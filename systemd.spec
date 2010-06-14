@@ -1,12 +1,12 @@
-%global git_date    20100610
-%global git_version 2f198e
+%global git_date    20100614
+%global git_version 393034
 %global _bindir      /bin
 %global _libdir      /lib
 
 Name:            systemd  
 Url:             http://www.freedesktop.org/wiki/Software/systemd  
 Version:         0
-Release:         0.3.%{git_date}git%{git_version}%{?dist} 
+Release:         0.4.%{git_date}git%{git_version}%{?dist} 
 License:         GPLv2+  
 Group:           System Environment/Base
 Summary:         A System and Session Manager  
@@ -18,7 +18,7 @@ BuildRequires:   automake autoconf
 
 # git clone git://anongit.freedesktop.org/systemd 
 # cd systemd;
-# git-archive --format=tar --prefix={name} {git_version} | xz  > systemd-{version}.{git_date}git{git_version}.tar.xz
+# git-archive --format=tar --prefix={name}/ {git_version} | xz  > systemd-{version}.{git_date}git{git_version}.tar.xz
 
 Source0:         %{name}-%{version}.%{git_date}git%{git_version}.tar.xz
 #Source0:        http://www.freedesktop.org/FIXME/%{name}-%{version}.tar.bz2  
@@ -41,7 +41,7 @@ control logic. It can work as a drop-in replacement for sysvinit.
 %build 
  
 export V=1  
-%configure --sbindir=/sbin  --libexecdir=%{_prefix}/libexec --with-rootdir=  --with-distro=fedora CFLAGS="%{optflags}"  
+%configure --sbindir=/sbin  --with-rootdir= --with-distro=fedora 
 
 make %{?_smp_mflags}
   
@@ -73,6 +73,9 @@ make DESTDIR=%{buildroot} install
 
   
 %changelog
+* Mon Jun 14 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.4.20100614.git393024
+- Pull the latest snapshot that fixes a segfault. Resolves rhbz#603231
+
 * Thu Jun 11 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.3.20100610git2f198e
 - More minor fixes as per review
 
@@ -81,7 +84,7 @@ make DESTDIR=%{buildroot} install
 
 * Wed Jun 09 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.1.20090609git2f198e
 - Address review comments
- 
+
 * Tue Jun 01 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.0.git2010-06-02
 - Initial spec (adopted from Kay Sievers)
 
