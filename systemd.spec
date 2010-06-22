@@ -26,6 +26,7 @@ Requires:       dbus
 Requires:       udev
 Requires:       pkgconfig
 Requires:       initscripts
+Requires:       selinux-policy >= 3.8.5
 
 # git clone git://anongit.freedesktop.org/systemd
 # cd systemd;
@@ -62,16 +63,6 @@ Conflicts:      upstart
 %description sysvinit
 Drop-in replacement for the System V init tools of systemd.
 
-%package pam
-Group:          System Environment/Base
-Summary:        systemd PAM module
-Conflicts:      %{name} < %{version}-%{release}
-Conflicts:      %{name} > %{version}-%{release}
-
-%description pam
-PAM module for creating per-user and per-session control groups in the
-systemd control group hierarchy.
-
 %prep
 %setup -q -n %{name}
 ./bootstrap.sh ac
@@ -101,7 +92,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %{_sysconfdir}/systemd
 %{_sysconfdir}/xdg/systemd
-%config %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %{_sysconfdir}/rc.d/init.d/reboot
 /bin/systemd
 /bin/systemctl
@@ -109,6 +100,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/systemd-install
 /lib/systemd
 /lib/udev/rules.d/*.rules
+/%{_lib}/security/pam_systemd.so
 %{_mandir}/man?/*.*
 %{_datadir}/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
@@ -131,12 +123,11 @@ rm -rf $RPM_BUILD_ROOT
 /sbin/telinit
 /sbin/runlevel
 
-%files pam
-%defattr(-,root,root,-)
-/%{_lib}/security/pam_systemd.so
-
 %changelog
-* Mon Jun 14 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.4.20100614.git393024
+* Tue Jun 22 2010 Lennart Poettering <lpoetter@redhat.com> - 0-0.5.20100622gita3723b
+- Update snapshot.
+
+* Mon Jun 14 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.4.20100614git393024
 - Pull the latest snapshot that fixes a segfault. Resolves rhbz#603231
 
 * Thu Jun 11 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.3.20100610git2f198e
