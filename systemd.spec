@@ -5,7 +5,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        0
-Release:        0.5.%{git_date}git%{git_version}%{?dist}
+Release:        0.6.%{git_date}git%{git_version}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -22,6 +22,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
 BuildRequires:  automake
 BuildRequires:  autoconf
+BuildRequires:  libtool
 Requires:       dbus
 Requires:       udev
 Requires:       pkgconfig
@@ -124,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 /sbin/runlevel
 
 %changelog
+* Tue Jun 22 2010 Lennart Poettering <lpoetter@redhat.com> - 0-0.6.20100622gita3723b
+- Add missing libtool dependency.
+
 * Tue Jun 22 2010 Lennart Poettering <lpoetter@redhat.com> - 0-0.5.20100622gita3723b
 - Update snapshot.
 
