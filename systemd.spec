@@ -156,7 +156,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
-* Tue Jun 29 2010 Lennart Poettering <lpoetter@redhat.com> - 0-0.7.20100622gita3723b
+* Tue Jun 29 2010 Lennart Poettering <lpoetter@redhat.com> - 0-0.7.20100629git4176e5
 - New snapshot
 - Split off -units package where other packages can depend on without pulling in the whole of systemd
 
