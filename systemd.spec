@@ -1,11 +1,8 @@
-%global git_date    20100629
-%global git_version 4176e5
-
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        0
-Release:        0.7.%{git_date}git%{git_version}%{?dist}
+Version:        1
+Release:        0%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -23,19 +20,13 @@ BuildRequires:  gtk2-devel
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-Requires:	systemd-units = %{version}-%{release}
+Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus
 Requires:       udev
 Requires:       pkgconfig
 Requires:       initscripts
 Requires:       selinux-policy >= 3.8.5
-
-# git clone git://anongit.freedesktop.org/systemd
-# cd systemd;
-# git archive --format=tar --prefix=systemd/ {git_version} | xz  > systemd-{version}.{git_date}git{git_version}.tar.xz
-
-Source0:        %{name}-%{version}.%{git_date}git%{git_version}.tar.xz
-#Source0:       http://www.freedesktop.org/FIXME/%{name}-%{version}.tar.bz2
+Source0:        http://0pointer.de/public/%{name}-%{version}.tar.bz2
 
 %description
 systemd is a system and session manager for Linux, compatible with
@@ -76,8 +67,7 @@ Conflicts:      upstart
 Drop-in replacement for the System V init tools of systemd.
 
 %prep
-%setup -q -n %{name}
-./bootstrap.sh ac
+%setup -q
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -156,6 +146,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Wed Jul 7 2010 Lennart Poettering <lpoetter@redhat.com> - 1-0
+- First upstream release
+
 * Tue Jun 29 2010 Lennart Poettering <lpoetter@redhat.com> - 0-0.7.20100629git4176e5
 - New snapshot
 - Split off -units package where other packages can depend on without pulling in the whole of systemd
