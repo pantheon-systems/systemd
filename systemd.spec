@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        1
+Version:        2
 Release:        0%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -23,10 +23,9 @@ BuildRequires:  libtool
 Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus
 Requires:       udev
-Requires:       pkgconfig
 Requires:       initscripts
 Requires:       selinux-policy >= 3.8.5
-Source0:        http://0pointer.de/public/%{name}-%{version}.tar.bz2
+Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 
 %description
 systemd is a system and session manager for Linux, compatible with
@@ -41,6 +40,7 @@ work as a drop-in replacement for sysvinit.
 %package units
 Group:          System Environment/Base
 Summary:        Configuration files, directories and installation tool for systemd
+Requires:       pkgconfig
 
 %description units
 Basic configuration files, directories and installation tool for the systemd
@@ -78,13 +78,13 @@ rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 mkdir -p %{buildroot}/sbin
-ln -s /bin/systemd %{buildroot}/sbin/init
-ln -s /bin/systemctl %{buildroot}/sbin/reboot
-ln -s /bin/systemctl %{buildroot}/sbin/halt
-ln -s /bin/systemctl %{buildroot}/sbin/poweroff
-ln -s /bin/systemctl %{buildroot}/sbin/shutdown
-ln -s /bin/systemctl %{buildroot}/sbin/telinit
-ln -s /bin/systemctl %{buildroot}/sbin/runlevel
+ln -s ../bin/systemd %{buildroot}/sbin/init
+ln -s ../bin/systemctl %{buildroot}/sbin/reboot
+ln -s ../bin/systemctl %{buildroot}/sbin/halt
+ln -s ../bin/systemctl %{buildroot}/sbin/poweroff
+ln -s ../bin/systemctl %{buildroot}/sbin/shutdown
+ln -s ../bin/systemctl %{buildroot}/sbin/telinit
+ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 rmdir %{buildroot}/cgroup
 
 %clean
@@ -100,9 +100,11 @@ rm -rf $RPM_BUILD_ROOT
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 /%{_lib}/security/pam_systemd.so
+%{_bindir}/systemd-cgls
 %{_mandir}/man1/systemd.*
 %{_mandir}/man1/systemctl.*
 %{_mandir}/man1/systemd-notify.*
+%{_mandir}/man1/systemd-cgls.*
 %{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
@@ -111,7 +113,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
-%{_datadir}/pkgconfig/systemd.pc
 %{_docdir}/systemd
 
 %files units
@@ -122,6 +123,8 @@ rm -rf $RPM_BUILD_ROOT
 /lib/systemd/system
 %{_bindir}/systemd-install
 %{_mandir}/man1/systemd-install.*
+%{_datadir}/pkgconfig/systemd.pc
+%{_docdir}/systemd/LICENSE
 
 %files gtk
 %defattr(-,root,root,-)
@@ -146,6 +149,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Jul 9 2010 Lennart Poettering <lpoetter@redhat.com> - 2-0
+- New upstream release
+
 * Wed Jul 7 2010 Lennart Poettering <lpoetter@redhat.com> - 1-0
 - First upstream release
 
