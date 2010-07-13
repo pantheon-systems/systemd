@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        3
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -150,6 +150,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Jul 13 2010 Lennart Poettering <lennart@poettering.net> - 3-3
+- Used wrong tarball
+
 * Tue Jul 13 2010 Lennart Poettering <lennart@poettering.net> - 3-2
 - Own /cgroup jointly with libcgroup, since we don't dpend on it anymore
 
