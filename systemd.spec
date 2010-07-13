@@ -1,14 +1,13 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        2
-Release:        0%{?dist}
+Version:        3
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
 BuildRequires:  libudev-devel
 BuildRequires:  libcap-devel
-BuildRequires:  libcgroup-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libxslt
@@ -21,8 +20,8 @@ BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
 Requires:       systemd-units = %{version}-%{release}
-Requires:       dbus
-Requires:       udev
+Requires:       dbus >= 1.3.2
+Requires:       udev >= 160
 Requires:       initscripts
 Requires:       selinux-policy >= 3.8.5
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
@@ -149,6 +148,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Jul 13 2010 Lennart Poettering <lpoetter@redhat.com> - 3-1
+- New upstream release
+
 * Fri Jul 9 2010 Lennart Poettering <lpoetter@redhat.com> - 2-0
 - New upstream release
 
