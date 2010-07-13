@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        3
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -84,7 +84,6 @@ ln -s ../bin/systemctl %{buildroot}/sbin/poweroff
 ln -s ../bin/systemctl %{buildroot}/sbin/shutdown
 ln -s ../bin/systemctl %{buildroot}/sbin/telinit
 ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
-rmdir %{buildroot}/cgroup
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -113,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_docdir}/systemd
+
+# Joint ownership with libcgroup
+%dir /cgroup
 
 %files units
 %defattr(-,root,root,-)
@@ -148,6 +150,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Jul 13 2010 Lennart Poettering <lennart@poettering.net> - 3-2
+- Own /cgroup jointly with libcgroup, since we don't dpend on it anymore
+
 * Tue Jul 13 2010 Lennart Poettering <lpoetter@redhat.com> - 3-1
 - New upstream release
 
