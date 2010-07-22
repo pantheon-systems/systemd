@@ -22,8 +22,9 @@ BuildRequires:  libtool
 Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.3.2
 Requires:       udev >= 160
+Requires:       libudev >= 160
 Requires:       initscripts
-Requires:       selinux-policy >= 3.8.5
+Requires:       selinux-policy >= 3.8.7
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 
 %description
