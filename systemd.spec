@@ -1,19 +1,19 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        3
-Release:        3%{?dist}
+Version:        4
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
-BuildRequires:  libudev-devel
+BuildRequires:  libudev-devel >= 160
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  dbus-glib-devel
-BuildRequires:  vala
+BuildRequires:  vala >= 0.9
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
 BuildRequires:  automake
@@ -60,8 +60,12 @@ Summary:        systemd System V init tools
 Requires:       %{name} = %{version}-%{release}
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
-#Obsoletes:      upstart <= 0.6.99
-Conflicts:      upstart
+Obsoletes:      upstart < 0.6.5-6.fc14
+Conflicts:      upstart-sysvinit
+
+# For now, require upstart installed, so that people can rely that
+# they can emergency boot into upstart with init=/sbin/upstart
+Requires:       upstart >= 0.6.5-6.fc14
 
 %description sysvinit
 Drop-in replacement for the System V init tools of systemd.
@@ -77,6 +81,9 @@ make %{?_smp_mflags}
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
+
+# Create SysV compatibility symlinks. systemctl/systemd are smart
+# enough to detect in which way they are called.
 mkdir -p %{buildroot}/sbin
 ln -s ../bin/systemd %{buildroot}/sbin/init
 ln -s ../bin/systemctl %{buildroot}/sbin/reboot
@@ -86,22 +93,69 @@ ln -s ../bin/systemctl %{buildroot}/sbin/shutdown
 ln -s ../bin/systemctl %{buildroot}/sbin/telinit
 ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 
+# We create all wants links manually at installation time to make sure
+# they are not owned and hence overriden by rpm after the used deleted
+# them.
+rm -r %{buildroot}/etc/systemd/system/*.target.wants
+
+# And the default symlink we generate automatically based on inittab
+rm %{buildroot}/etc/systemd/system/default.target
+
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post units
+if [ $1 -eq 1 ] ; then
+        # Try to read default runlevel from the old inittab if it exists
+        runlevel=$(/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
+        if [ -z "$runlevel" ] ; then
+                target="/lib/systemd/system/graphical.target"
+        else
+                target="/etc/systemd/system/runlevel$runlevel.target"
+        fi
+
+        # And symlink what we found to the new-style default.target
+        /bin/ln -sf "$target" /etc/systemd/system/default.target 2>&1 || :
+
+        # Enable the services we install by default.
+        /bin/systemctl enable \
+                getty@.service \
+                prefdm.service \
+                getty.target \
+                rc-local.service \
+                remote-fs.target 2>&1 || :
+fi
+
+%preun units
+if [ $1 -eq 0 ] ; then
+        /bin/systemctl disable \
+                getty@.service \
+                prefdm.service \
+                getty.target \
+                rc-local.service \
+                remote-fs.target 2>&1 || :
+
+        /bin/rm -f /etc/systemd/system/default.target 2>&1 || :
+fi
+
+%postun units
+if [ $1 -ge 1 ] ; then
+        /bin/systemctl daemon-reload 2>&1 || :
+fi
 
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %{_sysconfdir}/rc.d/init.d/reboot
+%dir %{_sysconfdir}/systemd/session
+%{_sysconfdir}/xdg/systemd
 /bin/systemd
-/bin/systemctl
 /bin/systemd-notify
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 /%{_lib}/security/pam_systemd.so
 %{_bindir}/systemd-cgls
 %{_mandir}/man1/systemd.*
-%{_mandir}/man1/systemctl.*
 %{_mandir}/man1/systemd-notify.*
 %{_mandir}/man1/systemd-cgls.*
 %{_mandir}/man3/*
@@ -119,12 +173,20 @@ rm -rf $RPM_BUILD_ROOT
 
 %files units
 %defattr(-,root,root,-)
-%{_sysconfdir}/systemd
-%{_sysconfdir}/xdg/systemd
+%dir %{_sysconfdir}/systemd
+%dir %{_sysconfdir}/systemd/system
+%config(noreplace) %{_sysconfdir}/systemd/system.conf
+%config(noreplace) %{_sysconfdir}/systemd/system/ctrl-alt-del.target
+%config(noreplace) %{_sysconfdir}/systemd/system/display-manager.service
+%config(noreplace) %{_sysconfdir}/systemd/system/kbrequest.target
+%config(noreplace) %{_sysconfdir}/systemd/system/runlevel2.target
+%config(noreplace) %{_sysconfdir}/systemd/system/runlevel3.target
+%config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
+%config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 %dir /lib/systemd
 /lib/systemd/system
-%{_bindir}/systemd-install
-%{_mandir}/man1/systemd-install.*
+/bin/systemctl
+%{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
 %{_docdir}/systemd/LICENSE
 
@@ -151,6 +213,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Sat Jul 24 2010 Lennart Poettering <lpoetter@redhat.com> - 4-1
+- New upstream release, and make default
+
 * Tue Jul 13 2010 Lennart Poettering <lennart@poettering.net> - 3-3
 - Used wrong tarball
 
