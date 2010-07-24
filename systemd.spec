@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        4
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -10,6 +10,7 @@ BuildRequires:  libudev-devel >= 160
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
+BuildRequires:  libselinux-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  dbus-glib-devel
@@ -213,6 +214,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Sat Jul 24 2010 Lennart Poettering <lpoetter@redhat.com> - 4-3
+- Add libselinux to build dependencies
+
 * Sat Jul 24 2010 Lennart Poettering <lpoetter@redhat.com> - 4-2
 - Use the right tarball
 
