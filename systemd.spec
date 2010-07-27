@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        4
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -61,6 +61,7 @@ Summary:        systemd System V init tools
 Requires:       %{name} = %{version}-%{release}
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
+Provides:	sysvinit-userspace
 Obsoletes:      upstart < 0.6.5-6.fc14
 Conflicts:      upstart-sysvinit
 
@@ -214,6 +215,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Jul 27 2010 Bill Nottingham <notting@redhat.com> - 4-4
+- Add 'sysvinit-userspace' provide to -sysvinit package to fix upgrade/install (#618537)
+
 * Sat Jul 24 2010 Lennart Poettering <lpoetter@redhat.com> - 4-3
 - Add libselinux to build dependencies
 
