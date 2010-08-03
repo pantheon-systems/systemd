@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        4
-Release:        4%{?dist}
+Version:        5
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -126,6 +126,11 @@ if [ $1 -eq 1 ] ; then
                 getty.target \
                 rc-local.service \
                 remote-fs.target 2>&1 || :
+
+	# Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
+	/bin/systemctl enable \
+		dbus.service \
+		dbus.socket 2>&1 || :
 fi
 
 %preun units
@@ -215,6 +220,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Wed Aug  4 2010 Lennart Poettering <lpoetter@redhat.com> - 5-1
+- Prepare release 5
+
 * Tue Jul 27 2010 Bill Nottingham <notting@redhat.com> - 4-4
 - Add 'sysvinit-userspace' provide to -sysvinit package to fix upgrade/install (#618537)
 
