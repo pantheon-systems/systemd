@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        5
-Release:        2%{?dist}
+Version:        6
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -220,6 +220,10 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Aug  6 2010 Lennart Poettering <lpoetter@redhat.com> - 6-1
+- New upstream release
+- Fixes #621200
+
 * Wed Aug  4 2010 Lennart Poettering <lpoetter@redhat.com> - 5-2
 - Add tarball
 
