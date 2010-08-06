@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        6
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -42,6 +42,8 @@ work as a drop-in replacement for sysvinit.
 Group:          System Environment/Base
 Summary:        Configuration files, directories and installation tool for systemd
 Requires:       pkgconfig
+Requires(post): coreutils
+Requires(post): gawk
 
 %description units
 Basic configuration files, directories and installation tool for the systemd
@@ -61,7 +63,7 @@ Summary:        systemd System V init tools
 Requires:       %{name} = %{version}-%{release}
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
-Provides:	sysvinit-userspace
+Provides:       sysvinit-userspace
 Obsoletes:      upstart < 0.6.5-6.fc14
 Conflicts:      upstart-sysvinit
 
@@ -117,7 +119,7 @@ if [ $1 -eq 1 ] ; then
         fi
 
         # And symlink what we found to the new-style default.target
-        /bin/ln -sf "$target" /etc/systemd/system/default.target 2>&1 || :
+        /bin/ln -sf "$target" /etc/systemd/system/default.target > /dev/null 2>&1 || :
 
         # Enable the services we install by default.
         /bin/systemctl enable \
@@ -125,12 +127,12 @@ if [ $1 -eq 1 ] ; then
                 prefdm.service \
                 getty.target \
                 rc-local.service \
-                remote-fs.target 2>&1 || :
+                remote-fs.target > /dev/null 2>&1 || :
 
-	# Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
-	/bin/systemctl enable \
-		dbus.service \
-		dbus.socket 2>&1 || :
+        # Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
+        /bin/systemctl enable \
+                dbus.service \
+                dbus.socket > /dev/null 2>&1 || :
 fi
 
 %preun units
@@ -140,14 +142,14 @@ if [ $1 -eq 0 ] ; then
                 prefdm.service \
                 getty.target \
                 rc-local.service \
-                remote-fs.target 2>&1 || :
+                remote-fs.target > /dev/null 2>&1 || :
 
-        /bin/rm -f /etc/systemd/system/default.target 2>&1 || :
+        /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
 fi
 
 %postun units
 if [ $1 -ge 1 ] ; then
-        /bin/systemctl daemon-reload 2>&1 || :
+        /bin/systemctl daemon-reload > /dev/null 2>&1 || :
 fi
 
 %files
@@ -220,6 +222,10 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Aug  6 2010 Lennart Poettering <lpoetter@redhat.com> - 6-2
+- properly hide output on package installation
+- pull in coreutils during package installtion
+
 * Fri Aug  6 2010 Lennart Poettering <lpoetter@redhat.com> - 6-1
 - New upstream release
 - Fixes #621200
