@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        6
-Release:        2%{?dist}
+Version:        7
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -127,7 +127,9 @@ if [ $1 -eq 1 ] ; then
                 prefdm.service \
                 getty.target \
                 rc-local.service \
-                remote-fs.target > /dev/null 2>&1 || :
+                remote-fs.target \
+                plymouth-quit.service \
+                plymouth-shutdown.service > /dev/null 2>&1 || :
 
         # Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
         /bin/systemctl enable \
@@ -142,7 +144,9 @@ if [ $1 -eq 0 ] ; then
                 prefdm.service \
                 getty.target \
                 rc-local.service \
-                remote-fs.target > /dev/null 2>&1 || :
+                remote-fs.target \
+                plymouth-quit.service \
+                plymouth-shutdown.service > /dev/null 2>&1 || :
 
         /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
 fi
@@ -222,6 +226,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Aug 10 2010 Lennart Poettering <lpoetter@redhat.com> - 7-1
+- New upstream release
+
 * Fri Aug  6 2010 Lennart Poettering <lpoetter@redhat.com> - 6-2
 - properly hide output on package installation
 - pull in coreutils during package installtion
