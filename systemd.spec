@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        7
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -27,6 +27,8 @@ Requires:       libudev >= 160
 Requires:       initscripts
 Requires:       selinux-policy >= 3.8.7
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
+
+Patch0: 0001-plymouth-call-plymouth-quit-before-running-the-getty.patch
 
 %description
 systemd is a system and session manager for Linux, compatible with
@@ -76,6 +78,7 @@ Drop-in replacement for the System V init tools of systemd.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -226,6 +229,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Thu Aug 12 2010 Lennart Poettering <lennart@poettering.net> - 7-2
+- Fix https://bugzilla.redhat.com/show_bug.cgi?id=623430
+
 * Tue Aug 10 2010 Lennart Poettering <lpoetter@redhat.com> - 7-1
 - New upstream release
 
