@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        7
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -28,7 +28,8 @@ Requires:       initscripts
 Requires:       selinux-policy >= 3.8.7
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 
-Patch0: 0001-plymouth-call-plymouth-quit-before-running-the-getty.patch
+Patch0:         0001-plymouth-call-plymouth-quit-before-running-the-getty.patch
+Patch1:         0001-unit-move-prefdm-after-livesys.patch
 
 %description
 systemd is a system and session manager for Linux, compatible with
@@ -79,6 +80,7 @@ Drop-in replacement for the System V init tools of systemd.
 %prep
 %setup -q
 %patch0 -p1
+%patch1 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -229,7 +231,10 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
-* Thu Aug 12 2010 Lennart Poettering <lennart@poettering.net> - 7-2
+* Thu Aug 12 2010 Lennart Poettering <lpoetter@redhat.com> - 7-3
+- Fix https://bugzilla.redhat.com/show_bug.cgi?id=623561
+
+* Thu Aug 12 2010 Lennart Poettering <lpoetter@redhat.com> - 7-2
 - Fix https://bugzilla.redhat.com/show_bug.cgi?id=623430
 
 * Tue Aug 10 2010 Lennart Poettering <lpoetter@redhat.com> - 7-1
@@ -261,10 +266,10 @@ fi
 * Sat Jul 24 2010 Lennart Poettering <lpoetter@redhat.com> - 4-1
 - New upstream release, and make default
 
-* Tue Jul 13 2010 Lennart Poettering <lennart@poettering.net> - 3-3
+* Tue Jul 13 2010 Lennart Poettering <lpoetter@redhat.com> - 3-3
 - Used wrong tarball
 
-* Tue Jul 13 2010 Lennart Poettering <lennart@poettering.net> - 3-2
+* Tue Jul 13 2010 Lennart Poettering <lpoetter@redhat.com> - 3-2
 - Own /cgroup jointly with libcgroup, since we don't dpend on it anymore
 
 * Tue Jul 13 2010 Lennart Poettering <lpoetter@redhat.com> - 3-1

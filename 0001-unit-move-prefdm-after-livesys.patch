@@ -1,0 +1,26 @@
+From 145b66acab96f3a51696e8402d8cb21153868d7c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Aug 2010 17:14:20 +0200
+Subject: [PATCH] unit: move prefdm after livesys
+
+https://bugzilla.redhat.com/show_bug.cgi?id=623561
+---
+ units/fedora/prefdm.service |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/units/fedora/prefdm.service b/units/fedora/prefdm.service
+index 49c06a6..233e00d 100644
+--- a/units/fedora/prefdm.service
++++ b/units/fedora/prefdm.service
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Display Manager
+-After=syslog.target haldaemon.service
++After=syslog.target haldaemon.service livesys-late.service
+ 
+ # On Fedora gdm/X11 is on tty1. We explicitly cancel the getty here to
+ # avoid any races around that.
+-- 
+1.7.0.1
+
