@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        7
-Release:        3%{?dist}
+Version:        8
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -26,10 +26,8 @@ Requires:       udev >= 160
 Requires:       libudev >= 160
 Requires:       initscripts
 Requires:       selinux-policy >= 3.8.7
+Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
-
-Patch0:         0001-plymouth-call-plymouth-quit-before-running-the-getty.patch
-Patch1:         0001-unit-move-prefdm-after-livesys.patch
 
 %description
 systemd is a system and session manager for Linux, compatible with
@@ -79,8 +77,6 @@ Drop-in replacement for the System V init tools of systemd.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -109,6 +105,9 @@ rm -r %{buildroot}/etc/systemd/system/*.target.wants
 
 # And the default symlink we generate automatically based on inittab
 rm %{buildroot}/etc/systemd/system/default.target
+
+sed -i -e 's/^#MountAuto=yes$/MountAuto=no/' \
+        -e 's/^#SwapAuto=yes$/SwapAuto=no/' %{buildroot}/etc/systemd/system.conf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -186,9 +185,6 @@ fi
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_docdir}/systemd
 
-# Joint ownership with libcgroup
-%dir /cgroup
-
 %files units
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/systemd
@@ -197,10 +193,6 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/system/ctrl-alt-del.target
 %config(noreplace) %{_sysconfdir}/systemd/system/display-manager.service
 %config(noreplace) %{_sysconfdir}/systemd/system/kbrequest.target
-%config(noreplace) %{_sysconfdir}/systemd/system/runlevel2.target
-%config(noreplace) %{_sysconfdir}/systemd/system/runlevel3.target
-%config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
-%config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 %dir /lib/systemd
 /lib/systemd/system
 /bin/systemctl
@@ -231,6 +223,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Wed Aug 25 2010 Lennart Poettering <lpoetter@redhat.com> - 8-1
+- New upstream release
+
 * Thu Aug 12 2010 Lennart Poettering <lpoetter@redhat.com> - 7-3
 - Fix https://bugzilla.redhat.com/show_bug.cgi?id=623561
 
