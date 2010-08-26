@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        8
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -109,6 +109,12 @@ rm %{buildroot}/etc/systemd/system/default.target
 sed -i -e 's/^#MountAuto=yes$/MountAuto=no/' \
         -e 's/^#SwapAuto=yes$/SwapAuto=no/' %{buildroot}/etc/systemd/system.conf
 
+# Make sure the %ghost-ing below works
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -119,7 +125,7 @@ if [ $1 -eq 1 ] ; then
         if [ -z "$runlevel" ] ; then
                 target="/lib/systemd/system/graphical.target"
         else
-                target="/etc/systemd/system/runlevel$runlevel.target"
+                target="/lib/systemd/system/runlevel$runlevel.target"
         fi
 
         # And symlink what we found to the new-style default.target
@@ -200,6 +206,13 @@ fi
 %{_datadir}/pkgconfig/systemd.pc
 %{_docdir}/systemd/LICENSE
 
+# Make sure we don't remove runlevel targets from F14 alpha installs,
+# but make sure we don't create then anew.
+%ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel2.target
+%ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel3.target
+%ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
+%ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
+
 %files gtk
 %defattr(-,root,root,-)
 %{_bindir}/systemadm
@@ -223,6 +236,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Thu Aug 26 2010 Lennart Poettering <lpoetter@redhat.com> - 8-2
+- Properly create default.target link
+
 * Wed Aug 25 2010 Lennart Poettering <lpoetter@redhat.com> - 8-1
 - New upstream release
 
