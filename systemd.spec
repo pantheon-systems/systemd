@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        8
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -115,8 +115,13 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
+mkdir -p %{buildroot}%{_localstatedir}/run/user
+
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post
+/bin/systemctl daemon-reexec
 
 %post units
 if [ $1 -eq 1 ] ; then
@@ -190,6 +195,7 @@ fi
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_docdir}/systemd
+%dir %{_localstatedir}/run/user
 
 %files units
 %defattr(-,root,root,-)
@@ -236,6 +242,11 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Aug 27 2010 Lennart Poettering <lpoetter@redhat.com> - 8-3
+- Reexecute after installation, take ownership of /var/run/user
+- https://bugzilla.redhat.com/show_bug.cgi?id=627457
+- https://bugzilla.redhat.com/show_bug.cgi?id=627634
+
 * Thu Aug 26 2010 Lennart Poettering <lpoetter@redhat.com> - 8-2
 - Properly create default.target link
 
