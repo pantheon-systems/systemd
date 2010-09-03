@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        8
-Release:        3%{?dist}
+Version:        9
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -142,9 +142,7 @@ if [ $1 -eq 1 ] ; then
                 prefdm.service \
                 getty.target \
                 rc-local.service \
-                remote-fs.target \
-                plymouth-quit.service \
-                plymouth-shutdown.service > /dev/null 2>&1 || :
+                remote-fs.target > /dev/null 2>&1 || :
 
         # Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
         /bin/systemctl enable \
@@ -159,9 +157,7 @@ if [ $1 -eq 0 ] ; then
                 prefdm.service \
                 getty.target \
                 rc-local.service \
-                remote-fs.target \
-                plymouth-quit.service \
-                plymouth-shutdown.service > /dev/null 2>&1 || :
+                remote-fs.target > /dev/null 2>&1 || :
 
         /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
 fi
@@ -242,6 +238,10 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Sep  3 2010 Lennart Poettering <lpoetter@redhat.com> - 9-1
+- New upstream version
+- Closes 501720, 614619, 621290, 626443, 626477, 627014, 627785, 628913
+
 * Fri Aug 27 2010 Lennart Poettering <lpoetter@redhat.com> - 8-3
 - Reexecute after installation, take ownership of /var/run/user
 - https://bugzilla.redhat.com/show_bug.cgi?id=627457
