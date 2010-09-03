@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        9
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -24,7 +24,7 @@ Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.3.2
 Requires:       udev >= 160
 Requires:       libudev >= 160
-Requires:       initscripts
+Requires:       initscripts >= 9.18
 Requires:       selinux-policy >= 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
@@ -106,6 +106,13 @@ rm -r %{buildroot}/etc/systemd/system/*.target.wants
 # And the default symlink we generate automatically based on inittab
 rm %{buildroot}/etc/systemd/system/default.target
 
+# These are now in the initscripts package
+rm -f %{buildroot}/lib/systemd/system/{halt,killall,poweroff,prefdm,rc-local,reboot,single,sysinit}.service
+rm -f %{buildroot}/%{_sysconfdir}/rc.d/init.d/reboot
+rm -f    %{buildroot}/%{_sysconfdir}/systemd/system/ctrl-alt-del.target \
+   %{buildroot}/%{_sysconfdir}/systemd/system/display-manager.service \
+   %{buildroot}/%{_sysconfdir}/systemd/system/kbrequest.target
+
 sed -i -e 's/^#MountAuto=yes$/MountAuto=no/' \
         -e 's/^#SwapAuto=yes$/SwapAuto=no/' %{buildroot}/etc/systemd/system.conf
 
@@ -139,9 +146,7 @@ if [ $1 -eq 1 ] ; then
         # Enable the services we install by default.
         /bin/systemctl enable \
                 getty@.service \
-                prefdm.service \
                 getty.target \
-                rc-local.service \
                 remote-fs.target > /dev/null 2>&1 || :
 
         # Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
@@ -154,9 +159,7 @@ fi
 if [ $1 -eq 0 ] ; then
         /bin/systemctl disable \
                 getty@.service \
-                prefdm.service \
                 getty.target \
-                rc-local.service \
                 remote-fs.target > /dev/null 2>&1 || :
 
         /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
@@ -170,7 +173,6 @@ fi
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
-%{_sysconfdir}/rc.d/init.d/reboot
 %dir %{_sysconfdir}/systemd/session
 %{_sysconfdir}/xdg/systemd
 /bin/systemd
@@ -198,9 +200,6 @@ fi
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
-%config(noreplace) %{_sysconfdir}/systemd/system/ctrl-alt-del.target
-%config(noreplace) %{_sysconfdir}/systemd/system/display-manager.service
-%config(noreplace) %{_sysconfdir}/systemd/system/kbrequest.target
 %dir /lib/systemd
 /lib/systemd/system
 /bin/systemctl
@@ -238,6 +237,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Sep  3 2010 Bill Nottingham <notting@redhat.com> - 9-3
+- move fedora-specific units to initscripts; require newer version thereof
+
 * Fri Sep  3 2010 Lennart Poettering <lpoetter@redhat.com> - 9-2
 - Add missing tarball
 
