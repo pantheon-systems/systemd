@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        9
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -238,6 +238,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Sep  3 2010 Lennart Poettering <lpoetter@redhat.com> - 9-2
+- Add missing tarball
+
 * Fri Sep  3 2010 Lennart Poettering <lpoetter@redhat.com> - 9-1
 - New upstream version
 - Closes 501720, 614619, 621290, 626443, 626477, 627014, 627785, 628913
