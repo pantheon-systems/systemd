@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        10
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -11,6 +11,7 @@ BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
+BuildRequires:  audit-libs-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  dbus-glib-devel
@@ -134,7 +135,7 @@ mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
 rm -rf $RPM_BUILD_ROOT
 
 %post
-/bin/systemctl daemon-reexec
+/bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 %post units
 if [ $1 -eq 1 ] ; then
@@ -243,6 +244,10 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Sep 14 2010 Lennart Poettering <lpoetter@redhat.com> - 10-2
+- Enable audit
+- https://bugzilla.redhat.com/show_bug.cgi?id=633771
+
 * Tue Sep 14 2010 Lennart Poettering <lpoetter@redhat.com> - 10-1
 - New upstream release
 - https://bugzilla.redhat.com/show_bug.cgi?id=630401
