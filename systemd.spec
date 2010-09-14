@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        9
-Release:        3%{?dist}
+Version:        10
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -124,6 +124,12 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
 mkdir -p %{buildroot}%{_localstatedir}/run/user
 
+# Make sure these directories are properly owned
+mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
+mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
+mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
+mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -237,6 +243,13 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Tue Sep 14 2010 Lennart Poettering <lpoetter@redhat.com> - 10-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=630401
+- https://bugzilla.redhat.com/show_bug.cgi?id=630225
+- https://bugzilla.redhat.com/show_bug.cgi?id=626966
+- https://bugzilla.redhat.com/show_bug.cgi?id=623456
+
 * Fri Sep  3 2010 Bill Nottingham <notting@redhat.com> - 9-3
 - move fedora-specific units to initscripts; require newer version thereof
 
