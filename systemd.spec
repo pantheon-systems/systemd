@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        10
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -66,12 +66,8 @@ Requires:       %{name} = %{version}-%{release}
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
-Obsoletes:      upstart < 0.6.5-6.fc14
+Obsoletes:      upstart < 0.6.5-9
 Conflicts:      upstart-sysvinit
-
-# For now, require upstart installed, so that people can rely that
-# they can emergency boot into upstart with init=/sbin/upstart
-Requires:       upstart >= 0.6.5-6.fc14
 
 %description sysvinit
 Drop-in replacement for the System V init tools of systemd.
@@ -244,6 +240,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Fri Sep 17 2010 Bill Nottingham <notting@redhat.com> - 10-3
+- Drop upstart requires
+
 * Tue Sep 14 2010 Lennart Poettering <lpoetter@redhat.com> - 10-2
 - Enable audit
 - https://bugzilla.redhat.com/show_bug.cgi?id=633771
