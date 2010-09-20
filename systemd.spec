@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        10
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -67,6 +67,7 @@ Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
 Obsoletes:      upstart < 0.6.5-9
+Obsoletes:      upstart-sysvinit < 0.6.5-9
 Conflicts:      upstart-sysvinit
 
 %description sysvinit
@@ -240,6 +241,9 @@ fi
 %{_mandir}/man8/runlevel.*
 
 %changelog
+* Mon Sep 20 2010 Bill Nottingham <notting@redhat.com> - 10-4
+- obsolete upstart-sysvinit too
+
 * Fri Sep 17 2010 Bill Nottingham <notting@redhat.com> - 10-3
 - Drop upstart requires
 
