@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        10
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -29,6 +29,15 @@ Requires:       initscripts >= 9.18
 Requires:       selinux-policy >= 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
+# For sysvinit tools
+Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
+Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
+Provides:       sysvinit-userspace
+Provides:	systemd-sysvinit
+Obsoletes:      systemd-sysvinit
+Obsoletes:      upstart < 0.6.5-9
+Obsoletes:      upstart-sysvinit < 0.6.5-9
+Conflicts:      upstart-sysvinit
 
 %description
 systemd is a system and session manager for Linux, compatible with
@@ -58,20 +67,6 @@ Requires:       %{name} = %{version}-%{release}
 
 %description gtk
 Graphical front-end for systemd.
-
-%package sysvinit
-Group:          System Environment/Base
-Summary:        systemd System V init tools
-Requires:       %{name} = %{version}-%{release}
-Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
-Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
-Provides:       sysvinit-userspace
-Obsoletes:      upstart < 0.6.5-9
-Obsoletes:      upstart-sysvinit < 0.6.5-9
-Conflicts:      upstart-sysvinit
-
-%description sysvinit
-Drop-in replacement for the System V init tools of systemd.
 
 %prep
 %setup -q
@@ -184,14 +179,20 @@ fi
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 /%{_lib}/security/pam_systemd.so
+/sbin/init
+/sbin/reboot
+/sbin/halt
+/sbin/poweroff
+/sbin/shutdown
+/sbin/telinit
+/sbin/runlevel
 %{_bindir}/systemd-cgls
-%{_mandir}/man1/systemd.*
-%{_mandir}/man1/systemd-notify.*
-%{_mandir}/man1/systemd-cgls.*
+%{_mandir}/man1/*
+%exclude %{_mandir}/man1/systemctl.*
 %{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
-%{_mandir}/man8/pam_systemd.*
+%{_mandir}/man8/*
 %{_datadir}/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
@@ -223,24 +224,10 @@ fi
 %{_bindir}/systemadm
 %{_mandir}/man1/systemadm.*
 
-%files sysvinit
-%defattr(-,root,root,-)
-/sbin/init
-/sbin/reboot
-/sbin/halt
-/sbin/poweroff
-/sbin/shutdown
-/sbin/telinit
-/sbin/runlevel
-%{_mandir}/man1/init.*
-%{_mandir}/man8/halt.*
-%{_mandir}/man8/reboot.*
-%{_mandir}/man8/shutdown.*
-%{_mandir}/man8/poweroff.*
-%{_mandir}/man8/telinit.*
-%{_mandir}/man8/runlevel.*
-
 %changelog
+* Thu Sep 23 2010 Bill Nottingham <notting@redhat.com> - 10-5
+- merge -sysvinit into main package
+
 * Mon Sep 20 2010 Bill Nottingham <notting@redhat.com> - 10-4
 - obsolete upstart-sysvinit too
 
