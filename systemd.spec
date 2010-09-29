@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        10
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -225,6 +225,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Sep 29 2010 jkeating - 10-6
+- Rebuilt for gcc bug 634757
+
 * Thu Sep 23 2010 Bill Nottingham <notting@redhat.com> - 10-5
 - merge -sysvinit into main package
 
