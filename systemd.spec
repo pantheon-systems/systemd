@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        10
-Release:        6%{?dist}
+Version:        11
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -18,6 +18,7 @@ BuildRequires:  dbus-glib-devel
 BuildRequires:  vala >= 0.9
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
+BuildRequires:  libnotify-devel
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
@@ -64,6 +65,7 @@ system and session manager.
 Group:          System Environment/Base
 Summary:        Graphical frontend for systemd
 Requires:       %{name} = %{version}-%{release}
+Requires:       polkit
 
 %description gtk
 Graphical front-end for systemd.
@@ -96,26 +98,23 @@ ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 # them.
 rm -r %{buildroot}/etc/systemd/system/*.target.wants
 
-# And the default symlink we generate automatically based on inittab
-rm %{buildroot}/etc/systemd/system/default.target
-
 # These are now in the initscripts package
-rm -f %{buildroot}/lib/systemd/system/{halt,killall,poweroff,prefdm,rc-local,reboot,single,sysinit}.service
-rm -f %{buildroot}/%{_sysconfdir}/rc.d/init.d/reboot
-rm -f    %{buildroot}/%{_sysconfdir}/systemd/system/ctrl-alt-del.target \
-   %{buildroot}/%{_sysconfdir}/systemd/system/display-manager.service \
-   %{buildroot}/%{_sysconfdir}/systemd/system/kbrequest.target
+rm %{buildroot}/lib/systemd/system/{halt,killall,poweroff,prefdm,rc-local,reboot,single,sysinit}.service
+rm %{buildroot}/%{_sysconfdir}/rc.d/init.d/reboot
+rm %{buildroot}/%{_sysconfdir}/systemd/system/display-manager.service
 
 sed -i -e 's/^#MountAuto=yes$/MountAuto=no/' \
         -e 's/^#SwapAuto=yes$/SwapAuto=no/' %{buildroot}/etc/systemd/system.conf
+
+# We haven't updated Fedora for tmpfs on /var/run and /var/lock yet
+rm %{buildroot}/lib/systemd/system/local-fs.target.wants/var-run.mount
+rm %{buildroot}/lib/systemd/system/local-fs.target.wants/var-lock.mount
 
 # Make sure the %ghost-ing below works
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
-
-mkdir -p %{buildroot}%{_localstatedir}/run/user
 
 # Make sure these directories are properly owned
 mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
@@ -172,10 +171,14 @@ fi
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
+%config(noreplace) %{_sysconfdir}/systemd/system.conf
 %dir %{_sysconfdir}/systemd/session
 %{_sysconfdir}/xdg/systemd
+%{_sysconfdir}/tmpfiles.d/systemd.conf
+%{_sysconfdir}/tmpfiles.d/x11.conf
 /bin/systemd
 /bin/systemd-notify
+/bin/systemd-ask-password
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 /%{_lib}/security/pam_systemd.so
@@ -198,13 +201,12 @@ fi
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_docdir}/systemd
-%dir %{_localstatedir}/run/user
 
 %files units
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
-%config(noreplace) %{_sysconfdir}/systemd/system.conf
+%dir %{_sysconfdir}/tmpfiles.d
 %dir /lib/systemd
 /lib/systemd/system
 /bin/systemctl
@@ -222,10 +224,15 @@ fi
 %files gtk
 %defattr(-,root,root,-)
 %{_bindir}/systemadm
+%{_bindir}/systemd-ask-password-agent
+%{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_mandir}/man1/systemadm.*
 
 %changelog
-* Wed Sep 29 2010 jkeating - 10-6
+* Thu Oct  7 2010 Lennart Poettering <lpoetter@redhat.com> - 11-1
+- New upstream release
+
+* Wed Sep 29 2010 Jesse Keating <jkeating@redhat.com> - 10-6
 - Rebuilt for gcc bug 634757
 
 * Thu Sep 23 2010 Bill Nottingham <notting@redhat.com> - 10-5
