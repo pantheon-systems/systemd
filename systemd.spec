@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        11
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Session Manager
@@ -40,6 +40,11 @@ Obsoletes:      upstart < 0.6.5-9
 Obsoletes:      upstart-sysvinit < 0.6.5-9
 Conflicts:      upstart-sysvinit
 
+# build with libnotify 0.7.0
+Patch0: notify.patch
+# build with vala 0.11.2
+Patch1: vala-build.patch
+
 %description
 systemd is a system and session manager for Linux, compatible with
 SysV and LSB init scripts. systemd provides aggressive parallelization
@@ -72,6 +77,8 @@ Graphical front-end for systemd.
 
 %prep
 %setup -q
+%patch0 -p1 -b .notify
+%patch1 -p1 -b .vala
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -229,6 +236,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Fri Nov 12 2010 Matthias Clasen <mclasen@redhat.com> - 11-2
+- Rebuild with newer vala, libnotify
+
 * Thu Oct  7 2010 Lennart Poettering <lpoetter@redhat.com> - 11-1
 - New upstream release
 
