@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        12
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -27,7 +27,7 @@ Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.3.2
 Requires:       udev >= 160
 Requires:       libudev >= 160
-Requires:       initscripts >= 9.18
+Requires:       initscripts >= 9.22
 Requires:       selinux-policy >= 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
@@ -98,9 +98,6 @@ ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 # they are not owned and hence overriden by rpm after the used deleted
 # them.
 rm -r %{buildroot}/etc/systemd/system/*.target.wants
-
-# These are for now in the initscript package
-rm %{buildroot}/lib/systemd/system/{halt,poweroff,prefdm,rc-local,reboot,graphical.target.wants/display-manager,multi-user.target.wants/rc-local}.service
 
 # We haven't updated Fedora for tmpfs on /var/run and /var/lock yet
 rm %{buildroot}/lib/systemd/system/local-fs.target.wants/var-run.mount
@@ -232,6 +229,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Nov 17 2010 Bill Nottingham <notting@redhat.com> 12-3
+- Fix clash
+
 * Wed Nov 17 2010 Lennart Poettering <lpoetter@redhat.com> - 12-2
 - Don't clash with initscripts for now, so that we don't break the builders
 
