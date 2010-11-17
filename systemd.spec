@@ -1,24 +1,25 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        11
-Release:        2%{?dist}
+Version:        12
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
-Summary:        A System and Session Manager
+Summary:        A System and Service Manager
 BuildRequires:  libudev-devel >= 160
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
+BuildRequires:  cryptsetup-luks-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  dbus-glib-devel
-BuildRequires:  vala >= 0.9
+BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
-BuildRequires:  libnotify-devel
+BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
@@ -40,13 +41,8 @@ Obsoletes:      upstart < 0.6.5-9
 Obsoletes:      upstart-sysvinit < 0.6.5-9
 Conflicts:      upstart-sysvinit
 
-# build with libnotify 0.7.0
-Patch0: notify.patch
-# build with vala 0.11.2
-Patch1: vala-build.patch
-
 %description
-systemd is a system and session manager for Linux, compatible with
+systemd is a system and service manager for Linux, compatible with
 SysV and LSB init scripts. systemd provides aggressive parallelization
 capabilities, uses socket and D-Bus activation for starting services,
 offers on-demand starting of daemons, keeps track of processes using
@@ -64,7 +60,7 @@ Requires(post): gawk
 
 %description units
 Basic configuration files, directories and installation tool for the systemd
-system and session manager.
+system and service manager.
 
 %package gtk
 Group:          System Environment/Base
@@ -77,8 +73,6 @@ Graphical front-end for systemd.
 
 %prep
 %setup -q
-%patch0 -p1 -b .notify
-%patch1 -p1 -b .vala
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -104,14 +98,6 @@ ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 # they are not owned and hence overriden by rpm after the used deleted
 # them.
 rm -r %{buildroot}/etc/systemd/system/*.target.wants
-
-# These are now in the initscripts package
-rm %{buildroot}/lib/systemd/system/{halt,killall,poweroff,prefdm,rc-local,reboot,single,sysinit}.service
-rm %{buildroot}/%{_sysconfdir}/rc.d/init.d/reboot
-rm %{buildroot}/%{_sysconfdir}/systemd/system/display-manager.service
-
-sed -i -e 's/^#MountAuto=yes$/MountAuto=no/' \
-        -e 's/^#SwapAuto=yes$/SwapAuto=no/' %{buildroot}/etc/systemd/system.conf
 
 # We haven't updated Fedora for tmpfs on /var/run and /var/lock yet
 rm %{buildroot}/lib/systemd/system/local-fs.target.wants/var-run.mount
@@ -152,12 +138,11 @@ if [ $1 -eq 1 ] ; then
         /bin/systemctl enable \
                 getty@.service \
                 getty.target \
-                remote-fs.target > /dev/null 2>&1 || :
-
-        # Temporary fix for broken upgrades between older F14 rawhide to newer F14 rawhide. Should be removed eventually.
-        /bin/systemctl enable \
-                dbus.service \
-                dbus.socket > /dev/null 2>&1 || :
+                remote-fs.target \
+                quotaon.service \
+                quotacheck.service \
+                systemd-readahead-replay.service \
+                systemd-readahead-collect.service > /dev/null 2>&1 || :
 fi
 
 %preun units
@@ -165,7 +150,11 @@ if [ $1 -eq 0 ] ; then
         /bin/systemctl disable \
                 getty@.service \
                 getty.target \
-                remote-fs.target > /dev/null 2>&1 || :
+                remote-fs.target \
+                quotaon.service \
+                quotacheck.service \
+                systemd-readahead-replay.service \
+                systemd-readahead-collect.service > /dev/null 2>&1 || :
 
         /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
 fi
@@ -179,15 +168,17 @@ fi
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
-%dir %{_sysconfdir}/systemd/session
+%dir %{_sysconfdir}/systemd/user
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/tmpfiles.d/systemd.conf
 %{_sysconfdir}/tmpfiles.d/x11.conf
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
+/bin/systemd-tty-ask-password-agent
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
+/lib/systemd/system-generators/systemd-cryptsetup-generator
 /%{_lib}/security/pam_systemd.so
 /sbin/init
 /sbin/reboot
@@ -214,9 +205,11 @@ fi
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
 %dir %{_sysconfdir}/tmpfiles.d
+%dir %{_sysconfdir}/bash_completion.d
 %dir /lib/systemd
 /lib/systemd/system
 /bin/systemctl
+%{_sysconfdir}/bash_completion.d/systemctl-bash-completion.sh
 %{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
 %{_docdir}/systemd/LICENSE
@@ -231,11 +224,14 @@ fi
 %files gtk
 %defattr(-,root,root,-)
 %{_bindir}/systemadm
-%{_bindir}/systemd-ask-password-agent
+%{_bindir}/systemd-gnome-ask-password-agent
 %{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Nov 17 2010 Lennart Poettering <lpoetter@redhat.com> - 12-1
+- New upstream release
+
 * Fri Nov 12 2010 Matthias Clasen <mclasen@redhat.com> - 11-2
 - Rebuild with newer vala, libnotify
 
