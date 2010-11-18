@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        12
-Release:        3%{?dist}
+Version:        13
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -229,6 +229,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Fri Nov 19 2010 Lennart Poettering <lpoetter@redhat.com> - 13-1
+- new upstream release
+
 * Wed Nov 17 2010 Bill Nottingham <notting@redhat.com> 12-3
 - Fix clash
 
