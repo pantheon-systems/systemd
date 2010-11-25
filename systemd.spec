@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        13
+Version:        14
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -31,6 +31,7 @@ Requires:       initscripts >= 9.22
 Requires:       selinux-policy >= 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
+Source1:        console.conf
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -40,6 +41,8 @@ Obsoletes:      systemd-sysvinit
 Obsoletes:      upstart < 0.6.5-9
 Obsoletes:      upstart-sysvinit < 0.6.5-9
 Conflicts:      upstart-sysvinit
+Obsoletes:      readahead < 1.5.7-3
+Provides:       readahead = 1.5.7-3
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -99,10 +102,6 @@ ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 # them.
 rm -r %{buildroot}/etc/systemd/system/*.target.wants
 
-# We haven't updated Fedora for tmpfs on /var/run and /var/lock yet
-rm %{buildroot}/lib/systemd/system/local-fs.target.wants/var-run.mount
-rm %{buildroot}/lib/systemd/system/local-fs.target.wants/var-lock.mount
-
 # Make sure the %ghost-ing below works
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
@@ -114,6 +113,8 @@ mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
+
+install -m 644 -p $RPM_SOURCE_DIR/console.conf $RPM_BUILD_ROOT%{_sysconfdir}/tmpfiles.d/console.conf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -142,7 +143,8 @@ if [ $1 -eq 1 ] ; then
                 quotaon.service \
                 quotacheck.service \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service > /dev/null 2>&1 || :
+                systemd-readahead-collect.service \
+                hwclock-load.service > /dev/null 2>&1 || :
 fi
 
 %preun units
@@ -154,7 +156,8 @@ if [ $1 -eq 0 ] ; then
                 quotaon.service \
                 quotacheck.service \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service > /dev/null 2>&1 || :
+                systemd-readahead-collect.service \
+                hwclock-load.service > /dev/null 2>&1 || :
 
         /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
 fi
@@ -172,6 +175,7 @@ fi
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/tmpfiles.d/systemd.conf
 %{_sysconfdir}/tmpfiles.d/x11.conf
+%{_sysconfdir}/tmpfiles.d/console.conf
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
@@ -229,6 +233,12 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Thu Nov 25 2010 Lennart Poettering <lpoetter@redhat.com> - 14-1
+- Upstream update
+- Enable hwclock-load by default
+- Obsolete readahead
+- Enable /var/run and /var/lock on tmpfs
+
 * Fri Nov 19 2010 Lennart Poettering <lpoetter@redhat.com> - 13-1
 - new upstream release
 
