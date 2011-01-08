@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        15
+Version:        16
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -233,6 +233,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Sat Jan  8 2011 Lennart Poettering <lpoetter@redhat.com> - 16-1
+- New upstream release
+
 * Thu Nov 25 2010 Lennart Poettering <lpoetter@redhat.com> - 15-1
 - New upstream release
 
