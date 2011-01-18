@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        16
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -31,7 +31,6 @@ Requires:       initscripts >= 9.22
 Requires:       selinux-policy >= 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
-Source1:        console.conf
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -114,8 +113,6 @@ mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
 
-install -m 644 -p $RPM_SOURCE_DIR/console.conf $RPM_BUILD_ROOT%{_sysconfdir}/tmpfiles.d/console.conf
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -175,7 +172,6 @@ fi
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/tmpfiles.d/systemd.conf
 %{_sysconfdir}/tmpfiles.d/x11.conf
-%{_sysconfdir}/tmpfiles.d/console.conf
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
@@ -233,6 +229,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Tue Jan 18 2011 Lennart Poettering <lpoetter@redhat.com> - 16-2
+- Drop console.conf again, since it is not shipped in pamtmp.conf
+
 * Sat Jan  8 2011 Lennart Poettering <lpoetter@redhat.com> - 16-1
 - New upstream release
 
