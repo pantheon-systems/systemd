@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        16
-Release:        2%{?dist}
+Version:        17
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -229,6 +229,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Sat Jan 22 2011 Lennart Poettering <lpoetter@redhat.com> - 17-1
+- New upstream release
+
 * Tue Jan 18 2011 Lennart Poettering <lpoetter@redhat.com> - 16-2
 - Drop console.conf again, since it is not shipped in pamtmp.conf
 
