@@ -40,8 +40,8 @@ Obsoletes:      systemd-sysvinit
 Obsoletes:      upstart < 0.6.5-9
 Obsoletes:      upstart-sysvinit < 0.6.5-9
 Conflicts:      upstart-sysvinit
-Obsoletes:      readahead < 1.5.7-3
-Provides:       readahead = 1.5.7-3
+Obsoletes:      readahead < 1:1.5.7-3
+Provides:       readahead = 1:1.5.7-3
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -229,6 +229,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Mon Feb  7 2011 Bill Nottingham <notting@redhat.com> - 17-2
+- add epoch to readahead obsolete
+
 * Sat Jan 22 2011 Lennart Poettering <lpoetter@redhat.com> - 17-1
 - New upstream release
 
