@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        17
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -31,6 +31,8 @@ Requires:       initscripts >= 9.22
 Requires:       selinux-policy >= 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
+# Adds support for the %%{_unitdir} macro
+Source1:	macros.systemd
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -114,6 +116,10 @@ mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
+
+# Install RPM macros file for systemd
+mkdir -p %{buildroot}%{_sysconfdir}/rpm/
+install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -212,6 +218,7 @@ fi
 /lib/systemd/system
 /bin/systemctl
 %{_sysconfdir}/bash_completion.d/systemctl-bash-completion.sh
+%{_sysconfdir}/rpm/macros.systemd
 %{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
 %{_docdir}/systemd/LICENSE
@@ -231,6 +238,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Feb  9 2011 Tom Callaway <spot@fedoraproject.org> - 17-5
+- add macros.systemd file for %%{_unitdir}
+
 * Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 17-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
