@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        17
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -42,6 +42,7 @@ Obsoletes:      upstart-sysvinit < 0.6.5-9
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
+Patch0:         fix-popen.patch
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -75,6 +76,7 @@ Graphical front-end for systemd.
 
 %prep
 %setup -q
+%patch0 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -229,6 +231,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Feb  9 2011 Lennart Poettering <lpoetter@redhat.com> - 17-3
+- Fix popen() of systemctl, #674916
+
 * Mon Feb  7 2011 Bill Nottingham <notting@redhat.com> - 17-2
 - add epoch to readahead obsolete
 
