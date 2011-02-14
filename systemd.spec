@@ -121,6 +121,9 @@ mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
 install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
 
+# Mask legacy stuff
+ln -s rescue.service %{buildroot}/lib/systemd/system/single.service
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
