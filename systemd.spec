@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        17
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -39,8 +39,8 @@ Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
 Provides:	systemd-sysvinit
 Obsoletes:      systemd-sysvinit
-Obsoletes:      upstart < 0.6.5-9
-Obsoletes:      upstart-sysvinit < 0.6.5-9
+Obsoletes:      upstart < 0.6.5-11
+Obsoletes:      upstart-sysvinit < 0.6.5-11
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
@@ -238,6 +238,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Mon Feb 14 2011 Bill Nottingham <notting@redhat.com> - 17-6
+- bump upstart obsoletes (#676815)
+
 * Wed Feb  9 2011 Tom Callaway <spot@fedoraproject.org> - 17-5
 - add macros.systemd file for %%{_unitdir}
 
