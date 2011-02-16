@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        17
-Release:        6%{?dist}
+Version:        18
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -44,7 +44,6 @@ Obsoletes:      upstart-sysvinit < 0.6.5-11
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
-Patch0:         fix-popen.patch
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -78,7 +77,6 @@ Graphical front-end for systemd.
 
 %prep
 %setup -q
-%patch0 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -220,6 +218,7 @@ fi
 %dir /lib/systemd
 /lib/systemd/system
 /bin/systemctl
+/bin/systemd-tmpfiles
 %{_sysconfdir}/bash_completion.d/systemctl-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_mandir}/man1/systemctl.*
@@ -241,6 +240,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Feb 16 2011 Lennart Poettering <lpoetter@redhat.com> - 18-1
+- New upstream release
+
 * Mon Feb 14 2011 Bill Nottingham <notting@redhat.com> - 17-6
 - bump upstart obsoletes (#676815)
 
