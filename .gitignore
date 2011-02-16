@@ -1,7 +1,7 @@
-systemd-4.tar.bz2
-systemd-5.tar.bz2
-systemd-6.tar.bz2
-systemd-7.tar.bz2
+/systemd-4.tar.bz2
+/systemd-5.tar.bz2
+/systemd-6.tar.bz2
+/systemd-7.tar.bz2
 /systemd-8.tar.bz2
 /systemd-9.tar.bz2
 /systemd-10.tar.bz2
@@ -12,3 +12,6 @@ systemd-7.tar.bz2
 /systemd-15.tar.bz2
 /systemd-16.tar.bz2
 /systemd-17.tar.bz2
+.build-*.log
+x86_64/
+systemd-*src.rpm
