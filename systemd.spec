@@ -15,7 +15,6 @@ BuildRequires:  audit-libs-devel
 BuildRequires:  cryptsetup-luks-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
-BuildRequires:  dbus-glib-devel
 BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
