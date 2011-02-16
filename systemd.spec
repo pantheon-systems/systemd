@@ -186,6 +186,7 @@ fi
 /bin/systemd-tty-ask-password-agent
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
+%dir /lib/systemd/system-generators
 /lib/systemd/system-generators/systemd-cryptsetup-generator
 /%{_lib}/security/pam_systemd.so
 /sbin/init
