@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        18
+Version:        19
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -22,21 +22,23 @@ BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
+BuildRequires:  make
+Requires(post): authconfig
 Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.3.2
 Requires:       udev >= 160
 Requires:       libudev >= 160
 Requires:       initscripts >= 9.22
-Requires:       selinux-policy >= 3.8.7
+Conflicts:      selinux-policy < 3.8.7
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
-Source1:	macros.systemd
+Source1:        macros.systemd
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
-Provides:	systemd-sysvinit
+Provides:       systemd-sysvinit
 Obsoletes:      systemd-sysvinit
 Obsoletes:      upstart < 0.6.5-11
 Obsoletes:      upstart-sysvinit < 0.6.5-11
@@ -102,7 +104,7 @@ ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
 # them.
 rm -r %{buildroot}/etc/systemd/system/*.target.wants
 
-# Make sure the %ghost-ing below works
+# Make sure the ghost-ing below works
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
@@ -126,6 +128,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
+
+# Make sure pam_systemd is enabled
+if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac ; then
+        /usr/sbin/authconfig --update >/dev/null 2>&1 || :
+
+        # Try harder
+        /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac || /usr/sbin/authconfig --updateall >/dev/null 2>&1 || :
+fi
 
 %post units
 if [ $1 -eq 1 ] ; then
@@ -240,6 +250,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Tue Mar  1 2011 Lennart Poettering <lpoetter@redhat.com> - 19-1
+- New upstream release
+
 * Wed Feb 16 2011 Lennart Poettering <lpoetter@redhat.com> - 18-1
 - New upstream release
 
