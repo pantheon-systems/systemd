@@ -17,3 +17,4 @@ x86_64/
 systemd-*src.rpm
 /systemd-18.tar.bz2
 /systemd-19.tar.bz2
+/systemd-20.tar.bz2

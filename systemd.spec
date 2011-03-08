@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        19
+Version:        20
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -110,6 +110,8 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
+touch %{buildroot}%{_sysconfdir}/machine-id
+
 # Make sure these directories are properly owned
 mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
@@ -127,6 +129,7 @@ ln -s rescue.service %{buildroot}/lib/systemd/system/single.service
 rm -rf $RPM_BUILD_ROOT
 
 %post
+/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 # Make sure pam_systemd is enabled
@@ -190,10 +193,12 @@ fi
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/tmpfiles.d/systemd.conf
 %{_sysconfdir}/tmpfiles.d/x11.conf
+%ghost %config(noreplace) %{_sysconfdir}/machine-id
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
 /bin/systemd-tty-ask-password-agent
+/bin/systemd-machine-id-setup
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 %dir /lib/systemd/system-generators
@@ -250,6 +255,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Tue Mar  8 2011 Lennart Poettering <lpoetter@redhat.com> - 20-1
+- New upstream release
+
 * Tue Mar  1 2011 Lennart Poettering <lpoetter@redhat.com> - 19-1
 - New upstream release
 
