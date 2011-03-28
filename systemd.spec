@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        20
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -34,6 +34,10 @@ Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
+
+# https://bugs.freedesktop.org/show_bug.cgi?id=35711
+Patch0:         systemd-plymouth-messages.patch
+
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -78,6 +82,7 @@ Graphical front-end for systemd.
 
 %prep
 %setup -q
+%patch0 -p1 -b .plymouth-messages
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -255,6 +260,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Mon Mar 28 2011 Matthias Clasen <mclasen@redhat.com> - 20-2
+- Apply upstream patch to not send untranslated messages to plymouth
+
 * Tue Mar  8 2011 Lennart Poettering <lpoetter@redhat.com> - 20-1
 - New upstream release
 

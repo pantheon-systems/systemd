@@ -1,0 +1,60 @@
+From 8bf22a7b68d98f1757a1c4ea3180130eac119fd1 Mon Sep 17 00:00:00 2001
+From: William Jon McCann <jmccann@redhat.com>
+Date: Sun, 27 Mar 2011 00:18:16 -0400
+Subject: [PATCH] Remove the calls to plymouth message
+
+ * messages aren't translated
+ * console text is ugly
+ * they are jargonny
+ * they really aren't needed
+
+https://bugs.freedesktop.org/show_bug.cgi?id=35711
+---
+ units/plymouth-halt.service     |    1 -
+ units/plymouth-kexec.service    |    1 -
+ units/plymouth-poweroff.service |    1 -
+ units/plymouth-reboot.service   |    1 -
+ 4 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/units/plymouth-halt.service b/units/plymouth-halt.service
+index fa1a20a..962d829 100644
+--- a/units/plymouth-halt.service
++++ b/units/plymouth-halt.service
+@@ -14,5 +14,4 @@ DefaultDependencies=no
+ [Service]
+ ExecStart=/sbin/plymouthd --mode=shutdown
+ ExecStartPost=-/bin/plymouth --show-splash
+-ExecStartPost=-/bin/plymouth message '--text=Halting...'
+ Type=forking
+diff --git a/units/plymouth-kexec.service b/units/plymouth-kexec.service
+index 61c6376..0d7450f 100644
+--- a/units/plymouth-kexec.service
++++ b/units/plymouth-kexec.service
+@@ -14,5 +14,4 @@ DefaultDependencies=no
+ [Service]
+ ExecStart=/sbin/plymouthd --mode=shutdown
+ ExecStartPost=-/bin/plymouth --show-splash
+-ExecStartPost=-/bin/plymouth message '--text=Rebooting with kexec...'
+ Type=forking
+diff --git a/units/plymouth-poweroff.service b/units/plymouth-poweroff.service
+index c1eebb5..d4979df 100644
+--- a/units/plymouth-poweroff.service
++++ b/units/plymouth-poweroff.service
+@@ -14,5 +14,4 @@ DefaultDependencies=no
+ [Service]
+ ExecStart=/sbin/plymouthd --mode=shutdown
+ ExecStartPost=-/bin/plymouth --show-splash
+-ExecStartPost=-/bin/plymouth message '--text=Powering Off...'
+ Type=forking
+diff --git a/units/plymouth-reboot.service b/units/plymouth-reboot.service
+index 974db31..7304a5f 100644
+--- a/units/plymouth-reboot.service
++++ b/units/plymouth-reboot.service
+@@ -14,5 +14,4 @@ DefaultDependencies=no
+ [Service]
+ ExecStart=/sbin/plymouthd --mode=shutdown
+ ExecStartPost=-/bin/plymouth --show-splash
+-ExecStartPost=-/bin/plymouth message '--text=Rebooting...'
+ Type=forking
+-- 
+1.7.3.4
