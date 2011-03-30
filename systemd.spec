@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        20
-Release:        2%{?dist}
+Version:        21
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -34,9 +34,6 @@ Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
-
-# https://bugs.freedesktop.org/show_bug.cgi?id=35711
-Patch0:         systemd-plymouth-messages.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -82,7 +79,6 @@ Graphical front-end for systemd.
 
 %prep
 %setup -q
-%patch0 -p1 -b .plymouth-messages
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -127,13 +123,13 @@ mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
 install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
 
-# Mask legacy stuff
-ln -s rescue.service %{buildroot}/lib/systemd/system/single.service
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
+# Should move to some other place eventually
+mkdir -p -m 755 /run || :
+
 /bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
@@ -204,10 +200,13 @@ fi
 /bin/systemd-ask-password
 /bin/systemd-tty-ask-password-agent
 /bin/systemd-machine-id-setup
+/usr/bin/systemd-nspawn
+/usr/bin/systemd-stdio-bridge
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 %dir /lib/systemd/system-generators
 /lib/systemd/system-generators/systemd-cryptsetup-generator
+/lib/systemd/system-generators/systemd-getty-generator
 /%{_lib}/security/pam_systemd.so
 /sbin/init
 /sbin/reboot
@@ -260,6 +259,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Tue Mar 29 2011 Lennart Poettering <lpoetter@redhat.com> - 21-1
+- New upstream release
+
 * Mon Mar 28 2011 Matthias Clasen <mclasen@redhat.com> - 20-2
 - Apply upstream patch to not send untranslated messages to plymouth
 
