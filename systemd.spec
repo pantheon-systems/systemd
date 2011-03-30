@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        21
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -157,10 +157,7 @@ if [ $1 -eq 1 ] ; then
         # Enable the services we install by default.
         /bin/systemctl enable \
                 getty@.service \
-                getty.target \
                 remote-fs.target \
-                quotaon.service \
-                quotacheck.service \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service \
                 hwclock-load.service > /dev/null 2>&1 || :
@@ -170,10 +167,7 @@ fi
 if [ $1 -eq 0 ] ; then
         /bin/systemctl disable \
                 getty@.service \
-                getty.target \
                 remote-fs.target \
-                quotaon.service \
-                quotacheck.service \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service \
                 hwclock-load.service > /dev/null 2>&1 || :
@@ -259,6 +253,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Wed Mar 30 2011 Lennart Poettering <lpoetter@redhat.com> - 21-2
+- The quota services are now pulled in by mount points, hence no need to enable them explicitly
+
 * Tue Mar 29 2011 Lennart Poettering <lpoetter@redhat.com> - 21-1
 - New upstream release
 
