@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        21
-Release:        2%{?dist}
+Version:        22
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -128,7 +128,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %post
 # Should move to some other place eventually
-mkdir -p -m 755 /run || :
+/bin/mkdir -p -m 755 /run || :
+/sbin/restorecon /run || :
 
 /bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
@@ -196,9 +197,11 @@ fi
 /bin/systemd-machine-id-setup
 /usr/bin/systemd-nspawn
 /usr/bin/systemd-stdio-bridge
+/usr/bin/systemd-analyze
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 %dir /lib/systemd/system-generators
+%dir /lib/systemd/system-shutdown
 /lib/systemd/system-generators/systemd-cryptsetup-generator
 /lib/systemd/system-generators/systemd-getty-generator
 /%{_lib}/security/pam_systemd.so
@@ -227,6 +230,8 @@ fi
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
 %dir %{_sysconfdir}/tmpfiles.d
+%dir %{_sysconfdir}/sysctl.d
+%dir %{_sysconfdir}/modules-load.d
 %dir %{_sysconfdir}/bash_completion.d
 %dir /lib/systemd
 /lib/systemd/system
@@ -253,6 +258,9 @@ fi
 %{_mandir}/man1/systemadm.*
 
 %changelog
+* Fri Apr  1 2011 Lennart Poettering <lpoetter@redhat.com> - 22-1
+- New upstream release
+
 * Wed Mar 30 2011 Lennart Poettering <lpoetter@redhat.com> - 21-2
 - The quota services are now pulled in by mount points, hence no need to enable them explicitly
 
