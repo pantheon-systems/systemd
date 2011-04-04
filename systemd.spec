@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        22
+Version:        23
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -29,11 +29,12 @@ Requires:       dbus >= 1.3.2
 Requires:       udev >= 160
 Requires:       libudev >= 160
 Requires:       initscripts >= 9.22
-Conflicts:      selinux-policy < 3.8.7
+Conflicts:      selinux-policy < 3.9.16-10.fc15
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
+Source2:        systemd-sysv-convert
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -76,6 +77,14 @@ Requires:       polkit
 
 %description gtk
 Graphical front-end for systemd.
+
+%package sysv
+Group:          System Environment/Base
+Summary:        SysV tools for systemd
+Requires:       %{name} = %{version}-%{release}
+
+%description sysv
+SysV compatibility tools for systemd
 
 %prep
 %setup -q
@@ -122,6 +131,9 @@ mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
 # Install RPM macros file for systemd
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
 install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
+
+# Install SysV conversion tool for systemd
+install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -189,6 +201,7 @@ fi
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/tmpfiles.d/systemd.conf
 %{_sysconfdir}/tmpfiles.d/x11.conf
+%{_sysconfdir}/tmpfiles.d/legacy.conf
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 /bin/systemd
 /bin/systemd-notify
@@ -219,7 +232,7 @@ fi
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
-%{_datadir}/systemd
+%{_libdir}/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
@@ -232,6 +245,7 @@ fi
 %dir %{_sysconfdir}/tmpfiles.d
 %dir %{_sysconfdir}/sysctl.d
 %dir %{_sysconfdir}/modules-load.d
+%dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/bash_completion.d
 %dir /lib/systemd
 /lib/systemd/system
@@ -257,7 +271,14 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_mandir}/man1/systemadm.*
 
+%files sysv
+%{_bindir}/systemd-sysv-convert
+
 %changelog
+* Tue Apr  5 2011 Lennart Poettering <lpoetter@redhat.com> - 23-1
+- New upstream release
+- Include systemd-sysv-convert
+
 * Fri Apr  1 2011 Lennart Poettering <lpoetter@redhat.com> - 22-1
 - New upstream release
 
