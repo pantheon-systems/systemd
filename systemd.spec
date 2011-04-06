@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        23
+Version:        24
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -25,11 +25,12 @@ BuildRequires:  libtool
 BuildRequires:  make
 Requires(post): authconfig
 Requires:       systemd-units = %{version}-%{release}
-Requires:       dbus >= 1.3.2
-Requires:       udev >= 160
+Requires:       dbus >= 1.4.6-3.fc15
+Requires:       udev >= 167
 Requires:       libudev >= 160
-Requires:       initscripts >= 9.22
-Conflicts:      selinux-policy < 3.9.16-10.fc15
+Requires:       initscripts >= 9.28
+Requires:       filesystem >= 2.4.40
+Conflicts:      selinux-policy < 3.9.16-12.fc15
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
@@ -139,10 +140,6 @@ install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 rm -rf $RPM_BUILD_ROOT
 
 %post
-# Should move to some other place eventually
-/bin/mkdir -p -m 755 /run || :
-/sbin/restorecon /run || :
-
 /bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
@@ -232,7 +229,7 @@ fi
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
-%{_libdir}/systemd
+%{_libdir}/../lib/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
@@ -275,6 +272,13 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Apr  6 2011 Lennart Poettering <lpoetter@redhat.com> - 24-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=694079
+- https://bugzilla.redhat.com/show_bug.cgi?id=693289
+- https://bugzilla.redhat.com/show_bug.cgi?id=693274
+- https://bugzilla.redhat.com/show_bug.cgi?id=693161
+
 * Tue Apr  5 2011 Lennart Poettering <lpoetter@redhat.com> - 23-1
 - New upstream release
 - Include systemd-sysv-convert
