@@ -134,10 +134,10 @@ rm -rf $RPM_BUILD_ROOT
 
 # Make sure pam_systemd is enabled
 if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac ; then
-        /usr/sbin/authconfig --update >/dev/null 2>&1 || :
+        /usr/sbin/authconfig --update --nostart >/dev/null 2>&1 || :
 
         # Try harder
-        /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac || /usr/sbin/authconfig --updateall >/dev/null 2>&1 || :
+        /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
 fi
 
 %post units
