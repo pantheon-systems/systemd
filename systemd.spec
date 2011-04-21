@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        24
+Version:        25
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -121,13 +121,19 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
-touch %{buildroot}%{_sysconfdir}/machine-id
-
 # Make sure these directories are properly owned
 mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
+
+# Create new-style configuration files so that we can ghost-own them
+touch %{buildroot}%{_sysconfdir}/hostname
+touch %{buildroot}%{_sysconfdir}/vconsole.conf
+touch %{buildroot}%{_sysconfdir}/locale.conf
+touch %{buildroot}%{_sysconfdir}/os-release
+touch %{buildroot}%{_sysconfdir}/machine-id
+touch %{buildroot}%{_sysconfdir}/machine-info
 
 # Install RPM macros file for systemd
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
@@ -193,13 +199,19 @@ fi
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %dir %{_sysconfdir}/systemd/user
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/tmpfiles.d/systemd.conf
 %{_sysconfdir}/tmpfiles.d/x11.conf
 %{_sysconfdir}/tmpfiles.d/legacy.conf
+%ghost %config(noreplace) %{_sysconfdir}/hostname
+%ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
+%ghost %config(noreplace) %{_sysconfdir}/locale.conf
+%ghost %config(noreplace) %{_sysconfdir}/os-release
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
+%ghost %config(noreplace) %{_sysconfdir}/machine-info
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
@@ -232,8 +244,11 @@ fi
 %{_libdir}/../lib/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.hostname1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_docdir}/systemd
+%{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
+%{_datadir}/polkit-1/actions/org.freedesktop.hostname1.policy
 
 %files units
 %defattr(-,root,root,-)
@@ -265,13 +280,22 @@ fi
 %defattr(-,root,root,-)
 %{_bindir}/systemadm
 %{_bindir}/systemd-gnome-ask-password-agent
-%{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_mandir}/man1/systemadm.*
 
 %files sysv
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Thu Apr 21 2011 Lennart Poettering <lpoetter@redhat.com> - 25-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=694788
+- https://bugzilla.redhat.com/show_bug.cgi?id=694321
+- https://bugzilla.redhat.com/show_bug.cgi?id=690253
+- https://bugzilla.redhat.com/show_bug.cgi?id=688661
+- https://bugzilla.redhat.com/show_bug.cgi?id=682662
+- https://bugzilla.redhat.com/show_bug.cgi?id=678555
+- https://bugzilla.redhat.com/show_bug.cgi?id=628004
+
 * Wed Apr  6 2011 Lennart Poettering <lpoetter@redhat.com> - 24-1
 - New upstream release
 - https://bugzilla.redhat.com/show_bug.cgi?id=694079
