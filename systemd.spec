@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        25
+Version:        26
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -203,9 +203,9 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %dir %{_sysconfdir}/systemd/user
 %{_sysconfdir}/xdg/systemd
-%{_sysconfdir}/tmpfiles.d/systemd.conf
-%{_sysconfdir}/tmpfiles.d/x11.conf
-%{_sysconfdir}/tmpfiles.d/legacy.conf
+%{_libdir}/../lib/tmpfiles.d/systemd.conf
+%{_libdir}/../lib/tmpfiles.d/x11.conf
+%{_libdir}/../lib/tmpfiles.d/legacy.conf
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
@@ -237,6 +237,7 @@ fi
 %{_bindir}/systemd-cgls
 %{_mandir}/man1/*
 %exclude %{_mandir}/man1/systemctl.*
+%exclude %{_mandir}/man1/systemadm.*
 %{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
@@ -260,6 +261,10 @@ fi
 %dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/bash_completion.d
 %dir /lib/systemd
+%dir %{_libdir}/../lib/tmpfiles.d
+%dir %{_libdir}/../lib/sysctl.d
+%dir %{_libdir}/../lib/modules-load.d
+%dir %{_libdir}/../lib/binfmt.d
 /lib/systemd/system
 /bin/systemctl
 /bin/systemd-tmpfiles
@@ -286,6 +291,14 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Sat Apr 30 2011 Lennart Poettering <lpoetter@redhat.com> - 26-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=699394
+- https://bugzilla.redhat.com/show_bug.cgi?id=698198
+- https://bugzilla.redhat.com/show_bug.cgi?id=698674
+- https://bugzilla.redhat.com/show_bug.cgi?id=699114
+- https://bugzilla.redhat.com/show_bug.cgi?id=699128
+
 * Thu Apr 21 2011 Lennart Poettering <lpoetter@redhat.com> - 25-1
 - New upstream release
 - https://bugzilla.redhat.com/show_bug.cgi?id=694788
