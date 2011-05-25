@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        26
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -36,6 +36,10 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
 Source2:        systemd-sysv-convert
+Patch0:         0001-dbus-common-fix-segfault-when-a-DBus-message-has-no-.patch
+Patch1:         0001-readahead-collect-ignore-EACCES-for-fanotify.patch
+Patch2:         0001-vconsole-use-open_terminal-instead-of-open.patch
+Patch3:         0001-pam-downgrade-a-few-log-msgs.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -43,8 +47,8 @@ Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
 Provides:       systemd-sysvinit
 Obsoletes:      systemd-sysvinit
-Obsoletes:      upstart < 0.6.5-11
-Obsoletes:      upstart-sysvinit < 0.6.5-11
+Obsoletes:      upstart < 1.2-3
+Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
@@ -89,6 +93,10 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -291,6 +299,13 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed May 25 2011 Lennart Poettering <lpoetter@redhat.com> - 26-2
+- Bugfix release
+- https://bugzilla.redhat.com/show_bug.cgi?id=707507
+- https://bugzilla.redhat.com/show_bug.cgi?id=707483
+- https://bugzilla.redhat.com/show_bug.cgi?id=705427
+- https://bugzilla.redhat.com/show_bug.cgi?id=707577
+
 * Sat Apr 30 2011 Lennart Poettering <lpoetter@redhat.com> - 26-1
 - New upstream release
 - https://bugzilla.redhat.com/show_bug.cgi?id=699394
