@@ -1,0 +1,41 @@
+From 53d5582fa006b0eb528f5dc3f4ba978abd8ac5a3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 May 2011 23:31:06 +0200
+Subject: [PATCH] pam: downgrade a few log msgs
+
+---
+ src/pam-module.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/pam-module.c b/src/pam-module.c
+index 93eb929..03864fe 100644
+--- a/src/pam-module.c
++++ b/src/pam-module.c
+@@ -505,7 +505,7 @@ _public_ PAM_EXTERN int pam_sm_open_session(
+                 goto finish;
+         }
+ 
+-        pam_syslog(handle, LOG_INFO, "Moving new user session for %s into control group %s.", username, buf);
++        pam_syslog(handle, LOG_DEBUG, "Moving new user session for %s into control group %s.", username, buf);
+ 
+         if ((r = create_user_group(handle, SYSTEMD_CGROUP_CONTROLLER, buf, pw, true, true)) != PAM_SUCCESS)
+                 goto finish;
+@@ -676,13 +676,13 @@ _public_ PAM_EXTERN int pam_sm_close_session(
+                 }
+ 
+                 if (kill_session && check_user_lists(handle, pw->pw_uid, kill_only_users, kill_exclude_users))  {
+-                        pam_syslog(handle, LOG_INFO, "Killing remaining processes of user session %s of %s.", id, username);
++                        pam_syslog(handle, LOG_DEBUG, "Killing remaining processes of user session %s of %s.", id, username);
+ 
+                         /* Kill processes in session cgroup, and delete it */
+                         if ((r = cg_kill_recursive_and_wait(SYSTEMD_CGROUP_CONTROLLER, session_path, true)) < 0)
+                                 pam_syslog(handle, LOG_ERR, "Failed to kill session cgroup: %s", strerror(-r));
+                 } else {
+-                        pam_syslog(handle, LOG_INFO, "Moving remaining processes of user session %s of %s into control group %s.", id, username, nosession_path);
++                        pam_syslog(handle, LOG_DEBUG, "Moving remaining processes of user session %s of %s into control group %s.", id, username, nosession_path);
+ 
+                         /* Migrate processes from session to user
+                          * cgroup. First, try to create the user group
+-- 
+1.7.5.2
+

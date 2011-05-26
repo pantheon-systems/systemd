@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        20
-Release:        1%{?dist}
+Version:        26
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -25,23 +25,30 @@ BuildRequires:  libtool
 BuildRequires:  make
 Requires(post): authconfig
 Requires:       systemd-units = %{version}-%{release}
-Requires:       dbus >= 1.3.2
-Requires:       udev >= 160
+Requires:       dbus >= 1.4.6-3.fc15
+Requires:       udev >= 167
 Requires:       libudev >= 160
-Requires:       initscripts >= 9.22
-Conflicts:      selinux-policy < 3.8.7
+Requires:       initscripts >= 9.28
+Requires:       filesystem >= 2.4.40
+Conflicts:      selinux-policy < 3.9.16-12.fc15
 Requires:       kernel >= 2.6.35.2-9.fc14
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
+Source2:        systemd-sysv-convert
+Patch0:         0001-dbus-common-fix-segfault-when-a-DBus-message-has-no-.patch
+Patch1:         0001-readahead-collect-ignore-EACCES-for-fanotify.patch
+Patch2:         0001-vconsole-use-open_terminal-instead-of-open.patch
+Patch3:         0001-pam-downgrade-a-few-log-msgs.patch
+
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
 Provides:       systemd-sysvinit
 Obsoletes:      systemd-sysvinit
-Obsoletes:      upstart < 0.6.5-11
-Obsoletes:      upstart-sysvinit < 0.6.5-11
+Obsoletes:      upstart < 1.2-3
+Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
@@ -76,8 +83,20 @@ Requires:       polkit
 %description gtk
 Graphical front-end for systemd.
 
+%package sysv
+Group:          System Environment/Base
+Summary:        SysV tools for systemd
+Requires:       %{name} = %{version}-%{release}
+
+%description sysv
+SysV compatibility tools for systemd
+
 %prep
 %setup -q
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -110,20 +129,26 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
-touch %{buildroot}%{_sysconfdir}/machine-id
-
 # Make sure these directories are properly owned
 mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
 
+# Create new-style configuration files so that we can ghost-own them
+touch %{buildroot}%{_sysconfdir}/hostname
+touch %{buildroot}%{_sysconfdir}/vconsole.conf
+touch %{buildroot}%{_sysconfdir}/locale.conf
+touch %{buildroot}%{_sysconfdir}/os-release
+touch %{buildroot}%{_sysconfdir}/machine-id
+touch %{buildroot}%{_sysconfdir}/machine-info
+
 # Install RPM macros file for systemd
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
 install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
 
-# Mask legacy stuff
-ln -s rescue.service %{buildroot}/lib/systemd/system/single.service
+# Install SysV conversion tool for systemd
+install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -156,10 +181,7 @@ if [ $1 -eq 1 ] ; then
         # Enable the services we install by default.
         /bin/systemctl enable \
                 getty@.service \
-                getty.target \
                 remote-fs.target \
-                quotaon.service \
-                quotacheck.service \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service \
                 hwclock-load.service > /dev/null 2>&1 || :
@@ -169,10 +191,7 @@ fi
 if [ $1 -eq 0 ] ; then
         /bin/systemctl disable \
                 getty@.service \
-                getty.target \
                 remote-fs.target \
-                quotaon.service \
-                quotacheck.service \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service \
                 hwclock-load.service > /dev/null 2>&1 || :
@@ -188,21 +207,33 @@ fi
 %files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %dir %{_sysconfdir}/systemd/user
 %{_sysconfdir}/xdg/systemd
-%{_sysconfdir}/tmpfiles.d/systemd.conf
-%{_sysconfdir}/tmpfiles.d/x11.conf
+%{_libdir}/../lib/tmpfiles.d/systemd.conf
+%{_libdir}/../lib/tmpfiles.d/x11.conf
+%{_libdir}/../lib/tmpfiles.d/legacy.conf
+%ghost %config(noreplace) %{_sysconfdir}/hostname
+%ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
+%ghost %config(noreplace) %{_sysconfdir}/locale.conf
+%ghost %config(noreplace) %{_sysconfdir}/os-release
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
+%ghost %config(noreplace) %{_sysconfdir}/machine-info
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
 /bin/systemd-tty-ask-password-agent
 /bin/systemd-machine-id-setup
+/usr/bin/systemd-nspawn
+/usr/bin/systemd-stdio-bridge
+/usr/bin/systemd-analyze
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 %dir /lib/systemd/system-generators
+%dir /lib/systemd/system-shutdown
 /lib/systemd/system-generators/systemd-cryptsetup-generator
+/lib/systemd/system-generators/systemd-getty-generator
 /%{_lib}/security/pam_systemd.so
 /sbin/init
 /sbin/reboot
@@ -214,23 +245,34 @@ fi
 %{_bindir}/systemd-cgls
 %{_mandir}/man1/*
 %exclude %{_mandir}/man1/systemctl.*
+%exclude %{_mandir}/man1/systemadm.*
 %{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
-%{_datadir}/systemd
+%{_libdir}/../lib/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.hostname1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_docdir}/systemd
+%{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
+%{_datadir}/polkit-1/actions/org.freedesktop.hostname1.policy
 
 %files units
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
 %dir %{_sysconfdir}/tmpfiles.d
+%dir %{_sysconfdir}/sysctl.d
+%dir %{_sysconfdir}/modules-load.d
+%dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/bash_completion.d
 %dir /lib/systemd
+%dir %{_libdir}/../lib/tmpfiles.d
+%dir %{_libdir}/../lib/sysctl.d
+%dir %{_libdir}/../lib/modules-load.d
+%dir %{_libdir}/../lib/binfmt.d
 /lib/systemd/system
 /bin/systemctl
 /bin/systemd-tmpfiles
@@ -251,10 +293,60 @@ fi
 %defattr(-,root,root,-)
 %{_bindir}/systemadm
 %{_bindir}/systemd-gnome-ask-password-agent
-%{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_mandir}/man1/systemadm.*
 
+%files sysv
+%{_bindir}/systemd-sysv-convert
+
 %changelog
+* Wed May 25 2011 Lennart Poettering <lpoetter@redhat.com> - 26-2
+- Bugfix release
+- https://bugzilla.redhat.com/show_bug.cgi?id=707507
+- https://bugzilla.redhat.com/show_bug.cgi?id=707483
+- https://bugzilla.redhat.com/show_bug.cgi?id=705427
+- https://bugzilla.redhat.com/show_bug.cgi?id=707577
+
+* Sat Apr 30 2011 Lennart Poettering <lpoetter@redhat.com> - 26-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=699394
+- https://bugzilla.redhat.com/show_bug.cgi?id=698198
+- https://bugzilla.redhat.com/show_bug.cgi?id=698674
+- https://bugzilla.redhat.com/show_bug.cgi?id=699114
+- https://bugzilla.redhat.com/show_bug.cgi?id=699128
+
+* Thu Apr 21 2011 Lennart Poettering <lpoetter@redhat.com> - 25-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=694788
+- https://bugzilla.redhat.com/show_bug.cgi?id=694321
+- https://bugzilla.redhat.com/show_bug.cgi?id=690253
+- https://bugzilla.redhat.com/show_bug.cgi?id=688661
+- https://bugzilla.redhat.com/show_bug.cgi?id=682662
+- https://bugzilla.redhat.com/show_bug.cgi?id=678555
+- https://bugzilla.redhat.com/show_bug.cgi?id=628004
+
+* Wed Apr  6 2011 Lennart Poettering <lpoetter@redhat.com> - 24-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=694079
+- https://bugzilla.redhat.com/show_bug.cgi?id=693289
+- https://bugzilla.redhat.com/show_bug.cgi?id=693274
+- https://bugzilla.redhat.com/show_bug.cgi?id=693161
+
+* Tue Apr  5 2011 Lennart Poettering <lpoetter@redhat.com> - 23-1
+- New upstream release
+- Include systemd-sysv-convert
+
+* Fri Apr  1 2011 Lennart Poettering <lpoetter@redhat.com> - 22-1
+- New upstream release
+
+* Wed Mar 30 2011 Lennart Poettering <lpoetter@redhat.com> - 21-2
+- The quota services are now pulled in by mount points, hence no need to enable them explicitly
+
+* Tue Mar 29 2011 Lennart Poettering <lpoetter@redhat.com> - 21-1
+- New upstream release
+
+* Mon Mar 28 2011 Matthias Clasen <mclasen@redhat.com> - 20-2
+- Apply upstream patch to not send untranslated messages to plymouth
+
 * Tue Mar  8 2011 Lennart Poettering <lpoetter@redhat.com> - 20-1
 - New upstream release
 
