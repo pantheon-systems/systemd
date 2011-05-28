@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        28
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -32,6 +32,7 @@ Requires:       initscripts >= 9.28
 Requires:       filesystem >= 2.4.40
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Requires:       kernel >= 2.6.35.2-9.fc14
+Requires:       nss-myhostname
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
@@ -175,8 +176,7 @@ if [ $1 -eq 1 ] ; then
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service \
-                hwclock-load.service > /dev/null 2>&1 || :
+                systemd-readahead-collect.service > /dev/null 2>&1 || :
 fi
 
 %preun units
@@ -185,8 +185,7 @@ if [ $1 -eq 0 ] ; then
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service \
-                hwclock-load.service > /dev/null 2>&1 || :
+                systemd-readahead-collect.service > /dev/null 2>&1 || :
 
         /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
 fi
@@ -291,6 +290,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Sat May 28 2011 Lennart Poettering <lpoetter@redhat.com> - 28-2
+- Pull in nss-myhostname
+
 * Thu May 26 2011 Lennart Poettering <lpoetter@redhat.com> - 28-1
 - New upstream release
 
