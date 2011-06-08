@@ -1,0 +1,52 @@
+From ef9d7dca5463e64510e174d55a869b4d5a3c4e84 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 7 Jun 2011 00:48:16 +0200
+Subject: [PATCH 4/4] selinux: selinuxfs can be mounted on /sys/fs/selinux
+
+The kernel now provides the /sys/fs/selinux mountpoint and libselinux
+prefers it if it's available.
+
+systemd currently tests only for /selinux and this leads to an infinite
+loop of policy reloads in the latest Rawhide.
+
+Fix it by checking both possible mountpoints.
+Also add the new path to ignore_paths[].
+
+/selinux appears also in nspawn.c. I don't think it's necessary to
+change it there at this point.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=711015
+---
+ src/mount-setup.c   |    1 +
+ src/selinux-setup.c |    3 ++-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/src/mount-setup.c b/src/mount-setup.c
+index 48c32ea..6feee6a 100644
+--- a/src/mount-setup.c
++++ b/src/mount-setup.c
+@@ -63,6 +63,7 @@ static const MountPoint mount_table[] = {
+  * we just list them here so that we know that we should ignore them */
+ 
+ static const char * const ignore_paths[] = {
++        "/sys/fs/selinux",
+         "/selinux",
+         "/proc/bus/usb"
+ };
+diff --git a/src/selinux-setup.c b/src/selinux-setup.c
+index c32c7ad..9ff27dc 100644
+--- a/src/selinux-setup.c
++++ b/src/selinux-setup.c
+@@ -39,7 +39,8 @@ int selinux_setup(char *const argv[]) {
+        int enforce = 0;
+ 
+        /* Already initialized? */
+-       if (path_is_mount_point("/selinux") > 0)
++       if (path_is_mount_point("/sys/fs/selinux") > 0 ||
++           path_is_mount_point("/selinux") > 0)
+                return 0;
+ 
+        /* Before we load the policy we create a flag file to ensure
+-- 
+1.7.4.4
+

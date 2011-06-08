@@ -1,0 +1,33 @@
+From 9a66640832d103f906c2ef609a1d19d43fc542f6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>
+Date: Fri, 27 May 2011 08:24:22 +0300
+Subject: [PATCH 1/4] exec: Fix number of unit types
+
+There are four unit types mentioned in here, not three
+---
+ man/systemd.exec.xml |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index de1d9bf..7b4f7e3 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -57,13 +57,13 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-                <para>Unit configuration files for services, sockets
++                <para>Unit configuration files for services, sockets,
+                 mount points and swap devices share a subset of
+                 configuration options which define the execution
+                 environment of spawned processes.</para>
+ 
+                 <para>This man page lists the configuration options
+-                shared by these three unit types. See
++                shared by these four unit types. See
+                 <citerefentry><refentrytitle>systemd.unit</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                 for the common options of all unit configuration
+                 files, and
+-- 
+1.7.4.4
+
