@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        28
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -37,6 +37,10 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
 Source2:        systemd-sysv-convert
+Patch1:         0001-exec-Fix-number-of-unit-types.patch
+Patch2:         0002-systemctl-fix-double-unref-of-a-dbus-message.patch
+Patch3:         0003-cryptsetup-generator-fix-etc-cryptsetup-options.patch
+Patch4:         0004-selinux-selinuxfs-can-be-mounted-on-sys-fs-selinux.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -90,6 +94,10 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -290,6 +298,12 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jun 08 2011 Michal Schmidt <mschmidt@redhat.com> 28-3
+- Apply patches from current upstream
+- https://bugzilla.redhat.com/show_bug.cgi?id=709909
+- https://bugzilla.redhat.com/show_bug.cgi?id=710839
+- https://bugzilla.redhat.com/show_bug.cgi?id=711015
+
 * Sat May 28 2011 Lennart Poettering <lpoetter@redhat.com> - 28-2
 - Pull in nss-myhostname
 
