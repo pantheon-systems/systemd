@@ -1,0 +1,25 @@
+From dc725264f34f3a81eb47b7472f4484f849e0461d Mon Sep 17 00:00:00 2001
+From: Frederic Crozat <fcrozat@suse.com>
+Date: Wed, 8 Jun 2011 17:34:22 +0200
+Subject: [PATCH 5/6] enable chkconfig support in systemctl for openSUSE
+
+---
+ src/systemctl.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/systemctl.c b/src/systemctl.c
+index a82cce4..faca797 100644
+--- a/src/systemctl.c
++++ b/src/systemctl.c
+@@ -4089,7 +4089,7 @@ static int install_info_apply(const char *verb, LookupPaths *paths, InstallInfo
+         }
+ 
+         if (!f) {
+-#if (defined(TARGET_FEDORA) || defined(TARGET_MANDRIVA)) || defined(TARGET_MEEGO) && defined (HAVE_SYSV_COMPAT)
++#if (defined(TARGET_FEDORA) || defined(TARGET_MANDRIVA) || defined(TARGET_SUSE)) || defined(TARGET_MEEGO) && defined (HAVE_SYSV_COMPAT)
+ 
+                 if (endswith(i->name, ".service")) {
+                         char *sysv;
+-- 
+1.7.4.4
+

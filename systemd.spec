@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        28
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -41,6 +41,8 @@ Patch1:         0001-exec-Fix-number-of-unit-types.patch
 Patch2:         0002-systemctl-fix-double-unref-of-a-dbus-message.patch
 Patch3:         0003-cryptsetup-generator-fix-etc-cryptsetup-options.patch
 Patch4:         0004-selinux-selinuxfs-can-be-mounted-on-sys-fs-selinux.patch
+Patch5:         0005-enable-chkconfig-support-in-systemctl-for-openSUSE.patch
+Patch6:         0006-readahead-common-fix-total-memory-size-detection.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -98,6 +100,8 @@ SysV compatibility tools for systemd
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
+%patch6 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora
@@ -298,7 +302,11 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
-* Wed Jun 08 2011 Michal Schmidt <mschmidt@redhat.com> 28-3
+* Mon Jun 13 2011 Michal Schmidt <mschmidt@redhat.com> - 28-4
+- Apply patches from current upstream.
+- Fixes memory size detection on 32-bit with >4GB RAM (BZ712341)
+
+* Wed Jun 08 2011 Michal Schmidt <mschmidt@redhat.com> - 28-3
 - Apply patches from current upstream
 - https://bugzilla.redhat.com/show_bug.cgi?id=709909
 - https://bugzilla.redhat.com/show_bug.cgi?id=710839

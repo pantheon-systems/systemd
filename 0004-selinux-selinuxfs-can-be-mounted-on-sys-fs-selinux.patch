@@ -1,7 +1,7 @@
 From ef9d7dca5463e64510e174d55a869b4d5a3c4e84 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 7 Jun 2011 00:48:16 +0200
-Subject: [PATCH 4/4] selinux: selinuxfs can be mounted on /sys/fs/selinux
+Subject: [PATCH 4/6] selinux: selinuxfs can be mounted on /sys/fs/selinux
 
 The kernel now provides the /sys/fs/selinux mountpoint and libselinux
 prefers it if it's available.

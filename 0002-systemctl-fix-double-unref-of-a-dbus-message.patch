@@ -1,7 +1,7 @@
 From 78e39b43b89c6bf9ce401d6030939a004a23c850 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Sun, 5 Jun 2011 17:22:37 +0200
-Subject: [PATCH 2/4] systemctl: fix double unref of a dbus message
+Subject: [PATCH 2/6] systemctl: fix double unref of a dbus message
 
 ---
  src/systemctl.c |    1 +

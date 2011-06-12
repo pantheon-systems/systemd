@@ -1,0 +1,33 @@
+From 597b99b09a007dfa8ddfce31c480765b0c7baa6a Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 10 Jun 2011 14:37:21 +0200
+Subject: [PATCH 6/6] readahead-common: fix total memory size detection
+
+sysinfo returns the total memory size in multiples of mem_unit bytes.
+As long as the size in bytes fits into unsigned long, the kernel uses
+mem_unit = 1, but this is not true on i386 with more than 4 GB RAM.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=712341
+---
+ src/readahead-common.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/src/readahead-common.c b/src/readahead-common.c
+index 8a75b2e..f0d57b4 100644
+--- a/src/readahead-common.c
++++ b/src/readahead-common.c
+@@ -154,9 +154,8 @@ bool enough_ram(void) {
+ 
+         assert_se(sysinfo(&si) >= 0);
+ 
+-        return si.totalram > 127 * 1024*1024; /* Enable readahead only
+-                                               * with at least 128MB
+-                                               * memory */
++        /* Enable readahead only with at least 128MB memory */
++        return si.totalram > 127 * 1024*1024 / si.mem_unit;
+ }
+ 
+ int open_inotify(void) {
+-- 
+1.7.4.4
+

@@ -1,7 +1,7 @@
 From 9a66640832d103f906c2ef609a1d19d43fc542f6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>
 Date: Fri, 27 May 2011 08:24:22 +0300
-Subject: [PATCH 1/4] exec: Fix number of unit types
+Subject: [PATCH 1/6] exec: Fix number of unit types
 
 There are four unit types mentioned in here, not three
 ---
