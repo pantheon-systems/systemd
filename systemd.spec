@@ -24,6 +24,7 @@ BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
 BuildRequires:  make
+BuildRequires:  intltool >= 0.40.0
 Requires(post): authconfig
 Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.4.6-3.fc15
