@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        29
+Version:        30
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -19,6 +19,7 @@ BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
 BuildRequires:  libnotify-devel >= 0.7
+BuildRequires:  libacl-devel
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
@@ -199,7 +200,12 @@ fi
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.locale1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.timedate1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
+%config(noreplace) %{_sysconfdir}/systemd/user.conf
+%config(noreplace) %{_sysconfdir}/systemd/systemd-logind.conf
 %dir %{_sysconfdir}/systemd/user
 %{_sysconfdir}/xdg/systemd
 %{_libdir}/../lib/tmpfiles.d/systemd.conf
@@ -216,6 +222,7 @@ fi
 /bin/systemd-ask-password
 /bin/systemd-tty-ask-password-agent
 /bin/systemd-machine-id-setup
+/bin/systemd-loginctl
 /usr/bin/systemd-nspawn
 /usr/bin/systemd-stdio-bridge
 /usr/bin/systemd-analyze
@@ -245,10 +252,19 @@ fi
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.hostname1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.login1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.locale1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.timedate1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
+%{_datadir}/dbus-1/interfaces/org.freedesktop.hostname1.xml
+%{_datadir}/dbus-1/interfaces/org.freedesktop.locale1.xml
+%{_datadir}/dbus-1/interfaces/org.freedesktop.timedate1.xml
 %{_docdir}/systemd
 %{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.hostname1.policy
+%{_datadir}/polkit-1/actions/org.freedesktop.login1.policy
+%{_datadir}/polkit-1/actions/org.freedesktop.locale1.policy
+%{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 
 %files units
 %defattr(-,root,root,-)
@@ -290,6 +306,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jul 13 2011 Lennart Poettering <lpoetter@redhat.com> - 30-1
+- New upstream release
+
 * Thu Jun 16 2011 Lennart Poettering <lpoetter@redhat.com> - 29-1
 - New upstream release
 
