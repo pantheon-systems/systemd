@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        30
+Version:        31
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -39,6 +39,8 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
 Source2:        systemd-sysv-convert
+# Stop-gap, just to ensure things work out-of-the-box for this driver.
+Source3:        udlfb.conf
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -73,6 +75,15 @@ Requires(post): gawk
 Basic configuration files, directories and installation tool for the systemd
 system and service manager.
 
+%package devel
+Group:          System Environment/Base
+Summary:        Development headers for systemd
+Requires:       %{name} = %{version}-%{release}
+Requires:       pkgconfig
+
+%description devel
+Development headers and auxiliary files for developing applications for systemd.
+
 %package gtk
 Group:          System Environment/Base
 Summary:        Graphical frontend for systemd
@@ -94,7 +105,7 @@ SysV compatibility tools for systemd
 %setup -q
 
 %build
-%configure --with-rootdir= --with-distro=fedora
+%configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
 make %{?_smp_mflags}
 
 %install
@@ -144,6 +155,10 @@ install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
 
 # Install SysV conversion tool for systemd
 install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
+
+# Install modprobe fragment
+mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
+install -m 0755 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -207,7 +222,6 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/systemd-logind.conf
-%dir %{_sysconfdir}/systemd/user
 %{_sysconfdir}/xdg/systemd
 %{_libdir}/../lib/tmpfiles.d/systemd.conf
 %{_libdir}/../lib/tmpfiles.d/x11.conf
@@ -229,11 +243,11 @@ fi
 /usr/bin/systemd-analyze
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
-%dir /lib/systemd/system-generators
-%dir /lib/systemd/system-shutdown
 /lib/systemd/system-generators/systemd-cryptsetup-generator
 /lib/systemd/system-generators/systemd-getty-generator
 /%{_lib}/security/pam_systemd.so
+/%{_lib}/libsystemd-daemon.so.*
+/%{_lib}/libsystemd-login.so.*
 /sbin/init
 /sbin/reboot
 /sbin/halt
@@ -266,17 +280,21 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.login1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.locale1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
+%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 
 %files units
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
+%dir %{_sysconfdir}/systemd/user
 %dir %{_sysconfdir}/tmpfiles.d
 %dir %{_sysconfdir}/sysctl.d
 %dir %{_sysconfdir}/modules-load.d
 %dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/bash_completion.d
 %dir /lib/systemd
+%dir /lib/systemd/system-generators
+%dir /lib/systemd/system-shutdown
 %dir %{_libdir}/../lib/tmpfiles.d
 %dir %{_libdir}/../lib/sysctl.d
 %dir %{_libdir}/../lib/modules-load.d
@@ -303,10 +321,23 @@ fi
 %{_bindir}/systemd-gnome-ask-password-agent
 %{_mandir}/man1/systemadm.*
 
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/libsystemd-daemon.so
+%{_libdir}/libsystemd-login.so
+%{_includedir}/systemd/sd-login.h
+%{_includedir}/systemd/sd-daemon.h
+%{_libdir}/pkgconfig/libsystemd-daemon.pc
+%{_libdir}/pkgconfig/libsystemd-login.pc
+
 %files sysv
+%defattr(-,root,root,-)
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jul 27 2011 Lennart Poettering <lpoetter@redhat.com> - 31-1
+- New upstream release
+
 * Wed Jul 13 2011 Lennart Poettering <lpoetter@redhat.com> - 30-1
 - New upstream release
 
