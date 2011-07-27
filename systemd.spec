@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        31
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -158,7 +158,7 @@ install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 # Install modprobe fragment
 mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
-install -m 0755 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
+install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -173,6 +173,11 @@ if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac ; then
 
         # Try harder
         /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
+fi
+
+%postun
+if [ $1 -ge 1 ] ; then
+        /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
 fi
 
 %post units
@@ -335,6 +340,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jul 27 2011 Lennart Poettering <lpoetter@redhat.com> - 31-2
+- Fix access mode of modprobe file, restart logind after upgrade
+
 * Wed Jul 27 2011 Lennart Poettering <lpoetter@redhat.com> - 31-1
 - New upstream release
 
