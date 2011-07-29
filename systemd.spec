@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        31
-Release:        2%{?dist}
+Version:        32
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -340,6 +340,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Fri Jul 29 2011 Lennart Poettering <lpoetter@redhat.com> - 32-1
+- New upstream release
+
 * Wed Jul 27 2011 Lennart Poettering <lpoetter@redhat.com> - 31-2
 - Fix access mode of modprobe file, restart logind after upgrade
 
