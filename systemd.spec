@@ -1,7 +1,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        32
+Version:        33
 Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -340,6 +340,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Aug  3 2011 Lennart Poettering <lpoetter@redhat.com> - 33-1
+- New upstream release
+
 * Fri Jul 29 2011 Lennart Poettering <lpoetter@redhat.com> - 32-1
 - New upstream release
 
