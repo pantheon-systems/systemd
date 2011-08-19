@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        33
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -44,6 +44,7 @@ Source1:        macros.systemd
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
+Patch1: 	systemd-git-e191553d1dc80cd6d65d05f0cb29f8967fab6983.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -106,6 +107,7 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
+%patch1 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
@@ -343,6 +345,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Fri Aug 19 2011 Harald Hoyer <harald@redhat.com> 33-2
+- fix ABRT on service file reloading
+Resolves: rhbz#732020
+
 * Wed Aug  3 2011 Lennart Poettering <lpoetter@redhat.com> - 33-1
 - New upstream release
 
