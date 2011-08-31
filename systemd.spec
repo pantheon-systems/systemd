@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        34
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -175,7 +175,7 @@ if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac ; then
         /usr/sbin/authconfig --update --nostart >/dev/null 2>&1 || :
 
         # Try harder
-        /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
+        /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
 fi
 
 %postun
@@ -194,14 +194,18 @@ if [ $1 -eq 1 ] ; then
         fi
 
         # And symlink what we found to the new-style default.target
-        /bin/ln -sf "$target" /etc/systemd/system/default.target > /dev/null 2>&1 || :
+        /bin/ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
 
         # Enable the services we install by default.
         /bin/systemctl enable \
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service > /dev/null 2>&1 || :
+                systemd-readahead-collect.service >/dev/null 2>&1 || :
+else
+        # This systemd service does not exist anymore, we now do it
+        # internally in PID 1
+        /bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 fi
 
 %preun units
@@ -210,9 +214,9 @@ if [ $1 -eq 0 ] ; then
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service > /dev/null 2>&1 || :
+                systemd-readahead-collect.service >/dev/null 2>&1 || :
 
-        /bin/rm -f /etc/systemd/system/default.target > /dev/null 2>&1 || :
+        /bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 fi
 
 %postun units
@@ -344,12 +348,16 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Mon Aug 29 2011 Lennart Poettering <lpoetter@redhat.com> - 34-2
+- Update post scripts
+- Resolves: #726683, #713384
+
 * Thu Aug 25 2011 Lennart Poettering <lpoetter@redhat.com> - 34-1
 - New upstream release
 
 * Fri Aug 19 2011 Harald Hoyer <harald@redhat.com> 33-2
 - fix ABRT on service file reloading
-Resolves: rhbz#732020
+- Resolves: rhbz#732020
 
 * Wed Aug  3 2011 Lennart Poettering <lpoetter@redhat.com> - 33-1
 - New upstream release
