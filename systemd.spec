@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        34
-Release:        2%{?dist}
+Version:        35
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -348,9 +348,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
-* Mon Aug 29 2011 Lennart Poettering <lpoetter@redhat.com> - 34-2
+* Thu Sep  1 2011 Lennart Poettering <lpoetter@redhat.com> - 35-1
+- New upstream release
 - Update post scripts
-- Resolves: #726683, #713384
+- Resolves: #726683, #713384, #698198, #722803, #727315, #729997, #733706, #734611
 
 * Thu Aug 25 2011 Lennart Poettering <lpoetter@redhat.com> - 34-1
 - New upstream release
