@@ -171,7 +171,7 @@ rm -rf $RPM_BUILD_ROOT
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 # Make sure pam_systemd is enabled
-if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac ; then
+if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 ; then
         /usr/sbin/authconfig --update --nostart >/dev/null 2>&1 || :
 
         # Try harder
@@ -245,6 +245,7 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/os-release
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
+%ghost %config(noreplace) %{_sysconfdir}/timezone
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
