@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        36
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -151,6 +151,7 @@ touch %{buildroot}%{_sysconfdir}/locale.conf
 touch %{buildroot}%{_sysconfdir}/os-release
 touch %{buildroot}%{_sysconfdir}/machine-id
 touch %{buildroot}%{_sysconfdir}/machine-info
+touch %{buildroot}%{_sysconfdir}/timezone
 
 # Install RPM macros file for systemd
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
@@ -349,6 +350,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Fri Sep 23 2011 Lennart Poettering <lpoetter@redhat.com> - 36-2
+- Add /etc/timezone to ghosted files
+
 * Fri Sep 23 2011 Lennart Poettering <lpoetter@redhat.com> - 36-1
 - New upstream release
 - Resolves: #735013, #736360, #737047, #737509, #710487, #713384
