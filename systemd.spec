@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        36
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -44,6 +44,8 @@ Source1:        macros.systemd
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
+# We revert this one for https://bugzilla.redhat.com/show_bug.cgi?id=741078
+Patch0:         0001-unit-fix-complementing-of-requirement-deps-with-Afte.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -106,6 +108,7 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
+%patch0 -p1 -R
 
 %build
 %configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
@@ -350,6 +353,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Sun Sep 25 2011 Michal Schmidt <mschmidt@redhat.com> - 36-3
+- Revert an upstream patch that caused ordering cycles
+- Resolves: #741078
+
 * Fri Sep 23 2011 Lennart Poettering <lpoetter@redhat.com> - 36-2
 - Add /etc/timezone to ghosted files
 
