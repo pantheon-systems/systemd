@@ -1,0 +1,23 @@
+Fedora workaround for bz741655
+
+After unlocking a crypto device, give LVM a chance to assemble a VG from it.
+Needed to make the crypto-on-lvm-on-crypto disk layout work.
+
+Non-upstream patch. Will be obsoleted as soon as LVM gets the planned
+'policy daemon which will activate LV according to some system policy'.
+
+Index: systemd-36/src/cryptsetup-generator.c
+===================================================================
+--- systemd-36.orig/src/cryptsetup-generator.c
++++ systemd-36/src/cryptsetup-generator.c
+@@ -132,8 +132,10 @@ static int create_disk(
+                 "RemainAfterExit=yes\n"
+                 "TimeoutSec=0\n" /* the binary handles timeouts anyway */
+                 "ExecStart=" SYSTEMD_CRYPTSETUP_PATH " attach '%s' '%s' '%s' '%s'\n"
++                "ExecStartPost=/lib/systemd/fedora-crypto-lvm-hack '/dev/mapper/%s'\n"
+                 "ExecStop=" SYSTEMD_CRYPTSETUP_PATH " detach '%s'\n",
+                 name, u, strempty(password), strempty(options),
++                name,
+                 name);
+ 
+         if (has_option(options, "tmp"))

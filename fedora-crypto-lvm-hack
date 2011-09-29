@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Test if the given device is an LVM PV. If yes, activate its VG.
+#
+# Suggested by Milan Brož in
+# https://bugzilla.redhat.com/show_bug.cgi?id=741655#c19
+
+device="$1"
+[ -b "$device" ] || exit 1
+
+blkid -t TYPE=LVM2_member "$device" > /dev/null && \
+    vgchange -a y $(pvs --noheadings -o vg_name "$device")
