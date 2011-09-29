@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        36
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -44,12 +44,8 @@ Source1:        macros.systemd
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
-# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=741655
-Source4:        fedora-crypto-lvm-hack
 # We revert this one for https://bugzilla.redhat.com/show_bug.cgi?id=741078
 Patch0:         0001-unit-fix-complementing-of-requirement-deps-with-Afte.patch
-# Workaround https://bugzilla.redhat.com/show_bug.cgi?id=741655
-Patch100:       fedora-crypto-lvm-hack.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -113,7 +109,6 @@ SysV compatibility tools for systemd
 %prep
 %setup -q
 %patch0 -p1 -R
-%patch100 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
@@ -171,9 +166,6 @@ install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 # Install modprobe fragment
 mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
 install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
-
-# install the Fedora crypto-LVM hack
-install -m 0755 %{SOURCE4} %{buildroot}/lib/systemd/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -268,7 +260,6 @@ fi
 /usr/bin/systemd-stdio-bridge
 /usr/bin/systemd-analyze
 /lib/systemd/systemd-*
-/lib/systemd/fedora-crypto-lvm-hack
 /lib/udev/rules.d/*.rules
 /lib/systemd/system-generators/systemd-cryptsetup-generator
 /lib/systemd/system-generators/systemd-getty-generator
@@ -362,6 +353,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Thu Sep 29 2011 Michal Schmidt <mschmidt@redhat.com> - 36-5
+- Undo the workaround. Kay says it does not belong in systemd.
+- Unresolves: #741655
+
 * Thu Sep 29 2011 Michal Schmidt <mschmidt@redhat.com> - 36-4
 - Workaround for the crypto-on-lvm-on-crypto disk layout
 - Resolves: #741655
