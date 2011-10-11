@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        36
-Release:        5%{?dist}
+Version:        37
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -155,6 +155,8 @@ touch %{buildroot}%{_sysconfdir}/os-release
 touch %{buildroot}%{_sysconfdir}/machine-id
 touch %{buildroot}%{_sysconfdir}/machine-info
 touch %{buildroot}%{_sysconfdir}/timezone
+mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
+touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
 # Install RPM macros file for systemd
 mkdir -p %{buildroot}%{_sysconfdir}/rpm/
@@ -250,6 +252,7 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/timezone
+%ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
@@ -282,6 +285,7 @@ fi
 %{_mandir}/man7/*
 %{_mandir}/man8/*
 %{_libdir}/../lib/systemd
+%{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.hostname1.service
@@ -353,6 +357,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Tue Oct 11 2011 Lennart Poettering <lpoetter@redhat.com> - 37-1
+- New upstream release
+- Resolves: #744726, #718464, #713567, #713707, #736756
+
 * Thu Sep 29 2011 Michal Schmidt <mschmidt@redhat.com> - 36-5
 - Undo the workaround. Kay says it does not belong in systemd.
 - Unresolves: #741655
