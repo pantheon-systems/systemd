@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        37
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -45,7 +45,11 @@ Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
 # We revert this one for https://bugzilla.redhat.com/show_bug.cgi?id=741078
+# Must keep until https://bugzilla.redhat.com/show_bug.cgi?id=741115 is fixed.
 Patch0:         0001-unit-fix-complementing-of-requirement-deps-with-Afte.patch
+# some post-v37 patches from upstream:
+Patch1:         0002-manager-fix-a-crash-in-isolating.patch
+Patch2:         0005-systemctl-completion-always-invoke-with-no-legend.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -109,6 +113,8 @@ SysV compatibility tools for systemd
 %prep
 %setup -q
 %patch0 -p1 -R
+%patch1 -p1
+%patch2 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
@@ -357,6 +363,12 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Oct 19 2011 Michal Schmidt <mschmidt@redhat.com> - 37-2
+- A couple of fixes from upstream:
+- Fix a regression in bash-completion reported in Bodhi.
+- Fix a crash in isolating.
+- Resolves: #717325
+
 * Tue Oct 11 2011 Lennart Poettering <lpoetter@redhat.com> - 37-1
 - New upstream release
 - Resolves: #744726, #718464, #713567, #713707, #736756
