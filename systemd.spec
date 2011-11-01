@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        37
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -50,6 +50,8 @@ Patch0:         0001-unit-fix-complementing-of-requirement-deps-with-Afte.patch
 # some post-v37 patches from upstream:
 Patch1:         0002-manager-fix-a-crash-in-isolating.patch
 Patch2:         0005-systemctl-completion-always-invoke-with-no-legend.patch
+Patch3:         0001-mount-order-remote-mounts-after-both-network.target-.patch
+Patch4:         0001-units-drop-Install-section-from-remote-fs-pre.target.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -115,6 +117,8 @@ SysV compatibility tools for systemd
 %patch0 -p1 -R
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
+%patch4 -p1
 
 %build
 %configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
@@ -363,6 +367,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Nov 02 2011 Michal Schmidt <mschmidt@redhat.com> - 37-3
+- Fix remote-fs-pre.target and its ordering.
+- Resolves: #749940
+
 * Wed Oct 19 2011 Michal Schmidt <mschmidt@redhat.com> - 37-2
 - A couple of fixes from upstream:
 - Fix a regression in bash-completion reported in Bodhi.
