@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        37
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -187,7 +187,7 @@ rm -rf $RPM_BUILD_ROOT
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 # Make sure pam_systemd is enabled
-if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 ; then
+if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || ! [ -h /etc/pam.d/system-auth ] ; then
         /usr/sbin/authconfig --update --nostart >/dev/null 2>&1 || :
 
         # Try harder
@@ -367,6 +367,10 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Tue Nov 15 2011 Michal Schmidt <mschmidt@redhat.com> - 37-4
+- Run authconfig if /etc/pam.d/system-auth is not a symlink.
+- Resolves: #753160
+
 * Wed Nov 02 2011 Michal Schmidt <mschmidt@redhat.com> - 37-3
 - Fix remote-fs-pre.target and its ordering.
 - Resolves: #749940
