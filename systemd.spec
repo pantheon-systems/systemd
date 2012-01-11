@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        38
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -18,6 +18,8 @@ BuildRequires:  docbook-style-xsl
 BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
+BuildRequires:  glib2-devel
+BuildRequires:  libgee-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  automake
@@ -28,6 +30,7 @@ BuildRequires:  intltool >= 0.40.0
 BuildRequires:  binutils
 BuildRequires:  gperf
 BuildRequires:  gawk
+BuildRequires:  xz-devel
 Requires(post): authconfig
 Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.4.6-3.fc15
@@ -36,7 +39,7 @@ Requires:       libudev >= 160
 Requires:       initscripts >= 9.28
 Requires:       filesystem >= 2.4.40
 Conflicts:      selinux-policy < 3.9.16-12.fc15
-Requires:       kernel >= 2.6.35.2-9.fc14
+Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
 # Adds support for the %%{_unitdir} macro
@@ -377,6 +380,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-2
+- Fix a few (build) dependencies
+
 * Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-1
 - New upstream release
 
