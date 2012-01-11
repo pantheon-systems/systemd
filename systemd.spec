@@ -1,8 +1,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        37
-Release:        4%{?dist}
+Version:        38
+Release:        1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -38,20 +38,14 @@ Requires:       filesystem >= 2.4.40
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Requires:       kernel >= 2.6.35.2-9.fc14
 Requires:       nss-myhostname
-Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
+Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
-# We revert this one for https://bugzilla.redhat.com/show_bug.cgi?id=741078
-# Must keep until https://bugzilla.redhat.com/show_bug.cgi?id=741115 is fixed.
-Patch0:         0001-unit-fix-complementing-of-requirement-deps-with-Afte.patch
-# some post-v37 patches from upstream:
-Patch1:         0002-manager-fix-a-crash-in-isolating.patch
-Patch2:         0005-systemctl-completion-always-invoke-with-no-legend.patch
-Patch3:         0001-mount-order-remote-mounts-after-both-network.target-.patch
-Patch4:         0001-units-drop-Install-section-from-remote-fs-pre.target.patch
+# Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
+Source4:        listen.conf
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -114,14 +108,9 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
-%patch0 -p1 -R
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
 
 %build
-%configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
+%configure --with-rootprefix= --with-distro=fedora --with-rootlibdir=/%{_lib}
 make %{?_smp_mflags}
 
 %install
@@ -179,6 +168,10 @@ install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
 install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 
+# Install rsyslog fragment
+mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
+install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -193,6 +186,10 @@ if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || ! [ -
         # Try harder
         /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
 fi
+
+# Stop-gap until rsyslog.rpm does this on its own. (This is supposed
+# to fail when the link already exists)
+ln -s /lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
 %postun
 if [ $1 -ge 1 ] ; then
@@ -250,6 +247,7 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/systemd-logind.conf
+%config(noreplace) %{_sysconfdir}/systemd/systemd-journald.conf
 %{_sysconfdir}/xdg/systemd
 %{_libdir}/../lib/tmpfiles.d/systemd.conf
 %{_libdir}/../lib/tmpfiles.d/x11.conf
@@ -263,12 +261,14 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
+%config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 /bin/systemd
 /bin/systemd-notify
 /bin/systemd-ask-password
 /bin/systemd-tty-ask-password-agent
 /bin/systemd-machine-id-setup
 /bin/systemd-loginctl
+/bin/systemd-journalctl
 /usr/bin/systemd-nspawn
 /usr/bin/systemd-stdio-bridge
 /usr/bin/systemd-analyze
@@ -276,9 +276,12 @@ fi
 /lib/udev/rules.d/*.rules
 /lib/systemd/system-generators/systemd-cryptsetup-generator
 /lib/systemd/system-generators/systemd-getty-generator
+/lib/systemd/system-generators/systemd-rc-local-generator
 /%{_lib}/security/pam_systemd.so
 /%{_lib}/libsystemd-daemon.so.*
 /%{_lib}/libsystemd-login.so.*
+/%{_lib}/libsystemd-journal.so.*
+/%{_lib}/libsystemd-id128.so.*
 /sbin/init
 /sbin/reboot
 /sbin/halt
@@ -334,7 +337,7 @@ fi
 /lib/systemd/system
 /bin/systemctl
 /bin/systemd-tmpfiles
-%{_sysconfdir}/bash_completion.d/systemctl-bash-completion.sh
+%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
@@ -357,16 +360,26 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
-%{_includedir}/systemd/sd-login.h
+%{_libdir}/libsystemd-journal.so
+%{_libdir}/libsystemd-id128.so
 %{_includedir}/systemd/sd-daemon.h
+%{_includedir}/systemd/sd-login.h
+%{_includedir}/systemd/sd-journal.h
+%{_includedir}/systemd/sd-id128.h
+%{_includedir}/systemd/sd-messages.h
 %{_libdir}/pkgconfig/libsystemd-daemon.pc
 %{_libdir}/pkgconfig/libsystemd-login.pc
+%{_libdir}/pkgconfig/libsystemd-journal.pc
+%{_libdir}/pkgconfig/libsystemd-id128.pc
 
 %files sysv
 %defattr(-,root,root,-)
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-1
+- New upstream release
+
 * Tue Nov 15 2011 Michal Schmidt <mschmidt@redhat.com> - 37-4
 - Run authconfig if /etc/pam.d/system-auth is not a symlink.
 - Resolves: #753160
