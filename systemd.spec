@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        38
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -355,8 +355,9 @@ fi
 
 %files gtk
 %defattr(-,root,root,-)
-%{_bindir}/systemadm
-%{_bindir}/systemd-gnome-ask-password-agent
+# FIXME: hack to make things build for now
+#%{_bindir}/systemadm
+#%{_bindir}/systemd-gnome-ask-password-agent
 %{_mandir}/man1/systemadm.*
 
 %files devel
@@ -380,6 +381,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-3
+- Disable building of gtk tools for now
+
 * Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-2
 - Fix a few (build) dependencies
 
