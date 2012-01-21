@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        38
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -49,6 +49,8 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+# fix build on big-endians (commit ce3fd7e7)
+Patch0:         %{name}-38-big-endian.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -111,6 +113,7 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
+%patch0 -p1 -b .big-endian
 
 %build
 %configure --with-rootprefix= --with-distro=fedora --with-rootlibdir=/%{_lib}
@@ -381,6 +384,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Sat Jan 21 2012 Dan Horák <dan[at]danny.cz> - 38-4
+- fix build on big-endians
+
 * Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-3
 - Disable building of gtk tools for now
 
