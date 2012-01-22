@@ -174,6 +174,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
 install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 
 %post
+/sbin/ldconfig
 /bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
@@ -214,6 +215,7 @@ else
 fi
 
 %postun
+/sbin/ldconfig
 if [ $1 -ge 1 ] ; then
         /bin/systemctl daemon-reload > /dev/null 2>&1 || :
         /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
