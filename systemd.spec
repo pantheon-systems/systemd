@@ -305,7 +305,6 @@ fi
 %{_bindir}/systemd-cgls
 %{_mandir}/man1/*
 %exclude %{_mandir}/man1/systemadm.*
-%{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
@@ -355,6 +354,7 @@ fi
 %{_libdir}/pkgconfig/libsystemd-login.pc
 %{_libdir}/pkgconfig/libsystemd-journal.pc
 %{_libdir}/pkgconfig/libsystemd-id128.pc
+%{_mandir}/man3/*
 
 %files sysv
 %{_bindir}/systemd-sysv-convert
