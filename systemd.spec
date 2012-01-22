@@ -309,7 +309,7 @@ fi
 %{_mandir}/man7/*
 %{_mandir}/man8/*
 %{_libdir}/../lib/systemd
-%{_datadir}/systemd/kbd-model-map
+%{_datadir}/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.hostname1.service
