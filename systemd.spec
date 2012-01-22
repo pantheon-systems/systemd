@@ -1,8 +1,9 @@
+#% global gitcommit 3e52541
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        38
-Release:        4%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -22,15 +23,17 @@ BuildRequires:  glib2-devel
 BuildRequires:  libgee06-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
-BuildRequires:  automake
-BuildRequires:  autoconf
-BuildRequires:  libtool
 BuildRequires:  make
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  binutils
 BuildRequires:  gperf
 BuildRequires:  gawk
 BuildRequires:  xz-devel
+%if %{defined gitcommit}
+BuildRequires:  automake
+BuildRequires:  autoconf
+BuildRequires:  libtool
+%endif
 Requires(post): authconfig
 Requires:       systemd-units = %{version}-%{release}
 Requires:       dbus >= 1.4.6-3.fc15
@@ -41,7 +44,12 @@ Requires:       filesystem >= 2.4.40
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
+%if %{defined gitcommit}
+# Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
+Source0:        %{name}-git%{gitcommit}.tar.xz
+%else
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
+%endif
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
 Source2:        systemd-sysv-convert
@@ -112,10 +120,11 @@ Requires:       %{name} = %{version}-%{release}
 SysV compatibility tools for systemd
 
 %prep
-%setup -q
+%setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
 %patch0 -p1 -b .big-endian
 
 %build
+%{?gitcommit: ./autogen.sh }
 %configure --with-rootprefix= --with-distro=fedora --with-rootlibdir=/%{_lib}
 make %{?_smp_mflags}
 
