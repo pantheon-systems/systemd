@@ -31,7 +31,8 @@ BuildRequires:  autoconf
 BuildRequires:  libtool
 %endif
 Requires(post): authconfig
-Requires:       systemd-units = %{version}-%{release}
+Requires(post): coreutils
+Requires(post): gawk
 Requires:       dbus >= 1.4.6-3.fc15
 Requires:       udev >= 167
 Requires:       libudev >= 160
@@ -67,6 +68,8 @@ Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
+Obsoletes:      systemd-units < 38-5
+Provides:       systemd-units = %{version}-%{release}
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -77,16 +80,6 @@ Linux cgroups, supports snapshotting and restoring of the system
 state, maintains mount and automount points and implements an
 elaborate transactional dependency-based service control logic. It can
 work as a drop-in replacement for sysvinit.
-
-%package units
-Group:          System Environment/Base
-Summary:        Configuration files, directories and installation tool for systemd
-Requires(post): coreutils
-Requires(post): gawk
-
-%description units
-Basic configuration files, directories and installation tool for the systemd
-system and service manager.
 
 %package devel
 Group:          System Environment/Base
@@ -196,12 +189,6 @@ fi
 # to fail when the link already exists)
 ln -s /lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
-%postun
-if [ $1 -ge 1 ] ; then
-        /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
-fi
-
-%post units
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
         runlevel=$(/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
@@ -226,7 +213,13 @@ else
         /bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 fi
 
-%preun units
+%postun
+if [ $1 -ge 1 ] ; then
+        /bin/systemctl daemon-reload > /dev/null 2>&1 || :
+        /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
+fi
+
+%preun
 if [ $1 -eq 0 ] ; then
         /bin/systemctl disable \
                 getty@.service \
@@ -237,12 +230,23 @@ if [ $1 -eq 0 ] ; then
         /bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 fi
 
-%postun units
-if [ $1 -ge 1 ] ; then
-        /bin/systemctl daemon-reload > /dev/null 2>&1 || :
-fi
-
 %files
+%doc %{_docdir}/systemd
+%dir %{_sysconfdir}/systemd
+%dir %{_sysconfdir}/systemd/system
+%dir %{_sysconfdir}/systemd/user
+%dir %{_sysconfdir}/tmpfiles.d
+%dir %{_sysconfdir}/sysctl.d
+%dir %{_sysconfdir}/modules-load.d
+%dir %{_sysconfdir}/binfmt.d
+%dir %{_sysconfdir}/bash_completion.d
+%dir /lib/systemd
+%dir /lib/systemd/system-generators
+%dir /lib/systemd/system-shutdown
+%dir %{_libdir}/../lib/tmpfiles.d
+%dir %{_libdir}/../lib/sysctl.d
+%dir %{_libdir}/../lib/modules-load.d
+%dir %{_libdir}/../lib/binfmt.d
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -252,6 +256,8 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/systemd-logind.conf
 %config(noreplace) %{_sysconfdir}/systemd/systemd-journald.conf
+%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
+%{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
 %{_libdir}/../lib/tmpfiles.d/systemd.conf
 %{_libdir}/../lib/tmpfiles.d/x11.conf
@@ -273,9 +279,12 @@ fi
 /bin/systemd-machine-id-setup
 /bin/systemd-loginctl
 /bin/systemd-journalctl
+/bin/systemd-tmpfiles
+/bin/systemctl
 /usr/bin/systemd-nspawn
 /usr/bin/systemd-stdio-bridge
 /usr/bin/systemd-analyze
+/lib/systemd/system
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
 /lib/systemd/system-generators/systemd-cryptsetup-generator
@@ -295,7 +304,6 @@ fi
 /sbin/runlevel
 %{_bindir}/systemd-cgls
 %{_mandir}/man1/*
-%exclude %{_mandir}/man1/systemctl.*
 %exclude %{_mandir}/man1/systemadm.*
 %{_mandir}/man3/*
 %{_mandir}/man5/*
@@ -313,38 +321,13 @@ fi
 %{_datadir}/dbus-1/interfaces/org.freedesktop.hostname1.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.locale1.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.timedate1.xml
-%{_docdir}/systemd
 %{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.hostname1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.login1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.locale1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
-%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
-
-%files units
-%dir %{_sysconfdir}/systemd
-%dir %{_sysconfdir}/systemd/system
-%dir %{_sysconfdir}/systemd/user
-%dir %{_sysconfdir}/tmpfiles.d
-%dir %{_sysconfdir}/sysctl.d
-%dir %{_sysconfdir}/modules-load.d
-%dir %{_sysconfdir}/binfmt.d
-%dir %{_sysconfdir}/bash_completion.d
-%dir /lib/systemd
-%dir /lib/systemd/system-generators
-%dir /lib/systemd/system-shutdown
-%dir %{_libdir}/../lib/tmpfiles.d
-%dir %{_libdir}/../lib/sysctl.d
-%dir %{_libdir}/../lib/modules-load.d
-%dir %{_libdir}/../lib/binfmt.d
-/lib/systemd/system
-/bin/systemctl
-/bin/systemd-tmpfiles
-%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
-%{_sysconfdir}/rpm/macros.systemd
-%{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
-%{_docdir}/systemd/LICENSE
+%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
