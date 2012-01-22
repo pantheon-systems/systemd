@@ -2,7 +2,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        38
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -70,6 +70,8 @@ Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
 Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
+# for the systemd-analyze split:
+Obsoletes:      systemd < 38-5
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -105,6 +107,21 @@ Requires:       %{name} = %{version}-%{release}
 
 %description sysv
 SysV compatibility tools for systemd
+
+%package analyze
+Group:          System Environment/Base
+Summary:        Tool for processing systemd profiling information
+Requires:       %{name} = %{version}-%{release}
+Requires:       dbus-python
+Requires:       pycairo
+# for the systemd-analyze split:
+Obsoletes:      systemd < 38-5
+
+%description analyze
+'systemd-analyze blame' lists which systemd unit needed how much time to finish
+initialization at boot.
+'systemd-analyze plot' renders an SVG visualizing the parallel start of units
+at boot.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
@@ -283,9 +300,8 @@ fi
 /bin/systemd-journalctl
 /bin/systemd-tmpfiles
 /bin/systemctl
-/usr/bin/systemd-nspawn
-/usr/bin/systemd-stdio-bridge
-/usr/bin/systemd-analyze
+%{_bindir}/systemd-nspawn
+%{_bindir}/systemd-stdio-bridge
 /lib/systemd/system
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
@@ -361,7 +377,23 @@ fi
 %files sysv
 %{_bindir}/systemd-sysv-convert
 
+%files analyze
+%{_bindir}/systemd-analyze
+
 %changelog
+* Sun Jan 22 2012 Michal Schmidt <mschmidt@redhat.com> - 38-5
+- Build against libgee06. Reenable gtk tools.
+- Delete unused patches.
+- Add easy building of git snapshots.
+- Remove legacy spec file elements.
+- Don't mention implicit BuildRequires.
+- Configure with --disable-static.
+- Merge -units into the main package.
+- Move section 3 manpages to -devel.
+- Fix unowned directory.
+- Run ldconfig in scriptlets.
+- Split systemd-analyze to a subpackage.
+
 * Sat Jan 21 2012 Dan Horák <dan[at]danny.cz> - 38-4
 - fix build on big-endians
 
