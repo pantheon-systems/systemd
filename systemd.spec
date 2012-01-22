@@ -84,7 +84,6 @@ work as a drop-in replacement for sysvinit.
 %package units
 Group:          System Environment/Base
 Summary:        Configuration files, directories and installation tool for systemd
-Requires:       pkgconfig
 Requires(post): coreutils
 Requires(post): gawk
 
@@ -96,7 +95,6 @@ system and service manager.
 Group:          System Environment/Base
 Summary:        Development headers for systemd
 Requires:       %{name} = %{version}-%{release}
-Requires:       pkgconfig
 
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
