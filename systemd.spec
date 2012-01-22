@@ -19,7 +19,7 @@ BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
 BuildRequires:  glib2-devel
-BuildRequires:  libgee-devel
+BuildRequires:  libgee06-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  automake
@@ -358,9 +358,8 @@ fi
 
 %files gtk
 %defattr(-,root,root,-)
-# FIXME: hack to make things build for now
-#%{_bindir}/systemadm
-#%{_bindir}/systemd-gnome-ask-password-agent
+%{_bindir}/systemadm
+%{_bindir}/systemd-gnome-ask-password-agent
 %{_mandir}/man1/systemadm.*
 
 %files devel
