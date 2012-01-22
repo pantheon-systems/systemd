@@ -1,8 +1,8 @@
-#% global gitcommit 3e52541
+%global gitcommit 9fa2f41
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        38
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -54,8 +54,6 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-# fix build on big-endians (commit ce3fd7e7)
-Patch0:         %{name}-38-big-endian.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -125,7 +123,6 @@ at boot.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1 -b .big-endian
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -189,6 +186,12 @@ install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 # Install rsyslog fragment
 mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
 install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+
+# To avoid making life hard for Rawhide-using developers, don't package the
+# kernel.core_pattern setting until systemd-coredump is a part of an actual
+# systemd release and it's made clear how to get the core dumps out of the
+# journal.
+rm -f %{buildroot}%{_libdir}/../lib/sysctl.d/coredump.conf
 
 %post
 /sbin/ldconfig
@@ -300,8 +303,6 @@ fi
 /bin/systemd-journalctl
 /bin/systemd-tmpfiles
 /bin/systemctl
-%{_bindir}/systemd-nspawn
-%{_bindir}/systemd-stdio-bridge
 /lib/systemd/system
 /lib/systemd/systemd-*
 /lib/udev/rules.d/*.rules
@@ -320,7 +321,11 @@ fi
 /sbin/shutdown
 /sbin/telinit
 /sbin/runlevel
+%{_bindir}/systemd-nspawn
+%{_bindir}/systemd-stdio-bridge
+%{_bindir}/systemd-cat
 %{_bindir}/systemd-cgls
+%{_bindir}/systemd-cgtop
 %{_mandir}/man1/*
 %exclude %{_mandir}/man1/systemadm.*
 %{_mandir}/man5/*
@@ -381,6 +386,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Sun Jan 22 2012 Michal Schmidt <mschmidt@redhat.com> - 38-6.git9fa2f41
+- Update to a current git snapshot.
+- Resolves: #781657
+
 * Sun Jan 22 2012 Michal Schmidt <mschmidt@redhat.com> - 38-5
 - Build against libgee06. Reenable gtk tools.
 - Delete unused patches.
