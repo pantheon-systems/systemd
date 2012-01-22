@@ -119,7 +119,7 @@ SysV compatibility tools for systemd
 
 %build
 %{?gitcommit: ./autogen.sh }
-%configure --with-rootprefix= --with-distro=fedora --with-rootlibdir=/%{_lib}
+%configure --with-rootprefix= --with-distro=fedora --with-rootlibdir=/%{_lib} --disable-static
 make %{?_smp_mflags}
 
 %install
