@@ -1,7 +1,6 @@
 #% global gitcommit 3e52541
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        38
 Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
@@ -129,7 +128,6 @@ SysV compatibility tools for systemd
 make %{?_smp_mflags}
 
 %install
-rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 
@@ -186,9 +184,6 @@ install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 # Install rsyslog fragment
 mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
 install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 %post
 /bin/systemd-machine-id-setup > /dev/null 2>&1 || :
@@ -253,7 +248,6 @@ if [ $1 -ge 1 ] ; then
 fi
 
 %files
-%defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -333,7 +327,6 @@ fi
 %config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 
 %files units
-%defattr(-,root,root,-)
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
 %dir %{_sysconfdir}/systemd/user
@@ -366,13 +359,11 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 
 %files gtk
-%defattr(-,root,root,-)
 %{_bindir}/systemadm
 %{_bindir}/systemd-gnome-ask-password-agent
 %{_mandir}/man1/systemadm.*
 
 %files devel
-%defattr(-,root,root,-)
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
 %{_libdir}/libsystemd-journal.so
@@ -388,7 +379,6 @@ fi
 %{_libdir}/pkgconfig/libsystemd-id128.pc
 
 %files sysv
-%defattr(-,root,root,-)
 %{_bindir}/systemd-sysv-convert
 
 %changelog
