@@ -22,11 +22,8 @@ BuildRequires:  glib2-devel
 BuildRequires:  libgee06-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
-BuildRequires:  make
 BuildRequires:  intltool >= 0.40.0
-BuildRequires:  binutils
 BuildRequires:  gperf
-BuildRequires:  gawk
 BuildRequires:  xz-devel
 %if %{defined gitcommit}
 BuildRequires:  automake
