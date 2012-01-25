@@ -1,8 +1,9 @@
-%global gitcommit 9fa2f41
+#global gitcommit 9fa2f41
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        38
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        39
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -386,6 +387,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Jan 25 2012 Lennart Poettering <lpoetter@redhat.com> - 39-1
+- New upstream release
+
 * Sun Jan 22 2012 Michal Schmidt <mschmidt@redhat.com> - 38-6.git9fa2f41
 - Update to a current git snapshot.
 - Resolves: #781657
