@@ -21,7 +21,7 @@ BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
 BuildRequires:  glib2-devel
-BuildRequires:  libgee-devel
+BuildRequires:  libgee06-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  intltool >= 0.40.0
