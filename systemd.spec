@@ -7,7 +7,8 @@ Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
-BuildRequires:  libudev-devel >= 160
+BuildRequires:  udev >= 179-2
+BuildRequires:  libudev-devel >= 179-2
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
@@ -20,7 +21,7 @@ BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
 BuildRequires:  glib2-devel
-BuildRequires:  libgee06-devel
+BuildRequires:  libgee-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  intltool >= 0.40.0
@@ -35,10 +36,10 @@ Requires(post): authconfig
 Requires(post): coreutils
 Requires(post): gawk
 Requires:       dbus >= 1.4.6-3.fc15
-Requires:       udev >= 167
-Requires:       libudev >= 160
+Requires:       udev >= 179-2
+Requires:       libudev >= 179-2
 Requires:       initscripts >= 9.28
-Requires:       filesystem >= 2.4.40
+Requires:       filesystem >= 3
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
@@ -67,6 +68,7 @@ Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
+Provides:       /bin/systemctl
 Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
 # for the systemd-analyze split:
@@ -127,7 +129,7 @@ at boot.
 
 %build
 %{?gitcommit: ./autogen.sh }
-%configure --with-rootprefix= --with-distro=fedora --with-rootlibdir=/%{_lib} --disable-static
+%configure --with-distro=fedora --disable-static
 make %{?_smp_mflags}
 
 %install
@@ -136,14 +138,14 @@ find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
-mkdir -p %{buildroot}/sbin
-ln -s ../bin/systemd %{buildroot}/sbin/init
-ln -s ../bin/systemctl %{buildroot}/sbin/reboot
-ln -s ../bin/systemctl %{buildroot}/sbin/halt
-ln -s ../bin/systemctl %{buildroot}/sbin/poweroff
-ln -s ../bin/systemctl %{buildroot}/sbin/shutdown
-ln -s ../bin/systemctl %{buildroot}/sbin/telinit
-ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
+mkdir -p %{buildroot}/%{_sbindir}
+ln -s ../bin/systemd %{buildroot}%{_sbindir}/init
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the used deleted
@@ -157,10 +159,10 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
 # Make sure these directories are properly owned
-mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
-mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
-mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
-mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/basic.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
 
 # Create new-style configuration files so that we can ghost-own them
 touch %{buildroot}%{_sysconfdir}/hostname
@@ -192,7 +194,7 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
-rm -f %{buildroot}%{_libdir}/../lib/sysctl.d/coredump.conf
+rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 %post
 /sbin/ldconfig
@@ -209,15 +211,15 @@ fi
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
-ln -s /lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
+ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
         runlevel=$(/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
         if [ -z "$runlevel" ] ; then
-                target="/lib/systemd/system/graphical.target"
+                target="/usr/lib/systemd/system/graphical.target"
         else
-                target="/lib/systemd/system/runlevel$runlevel.target"
+                target="/usr/lib/systemd/system/runlevel$runlevel.target"
         fi
 
         # And symlink what we found to the new-style default.target
@@ -263,13 +265,13 @@ fi
 %dir %{_sysconfdir}/modules-load.d
 %dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/bash_completion.d
-%dir /lib/systemd
-%dir /lib/systemd/system-generators
-%dir /lib/systemd/system-shutdown
-%dir %{_libdir}/../lib/tmpfiles.d
-%dir %{_libdir}/../lib/sysctl.d
-%dir %{_libdir}/../lib/modules-load.d
-%dir %{_libdir}/../lib/binfmt.d
+%dir %{_prefix}/lib/systemd
+%dir %{_prefix}/lib/systemd/system-generators
+%dir %{_prefix}/lib/systemd/system-shutdown
+%dir %{_prefix}/lib/tmpfiles.d
+%dir %{_prefix}/lib/sysctl.d
+%dir %{_prefix}/lib/modules-load.d
+%dir %{_prefix}/lib/binfmt.d
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -282,10 +284,10 @@ fi
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
-%{_libdir}/../lib/tmpfiles.d/systemd.conf
-%{_libdir}/../lib/tmpfiles.d/x11.conf
-%{_libdir}/../lib/tmpfiles.d/legacy.conf
-%{_libdir}/../lib/tmpfiles.d/tmp.conf
+%{_prefix}/lib/tmpfiles.d/systemd.conf
+%{_prefix}/lib/tmpfiles.d/x11.conf
+%{_prefix}/lib/tmpfiles.d/legacy.conf
+%{_prefix}/lib/tmpfiles.d/tmp.conf
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
@@ -295,44 +297,44 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
-/bin/systemd
-/bin/systemd-notify
-/bin/systemd-ask-password
-/bin/systemd-tty-ask-password-agent
-/bin/systemd-machine-id-setup
-/bin/systemd-loginctl
-/bin/systemd-journalctl
-/bin/systemd-tmpfiles
-/bin/systemctl
-/lib/systemd/system
-/lib/systemd/systemd-*
-/lib/udev/rules.d/*.rules
-/lib/systemd/system-generators/systemd-cryptsetup-generator
-/lib/systemd/system-generators/systemd-getty-generator
-/lib/systemd/system-generators/systemd-rc-local-generator
-/%{_lib}/security/pam_systemd.so
-/%{_lib}/libsystemd-daemon.so.*
-/%{_lib}/libsystemd-login.so.*
-/%{_lib}/libsystemd-journal.so.*
-/%{_lib}/libsystemd-id128.so.*
-/sbin/init
-/sbin/reboot
-/sbin/halt
-/sbin/poweroff
-/sbin/shutdown
-/sbin/telinit
-/sbin/runlevel
+%{_bindir}/systemd
+%{_bindir}/systemd-notify
+%{_bindir}/systemd-ask-password
+%{_bindir}/systemd-tty-ask-password-agent
+%{_bindir}/systemd-machine-id-setup
+%{_bindir}/systemd-loginctl
+%{_bindir}/systemd-journalctl
+%{_bindir}/systemd-tmpfiles
+%{_bindir}/systemctl
+%{_prefix}/lib/systemd/system
+%{_prefix}/lib/systemd/systemd-*
+%{_prefix}/lib/udev/rules.d/*.rules
+%{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
+%{_prefix}/lib/systemd/system-generators/systemd-getty-generator
+%{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
+%{_prefix}/lib/systemd
+%{_libdir}/security/pam_systemd.so
+%{_libdir}/libsystemd-daemon.so.*
+%{_libdir}/libsystemd-login.so.*
+%{_libdir}/libsystemd-journal.so.*
+%{_libdir}/libsystemd-id128.so.*
 %{_bindir}/systemd-nspawn
 %{_bindir}/systemd-stdio-bridge
 %{_bindir}/systemd-cat
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
+%{_sbindir}/init
+%{_sbindir}/reboot
+%{_sbindir}/halt
+%{_sbindir}/poweroff
+%{_sbindir}/shutdown
+%{_sbindir}/telinit
+%{_sbindir}/runlevel
 %{_mandir}/man1/*
 %exclude %{_mandir}/man1/systemadm.*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
-%{_libdir}/../lib/systemd
 %{_datadir}/systemd
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
@@ -387,6 +389,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Jan 25 2012 Kay Sievers <kay@redhat.com> - 39-2
+- install everything in /usr
+  https://fedoraproject.org/wiki/Features/UsrMove
+
 * Wed Jan 25 2012 Lennart Poettering <lpoetter@redhat.com> - 39-1
 - New upstream release
 
