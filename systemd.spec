@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        39
-Release:        1%{?gitcommit:.git%{gitcommit}}.1%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -389,6 +389,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Jan 25 2012 Harald Hoyer <harald@redhat.com> 39-2
+- increment release
+
 * Wed Jan 25 2012 Kay Sievers <kay@redhat.com> - 39-1.1
 - install everything in /usr
   https://fedoraproject.org/wiki/Features/UsrMove
