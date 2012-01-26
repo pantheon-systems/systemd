@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        39
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -69,6 +69,7 @@ Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
 Provides:       /bin/systemctl
+Provides:       /sbin/shutdown
 Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
 # for the systemd-analyze split:
@@ -389,6 +390,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Thu Jan 26 2012 Kay Sievers <kay@redhat.com> - 39-3
+- provide /sbin/shutdown
+
 * Wed Jan 25 2012 Harald Hoyer <harald@redhat.com> 39-2
 - increment release
 
