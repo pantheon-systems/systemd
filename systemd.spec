@@ -2,8 +2,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        39
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        40
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -196,6 +196,9 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
 rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+
+# Let rsyslog read from /proc/kmsg for now
+sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/systemd-journald.conf
 
 %post
 /sbin/ldconfig
@@ -390,6 +393,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Feb  7 2012 Lennart Poettering <lpoetter@redhat.com> - 40-1
+- New upstream release
+
 * Thu Jan 26 2012 Kay Sievers <kay@redhat.com> - 39-3
 - provide /sbin/shutdown
 
