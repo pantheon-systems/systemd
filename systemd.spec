@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        41
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -394,6 +394,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Thu Feb  9 2012 Adam Williamson <awilliam@redhat.com> - 41-2
+- rebuild for fixed binutils
+
 * Thu Feb  9 2012 Lennart Poettering <lpoetter@redhat.com> - 41-1
 - New upstream release
 
