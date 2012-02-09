@@ -2,7 +2,7 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        40
+Version:        41
 Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -27,6 +27,7 @@ BuildRequires:  libacl-devel
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  xz-devel
+BuildRequires:  kmod-devel >= 5
 %if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -140,7 +141,7 @@ find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
 mkdir -p %{buildroot}/%{_sbindir}
-ln -s ../bin/systemd %{buildroot}%{_sbindir}/init
+ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
@@ -301,7 +302,7 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
-%{_bindir}/systemd
+%{_prefix}/lib/systemd/systemd
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
@@ -393,6 +394,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Thu Feb  9 2012 Lennart Poettering <lpoetter@redhat.com> - 41-1
+- New upstream release
+
 * Tue Feb  7 2012 Lennart Poettering <lpoetter@redhat.com> - 40-1
 - New upstream release
 
