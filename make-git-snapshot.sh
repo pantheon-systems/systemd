@@ -15,14 +15,15 @@ trap 'rm -rf $WORKDIR' exit
 git clone $REFERENCE "$UPSTREAM" "$WORKDIR"
 
 pushd "$WORKDIR" > /dev/null
-read COMMIT_ID COMMIT_SHORTID COMMIT_TITLE <<EOGIT
-$(git log ${HEAD}^..${HEAD} --pretty='format:%H %h %s')
+git branch to-archive $HEAD
+read COMMIT_SHORTID COMMIT_TITLE <<EOGIT
+$(git log to-archive^..to-archive --pretty='format:%h %s')
 EOGIT
 popd > /dev/null
 
 echo "Making git snapshot using commit: $COMMIT_SHORTID $COMMIT_TITLE"
 
 DIRNAME="$NAME-git$COMMIT_SHORTID"
-git archive --remote="$WORKDIR" --format=tar --prefix="$DIRNAME/" "$COMMIT_ID" | xz -9 > "$DIRNAME.tar.xz"
+git archive --remote="$WORKDIR" --format=tar --prefix="$DIRNAME/" to-archive | xz -9 > "$DIRNAME.tar.xz"
 
 echo "Written $DIRNAME.tar.xz"
