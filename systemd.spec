@@ -2,8 +2,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        41
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        42
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -41,6 +41,7 @@ Requires:       udev >= 179-2
 Requires:       libudev >= 179-2
 Requires:       initscripts >= 9.28
 Requires:       filesystem >= 3
+Conflicts:      fedora-release < 17-0.7
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
@@ -166,11 +167,13 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
 
+# Make sure the user generators dir exists too
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
+
 # Create new-style configuration files so that we can ghost-own them
 touch %{buildroot}%{_sysconfdir}/hostname
 touch %{buildroot}%{_sysconfdir}/vconsole.conf
 touch %{buildroot}%{_sysconfdir}/locale.conf
-touch %{buildroot}%{_sysconfdir}/os-release
 touch %{buildroot}%{_sysconfdir}/machine-id
 touch %{buildroot}%{_sysconfdir}/machine-info
 touch %{buildroot}%{_sysconfdir}/timezone
@@ -203,7 +206,8 @@ sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/sys
 
 %post
 /sbin/ldconfig
-/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
+/usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
+/usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 # Make sure pam_systemd is enabled
@@ -216,7 +220,7 @@ fi
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
-ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
+/bin/ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
@@ -272,11 +276,13 @@ fi
 %dir %{_sysconfdir}/bash_completion.d
 %dir %{_prefix}/lib/systemd
 %dir %{_prefix}/lib/systemd/system-generators
+%dir %{_prefix}/lib/systemd/user-generators
 %dir %{_prefix}/lib/systemd/system-shutdown
 %dir %{_prefix}/lib/tmpfiles.d
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
+%dir %{_datadir}/systemd
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -296,13 +302,13 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
-%ghost %config(noreplace) %{_sysconfdir}/os-release
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %{_prefix}/lib/systemd/systemd
+%{_bindir}/systemctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
@@ -310,24 +316,23 @@ fi
 %{_bindir}/systemd-loginctl
 %{_bindir}/systemd-journalctl
 %{_bindir}/systemd-tmpfiles
-%{_bindir}/systemctl
-%{_prefix}/lib/systemd/system
-%{_prefix}/lib/systemd/systemd-*
-%{_prefix}/lib/udev/rules.d/*.rules
-%{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
-%{_prefix}/lib/systemd/system-generators/systemd-getty-generator
-%{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
-%{_prefix}/lib/systemd
-%{_libdir}/security/pam_systemd.so
-%{_libdir}/libsystemd-daemon.so.*
-%{_libdir}/libsystemd-login.so.*
-%{_libdir}/libsystemd-journal.so.*
-%{_libdir}/libsystemd-id128.so.*
 %{_bindir}/systemd-nspawn
 %{_bindir}/systemd-stdio-bridge
 %{_bindir}/systemd-cat
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
+%{_prefix}/lib/systemd/system
+%{_prefix}/lib/systemd/user
+%{_prefix}/lib/systemd/systemd-*
+%{_prefix}/lib/udev/rules.d/*.rules
+%{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
+%{_prefix}/lib/systemd/system-generators/systemd-getty-generator
+%{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
+%{_libdir}/security/pam_systemd.so
+%{_libdir}/libsystemd-daemon.so.*
+%{_libdir}/libsystemd-login.so.*
+%{_libdir}/libsystemd-journal.so.*
+%{_libdir}/libsystemd-id128.so.*
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -340,7 +345,7 @@ fi
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
-%{_datadir}/systemd
+%{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.hostname1.service
@@ -394,6 +399,11 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Sat Feb 11 2012 Lennart Poettering <lpoetter@redhat.com> - 42-1
+- New upstream release
+- Save a bit of entropy during system installation (#789407)
+- Don't own /etc/os-release anymore, leave that to fedora-release
+
 * Thu Feb  9 2012 Adam Williamson <awilliam@redhat.com> - 41-2
 - rebuild for fixed binutils
 
