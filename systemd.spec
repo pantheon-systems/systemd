@@ -2,7 +2,7 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        42
+Version:        43
 Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -143,6 +143,7 @@ find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 # enough to detect in which way they are called.
 mkdir -p %{buildroot}/%{_sbindir}
 ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
+ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
@@ -308,6 +309,7 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %{_prefix}/lib/systemd/systemd
+%{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-ask-password
@@ -399,6 +401,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Feb 15 2012 Lennart Poettering <lpoetter@redhat.com> - 43-1
+- New upstream release
+- Closes #789758, #790260, #790522
+
 * Sat Feb 11 2012 Lennart Poettering <lpoetter@redhat.com> - 42-1
 - New upstream release
 - Save a bit of entropy during system installation (#789407)
