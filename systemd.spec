@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        43
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -41,7 +41,6 @@ Requires:       udev >= 179-2
 Requires:       libudev >= 179-2
 Requires:       initscripts >= 9.28
 Requires:       filesystem >= 3
-Conflicts:      fedora-release < 17-0.7
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
@@ -401,6 +400,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Mon Feb 27 2012 Dennis Gilmore <dennis@ausil.us> - 43-2
+- don't conflict with fedora-release systemd never actually provided
+- /etc/os-release so there is no actual conflict
+
 * Wed Feb 15 2012 Lennart Poettering <lpoetter@redhat.com> - 43-1
 - New upstream release
 - Closes #789758, #790260, #790522
