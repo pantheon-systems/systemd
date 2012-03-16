@@ -2,8 +2,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        43
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        44
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -400,6 +400,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Fri Mar 16 2012 Lennart Poettering <lpoetter@redhat.com> - 44-1
+- New upstream release
+- Closes #798760, #784921, #783134, #768523, #781735
+
 * Mon Feb 27 2012 Dennis Gilmore <dennis@ausil.us> - 43-2
 - don't conflict with fedora-release systemd never actually provided
 - /etc/os-release so there is no actual conflict
