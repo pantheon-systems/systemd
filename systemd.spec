@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -15,14 +15,10 @@ BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
 BuildRequires:  cryptsetup-luks-devel
+BuildRequires:  dbus-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
-BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
-BuildRequires:  gtk2-devel
-BuildRequires:  glib2-devel
-BuildRequires:  libgee06-devel
-BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
@@ -93,15 +89,6 @@ Requires:       %{name} = %{version}-%{release}
 
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
-
-%package gtk
-Group:          System Environment/Base
-Summary:        Graphical frontend for systemd
-Requires:       %{name} = %{version}-%{release}
-Requires:       polkit
-
-%description gtk
-Graphical front-end for systemd.
 
 %package sysv
 Group:          System Environment/Base
@@ -372,11 +359,6 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 
-%files gtk
-%{_bindir}/systemadm
-%{_bindir}/systemd-gnome-ask-password-agent
-%{_mandir}/man1/systemadm.*
-
 %files devel
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
@@ -400,6 +382,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Mar 20 2012 Michal Schmidt <mschmidt@redhat.com> - 44-2
+- Don't build the gtk parts anymore. They're moving into systemd-ui.
+- Remove a dead patch file.
+
 * Fri Mar 16 2012 Lennart Poettering <lpoetter@redhat.com> - 44-1
 - New upstream release
 - Closes #798760, #784921, #783134, #768523, #781735
