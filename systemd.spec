@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -53,6 +53,7 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+Patch0:         systemd-PAGE_SIZE.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -115,6 +116,7 @@ at boot.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch0 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -382,6 +384,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Mon Mar 26 2012 Dennis Gilmore <dennis@ausil.us> - 44-3
+- apply patch from upstream so we can build systemd on arm and ppc
+- and likely the rest of the secondary arches
+
 * Tue Mar 20 2012 Michal Schmidt <mschmidt@redhat.com> - 44-2
 - Don't build the gtk parts anymore. They're moving into systemd-ui.
 - Remove a dead patch file.
