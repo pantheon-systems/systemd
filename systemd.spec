@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}.1
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -18,7 +18,12 @@ BuildRequires:  cryptsetup-luks-devel
 BuildRequires:  dbus-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
+BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
+BuildRequires:  gtk2-devel
+BuildRequires:  glib2-devel
+BuildRequires:  libgee06-devel
+BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
@@ -90,6 +95,15 @@ Requires:       %{name} = %{version}-%{release}
 
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
+
+%package gtk
+Group:          System Environment/Base
+Summary:        Graphical frontend for systemd
+Requires:       %{name} = %{version}-%{release}
+Requires:       polkit
+
+%description gtk
+Graphical front-end for systemd.
 
 %package sysv
 Group:          System Environment/Base
@@ -361,6 +375,11 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 
+%files gtk
+%{_bindir}/systemadm
+%{_bindir}/systemd-gnome-ask-password-agent
+%{_mandir}/man1/systemadm.*
+
 %files devel
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
@@ -384,6 +403,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Mar 27 2012 Michal Schmidt <mschmidt@redhat.com> - 44-3.fc17.1
+- Undo "Don't build the gtk parts anymore". It's for F>=18 only.
+
 * Mon Mar 26 2012 Dennis Gilmore <dennis@ausil.us> - 44-3
 - apply patch from upstream so we can build systemd on arm and ppc
 - and likely the rest of the secondary arches
