@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -253,6 +253,17 @@ if [ $1 -eq 0 ] ; then
         /bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 fi
 
+%triggerun -- systemd-units < 38-5
+mv /etc/systemd/system/default.target /etc/systemd/system/default.target.save >/dev/null 2>&1 || :
+
+%triggerpostun -- systemd-units < 38-5
+mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/dev/null 2>&1
+/bin/systemctl enable \
+        getty@.service \
+        remote-fs.target \
+        systemd-readahead-replay.service \
+        systemd-readahead-collect.service
+
 %files
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
@@ -384,6 +395,10 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Mar 28 2012 Michal Schmidt <mschmidt@redhat.com> - 44-4
+- Add triggers from Bill Nottingham to correct the damage done by
+  the obsoleted systemd-units's preun scriptlet (#807457).
+
 * Mon Mar 26 2012 Dennis Gilmore <dennis@ausil.us> - 44-3
 - apply patch from upstream so we can build systemd on arm and ppc
 - and likely the rest of the secondary arches
