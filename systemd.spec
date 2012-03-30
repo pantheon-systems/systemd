@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -29,11 +29,11 @@ BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
-%if %{defined gitcommit}
+
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-%endif
+
 Requires(post): authconfig
 Requires(post): coreutils
 Requires(post): gawk
@@ -58,7 +58,34 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-Patch0:         systemd-PAGE_SIZE.patch
+Patch0001:      0001-util-never-follow-symlinks-in-rm_rf_children.patch
+Patch0002:      0002-man-fix-parameter-name-for-sd_uid_xxx.patch
+Patch0003:      0003-bmfmt-allow-passing-more-than-one-config-file-name.patch
+Patch0004:      0004-modules-load-drop-lib-from-search-path-if-we-don-t-h.patch
+Patch0005:      0005-sysctl-accept-multiple-passed-configuration-files.patch
+Patch0006:      0006-man-updates-to-sysctl.d-5.patch
+Patch0007:      0007-journal-react-with-immediate-rotation-to-a-couple-of.patch
+Patch0008:      0008-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch
+Patch0009:      0009-systemd-mount-the-securityfs-filesystem-at-early-sta.patch
+Patch0010:      0010-main-added-support-for-loading-IMA-custom-policies.patch
+Patch0011:      0011-man-systemd-cat-1-typo-fix.patch
+Patch0012:      0012-binfmt-fix-apply-loop.patch
+Patch0013:      0013-add-sparse-support-to-detect-endianness-bug.patch
+Patch0014:      0014-update-TODO.patch
+Patch0015:      0015-logind-extend-comment-about-X11-socket-symlink.patch
+Patch0016:      0016-logind-close-FIFO-before-ending-sessions-cleanly.patch
+Patch0017:      0017-man-minor-typo-in-reference-to-manual-page.patch
+Patch0018:      0018-build-sys-fix-make-dist-check.patch
+Patch0019:      0019-journalctl-loginctl-drop-systemd-prefix-in-binary-na.patch
+Patch0020:      0020-build-sys-do-not-set-CFLAGS-directly.patch
+Patch0021:      0021-build-sys-separate-ldflags-from-cflags.patch
+Patch0022:      0022-man-don-t-claim-f-was-short-for-follow.patch
+Patch0023:      0023-journalctl-add-local-switch.patch
+Patch0024:      0024-cat-fix-priority-type.patch
+Patch0025:      0025-units-get-rid-of-var-run.mount-and-var-lock.mount.patch
+Patch0026:      0026-journal-properly-handle-if-we-interleave-files-with-.patch
+Patch0027:      0027-job-fix-loss-of-ordering-with-restart-jobs.patch
+Patch0028:      0028-job-add-debug-prints-where-job-type-gets-changed.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -130,10 +157,16 @@ at boot.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
+set +x
+for p in %{patches}; do
+        echo "Applying $p"
+        patch -p1 < $p
+done
+set -x
 
 %build
 %{?gitcommit: ./autogen.sh }
+autoreconf -i
 %configure --with-distro=fedora --disable-static
 make %{?_smp_mflags}
 
@@ -324,10 +357,13 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_prefix}/lib/systemd/systemd
 %{_bindir}/systemd
 %{_bindir}/systemctl
+%{_bindir}/loginctl
+%{_bindir}/journalctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
+%{_bindir}/systemd-systemctl
 %{_bindir}/systemd-loginctl
 %{_bindir}/systemd-journalctl
 %{_bindir}/systemd-tmpfiles
@@ -414,6 +450,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Fri Mar 30 2012 Michal Schmidt <mschmidt@redhat.com> - 44-5
+- Post-v44 patches from upstream git, except the changes of /media, /tmp
+  mountpoints and the gtk removal.
+
 * Wed Mar 28 2012 Michal Schmidt <mschmidt@redhat.com> - 44-4
 - Add triggers from Bill Nottingham to correct the damage done by
   the obsoleted systemd-units's preun scriptlet (#807457).

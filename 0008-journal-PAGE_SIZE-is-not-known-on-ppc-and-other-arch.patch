@@ -1,10 +1,14 @@
-From 7264278fbbdc1dc6c30fedc902d1337594aa6ff6 Mon Sep 17 00:00:00 2001
+From 618df2ac0d2343694e5eddda2e0899cdd9aeaab3 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
-Date: Wed, 21 Mar 2012 22:47:44 +0000
-Subject: journal: PAGE_SIZE is not known on ppc and other archs
+Date: Wed, 21 Mar 2012 23:47:44 +0100
+Subject: [PATCH] journal: PAGE_SIZE is not known on ppc and other archs
 
 Let's use NAME_MAX, as suggested by Dan Walsh
+(cherry picked from commit 7264278fbbdc1dc6c30fedc902d1337594aa6ff6)
 ---
+ src/journal/journald.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
+
 diff --git a/src/journal/journald.c b/src/journal/journald.c
 index d27cb60..87390bd 100644
 --- a/src/journal/journald.c
@@ -40,5 +44,3 @@ index d27cb60..87390bd 100644
                          } control;
                          ssize_t n;
                          int v;
---
-cgit v0.9.0.2-2-gbebe

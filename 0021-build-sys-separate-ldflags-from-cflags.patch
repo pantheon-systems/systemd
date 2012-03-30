@@ -1,0 +1,43 @@
+From 2a01e5dcb958413a47413056dc0b1355afcefc08 Mon Sep 17 00:00:00 2001
+From: Lucas De Marchi <lucas.demarchi@profusion.mobi>
+Date: Mon, 19 Mar 2012 13:20:43 -0300
+Subject: [PATCH] build-sys: separate ldflags from cflags (cherry picked from
+ commit 9e7adc3ae1133fa08a468768a490812299fad030)
+
+---
+ Makefile.am  |    1 +
+ configure.ac |    7 +++++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 5c19dbb..d563cfd 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -107,6 +107,7 @@ AM_CPPFLAGS = \
+ 	-I $(top_srcdir)/src/systemd
+ 
+ AM_CFLAGS = $(WARNINGFLAGS)
++AM_LDFLAGS = $(GCLDFLAGS)
+ 
+ if TARGET_GENTOO
+ AM_CPPFLAGS += \
+diff --git a/configure.ac b/configure.ac
+index 03ed1f7..0c70bae 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -102,10 +102,13 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+         -fno-strict-aliasing \
+         -fvisibility=hidden \
+         -ffunction-sections \
+-        -fdata-sections \
++        -fdata-sections])
++AC_SUBST([WARNINGFLAGS], $with_cflags)
++
++CC_CHECK_FLAGS_APPEND([with_ldflags], [LDFLAGS], [\
+         -Wl,--as-needed \
+         -Wl,--gc-sections])
+-AC_SUBST([WARNINGFLAGS], $with_cflags)
++AC_SUBST([GCLDFLAGS], $with_ldflags)
+ 
+ LT_PREREQ(2.2)
+ LT_INIT
