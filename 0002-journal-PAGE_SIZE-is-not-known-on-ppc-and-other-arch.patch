@@ -1,4 +1,4 @@
-From 618df2ac0d2343694e5eddda2e0899cdd9aeaab3 Mon Sep 17 00:00:00 2001
+From f906d0aa8f75dd704706d52222c04a2aa714fa4a Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 21 Mar 2012 23:47:44 +0100
 Subject: [PATCH] journal: PAGE_SIZE is not known on ppc and other archs
@@ -10,7 +10,7 @@ Let's use NAME_MAX, as suggested by Dan Walsh
  1 files changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/src/journal/journald.c b/src/journal/journald.c
-index d27cb60..87390bd 100644
+index baad3ab..f9694cb 100644
 --- a/src/journal/journald.c
 +++ b/src/journal/journald.c
 @@ -29,7 +29,6 @@
@@ -21,7 +21,7 @@ index d27cb60..87390bd 100644
  
  #include <systemd/sd-journal.h>
  #include <systemd/sd-login.h>
-@@ -2149,10 +2148,20 @@ static int process_event(Server *s, struct epoll_event *ev) {
+@@ -2141,10 +2140,20 @@ static int process_event(Server *s, struct epoll_event *ev) {
                          size_t label_len = 0;
                          union {
                                  struct cmsghdr cmsghdr;
