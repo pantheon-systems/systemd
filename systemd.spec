@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -61,6 +61,8 @@ Source4:        listen.conf
 Patch0001:      0001-util-never-follow-symlinks-in-rm_rf_children.patch
 Patch0002:      0002-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch
 Patch0003:      0003-service-place-control-command-in-subcgroup-control.patch
+Patch0004:      0004-transaction-cancel-jobs-non-recursively-on-isolate.patch
+Patch0005:      0005-timedated-introduce-systemd-timedated-ntp.target-whi.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -430,6 +432,12 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Apr 25 2012 Michal Schmidt <mschmidt@redhat.com> - 44-7
+- Fixes for two bugs from the F17Blocker tracker:
+  - Rescue shell on fsck errors (#798328)
+  - Add systemd-timedated-ntp.target to avoid harcoded ntpd.service
+    in timedated. Allows chrony to hook into it. (#815748)
+
 * Tue Apr 24 2012 Michal Schmidt <mschmidt@redhat.com> - 44-6
 - Revert most of the patches added in 44-5. F17 has 44-4 right now so let's
   try to minimize the risk of breakage before GA release. Apply only:
