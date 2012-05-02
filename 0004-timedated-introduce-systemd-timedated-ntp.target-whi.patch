@@ -1,4 +1,4 @@
-From 1e6b6f2348a0a280a29f4c48f0d66a6c53ddf183 Mon Sep 17 00:00:00 2001
+From 6e35b15d533c9df40d558b4b9734b04a25ea57eb Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 25 Apr 2012 16:49:02 +0200
 Subject: [PATCH] timedated: introduce systemd-timedated-ntp.target which is

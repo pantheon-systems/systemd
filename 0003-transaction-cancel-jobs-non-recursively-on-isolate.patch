@@ -1,4 +1,4 @@
-From efa270eec499f02cfb949c0090e2d7409c729e1c Mon Sep 17 00:00:00 2001
+From 8bdec378799f98c4d08c333bac8ea4955190c15f Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 24 Apr 2012 11:21:03 +0200
 Subject: [PATCH] transaction: cancel jobs non-recursively on isolate
