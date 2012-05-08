@@ -1,0 +1,38 @@
+From f8616b35b4121a69cce0eaee61dd7ed577318acf Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 02:45:39 +0200
+Subject: [PATCH] default to v102 everywhere, instead of vt100, to synchronize
+ with agetty (cherry picked from commit
+ acda6a054fb131dbab9b7b16e4148e05a03ce66b)
+
+---
+ src/shared/util.c              |    2 +-
+ units/serial-getty@.service.m4 |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index cf29452..e314827 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4352,7 +4352,7 @@ bool tty_is_vc_resolve(const char *tty) {
+ const char *default_term_for_tty(const char *tty) {
+         assert(tty);
+ 
+-        return tty_is_vc_resolve(tty) ? "TERM=linux" : "TERM=vt100";
++        return tty_is_vc_resolve(tty) ? "TERM=linux" : "TERM=vt102";
+ }
+ 
+ bool dirent_is_file(const struct dirent *de) {
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index d1d14d3..d966f77 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -35,7 +35,7 @@ Before=getty.target
+ IgnoreOnIsolate=yes
+ 
+ [Service]
+-Environment=TERM=vt100
++Environment=TERM=vt102
+ ExecStart=-/sbin/agetty -s %I 115200,38400,9600
+ Restart=always
+ RestartSec=0

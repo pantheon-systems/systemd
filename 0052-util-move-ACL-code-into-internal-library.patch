@@ -1,0 +1,208 @@
+From faf93d80f5feec4c10da18bc6758c930e57dc29f Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 14:53:38 +0200
+Subject: [PATCH] util: move ACL code into internal library (cherry picked
+ from commit 78b2e3a632748fbeae8a9eb70ab1940e4a70619a)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am                      |   67 +++++++++++++++++++++++---------------
+ src/journal/journald.c           |    2 +-
+ src/login/logind-acl.c           |    2 +-
+ src/{acl-util.c => shared/acl.c} |    2 +-
+ src/{acl-util.h => shared/acl.h} |    0
+ 5 files changed, 43 insertions(+), 30 deletions(-)
+ rename src/{acl-util.c => shared/acl.c} (98%)
+ rename src/{acl-util.h => shared/acl.h} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 588121f..82eb68d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -459,6 +459,7 @@ noinst_LTLIBRARIES = \
+ 	libsystemd-basic.la \
+ 	libsystemd-capability.la \
+ 	libsystemd-audit.la \
++	libsystemd-acl.la \
+ 	libsystemd-core.la
+ 
+ # ------------------------------------------------------------------------------
+@@ -517,6 +518,18 @@ libsystemd_audit_la_LIBADD = \
+ 	libsystemd-capability.la
+ 
+ # ------------------------------------------------------------------------------
++libsystemd_acl_la_SOURCES = \
++	src/shared/acl.c \
++	src/shared/acl.h
++
++libsystemd_acl_la_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(ACL_CFLAGS)
++
++libsystemd_acl_la_LIBADD = \
++	$(ACL_LIBS)
++
++# ------------------------------------------------------------------------------
+ libsystemd_core_la_SOURCES = \
+ 	src/unit.c \
+ 	src/unit.h \
+@@ -648,7 +661,6 @@ libsystemd_core_la_SOURCES = \
+ 	src/polkit.h \
+ 	src/dbus-loop.h \
+ 	src/spawn-agent.h \
+-	src/acl-util.h \
+ 	src/logs-show.h
+ 
+ nodist_libsystemd_core_la_SOURCES = \
+@@ -1292,30 +1304,29 @@ systemd_journald_SOURCES = \
+ 	src/sd-id128.c \
+ 	src/cgroup-util.c
+ 
+-if HAVE_ACL
+-systemd_journald_SOURCES += \
+-	src/acl-util.c
+-endif
+-
+ nodist_systemd_journald_SOURCES = \
+ 	src/journal/journald-gperf.c
+ 
+-systemd_journald_CFLAGS = \
+-	$(AM_CFLAGS) \
+-	$(ACL_CFLAGS)
++systemd_journald_CFLAGS =
+ 
+ systemd_journald_LDADD = \
+ 	libsystemd-basic.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-login.la \
+-	$(ACL_LIBS)
++	libsystemd-login.la
++
++if HAVE_ACL
++systemd_journald_LDADD += \
++	libsystemd-acl.la
++endif
+ 
+ if HAVE_XZ
+ systemd_journald_SOURCES += \
+ 	src/journal/compress.c
++
+ systemd_journald_CFLAGS += \
+ 	$(XZ_CFLAGS)
++
+ systemd_journald_LDADD += \
+ 	$(XZ_LIBS)
+ endif
+@@ -1911,25 +1922,25 @@ systemd_logind_SOURCES = \
+ nodist_systemd_logind_SOURCES = \
+ 	src/login/logind-gperf.c
+ 
+-if HAVE_ACL
+-systemd_logind_SOURCES += \
+-	src/login/logind-acl.c \
+-	src/acl-util.c
+-endif
+-
+ systemd_logind_CFLAGS = \
+ 	$(AM_CFLAGS) \
+-	$(DBUS_CFLAGS) \
+ 	$(UDEV_CFLAGS) \
+-	$(ACL_CFLAGS)
++	$(DBUS_CFLAGS)
+ 
+ systemd_logind_LDADD = \
+ 	libsystemd-basic.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+-	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS) \
+-	$(ACL_LIBS)
++	$(DBUS_LIBS)
++
++if HAVE_ACL
++systemd_logind_SOURCES += \
++	src/login/logind-acl.c
++
++systemd_logind_LDADD += \
++	libsystemd-acl.la
++endif
+ 
+ systemd_user_sessions_SOURCES = \
+ 	src/login/user-sessions.c \
+@@ -2093,12 +2104,6 @@ rootlibexec_PROGRAMS += \
+ systemd_uaccess_SOURCES = \
+ 	src/login/uaccess.c
+ 
+-if HAVE_ACL
+-systemd_uaccess_SOURCES += \
+-	src/login/logind-acl.c \
+-	src/acl-util.c
+-endif
+-
+ systemd_uaccess_CFLAGS = \
+ 	$(AM_CFLAGS) \
+ 	$(UDEV_CFLAGS) \
+@@ -2111,6 +2116,14 @@ systemd_uaccess_LDADD = \
+ 	$(UDEV_LIBS) \
+ 	$(ACL_LIBS)
+ 
++if HAVE_ACL
++systemd_uaccess_SOURCES += \
++	src/login/logind-acl.c
++
++systemd_uaccess_LDADD += \
++	libsystemd-acl.la
++endif
++
+ rootlibexec_PROGRAMS += \
+ 	systemd-uaccess
+ 
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index f817df6..858bb4e 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -50,7 +50,7 @@
+ #ifdef HAVE_ACL
+ #include <sys/acl.h>
+ #include <acl/libacl.h>
+-#include "acl-util.h"
++#include "acl.h"
+ #endif
+ 
+ #ifdef HAVE_SELINUX
+diff --git a/src/login/logind-acl.c b/src/login/logind-acl.c
+index eb8a48d..e2e8696 100644
+--- a/src/login/logind-acl.c
++++ b/src/login/logind-acl.c
+@@ -27,7 +27,7 @@
+ 
+ #include "logind-acl.h"
+ #include "util.h"
+-#include "acl-util.h"
++#include "acl.h"
+ 
+ static int flush_acl(acl_t acl) {
+         acl_entry_t i;
+diff --git a/src/acl-util.c b/src/shared/acl.c
+similarity index 98%
+rename from src/acl-util.c
+rename to src/shared/acl.c
+index a2a9f9a..d6a80f4 100644
+--- a/src/acl-util.c
++++ b/src/shared/acl.c
+@@ -25,7 +25,7 @@
+ #include <errno.h>
+ #include <stdbool.h>
+ 
+-#include "acl-util.h"
++#include "acl.h"
+ 
+ int acl_find_uid(acl_t acl, uid_t uid, acl_entry_t *entry) {
+         acl_entry_t i;
+diff --git a/src/acl-util.h b/src/shared/acl.h
+similarity index 100%
+rename from src/acl-util.h
+rename to src/shared/acl.h

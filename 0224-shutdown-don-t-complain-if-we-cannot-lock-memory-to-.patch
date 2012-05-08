@@ -1,0 +1,25 @@
+From 488be4586baf4d4da91cf94d4c9bab861289e43f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 24 Apr 2012 16:56:06 +0200
+Subject: [PATCH] shutdown: don't complain if we cannot lock memory, to make
+ container shutdowns clean (cherry picked from commit
+ b55d0651c0433aee6bbec0516a0c2eb001c3fc31)
+
+---
+ src/core/shutdown.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/core/shutdown.c b/src/core/shutdown.c
+index 8bde974..0d0fe44 100644
+--- a/src/core/shutdown.c
++++ b/src/core/shutdown.c
+@@ -347,8 +347,7 @@ int main(int argc, char *argv[]) {
+         use_watchdog = !!getenv("WATCHDOG_USEC");
+ 
+         /* lock us into memory */
+-        if (mlockall(MCL_CURRENT|MCL_FUTURE) != 0)
+-                log_warning("Cannot lock process memory: %m");
++        mlockall(MCL_CURRENT|MCL_FUTURE);
+ 
+         log_info("Sending SIGTERM to remaining processes...");
+         send_signal(SIGTERM);

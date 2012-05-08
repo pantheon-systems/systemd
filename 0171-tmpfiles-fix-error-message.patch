@@ -1,0 +1,24 @@
+From 2c4bb487cfcf8c6c457f6abf067006830516cc79 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 17 Apr 2012 22:53:35 +0200
+Subject: [PATCH] tmpfiles: fix error message (cherry picked from commit
+ a48f3d156652cc241eb67fdf34041d1b7cdb71fb)
+
+---
+ src/tmpfiles/tmpfiles.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index d3ea592..ea8fee9 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -1291,8 +1291,8 @@ int main(int argc, char *argv[]) {
+                                     "/usr/lib/tmpfiles.d",
+                                     NULL);
+                 if (r < 0) {
+-                        r = EXIT_FAILURE;
+                         log_error("Failed to enumerate tmpfiles.d files: %s", strerror(-r));
++                        r = EXIT_FAILURE;
+                         goto finish;
+                 }
+ 

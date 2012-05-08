@@ -1,0 +1,26 @@
+From 7bb1d73531cf204faa0bd1a786d6f7a45a2e3570 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 15:10:28 +0200
+Subject: [PATCH] detect-virt: print 'none' if no virtualization is detected
+ (cherry picked from commit
+ ac0d6edfac140a684533925adb897c35736308f2)
+
+---
+ src/detect-virt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/detect-virt.c b/src/detect-virt.c
+index f48e023..a5a6b30 100644
+--- a/src/detect-virt.c
++++ b/src/detect-virt.c
+@@ -164,8 +164,8 @@ int main(int argc, char *argv[]) {
+                 break;
+         }
+ 
+-        if (id && !arg_quiet)
+-                puts(id);
++        if (!arg_quiet)
++                puts(id ? id : "none");
+ 
+         return retval;
+ }

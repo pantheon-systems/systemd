@@ -1,0 +1,36 @@
+From 52d6e39161b8fa94040b09235e2a24ae5b3fdeab Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 15:35:35 +0200
+Subject: [PATCH] units: remount file systems only if /etc/fstab actually
+ exists (cherry picked from commit
+ e3f7277c6e50ce567f07cad5232292ec62207b8c)
+
+---
+ units/remount-rootfs.service             |    1 +
+ units/systemd-remount-api-vfs.service.in |    1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/units/remount-rootfs.service b/units/remount-rootfs.service
+index 7b63752..b95d5f4 100644
+--- a/units/remount-rootfs.service
++++ b/units/remount-rootfs.service
+@@ -12,6 +12,7 @@ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service fsck-root.service
+ Before=local-fs-pre.target local-fs.target shutdown.target
+ Wants=local-fs-pre.target
++ConditionPathExists=/etc/fstab
+ 
+ [Service]
+ Type=oneshot
+diff --git a/units/systemd-remount-api-vfs.service.in b/units/systemd-remount-api-vfs.service.in
+index f4df0ca..0df742a 100644
+--- a/units/systemd-remount-api-vfs.service.in
++++ b/units/systemd-remount-api-vfs.service.in
+@@ -12,6 +12,7 @@ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+ Before=local-fs-pre.target local-fs.target shutdown.target
+ Wants=local-fs-pre.target
++ConditionPathExists=/etc/fstab
+ 
+ [Service]
+ Type=oneshot

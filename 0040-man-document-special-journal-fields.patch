@@ -1,0 +1,427 @@
+From 9b078952ba7899b86c1fe93570ffdc76ce2b9491 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 7 May 2012 23:33:27 +0200
+Subject: [PATCH] man: document special journal fields (cherry picked from
+ commit ffa16db02673ffa155ffb2649e72a935a1ff70f5)
+
+Conflicts:
+
+	man/journalctl.xml
+---
+ Makefile.am                    |    1 +
+ man/journalctl.xml             |    5 +-
+ man/systemd-journald.conf.xml  |    1 +
+ man/systemd.journal-fields.xml |  330 ++++++++++++++++++++++++++++++++++++++++
+ src/logs-show.c                |    8 +-
+ 5 files changed, 340 insertions(+), 5 deletions(-)
+ create mode 100644 man/systemd.journal-fields.xml
+
+diff --git a/Makefile.am b/Makefile.am
+index 73c3556..aface06 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -674,6 +674,7 @@ MANPAGES = \
+ 	man/systemd.snapshot.5 \
+ 	man/systemd.exec.5 \
+ 	man/systemd.special.7 \
++        man/systemd.journal-fields.7 \
+ 	man/daemon.7 \
+ 	man/runlevel.8 \
+ 	man/telinit.8 \
+diff --git a/man/journalctl.xml b/man/journalctl.xml
+index efceefa..7e011c9 100644
+--- a/man/journalctl.xml
++++ b/man/journalctl.xml
+@@ -69,7 +69,9 @@
+                 <para>If a match argument is passed the output is
+                 filtered accordingly. A match is in the format
+                 <literal>FIELD=VALUE</literal>,
+-                e.g. <literal>_SYSTEMD_UNIT=httpd.service</literal>.</para>
++                e.g. <literal>_SYSTEMD_UNIT=httpd.service</literal>. See
++                <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>
++                for a list of well-known fields.</para>
+ 
+                 <para>Output is interleaved from all accessible
+                 journal files, whether they are rotated or currently
+@@ -254,6 +256,7 @@
+                 <para>
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd-journald.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                 </para>
+         </refsect1>
+diff --git a/man/systemd-journald.conf.xml b/man/systemd-journald.conf.xml
+index 37dae68..6206164 100644
+--- a/man/systemd-journald.conf.xml
++++ b/man/systemd-journald.conf.xml
+@@ -247,6 +247,7 @@
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                   </para>
+         </refsect1>
+diff --git a/man/systemd.journal-fields.xml b/man/systemd.journal-fields.xml
+new file mode 100644
+index 0000000..5f2a32c
+--- /dev/null
++++ b/man/systemd.journal-fields.xml
+@@ -0,0 +1,330 @@
++<?xml version='1.0'?> <!--*-nxml-*-->
++<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
++        "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
++
++<!--
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++
++<refentry id="systemd.journal-fields">
++
++        <refentryinfo>
++                <title>systemd.journal-fields</title>
++                <productname>systemd</productname>
++
++                <authorgroup>
++                        <author>
++                                <contrib>Developer</contrib>
++                                <firstname>Lennart</firstname>
++                                <surname>Poettering</surname>
++                                <email>lennart@poettering.net</email>
++                        </author>
++                </authorgroup>
++        </refentryinfo>
++
++        <refmeta>
++                <refentrytitle>systemd.journal-fields</refentrytitle>
++                <manvolnum>7</manvolnum>
++        </refmeta>
++
++        <refnamediv>
++                <refname>systemd.journal-fields</refname>
++                <refpurpose>Special journal fields</refpurpose>
++        </refnamediv>
++
++        <refsect1>
++                <title>Description</title>
++
++                <para>Entries in the journal resemble an environment
++                block in their syntax, however with fields that can
++                include binary data. Primarily, fields are formatted
++                ASCII strings, and binary formatting is used only
++                where formatting as ASCII makes little sense. New
++                fields may be freely defined by applications, but a
++                few fields have special meaning. All fields with
++                special meaning are optional.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>User Journal Fields</title>
++
++                <para>User fields are fields that are directly passed
++                from clients and stored in the journal.</para>
++
++                <variablelist>
++                        <varlistentry>
++                                <term>MESSAGE=</term>
++                                <listitem>
++                                        <para>The human readable
++                                        message string for this
++                                        entry. This is supposed to be
++                                        the primary text shown to the
++                                        user. It is not translated,
++                                        and is not supposed to be
++                                        parsed for meta data.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>MESSAGE_ID=</term>
++                                <listitem>
++                                        <para>A 128bit message
++                                        identifier ID for recognizing
++                                        certain message types, if this
++                                        is desirable. This should
++                                        contain a 128bit id formatted
++                                        as lower-case hexadecimal
++                                        string, without any separating
++                                        dashes or suchlike. This is
++                                        recommended to be a UUID
++                                        compatible ID, but this is not
++                                        enforced, and formatted
++                                        differently. Developers can
++                                        generate a new ID for this
++                                        purpose with
++                                        <command>journalctl
++                                        --new-id</command>.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>PRIORITY=</term>
++                                <listitem>
++                                        <para>A priority value between
++                                        0 (<literal>emerg</literal>)
++                                        and 7
++                                        (<literal>debug</literal>)
++                                        formatted as decimal
++                                        string. This field is
++                                        compatible with syslog's
++                                        priority concept.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>CODE_FILE=</term>
++                                <term>CODE_LINE=</term>
++                                <term>CODE_FUNC=</term>
++                                <listitem>
++                                        <para>The code location
++                                        generating this message, if
++                                        known. Contains the source
++                                        file name, the line number and
++                                        the function name.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>SYSLOG_FACILITY=</term>
++                                <term>SYSLOG_IDENTIFIER=</term>
++                                <term>SYSLOG_PID=</term>
++                                <listitem>
++                                        <para>Syslog compatibility
++                                        fields containing the facility
++                                        (formatted as decimal string),
++                                        the identifier string
++                                        (i.e. "tag"), and the client
++                                        PID.</para>
++                                </listitem>
++
++                        </varlistentry>
++                </variablelist>
++        </refsect1>
++
++        <refsect1>
++                <title>Trusted Journal Fields</title>
++
++                <para>Fields prefixed with an underscore are trusted
++                fields, i.e. fields that are implicitly added by the
++                journal and cannot be altered by client code.</para>
++
++                <variablelist>
++                        <varlistentry>
++                                <term>_PID=</term>
++                                <term>_UID=</term>
++                                <term>_GID=</term>
++                                <listitem>
++                                        <para>The process, user and
++                                        group ID of the process the
++                                        journal entry originates from
++                                        formatted as decimal
++                                        string.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_COMM=</term>
++                                <term>_EXE=</term>
++                                <term>_CMDLINE=</term>
++                                <listitem>
++                                        <para>The name, the executable
++                                        path and the command line of
++                                        the process the journal entry
++                                        originates from.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_AUDIT_SESSION=</term>
++                                <term>_AUDIT_LOGINUID=</term>
++                                <listitem>
++                                        <para>The session and login
++                                        UID of the process the journal
++                                        entry originates from, as
++                                        maintained by the kernel audit
++                                        subsystem.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_SYSTEMD_CGROUP=</term>
++                                <term>_SYSTEMD_SESSION=</term>
++                                <term>_SYSTEMD_UNIT=</term>
++                                <term>_SYSTEMD_OWNER_UID=</term>
++
++                                <listitem>
++                                        <para>The contol group path in
++                                        the systemd hierarchy, the
++                                        systemd session ID (if any),
++                                        the systemd unit name (if any)
++                                        and the owner UID of the
++                                        systemd session (if any) of
++                                        the process the journal entry
++                                        originates from.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_SELINUX_CONTEXT=</term>
++                                <listitem>
++                                        <para>The SELinux security
++                                        context of the process the
++                                        journal entry originates
++                                        from.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_SOURCE_REALTIME_TIMESTAMP=</term>
++                                <listitem>
++                                        <para>The earliest trusted
++                                        timestamp of the message, if
++                                        any is known that is different
++                                        from the reception time of the
++                                        journal. The time in usec
++                                        since the epoch formatted as
++                                        decimal string.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_BOOT_ID=</term>
++                                <listitem>
++                                        <para>The kernel boot ID for
++                                        the boot the message was
++                                        generated in, formatted as
++                                        128bit hexadecimal
++                                        string.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_MACHINE_ID=</term>
++                                <listitem>
++                                        <para>The machine ID of the
++                                        originating host, as available
++                                        in
++                                        <citerefentry><refentrytitle>machine-id</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>_HOSTNAME=</term>
++                                <listitem>
++                                        <para>The name of the
++                                        originating host.</para>
++                                </listitem>
++                        </varlistentry>
++                </variablelist>
++        </refsect1>
++
++        <refsect1>
++                <title>Address Fields</title>
++
++                <para>During serialization into external formats the
++                addresses of journal entries are serialized into
++                fields prefixed with double underscores. Note that
++                these aren't proper fields when stored in the journal,
++                but addressing meta data of entries.</para>
++
++                <variablelist>
++                        <varlistentry>
++                                <term>__CURSOR=</term>
++                                <listitem>
++                                        <para>The cursor for the
++                                        entry. A cursor is an opaque
++                                        text string that uniquely
++                                        describes the position of an
++                                        entry in the journal and is
++                                        portable across machines,
++                                        platforms and journal
++                                        files.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>__REALTIME_TIMESTAMP=</term>
++                                <listitem>
++                                        <para>The wallclock time
++                                        (CLOCK_REALTIME) at the point
++                                        in time the entry was received
++                                        by the journal. This has
++                                        different properties from
++                                        <literal>_SOURCE_REALTIME_TIMESTAMP=</literal>
++                                        as it is usually a bit later
++                                        but more likely to be
++                                        monotonic.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>__MONOTONIC_TIMESTAMP=</term>
++                                <listitem>
++                                        <para>The monotonic time
++                                        (CLOCK_MONOTONIC) at the point
++                                        in time the entry was received
++                                        by the journal. To be useful
++                                        as an address for the entry
++                                        this should be combined with
++                                        with boot ID in
++                                        <literal>_BOOT_ID=</literal>.</para>
++                                </listitem>
++                        </varlistentry>
++                </variablelist>
++        </refsect1>
++
++        <refsect1>
++                  <title>See Also</title>
++                  <para>
++                          <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>journald.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
++                  </para>
++        </refsect1>
++
++</refentry>
+diff --git a/src/logs-show.c b/src/logs-show.c
+index 0a07a77..158223f 100644
+--- a/src/logs-show.c
++++ b/src/logs-show.c
+@@ -348,8 +348,8 @@ static int output_export(sd_journal *j, unsigned line, unsigned n_columns, bool
+         }
+ 
+         printf("__CURSOR=%s\n"
+-               "__REALTIME=%llu\n"
+-               "__MONOTONIC=%llu\n"
++               "__REALTIME_TIMESTAMP=%llu\n"
++               "__MONOTONIC_TIMESTAMP=%llu\n"
+                "__BOOT_ID=%s\n",
+                cursor,
+                (unsigned long long) realtime,
+@@ -460,8 +460,8 @@ static int output_json(sd_journal *j, unsigned line, unsigned n_columns, bool sh
+ 
+         printf("{\n"
+                "\t\"__CURSOR\" : \"%s\",\n"
+-               "\t\"__REALTIME\" : \"%llu\",\n"
+-               "\t\"__MONOTONIC\" : \"%llu\",\n"
++               "\t\"__REALTIME_TIMESTAMP\" : \"%llu\",\n"
++               "\t\"__MONOTONIC_TIMESTAMP\" : \"%llu\",\n"
+                "\t\"__BOOT_ID\" : \"%s\"",
+                cursor,
+                (unsigned long long) realtime,

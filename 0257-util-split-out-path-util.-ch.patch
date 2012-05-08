@@ -1,0 +1,1966 @@
+From c2e1e5d6ee62ad597b6dfeb1e590c8bb3ba136bc Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 7 May 2012 21:36:12 +0200
+Subject: [PATCH] util: split-out path-util.[ch] (cherry picked from commit
+ 9eb977db5b89b44f254ab40c1876a76b7d7ea2d0)
+
+Conflicts:
+
+	src/udev/udev-rules.c
+---
+ Makefile.am                                        |    2 +
+ src/cgls/cgls.c                                    |    1 +
+ src/cgtop/cgtop.c                                  |    1 +
+ src/core/automount.c                               |    1 +
+ src/core/cgroup.c                                  |    1 +
+ src/core/condition.c                               |    1 +
+ src/core/device.c                                  |    1 +
+ src/core/execute.c                                 |    7 +-
+ src/core/load-fragment.c                           |    3 +-
+ src/core/manager.c                                 |    3 +-
+ src/core/mount-setup.c                             |    1 +
+ src/core/mount.c                                   |    1 +
+ src/core/namespace.c                               |    1 +
+ src/core/path.c                                    |    1 +
+ src/core/service.c                                 |    5 +-
+ src/core/socket.c                                  |    1 +
+ src/core/swap.c                                    |    1 +
+ src/core/umount.c                                  |    1 +
+ src/core/unit.c                                    |    7 +-
+ src/cryptsetup/cryptsetup.c                        |    1 +
+ src/journal/sd-journal.c                           |    3 +-
+ src/login/logind-dbus.c                            |    1 +
+ src/login/logind-inhibit.c                         |    4 +-
+ src/login/logind-seat.c                            |    3 +-
+ src/login/logind-session.c                         |    3 +-
+ src/login/sysfs-show.c                             |    1 +
+ src/nspawn/nspawn.c                                |    3 +-
+ src/remount-fs/remount-fs.c                        |    1 +
+ src/shared/cgroup-show.c                           |    5 +-
+ src/shared/cgroup-util.c                           |    3 +-
+ src/shared/conf-files.c                            |    7 +-
+ src/shared/conf-parser.c                           |    1 +
+ src/shared/install.c                               |   11 +-
+ src/shared/label.c                                 |    1 +
+ src/shared/path-lookup.c                           |   22 +-
+ src/shared/path-util.c                             |  371 ++++++++++++++++++++
+ src/shared/path-util.h                             |   46 +++
+ src/shared/socket-util.c                           |    1 +
+ src/shared/unit-name.c                             |    1 +
+ src/shared/util.c                                  |  350 +-----------------
+ src/shared/util.h                                  |   27 --
+ src/shared/utmp-wtmp.c                             |    3 +-
+ src/sysctl/sysctl.c                                |    1 +
+ src/systemctl/systemctl.c                          |   10 +-
+ src/test/test-cgroup.c                             |    1 +
+ src/test/test-install.c                            |   19 +-
+ src/tmpfiles/tmpfiles.c                            |    1 +
+ .../tty-ask-password-agent.c                       |    1 +
+ 48 files changed, 519 insertions(+), 423 deletions(-)
+ create mode 100644 src/shared/path-util.c
+ create mode 100644 src/shared/path-util.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 9823cdb..96cf5e5 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -512,6 +512,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/util.h \
+ 	src/shared/virt.c \
+ 	src/shared/virt.h \
++	src/shared/path-util.c \
++	src/shared/path-util.h \
+ 	src/shared/hashmap.c \
+ 	src/shared/hashmap.h \
+ 	src/shared/set.c \
+diff --git a/src/cgls/cgls.c b/src/cgls/cgls.c
+index 8c9d039..24a4121 100644
+--- a/src/cgls/cgls.c
++++ b/src/cgls/cgls.c
+@@ -29,6 +29,7 @@
+ #include "cgroup-show.h"
+ #include "cgroup-util.h"
+ #include "log.h"
++#include "path-util.h"
+ #include "util.h"
+ #include "pager.h"
+ #include "build.h"
+diff --git a/src/cgtop/cgtop.c b/src/cgtop/cgtop.c
+index 8b8617d..33d351b 100644
+--- a/src/cgtop/cgtop.c
++++ b/src/cgtop/cgtop.c
+@@ -26,6 +26,7 @@
+ #include <alloca.h>
+ #include <getopt.h>
+ 
++#include "path-util.h"
+ #include "util.h"
+ #include "hashmap.h"
+ #include "cgroup-util.h"
+diff --git a/src/core/automount.c b/src/core/automount.c
+index 6857a6f..98064a7 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -39,6 +39,7 @@
+ #include "special.h"
+ #include "label.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ 
+ static const UnitActiveState state_translation_table[_AUTOMOUNT_STATE_MAX] = {
+         [AUTOMOUNT_DEAD] = UNIT_INACTIVE,
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index f730451..ec219e9 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -31,6 +31,7 @@
+ #include "cgroup-util.h"
+ #include "log.h"
+ #include "strv.h"
++#include "path-util.h"
+ 
+ int cgroup_bonding_realize(CGroupBonding *b) {
+         int r;
+diff --git a/src/core/condition.c b/src/core/condition.c
+index 3ee9944..ae82abd 100644
+--- a/src/core/condition.c
++++ b/src/core/condition.c
+@@ -33,6 +33,7 @@
+ #include "util.h"
+ #include "condition.h"
+ #include "virt.h"
++#include "path-util.h"
+ 
+ Condition* condition_new(ConditionType type, const char *parameter, bool trigger, bool negate) {
+         Condition *c;
+diff --git a/src/core/device.c b/src/core/device.c
+index 0575379..65fd9ef 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -30,6 +30,7 @@
+ #include "unit-name.h"
+ #include "dbus-device.h"
+ #include "def.h"
++#include "path-util.h"
+ 
+ static const UnitActiveState state_translation_table[_DEVICE_STATE_MAX] = {
+         [DEVICE_DEAD] = UNIT_INACTIVE,
+diff --git a/src/core/execute.c b/src/core/execute.c
+index a594ee8..dad709a 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -59,6 +59,7 @@
+ #include "utmp-wtmp.h"
+ #include "def.h"
+ #include "loopback-setup.h"
++#include "path-util.h"
+ 
+ /* This assumes there is a 'tty' group */
+ #define TTY_MODE 0620
+@@ -929,7 +930,7 @@ static void rename_process_from_path(const char *path) {
+         /* This resulting string must fit in 10 chars (i.e. the length
+          * of "/sbin/init") to look pretty in /bin/ps */
+ 
+-        p = file_name_from_path(path);
++        p = path_get_file_name(path);
+         if (isempty(p)) {
+                 rename_process("(...)");
+                 return;
+@@ -1152,14 +1153,14 @@ int exec_spawn(ExecCommand *command,
+                 }
+ 
+                 if (!keep_stdout) {
+-                        err = setup_output(context, socket_fd, file_name_from_path(command->path), apply_tty_stdin);
++                        err = setup_output(context, socket_fd, path_get_file_name(command->path), apply_tty_stdin);
+                         if (err < 0) {
+                                 r = EXIT_STDOUT;
+                                 goto fail_child;
+                         }
+                 }
+ 
+-                err = setup_error(context, socket_fd, file_name_from_path(command->path), apply_tty_stdin);
++                err = setup_error(context, socket_fd, path_get_file_name(command->path), apply_tty_stdin);
+                 if (err < 0) {
+                         r = EXIT_STDERR;
+                         goto fail_child;
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 35b3e76..b5c6d0f 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -44,6 +44,7 @@
+ #include "unit-name.h"
+ #include "bus-errors.h"
+ #include "utf8.h"
++#include "path-util.h"
+ 
+ #ifndef HAVE_SYSV_COMPAT
+ int config_parse_warn_compat(
+@@ -2089,7 +2090,7 @@ static int open_follow(char **filename, FILE **_f, Set *names, char **_final) {
+                 /* Add the file name we are currently looking at to
+                  * the names of this unit, but only if it is a valid
+                  * unit name. */
+-                name = file_name_from_path(*filename);
++                name = path_get_file_name(*filename);
+ 
+                 if (unit_name_is_valid(name, true)) {
+ 
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 81a9131..336a870 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -65,6 +65,7 @@
+ #include "virt.h"
+ #include "watchdog.h"
+ #include "cgroup-util.h"
++#include "path-util.h"
+ 
+ /* As soon as 16 units are in our GC queue, make sure to run a gc sweep */
+ #define GC_QUEUE_ENTRIES_MAX 16
+@@ -785,7 +786,7 @@ int manager_load_unit_prepare(Manager *m, const char *name, const char *path, DB
+         }
+ 
+         if (!name)
+-                name = file_name_from_path(path);
++                name = path_get_file_name(path);
+ 
+         t = unit_name_to_type(name);
+ 
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index 9001798..3682547 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -38,6 +38,7 @@
+ #include "set.h"
+ #include "strv.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ 
+ #ifndef TTY_GID
+ #define TTY_GID 5
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 8807908..5c79e3a 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -32,6 +32,7 @@
+ #include "log.h"
+ #include "strv.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "mount-setup.h"
+ #include "unit-name.h"
+ #include "dbus-mount.h"
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index 2462552..a6208e1 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -33,6 +33,7 @@
+ 
+ #include "strv.h"
+ #include "util.h"
++#include "path-util.h"
+ #include "namespace.h"
+ #include "missing.h"
+ 
+diff --git a/src/core/path.c b/src/core/path.c
+index 1d50885..9155fee 100644
+--- a/src/core/path.c
++++ b/src/core/path.c
+@@ -32,6 +32,7 @@
+ #include "dbus-path.h"
+ #include "special.h"
+ #include "bus-errors.h"
++#include "path-util.h"
+ 
+ static const UnitActiveState state_translation_table[_PATH_STATE_MAX] = {
+         [PATH_DEAD] = UNIT_INACTIVE,
+diff --git a/src/core/service.c b/src/core/service.c
+index 0909bab..803153b 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -38,6 +38,7 @@
+ #include "bus-errors.h"
+ #include "exit-status.h"
+ #include "def.h"
++#include "path-util.h"
+ #include "util.h"
+ #include "utf8.h"
+ 
+@@ -722,7 +723,7 @@ static int service_load_sysv_path(Service *s, const char *path) {
+                                                 goto finish;
+                                         }
+ 
+-                                        r = sysv_translate_facility(n, file_name_from_path(path), &m);
++                                        r = sysv_translate_facility(n, path_get_file_name(path), &m);
+                                         free(n);
+ 
+                                         if (r < 0)
+@@ -772,7 +773,7 @@ static int service_load_sysv_path(Service *s, const char *path) {
+                                                 goto finish;
+                                         }
+ 
+-                                        r = sysv_translate_facility(n, file_name_from_path(path), &m);
++                                        r = sysv_translate_facility(n, path_get_file_name(path), &m);
+ 
+                                         if (r < 0) {
+                                                 log_error("[%s:%u] Failed to translate LSB dependency %s, ignoring: %s", path, line, n, strerror(-r));
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 1282e81..8152f06 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -37,6 +37,7 @@
+ #include "load-fragment.h"
+ #include "strv.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "unit-name.h"
+ #include "dbus-socket.h"
+ #include "missing.h"
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 78a2647..5ee8a1e 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -38,6 +38,7 @@
+ #include "bus-errors.h"
+ #include "exit-status.h"
+ #include "def.h"
++#include "path-util.h"
+ 
+ static const UnitActiveState state_translation_table[_SWAP_STATE_MAX] = {
+         [SWAP_DEAD] = UNIT_INACTIVE,
+diff --git a/src/core/umount.c b/src/core/umount.c
+index 75a92b9..3770b7d 100644
+--- a/src/core/umount.c
++++ b/src/core/umount.c
+@@ -32,6 +32,7 @@
+ #include "list.h"
+ #include "mount-setup.h"
+ #include "umount.h"
++#include "path-util.h"
+ #include "util.h"
+ 
+ typedef struct MountPoint {
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 7605bda..b34355e 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -33,6 +33,7 @@
+ #include "unit.h"
+ #include "macro.h"
+ #include "strv.h"
++#include "path-util.h"
+ #include "load-fragment.h"
+ #include "load-dropin.h"
+ #include "log.h"
+@@ -1670,7 +1671,7 @@ static const char *resolve_template(Unit *u, const char *name, const char*path,
+         assert(name || path);
+ 
+         if (!name)
+-                name = file_name_from_path(path);
++                name = path_get_file_name(path);
+ 
+         if (!unit_name_is_template(name)) {
+                 *p = NULL;
+@@ -2179,7 +2180,7 @@ static char *specifier_cgroup_root(char specifier, void *data, void *userdata) {
+         if (specifier == 'r')
+                 return strdup(u->manager->cgroup_hierarchy);
+ 
+-        if (parent_of_path(u->manager->cgroup_hierarchy, &p) < 0)
++        if (path_get_parent(u->manager->cgroup_hierarchy, &p) < 0)
+                 return strdup("");
+ 
+         if (streq(p, "/")) {
+@@ -2681,7 +2682,7 @@ UnitFileState unit_get_unit_file_state(Unit *u) {
+         if (u->unit_file_state < 0 && u->fragment_path)
+                 u->unit_file_state = unit_file_get_state(
+                                 u->manager->running_as == MANAGER_SYSTEM ? UNIT_FILE_SYSTEM : UNIT_FILE_USER,
+-                                NULL, file_name_from_path(u->fragment_path));
++                                NULL, path_get_file_name(u->fragment_path));
+ 
+         return u->unit_file_state;
+ }
+diff --git a/src/cryptsetup/cryptsetup.c b/src/cryptsetup/cryptsetup.c
+index 69901d6..f3116b7 100644
+--- a/src/cryptsetup/cryptsetup.c
++++ b/src/cryptsetup/cryptsetup.c
+@@ -29,6 +29,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "path-util.h"
+ #include "strv.h"
+ #include "ask-password-api.h"
+ #include "def.h"
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 92ba578..6e5f4bb 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -30,6 +30,7 @@
+ #include "journal-file.h"
+ #include "hashmap.h"
+ #include "list.h"
++#include "path-util.h"
+ #include "lookup3.h"
+ #include "compress.h"
+ #include "journal-internal.h"
+@@ -765,7 +766,7 @@ _public_ int sd_journal_get_cursor(sd_journal *j, char **cursor) {
+                      bid, (unsigned long long) le64toh(o->entry.monotonic),
+                      (unsigned long long) le64toh(o->entry.realtime),
+                      (unsigned long long) le64toh(o->entry.xor_hash),
+-                     file_name_from_path(j->current_file->path)) < 0)
++                     path_get_file_name(j->current_file->path)) < 0)
+                 return -ENOMEM;
+ 
+         return 1;
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index b86f470..b59a3a6 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -28,6 +28,7 @@
+ #include "dbus-common.h"
+ #include "strv.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "polkit.h"
+ #include "special.h"
+ 
+diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
+index e4eefd0..b5b801e 100644
+--- a/src/login/logind-inhibit.c
++++ b/src/login/logind-inhibit.c
+@@ -28,7 +28,7 @@
+ 
+ #include "util.h"
+ #include "mkdir.h"
+-
++#include "path-util.h"
+ #include "logind-inhibit.h"
+ 
+ Inhibitor* inhibitor_new(Manager *m, const char* id) {
+@@ -46,7 +46,7 @@ Inhibitor* inhibitor_new(Manager *m, const char* id) {
+                 return NULL;
+         }
+ 
+-        i->id = file_name_from_path(i->state_file);
++        i->id = path_get_file_name(i->state_file);
+ 
+         if (hashmap_put(m->inhibitors, i->id, i) < 0) {
+                 free(i->state_file);
+diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
+index 906ede6..b0dd5f9 100644
+--- a/src/login/logind-seat.c
++++ b/src/login/logind-seat.c
+@@ -31,6 +31,7 @@
+ #include "logind-acl.h"
+ #include "util.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ 
+ Seat *seat_new(Manager *m, const char *id) {
+         Seat *s;
+@@ -48,7 +49,7 @@ Seat *seat_new(Manager *m, const char *id) {
+                 return NULL;
+         }
+ 
+-        s->id = file_name_from_path(s->state_file);
++        s->id = path_get_file_name(s->state_file);
+         s->manager = m;
+ 
+         if (hashmap_put(m->seats, s->id, s) < 0) {
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index baf1ab2..b5c6300 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -28,6 +28,7 @@
+ #include "strv.h"
+ #include "util.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "cgroup-util.h"
+ #include "logind-session.h"
+ 
+@@ -49,7 +50,7 @@ Session* session_new(Manager *m, User *u, const char *id) {
+                 return NULL;
+         }
+ 
+-        s->id = file_name_from_path(s->state_file);
++        s->id = path_get_file_name(s->state_file);
+ 
+         if (hashmap_put(m->sessions, s->id, s) < 0) {
+                 free(s->state_file);
+diff --git a/src/login/sysfs-show.c b/src/login/sysfs-show.c
+index b8b356d..d01d8b6 100644
+--- a/src/login/sysfs-show.c
++++ b/src/login/sysfs-show.c
+@@ -25,6 +25,7 @@
+ 
+ #include "util.h"
+ #include "sysfs-show.h"
++#include "path-util.h"
+ 
+ static int show_sysfs_one(
+                 struct udev *udev,
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 9fa7592..7c36731 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -50,6 +50,7 @@
+ #include "missing.h"
+ #include "cgroup-util.h"
+ #include "strv.h"
++#include "path-util.h"
+ #include "loopback-setup.h"
+ 
+ static char *arg_directory = NULL;
+@@ -524,7 +525,7 @@ static int setup_hostname(void) {
+         char *hn;
+         int r = 0;
+ 
+-        hn = file_name_from_path(arg_directory);
++        hn = path_get_file_name(arg_directory);
+         if (hn) {
+                 hn = strdup(hn);
+                 if (!hn)
+diff --git a/src/remount-fs/remount-fs.c b/src/remount-fs/remount-fs.c
+index 24ecaff..8c7227c 100644
+--- a/src/remount-fs/remount-fs.c
++++ b/src/remount-fs/remount-fs.c
+@@ -29,6 +29,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "path-util.h"
+ #include "set.h"
+ #include "mount-setup.h"
+ #include "exit-status.h"
+diff --git a/src/shared/cgroup-show.c b/src/shared/cgroup-show.c
+index 22d432c..4d8345f 100644
+--- a/src/shared/cgroup-show.c
++++ b/src/shared/cgroup-show.c
+@@ -26,6 +26,7 @@
+ 
+ #include "util.h"
+ #include "macro.h"
++#include "path-util.h"
+ #include "cgroup-util.h"
+ #include "cgroup-show.h"
+ 
+@@ -205,7 +206,7 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+                 }
+ 
+                 if (last) {
+-                        printf("%s\342\224\234 %s\n", prefix, file_name_from_path(last));
++                        printf("%s\342\224\234 %s\n", prefix, path_get_file_name(last));
+ 
+                         if (!p1) {
+                                 p1 = strappend(prefix, "\342\224\202 ");
+@@ -230,7 +231,7 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+                 show_cgroup_one_by_path(path, prefix, n_columns, !!last, kernel_threads);
+ 
+         if (last) {
+-                printf("%s\342\224\224 %s\n", prefix, file_name_from_path(last));
++                printf("%s\342\224\224 %s\n", prefix, path_get_file_name(last));
+ 
+                 if (!p2) {
+                         p2 = strappend(prefix, "  ");
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index bfad85d..7bb7f54 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -34,6 +34,7 @@
+ #include "set.h"
+ #include "macro.h"
+ #include "util.h"
++#include "path-util.h"
+ #include "strv.h"
+ 
+ int cg_enumerate_processes(const char *controller, const char *path, FILE **_f) {
+@@ -673,7 +674,7 @@ int cg_delete(const char *controller, const char *path) {
+         assert(controller);
+         assert(path);
+ 
+-        if ((r = parent_of_path(path, &parent)) < 0)
++        if ((r = path_get_parent(path, &parent)) < 0)
+                 return r;
+ 
+         r = cg_migrate_recursive(controller, path, parent, false, true);
+diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
+index 019fadc..487c9a5 100644
+--- a/src/shared/conf-files.c
++++ b/src/shared/conf-files.c
+@@ -33,6 +33,7 @@
+ #include "missing.h"
+ #include "log.h"
+ #include "strv.h"
++#include "path-util.h"
+ #include "hashmap.h"
+ #include "conf-files.h"
+ 
+@@ -69,7 +70,7 @@ static int files_add(Hashmap *h, const char *path, const char *suffix) {
+                         goto finish;
+                 }
+ 
+-                if (hashmap_put(h, file_name_from_path(p), p) <= 0) {
++                if (hashmap_put(h, path_get_file_name(p), p) <= 0) {
+                         log_debug("Skip overridden file: %s.", p);
+                         free(p);
+                 }
+@@ -85,7 +86,7 @@ static int base_cmp(const void *a, const void *b) {
+ 
+         s1 = *(char * const *)a;
+         s2 = *(char * const *)b;
+-        return strcmp(file_name_from_path(s1), file_name_from_path(s2));
++        return strcmp(path_get_file_name(s1), path_get_file_name(s2));
+ }
+ 
+ int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs) {
+@@ -137,7 +138,7 @@ int conf_files_list(char ***strv, const char *suffix, const char *dir, ...) {
+                 goto finish;
+         }
+ 
+-        if (!strv_path_canonicalize(dirs)) {
++        if (!path_strv_canonicalize(dirs)) {
+                 r = -ENOMEM;
+                 goto finish;
+         }
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index a9b0113..d77cd2b 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -31,6 +31,7 @@
+ #include "strv.h"
+ #include "log.h"
+ #include "utf8.h"
++#include "path-util.h"
+ 
+ int config_item_table_lookup(
+                 void *table,
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 491957d..669abc0 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -29,6 +29,7 @@
+ #include "mkdir.h"
+ #include "hashmap.h"
+ #include "set.h"
++#include "path-util.h"
+ #include "path-lookup.h"
+ #include "strv.h"
+ #include "unit-name.h"
+@@ -283,7 +284,7 @@ static int remove_marked_symlinks_fd(
+ 
+                         found =
+                                 set_get(remove_symlinks_to, dest) ||
+-                                set_get(remove_symlinks_to, file_name_from_path(dest));
++                                set_get(remove_symlinks_to, path_get_file_name(dest));
+ 
+                         if (found) {
+ 
+@@ -468,7 +469,7 @@ static int find_symlinks_fd(
+                         if (path_is_absolute(name))
+                                 found_dest = path_equal(dest, name);
+                         else
+-                                found_dest = streq(file_name_from_path(dest), name);
++                                found_dest = streq(path_get_file_name(dest), name);
+ 
+                         free(dest);
+ 
+@@ -754,7 +755,7 @@ int unit_file_link(
+                 char *path, *fn;
+                 struct stat st;
+ 
+-                fn = file_name_from_path(*i);
++                fn = path_get_file_name(*i);
+ 
+                 if (!path_is_absolute(*i) ||
+                     !unit_name_is_valid_no_type(fn, true)) {
+@@ -917,7 +918,7 @@ static int install_info_add(
+         assert(name || path);
+ 
+         if (!name)
+-                name = file_name_from_path(path);
++                name = path_get_file_name(path);
+ 
+         if (!unit_name_is_valid_no_type(name, true))
+                 return -EINVAL;
+@@ -1915,7 +1916,7 @@ int unit_file_get_list(
+                         continue;
+ 
+                 found:
+-                        r = hashmap_put(h, file_name_from_path(f->path), f);
++                        r = hashmap_put(h, path_get_file_name(f->path), f);
+                         if (r < 0) {
+                                 free(f->path);
+                                 free(f);
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 433b768..3c35f08 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -28,6 +28,7 @@
+ 
+ #include "label.h"
+ #include "util.h"
++#include "path-util.h"
+ 
+ #ifdef HAVE_SELINUX
+ #include <selinux/selinux.h>
+diff --git a/src/shared/path-lookup.c b/src/shared/path-lookup.c
+index d33ebc7..b5073ad 100644
+--- a/src/shared/path-lookup.c
++++ b/src/shared/path-lookup.c
+@@ -28,7 +28,7 @@
+ #include "util.h"
+ #include "mkdir.h"
+ #include "strv.h"
+-
++#include "path-util.h"
+ #include "path-lookup.h"
+ 
+ int user_config_home(char **config_home) {
+@@ -165,7 +165,7 @@ static char** user_dirs(void) {
+         strv_free(r);
+         r = t;
+ 
+-        if (!strv_path_make_absolute_cwd(r))
++        if (!path_strv_make_absolute_cwd(r))
+             goto fail;
+ 
+ finish:
+@@ -191,7 +191,7 @@ int lookup_paths_init(LookupPaths *p, ManagerRunningAs running_as, bool personal
+         /* First priority is whatever has been passed to us via env
+          * vars */
+         if ((e = getenv("SYSTEMD_UNIT_PATH")))
+-                if (!(p->unit_path = split_path_and_make_absolute(e)))
++                if (!(p->unit_path = path_split_and_make_absolute(e)))
+                         return -ENOMEM;
+ 
+         if (strv_isempty(p->unit_path)) {
+@@ -239,11 +239,11 @@ int lookup_paths_init(LookupPaths *p, ManagerRunningAs running_as, bool personal
+         }
+ 
+         if (p->unit_path)
+-                if (!strv_path_canonicalize(p->unit_path))
++                if (!path_strv_canonicalize(p->unit_path))
+                         return -ENOMEM;
+ 
+         strv_uniq(p->unit_path);
+-        strv_path_remove_empty(p->unit_path);
++        path_strv_remove_empty(p->unit_path);
+ 
+         if (!strv_isempty(p->unit_path)) {
+ 
+@@ -262,7 +262,7 @@ int lookup_paths_init(LookupPaths *p, ManagerRunningAs running_as, bool personal
+                 /* /etc/init.d/ compatibility does not matter to users */
+ 
+                 if ((e = getenv("SYSTEMD_SYSVINIT_PATH")))
+-                        if (!(p->sysvinit_path = split_path_and_make_absolute(e)))
++                        if (!(p->sysvinit_path = path_split_and_make_absolute(e)))
+                                 return -ENOMEM;
+ 
+                 if (strv_isempty(p->sysvinit_path)) {
+@@ -275,7 +275,7 @@ int lookup_paths_init(LookupPaths *p, ManagerRunningAs running_as, bool personal
+                 }
+ 
+                 if ((e = getenv("SYSTEMD_SYSVRCND_PATH")))
+-                        if (!(p->sysvrcnd_path = split_path_and_make_absolute(e)))
++                        if (!(p->sysvrcnd_path = path_split_and_make_absolute(e)))
+                                 return -ENOMEM;
+ 
+                 if (strv_isempty(p->sysvrcnd_path)) {
+@@ -288,18 +288,18 @@ int lookup_paths_init(LookupPaths *p, ManagerRunningAs running_as, bool personal
+                 }
+ 
+                 if (p->sysvinit_path)
+-                        if (!strv_path_canonicalize(p->sysvinit_path))
++                        if (!path_strv_canonicalize(p->sysvinit_path))
+                                 return -ENOMEM;
+ 
+                 if (p->sysvrcnd_path)
+-                        if (!strv_path_canonicalize(p->sysvrcnd_path))
++                        if (!path_strv_canonicalize(p->sysvrcnd_path))
+                                 return -ENOMEM;
+ 
+                 strv_uniq(p->sysvinit_path);
+                 strv_uniq(p->sysvrcnd_path);
+ 
+-                strv_path_remove_empty(p->sysvinit_path);
+-                strv_path_remove_empty(p->sysvrcnd_path);
++                path_strv_remove_empty(p->sysvinit_path);
++                path_strv_remove_empty(p->sysvrcnd_path);
+ 
+                 if (!strv_isempty(p->sysvinit_path)) {
+ 
+diff --git a/src/shared/path-util.c b/src/shared/path-util.c
+new file mode 100644
+index 0000000..ccd7667
+--- /dev/null
++++ b/src/shared/path-util.c
+@@ -0,0 +1,371 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010-2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <assert.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdlib.h>
++#include <signal.h>
++#include <stdio.h>
++#include <fcntl.h>
++#include <dirent.h>
++#include <sys/statvfs.h>
++
++#include "macro.h"
++#include "util.h"
++#include "log.h"
++#include "strv.h"
++#include "path-util.h"
++
++bool path_is_absolute(const char *p) {
++        return p[0] == '/';
++}
++
++bool is_path(const char *p) {
++        return !!strchr(p, '/');
++}
++
++char *path_get_file_name(const char *p) {
++        char *r;
++
++        assert(p);
++
++        if ((r = strrchr(p, '/')))
++                return r + 1;
++
++        return (char*) p;
++}
++
++int path_get_parent(const char *path, char **_r) {
++        const char *e, *a = NULL, *b = NULL, *p;
++        char *r;
++        bool slash = false;
++
++        assert(path);
++        assert(_r);
++
++        if (!*path)
++                return -EINVAL;
++
++        for (e = path; *e; e++) {
++
++                if (!slash && *e == '/') {
++                        a = b;
++                        b = e;
++                        slash = true;
++                } else if (slash && *e != '/')
++                        slash = false;
++        }
++
++        if (*(e-1) == '/')
++                p = a;
++        else
++                p = b;
++
++        if (!p)
++                return -EINVAL;
++
++        if (p == path)
++                r = strdup("/");
++        else
++                r = strndup(path, p-path);
++
++        if (!r)
++                return -ENOMEM;
++
++        *_r = r;
++        return 0;
++}
++
++char **path_split_and_make_absolute(const char *p) {
++        char **l;
++        assert(p);
++
++        if (!(l = strv_split(p, ":")))
++                return NULL;
++
++        if (!path_strv_make_absolute_cwd(l)) {
++                strv_free(l);
++                return NULL;
++        }
++
++        return l;
++}
++
++char *path_make_absolute(const char *p, const char *prefix) {
++        assert(p);
++
++        /* Makes every item in the list an absolute path by prepending
++         * the prefix, if specified and necessary */
++
++        if (path_is_absolute(p) || !prefix)
++                return strdup(p);
++
++        return join(prefix, "/", p, NULL);
++}
++
++char *path_make_absolute_cwd(const char *p) {
++        char *cwd, *r;
++
++        assert(p);
++
++        /* Similar to path_make_absolute(), but prefixes with the
++         * current working directory. */
++
++        if (path_is_absolute(p))
++                return strdup(p);
++
++        if (!(cwd = get_current_dir_name()))
++                return NULL;
++
++        r = path_make_absolute(p, cwd);
++        free(cwd);
++
++        return r;
++}
++
++char **path_strv_make_absolute_cwd(char **l) {
++        char **s;
++
++        /* Goes through every item in the string list and makes it
++         * absolute. This works in place and won't rollback any
++         * changes on failure. */
++
++        STRV_FOREACH(s, l) {
++                char *t;
++
++                if (!(t = path_make_absolute_cwd(*s)))
++                        return NULL;
++
++                free(*s);
++                *s = t;
++        }
++
++        return l;
++}
++
++char **path_strv_canonicalize(char **l) {
++        char **s;
++        unsigned k = 0;
++        bool enomem = false;
++
++        if (strv_isempty(l))
++                return l;
++
++        /* Goes through every item in the string list and canonicalize
++         * the path. This works in place and won't rollback any
++         * changes on failure. */
++
++        STRV_FOREACH(s, l) {
++                char *t, *u;
++
++                t = path_make_absolute_cwd(*s);
++                free(*s);
++
++                if (!t) {
++                        enomem = true;
++                        continue;
++                }
++
++                errno = 0;
++                u = canonicalize_file_name(t);
++                free(t);
++
++                if (!u) {
++                        if (errno == ENOMEM || !errno)
++                                enomem = true;
++
++                        continue;
++                }
++
++                l[k++] = u;
++        }
++
++        l[k] = NULL;
++
++        if (enomem)
++                return NULL;
++
++        return l;
++}
++
++char **path_strv_remove_empty(char **l) {
++        char **f, **t;
++
++        if (!l)
++                return NULL;
++
++        for (f = t = l; *f; f++) {
++
++                if (dir_is_empty(*f) > 0) {
++                        free(*f);
++                        continue;
++                }
++
++                *(t++) = *f;
++        }
++
++        *t = NULL;
++        return l;
++}
++
++char *path_kill_slashes(char *path) {
++        char *f, *t;
++        bool slash = false;
++
++        /* Removes redundant inner and trailing slashes. Modifies the
++         * passed string in-place.
++         *
++         * ///foo///bar/ becomes /foo/bar
++         */
++
++        for (f = path, t = path; *f; f++) {
++
++                if (*f == '/') {
++                        slash = true;
++                        continue;
++                }
++
++                if (slash) {
++                        slash = false;
++                        *(t++) = '/';
++                }
++
++                *(t++) = *f;
++        }
++
++        /* Special rule, if we are talking of the root directory, a
++        trailing slash is good */
++
++        if (t == path && slash)
++                *(t++) = '/';
++
++        *t = 0;
++        return path;
++}
++
++bool path_startswith(const char *path, const char *prefix) {
++        assert(path);
++        assert(prefix);
++
++        if ((path[0] == '/') != (prefix[0] == '/'))
++                return false;
++
++        for (;;) {
++                size_t a, b;
++
++                path += strspn(path, "/");
++                prefix += strspn(prefix, "/");
++
++                if (*prefix == 0)
++                        return true;
++
++                if (*path == 0)
++                        return false;
++
++                a = strcspn(path, "/");
++                b = strcspn(prefix, "/");
++
++                if (a != b)
++                        return false;
++
++                if (memcmp(path, prefix, a) != 0)
++                        return false;
++
++                path += a;
++                prefix += b;
++        }
++}
++
++bool path_equal(const char *a, const char *b) {
++        assert(a);
++        assert(b);
++
++        if ((a[0] == '/') != (b[0] == '/'))
++                return false;
++
++        for (;;) {
++                size_t j, k;
++
++                a += strspn(a, "/");
++                b += strspn(b, "/");
++
++                if (*a == 0 && *b == 0)
++                        return true;
++
++                if (*a == 0 || *b == 0)
++                        return false;
++
++                j = strcspn(a, "/");
++                k = strcspn(b, "/");
++
++                if (j != k)
++                        return false;
++
++                if (memcmp(a, b, j) != 0)
++                        return false;
++
++                a += j;
++                b += k;
++        }
++}
++
++int path_is_mount_point(const char *t, bool allow_symlink) {
++        struct stat a, b;
++        char *parent;
++        int r;
++
++        if (allow_symlink)
++                r = stat(t, &a);
++        else
++                r = lstat(t, &a);
++
++        if (r < 0) {
++                if (errno == ENOENT)
++                        return 0;
++
++                return -errno;
++        }
++
++        r = path_get_parent(t, &parent);
++        if (r < 0)
++                return r;
++
++        r = lstat(parent, &b);
++        free(parent);
++
++        if (r < 0)
++                return -errno;
++
++        return a.st_dev != b.st_dev;
++}
++
++int path_is_read_only_fs(const char *path) {
++        struct statvfs st;
++
++        assert(path);
++
++        if (statvfs(path, &st) < 0)
++                return -errno;
++
++        return !!(st.f_flag & ST_RDONLY);
++}
+diff --git a/src/shared/path-util.h b/src/shared/path-util.h
+new file mode 100644
+index 0000000..181b981
+--- /dev/null
++++ b/src/shared/path-util.h
+@@ -0,0 +1,46 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foopathutilhfoo
++#define foopathutilhfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010-2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "stdbool.h"
++
++bool is_path(const char *p);
++char **path_split_and_make_absolute(const char *p);
++char *path_get_file_name(const char *p);
++int path_get_parent(const char *path, char **parent);
++bool path_is_absolute(const char *p);
++char *path_make_absolute(const char *p, const char *prefix);
++char *path_make_absolute_cwd(const char *p);
++int path_parent(const char *path, char **parent);
++char *path_kill_slashes(char *path);
++bool path_startswith(const char *path, const char *prefix);
++bool path_equal(const char *a, const char *b);
++
++char **path_strv_make_absolute_cwd(char **l);
++char **path_strv_canonicalize(char **l);
++char **path_strv_remove_empty(char **l);
++
++int path_is_mount_point(const char *path, bool allow_symlink);
++int path_is_read_only_fs(const char *path);
++
++#endif
+diff --git a/src/shared/socket-util.c b/src/shared/socket-util.c
+index 618c928..c9963cd 100644
+--- a/src/shared/socket-util.c
++++ b/src/shared/socket-util.c
+@@ -35,6 +35,7 @@
+ #include "macro.h"
+ #include "util.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "socket-util.h"
+ #include "missing.h"
+ 
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index 1cbb804..05baa4a 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -23,6 +23,7 @@
+ #include <string.h>
+ #include <assert.h>
+ 
++#include "path-util.h"
+ #include "util.h"
+ #include "unit-name.h"
+ 
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 96a35c1..125826e 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -55,7 +55,6 @@
+ #include <glob.h>
+ #include <grp.h>
+ #include <sys/mman.h>
+-#include <sys/statvfs.h>
+ 
+ #include "macro.h"
+ #include "util.h"
+@@ -64,6 +63,7 @@
+ #include "log.h"
+ #include "strv.h"
+ #include "label.h"
++#include "path-util.h"
+ #include "exit-status.h"
+ #include "hashmap.h"
+ 
+@@ -486,21 +486,6 @@ char *split_quoted(const char *c, size_t *l, char **state) {
+         return (char*) current;
+ }
+ 
+-char **split_path_and_make_absolute(const char *p) {
+-        char **l;
+-        assert(p);
+-
+-        if (!(l = strv_split(p, ":")))
+-                return NULL;
+-
+-        if (!strv_path_make_absolute_cwd(l)) {
+-                strv_free(l);
+-                return NULL;
+-        }
+-
+-        return l;
+-}
+-
+ int get_parent_of_pid(pid_t pid, pid_t *_ppid) {
+         int r;
+         FILE *f;
+@@ -1313,187 +1298,6 @@ int readlink_and_canonicalize(const char *p, char **r) {
+         return 0;
+ }
+ 
+-int parent_of_path(const char *path, char **_r) {
+-        const char *e, *a = NULL, *b = NULL, *p;
+-        char *r;
+-        bool slash = false;
+-
+-        assert(path);
+-        assert(_r);
+-
+-        if (!*path)
+-                return -EINVAL;
+-
+-        for (e = path; *e; e++) {
+-
+-                if (!slash && *e == '/') {
+-                        a = b;
+-                        b = e;
+-                        slash = true;
+-                } else if (slash && *e != '/')
+-                        slash = false;
+-        }
+-
+-        if (*(e-1) == '/')
+-                p = a;
+-        else
+-                p = b;
+-
+-        if (!p)
+-                return -EINVAL;
+-
+-        if (p == path)
+-                r = strdup("/");
+-        else
+-                r = strndup(path, p-path);
+-
+-        if (!r)
+-                return -ENOMEM;
+-
+-        *_r = r;
+-        return 0;
+-}
+-
+-
+-char *file_name_from_path(const char *p) {
+-        char *r;
+-
+-        assert(p);
+-
+-        if ((r = strrchr(p, '/')))
+-                return r + 1;
+-
+-        return (char*) p;
+-}
+-
+-bool path_is_absolute(const char *p) {
+-        assert(p);
+-
+-        return p[0] == '/';
+-}
+-
+-bool is_path(const char *p) {
+-
+-        return !!strchr(p, '/');
+-}
+-
+-char *path_make_absolute(const char *p, const char *prefix) {
+-        assert(p);
+-
+-        /* Makes every item in the list an absolute path by prepending
+-         * the prefix, if specified and necessary */
+-
+-        if (path_is_absolute(p) || !prefix)
+-                return strdup(p);
+-
+-        return join(prefix, "/", p, NULL);
+-}
+-
+-char *path_make_absolute_cwd(const char *p) {
+-        char *cwd, *r;
+-
+-        assert(p);
+-
+-        /* Similar to path_make_absolute(), but prefixes with the
+-         * current working directory. */
+-
+-        if (path_is_absolute(p))
+-                return strdup(p);
+-
+-        if (!(cwd = get_current_dir_name()))
+-                return NULL;
+-
+-        r = path_make_absolute(p, cwd);
+-        free(cwd);
+-
+-        return r;
+-}
+-
+-char **strv_path_make_absolute_cwd(char **l) {
+-        char **s;
+-
+-        /* Goes through every item in the string list and makes it
+-         * absolute. This works in place and won't rollback any
+-         * changes on failure. */
+-
+-        STRV_FOREACH(s, l) {
+-                char *t;
+-
+-                if (!(t = path_make_absolute_cwd(*s)))
+-                        return NULL;
+-
+-                free(*s);
+-                *s = t;
+-        }
+-
+-        return l;
+-}
+-
+-char **strv_path_canonicalize(char **l) {
+-        char **s;
+-        unsigned k = 0;
+-        bool enomem = false;
+-
+-        if (strv_isempty(l))
+-                return l;
+-
+-        /* Goes through every item in the string list and canonicalize
+-         * the path. This works in place and won't rollback any
+-         * changes on failure. */
+-
+-        STRV_FOREACH(s, l) {
+-                char *t, *u;
+-
+-                t = path_make_absolute_cwd(*s);
+-                free(*s);
+-
+-                if (!t) {
+-                        enomem = true;
+-                        continue;
+-                }
+-
+-                errno = 0;
+-                u = canonicalize_file_name(t);
+-                free(t);
+-
+-                if (!u) {
+-                        if (errno == ENOMEM || !errno)
+-                                enomem = true;
+-
+-                        continue;
+-                }
+-
+-                l[k++] = u;
+-        }
+-
+-        l[k] = NULL;
+-
+-        if (enomem)
+-                return NULL;
+-
+-        return l;
+-}
+-
+-char **strv_path_remove_empty(char **l) {
+-        char **f, **t;
+-
+-        if (!l)
+-                return NULL;
+-
+-        for (f = t = l; *f; f++) {
+-
+-                if (dir_is_empty(*f) > 0) {
+-                        free(*f);
+-                        continue;
+-                }
+-
+-                *(t++) = *f;
+-        }
+-
+-        *t = NULL;
+-        return l;
+-}
+-
+ int reset_all_signal_handlers(void) {
+         int sig;
+ 
+@@ -1972,107 +1776,6 @@ char *bus_path_unescape(const char *f) {
+         return r;
+ }
+ 
+-char *path_kill_slashes(char *path) {
+-        char *f, *t;
+-        bool slash = false;
+-
+-        /* Removes redundant inner and trailing slashes. Modifies the
+-         * passed string in-place.
+-         *
+-         * ///foo///bar/ becomes /foo/bar
+-         */
+-
+-        for (f = path, t = path; *f; f++) {
+-
+-                if (*f == '/') {
+-                        slash = true;
+-                        continue;
+-                }
+-
+-                if (slash) {
+-                        slash = false;
+-                        *(t++) = '/';
+-                }
+-
+-                *(t++) = *f;
+-        }
+-
+-        /* Special rule, if we are talking of the root directory, a
+-        trailing slash is good */
+-
+-        if (t == path && slash)
+-                *(t++) = '/';
+-
+-        *t = 0;
+-        return path;
+-}
+-
+-bool path_startswith(const char *path, const char *prefix) {
+-        assert(path);
+-        assert(prefix);
+-
+-        if ((path[0] == '/') != (prefix[0] == '/'))
+-                return false;
+-
+-        for (;;) {
+-                size_t a, b;
+-
+-                path += strspn(path, "/");
+-                prefix += strspn(prefix, "/");
+-
+-                if (*prefix == 0)
+-                        return true;
+-
+-                if (*path == 0)
+-                        return false;
+-
+-                a = strcspn(path, "/");
+-                b = strcspn(prefix, "/");
+-
+-                if (a != b)
+-                        return false;
+-
+-                if (memcmp(path, prefix, a) != 0)
+-                        return false;
+-
+-                path += a;
+-                prefix += b;
+-        }
+-}
+-
+-bool path_equal(const char *a, const char *b) {
+-        assert(a);
+-        assert(b);
+-
+-        if ((a[0] == '/') != (b[0] == '/'))
+-                return false;
+-
+-        for (;;) {
+-                size_t j, k;
+-
+-                a += strspn(a, "/");
+-                b += strspn(b, "/");
+-
+-                if (*a == 0 && *b == 0)
+-                        return true;
+-
+-                if (*a == 0 || *b == 0)
+-                        return false;
+-
+-                j = strcspn(a, "/");
+-                k = strcspn(b, "/");
+-
+-                if (j != k)
+-                        return false;
+-
+-                if (memcmp(a, b, j) != 0)
+-                        return false;
+-
+-                a += j;
+-                b += k;
+-        }
+-}
+-
+ char *ascii_strlower(char *t) {
+         char *p;
+ 
+@@ -2986,36 +2689,6 @@ ssize_t loop_write(int fd, const void *buf, size_t nbytes, bool do_poll) {
+         return n;
+ }
+ 
+-int path_is_mount_point(const char *t, bool allow_symlink) {
+-        struct stat a, b;
+-        char *parent;
+-        int r;
+-
+-        if (allow_symlink)
+-                r = stat(t, &a);
+-        else
+-                r = lstat(t, &a);
+-
+-        if (r < 0) {
+-                if (errno == ENOENT)
+-                        return 0;
+-
+-                return -errno;
+-        }
+-
+-        r = parent_of_path(t, &parent);
+-        if (r < 0)
+-                return r;
+-
+-        r = lstat(parent, &b);
+-        free(parent);
+-
+-        if (r < 0)
+-                return -errno;
+-
+-        return a.st_dev != b.st_dev;
+-}
+-
+ int parse_usec(const char *t, usec_t *usec) {
+         static const struct {
+                 const char *suffix;
+@@ -4746,7 +4419,7 @@ int fopen_temporary(const char *path, FILE **_f, char **_temp_path) {
+         if (!t)
+                 return -ENOMEM;
+ 
+-        fn = file_name_from_path(path);
++        fn = path_get_file_name(path);
+         k = fn-path;
+         memcpy(t, path, k);
+         t[k] = '.';
+@@ -4928,8 +4601,8 @@ int symlink_or_copy(const char *from, const char *to) {
+         assert(from);
+         assert(to);
+ 
+-        if (parent_of_path(from, &pf) < 0 ||
+-            parent_of_path(to, &pt) < 0) {
++        if (path_get_parent(from, &pf) < 0 ||
++            path_get_parent(to, &pt) < 0) {
+                 r = -ENOMEM;
+                 goto finish;
+         }
+@@ -4976,7 +4649,7 @@ int symlink_or_copy_atomic(const char *from, const char *to) {
+         if (!t)
+                 return -ENOMEM;
+ 
+-        fn = file_name_from_path(to);
++        fn = path_get_file_name(to);
+         k = fn-to;
+         memcpy(t, to, k);
+         t[k] = '.';
+@@ -5218,7 +4891,7 @@ int in_search_path(const char *path, char **search) {
+         char **i, *parent;
+         int r;
+ 
+-        r = parent_of_path(path, &parent);
++        r = path_get_parent(path, &parent);
+         if (r < 0)
+                 return r;
+ 
+@@ -5857,17 +5530,6 @@ int setrlimit_closest(int resource, const struct rlimit *rlim) {
+         return 0;
+ }
+ 
+-int path_is_read_only_fs(const char *path) {
+-        struct statvfs st;
+-
+-        assert(path);
+-
+-        if (statvfs(path, &st) < 0)
+-                return -errno;
+-
+-        return !!(st.f_flag & ST_RDONLY);
+-}
+-
+ int getenv_for_pid(pid_t pid, const char *field, char **_value) {
+         char path[sizeof("/proc/")-1+10+sizeof("/environ")], *value = NULL;
+         int r;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index ab5c8df..e98ed41 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -122,10 +122,6 @@ static inline const char *strna(const char *s) {
+         return s ? s : "n/a";
+ }
+ 
+-static inline bool is_path_absolute(const char *p) {
+-        return *p == '/';
+-}
+-
+ static inline bool isempty(const char *p) {
+         return !p || !p[0];
+ }
+@@ -205,8 +201,6 @@ char *split_quoted(const char *c, size_t *l, char **state);
+ #define FOREACH_WORD_QUOTED(word, length, s, state)                     \
+         for ((state) = NULL, (word) = split_quoted((s), &(length), &(state)); (word); (word) = split_quoted((s), &(length), &(state)))
+ 
+-char **split_path_and_make_absolute(const char *p);
+-
+ pid_t get_parent_of_pid(pid_t pid, pid_t *ppid);
+ int get_starttime_of_pid(pid_t pid, unsigned long long *st);
+ 
+@@ -229,17 +223,6 @@ int readlink_malloc(const char *p, char **r);
+ int readlink_and_make_absolute(const char *p, char **r);
+ int readlink_and_canonicalize(const char *p, char **r);
+ 
+-char *file_name_from_path(const char *p);
+-bool is_path(const char *p);
+-
+-bool path_is_absolute(const char *p);
+-char *path_make_absolute(const char *p, const char *prefix);
+-char *path_make_absolute_cwd(const char *p);
+-
+-char **strv_path_make_absolute_cwd(char **l);
+-char **strv_path_canonicalize(char **l);
+-char **strv_path_remove_empty(char **l);
+-
+ int reset_all_signal_handlers(void);
+ 
+ char *strstrip(char *s);
+@@ -248,8 +231,6 @@ char *truncate_nl(char *s);
+ 
+ char *file_in_same_dir(const char *path, const char *filename);
+ 
+-int parent_of_path(const char *path, char **parent);
+-
+ int rmdir_parents(const char *path, const char *stop);
+ 
+ int get_process_comm(pid_t pid, char **name);
+@@ -273,11 +254,6 @@ char *xescape(const char *s, const char *bad);
+ char *bus_path_escape(const char *s);
+ char *bus_path_unescape(const char *s);
+ 
+-char *path_kill_slashes(char *path);
+-
+-bool path_startswith(const char *path, const char *prefix);
+-bool path_equal(const char *a, const char *b);
+-
+ char *ascii_strlower(char *path);
+ 
+ bool dirent_is_file(const struct dirent *de);
+@@ -351,9 +327,6 @@ int fopen_temporary(const char *path, FILE **_f, char **_temp_path);
+ ssize_t loop_read(int fd, void *buf, size_t nbytes, bool do_poll);
+ ssize_t loop_write(int fd, const void *buf, size_t nbytes, bool do_poll);
+ 
+-int path_is_mount_point(const char *path, bool allow_symlink);
+-int path_is_read_only_fs(const char *path);
+-
+ bool is_device_path(const char *path);
+ 
+ int dir_is_empty(const char *path);
+diff --git a/src/shared/utmp-wtmp.c b/src/shared/utmp-wtmp.c
+index 217ae1e..c74af3e 100644
+--- a/src/shared/utmp-wtmp.c
++++ b/src/shared/utmp-wtmp.c
+@@ -29,6 +29,7 @@
+ #include <sys/poll.h>
+ 
+ #include "macro.h"
++#include "path-util.h"
+ #include "utmp-wtmp.h"
+ 
+ int utmp_get_runlevel(int *runlevel, int *previous) {
+@@ -224,7 +225,7 @@ int utmp_put_init_process(const char *id, pid_t pid, pid_t sid, const char *line
+         strncpy(store.ut_id, sanitize_id(id), sizeof(store.ut_id));
+ 
+         if (line)
+-                strncpy(store.ut_line, file_name_from_path(line), sizeof(store.ut_line));
++                strncpy(store.ut_line, path_get_file_name(line), sizeof(store.ut_line));
+ 
+         return write_entry_both(&store);
+ }
+diff --git a/src/sysctl/sysctl.c b/src/sysctl/sysctl.c
+index 3d1249f..19709cf 100644
+--- a/src/sysctl/sysctl.c
++++ b/src/sysctl/sysctl.c
+@@ -31,6 +31,7 @@
+ #include "strv.h"
+ #include "util.h"
+ #include "strv.h"
++#include "path-util.h"
+ #include "conf-files.h"
+ 
+ #define PROC_SYS_PREFIX "/proc/sys/"
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index bbf2a6b..a4f3de7 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -45,6 +45,7 @@
+ #include "utmp-wtmp.h"
+ #include "special.h"
+ #include "initreq.h"
++#include "path-util.h"
+ #include "strv.h"
+ #include "dbus-common.h"
+ #include "cgroup-show.h"
+@@ -61,6 +62,7 @@
+ #include "spawn-polkit-agent.h"
+ #include "install.h"
+ #include "logs-show.h"
++#include "path-util.h"
+ 
+ static const char *arg_type = NULL;
+ static char **arg_property = NULL;
+@@ -560,7 +562,7 @@ static int compare_unit_file_list(const void *a, const void *b) {
+                         return r;
+         }
+ 
+-        return strcasecmp(file_name_from_path(u->path), file_name_from_path(v->path));
++        return strcasecmp(path_get_file_name(u->path), path_get_file_name(v->path));
+ }
+ 
+ static bool output_show_unit_file(const UnitFileList *u) {
+@@ -579,7 +581,7 @@ static void output_unit_file_list(const UnitFileList *units, unsigned c) {
+                 if (!output_show_unit_file(u))
+                         continue;
+ 
+-                max_id_len = MAX(max_id_len, strlen(file_name_from_path(u->path)));
++                max_id_len = MAX(max_id_len, strlen(path_get_file_name(u->path)));
+                 state_cols = MAX(state_cols, strlen(unit_file_state_to_string(u->state)));
+         }
+ 
+@@ -616,7 +618,7 @@ static void output_unit_file_list(const UnitFileList *units, unsigned c) {
+                 } else
+                         on = off = "";
+ 
+-                id = file_name_from_path(u->path);
++                id = path_get_file_name(u->path);
+ 
+                 e = arg_full ? NULL : ellipsize(id, id_cols, 33);
+ 
+@@ -3701,7 +3703,7 @@ static int enable_sysv_units(char **args) {
+                 if (!isempty(arg_root))
+                         argv[c++] = q = strappend("--root=", arg_root);
+ 
+-                argv[c++] = file_name_from_path(p);
++                argv[c++] = path_get_file_name(p);
+                 argv[c++] =
+                         streq(verb, "enable") ? "on" :
+                         streq(verb, "disable") ? "off" : "--level=5";
+diff --git a/src/test/test-cgroup.c b/src/test/test-cgroup.c
+index eb18937..8de33e7 100644
+--- a/src/test/test-cgroup.c
++++ b/src/test/test-cgroup.c
+@@ -23,6 +23,7 @@
+ #include <string.h>
+ 
+ #include "cgroup-util.h"
++#include "path-util.h"
+ #include "util.h"
+ #include "log.h"
+ 
+diff --git a/src/test/test-install.c b/src/test/test-install.c
+index f8e87e0..14a5364 100644
+--- a/src/test/test-install.c
++++ b/src/test/test-install.c
+@@ -25,6 +25,7 @@
+ #include <fcntl.h>
+ 
+ #include "util.h"
++#include "path-util.h"
+ #include "install.h"
+ 
+ static void dump_changes(UnitFileChange *c, unsigned n) {
+@@ -57,7 +58,7 @@ int main(int argc, char* argv[]) {
+         HASHMAP_FOREACH(p, h, i) {
+                 UnitFileState s;
+ 
+-                s = unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(p->path));
++                s = unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(p->path));
+ 
+                 assert_se(p->state == s);
+ 
+@@ -175,7 +176,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == UNIT_FILE_ENABLED);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == UNIT_FILE_ENABLED);
+ 
+         log_error("disable files2");
+         changes = NULL;
+@@ -187,7 +188,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == _UNIT_FILE_STATE_INVALID);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == _UNIT_FILE_STATE_INVALID);
+ 
+         log_error("link files2");
+         changes = NULL;
+@@ -199,7 +200,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == UNIT_FILE_LINKED);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == UNIT_FILE_LINKED);
+ 
+         log_error("disable files2");
+         changes = NULL;
+@@ -211,7 +212,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == _UNIT_FILE_STATE_INVALID);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == _UNIT_FILE_STATE_INVALID);
+ 
+         log_error("link files2");
+         changes = NULL;
+@@ -223,7 +224,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == UNIT_FILE_LINKED);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == UNIT_FILE_LINKED);
+ 
+         log_error("reenable files2");
+         changes = NULL;
+@@ -235,7 +236,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == UNIT_FILE_ENABLED);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == UNIT_FILE_ENABLED);
+ 
+         log_error("disable files2");
+         changes = NULL;
+@@ -247,7 +248,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files2[0])) == _UNIT_FILE_STATE_INVALID);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files2[0])) == _UNIT_FILE_STATE_INVALID);
+         log_error("preset files");
+         changes = NULL;
+         n_changes = 0;
+@@ -258,7 +259,7 @@ int main(int argc, char* argv[]) {
+         dump_changes(changes, n_changes);
+         unit_file_changes_free(changes, n_changes);
+ 
+-        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, file_name_from_path(files[0])) == UNIT_FILE_ENABLED);
++        assert_se(unit_file_get_state(UNIT_FILE_SYSTEM, NULL, path_get_file_name(files[0])) == UNIT_FILE_ENABLED);
+ 
+         return 0;
+ }
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index f6bc07d..072776e 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -42,6 +42,7 @@
+ #include "log.h"
+ #include "util.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "strv.h"
+ #include "label.h"
+ #include "set.h"
+diff --git a/src/tty-ask-password-agent/tty-ask-password-agent.c b/src/tty-ask-password-agent/tty-ask-password-agent.c
+index c928b5f..f77bacd 100644
+--- a/src/tty-ask-password-agent/tty-ask-password-agent.c
++++ b/src/tty-ask-password-agent/tty-ask-password-agent.c
+@@ -34,6 +34,7 @@
+ 
+ #include "util.h"
+ #include "mkdir.h"
++#include "path-util.h"
+ #include "conf-parser.h"
+ #include "utmp-wtmp.h"
+ #include "socket-util.h"

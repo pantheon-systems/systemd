@@ -1,0 +1,179 @@
+From 645e9ac6422df40629b33acf6081ce56737ca32e Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 20 Apr 2012 09:38:43 +0200
+Subject: [PATCH] transaction: rework merging with installed jobs
+
+Previously transactions could reference installed jobs. It made some issues
+difficult to fix.
+
+This sets new rules for jobs:
+A job cannot be both a member of a transaction and installed. When jobs are
+created, they are linked to a transaction. The whole transaction is constructed
+(with merging of jobs within, etc.). When it's complete, all the jobs are
+unlinked from it one by one and let to install themselves. It is during the
+installation when merging with previously installed jobs (from older
+transactions) is contemplated.
+
+Merging with installed jobs has different rules than merging within a
+transaction:
+ - An installed conflicting job gets cancelled. It cannot be simply deleted,
+   because someone might be waiting for its completion on DBus.
+ - An installed, but still waiting, job can be safely merged into.
+ - An installed and running job can be tricky. For some job types it is safe to
+   just merge. For the other types we merge anyway, but put the job back into
+   JOB_WAITING to allow it to run again. This may be suboptimal, but it is not
+   currently possible to have more than one installed job for a unit.
+
+Note this also fixes a bug where the anchor job could be deleted during merging
+within the transaction.
+(cherry picked from commit 656bbffc6c45bdd8d5c28a96ca948ba16c546547)
+---
+ src/core/job.c         |   58 +++++++++++++++++++++++++++++++++++++++++++++---
+ src/core/job.h         |    2 +-
+ src/core/transaction.c |   21 ++++++++++--------
+ 3 files changed, 68 insertions(+), 13 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 58eb9dd..381b61c 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -96,18 +96,70 @@ void job_uninstall(Job *j) {
+         j->installed = false;
+ }
+ 
+-void job_install(Job *j) {
++static bool job_type_allows_late_merge(JobType t) {
++        /* Tells whether it is OK to merge a job of type 't' with an already
++         * running job.
++         * Reloads cannot be merged this way. Think of the sequence:
++         * 1. Reload of a daemon is in progress; the daemon has already loaded
++         *    its config file, but hasn't completed the reload operation yet.
++         * 2. Edit foo's config file.
++         * 3. Trigger another reload to have the daemon use the new config.
++         * Should the second reload job be merged into the first one, the daemon
++         * would not know about the new config.
++         * JOB_RESTART jobs on the other hand can be merged, because they get
++         * patched into JOB_START after stopping the unit. So if we see a
++         * JOB_RESTART running, it means the unit hasn't stopped yet and at
++         * this time the merge is still allowed. */
++        return !(t == JOB_RELOAD || t == JOB_RELOAD_OR_START);
++}
++
++static void job_merge_into_installed(Job *j, Job *other) {
++        assert(j->installed);
++        assert(j->unit == other->unit);
++
++        j->type = job_type_lookup_merge(j->type, other->type);
++        assert(j->type >= 0);
++
++        j->override = j->override || other->override;
++}
++
++Job* job_install(Job *j) {
+         Job *uj = j->unit->job;
+ 
++        assert(!j->installed);
++
+         if (uj) {
+-                job_uninstall(uj);
+-                job_free(uj);
++                if (job_type_is_conflicting(uj->type, j->type))
++                        job_finish_and_invalidate(uj, JOB_CANCELED);
++                else {
++                        /* not conflicting, i.e. mergeable */
++
++                        if (uj->state == JOB_WAITING ||
++                            (job_type_allows_late_merge(j->type) && job_type_is_superset(uj->type, j->type))) {
++                                job_merge_into_installed(uj, j);
++                                log_debug("Merged into installed job %s/%s as %u",
++                                          uj->unit->id, job_type_to_string(uj->type), (unsigned) uj->id);
++                                return uj;
++                        } else {
++                                /* already running and not safe to merge into */
++                                /* Patch uj to become a merged job and re-run it. */
++                                /* XXX It should be safer to queue j to run after uj finishes, but it is
++                                 * not currently possible to have more than one installed job per unit. */
++                                job_merge_into_installed(uj, j);
++                                log_debug("Merged into running job, re-running: %s/%s as %u",
++                                          uj->unit->id, job_type_to_string(uj->type), (unsigned) uj->id);
++                                uj->state = JOB_WAITING;
++                                return uj;
++                        }
++                }
+         }
+ 
++        /* Install the job */
+         j->unit->job = j;
+         j->installed = true;
+         j->manager->n_installed_jobs ++;
+         log_debug("Installed new job %s/%s as %u", j->unit->id, job_type_to_string(j->type), (unsigned) j->id);
++        return j;
+ }
+ 
+ JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts) {
+diff --git a/src/core/job.h b/src/core/job.h
+index 8fa9046..eab0e07 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -138,7 +138,7 @@ struct Job {
+ 
+ Job* job_new(Unit *unit, JobType type);
+ void job_free(Job *job);
+-void job_install(Job *j);
++Job* job_install(Job *j);
+ void job_uninstall(Job *j);
+ void job_dump(Job *j, FILE*f, const char *prefix);
+ 
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index d495cbd..aa0cedf 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -243,21 +243,14 @@ static int transaction_merge_jobs(Transaction *tr, DBusError *e) {
+                 LIST_FOREACH(transaction, k, j->transaction_next)
+                         assert_se(job_type_merge(&t, k->type) == 0);
+ 
+-                /* If an active job is mergeable, merge it too */
+-                if (j->unit->job)
+-                        job_type_merge(&t, j->unit->job->type); /* Might fail. Which is OK */
+-
+                 while ((k = j->transaction_next)) {
+-                        if (j->installed) {
++                        if (tr->anchor_job == k) {
+                                 transaction_merge_and_delete_job(tr, k, j, t);
+                                 j = k;
+                         } else
+                                 transaction_merge_and_delete_job(tr, j, k, t);
+                 }
+ 
+-                if (j->unit->job && !j->installed)
+-                        transaction_merge_and_delete_job(tr, j, j->unit->job, t);
+-
+                 assert(!j->transaction_next);
+                 assert(!j->transaction_prev);
+         }
+@@ -592,6 +585,8 @@ static int transaction_apply(Transaction *tr, Manager *m, JobMode mode) {
+         }
+ 
+         while ((j = hashmap_steal_first(tr->jobs))) {
++                Job *installed_job;
++
+                 if (j->installed) {
+                         /* log_debug("Skipping already installed job %s/%s as %u", j->unit->id, job_type_to_string(j->type), (unsigned) j->id); */
+                         continue;
+@@ -600,7 +595,15 @@ static int transaction_apply(Transaction *tr, Manager *m, JobMode mode) {
+                 /* Clean the job dependencies */
+                 transaction_unlink_job(tr, j, false);
+ 
+-                job_install(j);
++                installed_job = job_install(j);
++                if (installed_job != j) {
++                        /* j has been merged into a previously installed job */
++                        if (tr->anchor_job == j)
++                                tr->anchor_job = installed_job;
++                        hashmap_remove(m->jobs, UINT32_TO_PTR(j->id));
++                        job_free(j);
++                        j = installed_job;
++                }
+ 
+                 job_add_to_run_queue(j);
+                 job_add_to_dbus_queue(j);

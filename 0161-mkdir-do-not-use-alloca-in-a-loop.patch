@@ -1,0 +1,28 @@
+From 95861fe52f9fa0886c03a8efc3e7d63ffa92b96f Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 17 Apr 2012 14:43:28 +0200
+Subject: [PATCH] mkdir: do not use alloca() in a loop (cherry picked from
+ commit 75e37ac5b125713c5ab6e1c4a9d62cfb62948c27)
+
+---
+ src/shared/mkdir.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/mkdir.c b/src/shared/mkdir.c
+index d7635d4..3d65aec 100644
+--- a/src/shared/mkdir.c
++++ b/src/shared/mkdir.c
+@@ -84,10 +84,12 @@ int mkdir_parents(const char *path, mode_t mode) {
+                 if (*p == 0)
+                         return 0;
+ 
+-                if (!(t = strndupa(path, e - path)))
++                t = strndup(path, e - path);
++                if (!t)
+                         return -ENOMEM;
+ 
+                 r = label_mkdir(t, mode);
++                free(t);
+ 
+                 if (r < 0 && errno != EEXIST)
+                         return -errno;

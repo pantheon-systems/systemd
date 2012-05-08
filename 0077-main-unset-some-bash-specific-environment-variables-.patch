@@ -1,0 +1,29 @@
+From 822625de3d5dc7675e37af1c383ff1d42d943c86 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 13:19:26 +0200
+Subject: [PATCH] main: unset some bash specific environment variables that
+ might get leaked to us
+
+https://bugzilla.redhat.com/show_bug.cgi?id=811537
+(cherry picked from commit 9543ad166338a7bef8718070f11465df4b9badd7)
+---
+ src/main.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/main.c b/src/main.c
+index a0bcbdf..6656cb4 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1343,6 +1343,12 @@ int main(int argc, char *argv[]) {
+                 unsetenv("HOME");
+                 unsetenv("TERM");
+ 
++                /* When we are invoked by a shell, these might be set,
++                 * but make little sense to pass on */
++                unsetenv("PWD");
++                unsetenv("SHLVL");
++                unsetenv("_");
++
+                 /* All other variables are left as is, so that clients
+                  * can still read them via /proc/1/environ */
+         }

@@ -1,0 +1,61 @@
+From 0e35d1057d8ba5213dc41c82139172f7c78db6bb Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 14:46:29 +0200
+Subject: [PATCH] service: default to Type=dbus if BusName= is specified
+ (cherry picked from commit
+ 0b86feac50be53f278fa4f47024335cc8c20cc24)
+
+---
+ man/systemd.service.xml |    9 ++++++---
+ src/core/service.c      |    4 ++++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 837a992..9a80dd7 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -125,8 +125,9 @@
+ 
+                                 <para>If set to
+                                 <option>simple</option> (the default
+-                                value) it is expected that the process
+-                                configured with
++                                value if <varname>BusName=</varname>
++                                is not specified) it is expected that
++                                the process configured with
+                                 <varname>ExecStart=</varname> is the
+                                 main process of the service. In this
+                                 mode, if the process offers
+@@ -181,7 +182,9 @@
+                                 option configured implicitly gain
+                                 dependencies on the
+                                 <filename>dbus.socket</filename>
+-                                unit.</para>
++                                unit. This type is the default if
++                                <varname>BusName=</varname> is
++                                specified.</para>
+ 
+                                 <para>Behaviour of
+                                 <option>notify</option> is similar to
+diff --git a/src/core/service.c b/src/core/service.c
+index f0e6244..e8e190f 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -115,6 +115,7 @@ static void service_init(Unit *u) {
+ 
+         s->timeout_usec = DEFAULT_TIMEOUT_USEC;
+         s->restart_usec = DEFAULT_RESTART_USEC;
++        s->type = _SERVICE_TYPE_INVALID;
+ 
+         s->watchdog_watch.type = WATCH_INVALID;
+ 
+@@ -1216,6 +1217,9 @@ static int service_load(Unit *u) {
+ 
+         /* This is a new unit? Then let's add in some extras */
+         if (u->load_state == UNIT_LOADED) {
++                if (s->type == _SERVICE_TYPE_INVALID)
++                        s->type = s->bus_name ? SERVICE_DBUS : SERVICE_SIMPLE;
++
+                 service_fix_output(s);
+ 
+                 if ((r = unit_add_exec_dependencies(u, &s->exec_context)) < 0)

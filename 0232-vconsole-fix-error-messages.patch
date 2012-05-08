@@ -1,0 +1,42 @@
+From 060bb198ba6d6aece76496b698408bded1ce0247 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 02:28:26 +0200
+Subject: [PATCH] vconsole: fix error messages
+
+https://bugs.freedesktop.org/show_bug.cgi?id=49192
+(cherry picked from commit 682fff73712b2203300d54813cb11adbf47b0eb6)
+---
+ src/vconsole/vconsole-setup.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/vconsole/vconsole-setup.c b/src/vconsole/vconsole-setup.c
+index 9196789..e59078d 100644
+--- a/src/vconsole/vconsole-setup.c
++++ b/src/vconsole/vconsole-setup.c
+@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
+                                         NULL)) < 0) {
+ 
+                         if (r != -ENOENT)
+-                                log_warning("Failed to read /etc/sysconfig/i18n: %s", strerror(-r));
++                                log_warning("Failed to read /etc/sysconfig/keyboard: %s", strerror(-r));
+                 }
+ 
+                 if (access("/etc/sysconfig/console/default.kmap", F_OK) >= 0) {
+@@ -320,7 +320,7 @@ int main(int argc, char **argv) {
+                                         NULL)) < 0) {
+ 
+                         if (r != -ENOENT)
+-                                log_warning("Failed to read /etc/sysconfig/console: %s", strerror(-r));
++                                log_warning("Failed to read /etc/sysconfig/consolefont: %s", strerror(-r));
+                 }
+ 
+ #elif defined(TARGET_GENTOO)
+@@ -391,7 +391,7 @@ int main(int argc, char **argv) {
+                                         NULL)) < 0) {
+ 
+                         if (r != -ENOENT)
+-                                log_warning("Failed to read /etc/sysconfig/i18n: %s", strerror(-r));
++                                log_warning("Failed to read /etc/sysconfig/keyboard: %s", strerror(-r));
+                 }
+ 
+                 if (vc_keytable) {

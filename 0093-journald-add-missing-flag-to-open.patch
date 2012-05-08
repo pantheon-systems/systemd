@@ -1,0 +1,23 @@
+From 52f44f25038cd5bf6cdb72dc78b8b3a485ebb1db Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 12:57:41 +0200
+Subject: [PATCH] journald: add missing flag to open() (cherry picked from
+ commit 2abf99ac076299d80ed595fa4ae5cc46bb455975)
+
+---
+ src/journal/journald.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index a6e50fc..f54a006 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2480,7 +2480,7 @@ static int open_proc_kmsg(Server *s) {
+                 return 0;
+ 
+ 
+-        s->proc_kmsg_fd = open("/proc/kmsg", O_CLOEXEC|O_NONBLOCK|O_NOCTTY);
++        s->proc_kmsg_fd = open("/proc/kmsg", O_RDONLY|O_CLOEXEC|O_NONBLOCK|O_NOCTTY);
+         if (s->proc_kmsg_fd < 0) {
+                 log_warning("Failed to open /proc/kmsg, ignoring: %m");
+                 return 0;

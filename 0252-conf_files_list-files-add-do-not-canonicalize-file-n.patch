@@ -1,0 +1,47 @@
+From 9a297a418295f27917ab6796236ab939ea0a43f9 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 7 May 2012 13:15:25 +0200
+Subject: [PATCH] conf_files_list(): files-add() - do not canonicalize file
+ names
+
+File names in /etc, /run, /usr/lib are sorted/overridden by basename.
+Sorting things like "/dev/null" with the basename "null" in the hash
+of config files breaks the ordering and the overriding logic.
+(cherry picked from commit cd9556cc84523e2d515a8be2648e2a50fb6b2144)
+---
+ src/shared/util.c |   13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 283d0c5..07d8892 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4877,7 +4877,7 @@ static int files_add(Hashmap *h, const char *path, const char *suffix) {
+ 
+         for (;;) {
+                 int k;
+-                char *p, *f;
++                char *p;
+ 
+                 k = readdir_r(dir, &buffer, &de);
+                 if (k != 0) {
+@@ -4896,17 +4896,10 @@ static int files_add(Hashmap *h, const char *path, const char *suffix) {
+                         goto finish;
+                 }
+ 
+-                f = canonicalize_file_name(p);
+-                if (!f) {
+-                        log_error("Failed to canonicalize file name '%s': %m", p);
++                if (hashmap_put(h, file_name_from_path(p), p) <= 0) {
++                        log_debug("Skip overridden file: %s.", p);
+                         free(p);
+-                        continue;
+                 }
+-                free(p);
+-
+-                log_debug("found: %s\n", f);
+-                if (hashmap_put(h, file_name_from_path(f), f) <= 0)
+-                        free(f);
+         }
+ 
+ finish:

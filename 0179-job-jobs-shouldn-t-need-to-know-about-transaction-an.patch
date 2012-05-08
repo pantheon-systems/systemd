@@ -1,0 +1,128 @@
+From d0d165845140cd28b91c8de74df1573a67185dcd Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 18 Apr 2012 15:21:24 +0200
+Subject: [PATCH] job: jobs shouldn't need to know about transaction anchors
+
+Let the transactions maintain their own anchor links.
+(cherry picked from commit 1da4264fbd0fa5e6b1bd5e0ac4674a3503774369)
+---
+ src/core/job.c         |    8 ++------
+ src/core/job.h         |    5 ++---
+ src/core/transaction.c |   18 +++++++++++++++---
+ 3 files changed, 19 insertions(+), 12 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index b1a6bf3..a7cab13 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -96,7 +96,7 @@ void job_free(Job *j) {
+         free(j);
+ }
+ 
+-JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts, Transaction *tr) {
++JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts) {
+         JobDependency *l;
+ 
+         assert(object);
+@@ -116,21 +116,17 @@ JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool
+ 
+         if (subject)
+                 LIST_PREPEND(JobDependency, subject, subject->subject_list, l);
+-        else
+-                LIST_PREPEND(JobDependency, subject, tr->anchor, l);
+ 
+         LIST_PREPEND(JobDependency, object, object->object_list, l);
+ 
+         return l;
+ }
+ 
+-void job_dependency_free(JobDependency *l, Transaction *tr) {
++void job_dependency_free(JobDependency *l) {
+         assert(l);
+ 
+         if (l->subject)
+                 LIST_REMOVE(JobDependency, subject, l->subject->subject_list, l);
+-        else
+-                LIST_REMOVE(JobDependency, subject, tr->anchor, l);
+ 
+         LIST_REMOVE(JobDependency, object, l->object->object_list, l);
+ 
+diff --git a/src/core/job.h b/src/core/job.h
+index faa10e3..cbd10c5 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -34,7 +34,6 @@ typedef enum JobMode JobMode;
+ typedef enum JobResult JobResult;
+ 
+ #include "manager.h"
+-#include "transaction.h"
+ #include "unit.h"
+ #include "hashmap.h"
+ #include "list.h"
+@@ -142,8 +141,8 @@ void job_uninstall(Job *j);
+ void job_free(Job *job);
+ void job_dump(Job *j, FILE*f, const char *prefix);
+ 
+-JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts, Transaction *tr);
+-void job_dependency_free(JobDependency *l, Transaction *tr);
++JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts);
++void job_dependency_free(JobDependency *l);
+ 
+ bool job_is_anchor(Job *j);
+ 
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 1344e2f..2a6f1de 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -789,6 +789,12 @@ static Job* transaction_add_one_job(Transaction *tr, JobType type, Unit *unit, b
+         return j;
+ }
+ 
++static void transaction_job_dependency_free(Transaction *tr, JobDependency *l) {
++        if (!l->subject)
++                LIST_REMOVE(JobDependency, subject, tr->anchor, l);
++        job_dependency_free(l);
++}
++
+ static void transaction_unlink_job(Transaction *tr, Job *j, bool delete_dependencies) {
+         assert(tr);
+         assert(j);
+@@ -806,12 +812,12 @@ static void transaction_unlink_job(Transaction *tr, Job *j, bool delete_dependen
+         j->transaction_prev = j->transaction_next = NULL;
+ 
+         while (j->subject_list)
+-                job_dependency_free(j->subject_list, tr);
++                transaction_job_dependency_free(tr, j->subject_list);
+ 
+         while (j->object_list) {
+                 Job *other = j->object_list->matters ? j->object_list->subject : NULL;
+ 
+-                job_dependency_free(j->object_list, tr);
++                transaction_job_dependency_free(tr, j->object_list);
+ 
+                 if (other && delete_dependencies) {
+                         log_debug("Deleting job %s/%s as dependency of job %s/%s",
+@@ -835,6 +841,7 @@ int transaction_add_job_and_dependencies(
+                 DBusError *e,
+                 Job **_ret) {
+         Job *ret;
++        JobDependency *l;
+         Iterator i;
+         Unit *dep;
+         int r;
+@@ -884,9 +891,14 @@ int transaction_add_job_and_dependencies(
+         ret->ignore_order = ret->ignore_order || ignore_order;
+ 
+         /* Then, add a link to the job. */
+-        if (!job_dependency_new(by, ret, matters, conflicts, tr))
++        l = job_dependency_new(by, ret, matters, conflicts);
++        if (!l)
+                 return -ENOMEM;
+ 
++        /* If the link has no subject job, it's the anchor link. */
++        if (!by)
++                LIST_PREPEND(JobDependency, subject, tr->anchor, l);
++
+         if (is_new && !ignore_requirements) {
+                 Set *following;
+ 

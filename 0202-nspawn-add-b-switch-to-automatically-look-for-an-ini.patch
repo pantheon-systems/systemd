@@ -1,0 +1,125 @@
+From 3e56a78b50e4794f89295278d477ad605c22471b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 13:37:24 +0200
+Subject: [PATCH] nspawn: add -b switch to automatically look for an init
+ binary (cherry picked from commit
+ 0f0dbc46ccf5aaaf3131446d0a4d78bc97a37295)
+
+Conflicts:
+
+	TODO
+---
+ man/systemd-nspawn.xml |   10 ++++++++++
+ src/nspawn/nspawn.c    |   29 +++++++++++++++++++++++++++--
+ src/shared/util.h      |    2 ++
+ 3 files changed, 39 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd-nspawn.xml b/man/systemd-nspawn.xml
+index 47aa4a7..31baa01 100644
+--- a/man/systemd-nspawn.xml
++++ b/man/systemd-nspawn.xml
+@@ -142,6 +142,16 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><option>--boot</option></term>
++                                <term><option>-b</option></term>
++
++                                <listitem><para>Automatically search
++                                for an init binary and invoke it
++                                instead of a shell or a user supplied
++                                program.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><option>--user=</option></term>
+                                 <term><option>-u</option></term>
+ 
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 0d0d987..c1b1dc7 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -56,6 +56,7 @@ static char *arg_directory = NULL;
+ static char *arg_user = NULL;
+ static char **arg_controllers = NULL;
+ static bool arg_private_network = false;
++static bool arg_boot = false;
+ 
+ static int help(void) {
+ 
+@@ -63,6 +64,7 @@ static int help(void) {
+                "Spawn a minimal namespace container for debugging, testing and building.\n\n"
+                "  -h --help             Show this help\n"
+                "  -D --directory=NAME   Root directory for the container\n"
++               "  -b --boot             Boot up full system (i.e. invoke init)\n"
+                "  -u --user=USER        Run the command under specified user or uid\n"
+                "  -C --controllers=LIST Put the container in specified comma-separated cgroup hierarchies\n"
+                "     --private-network  Disable network in container\n",
+@@ -83,6 +85,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "user",            required_argument, NULL, 'u'                 },
+                 { "controllers",     required_argument, NULL, 'C'                 },
+                 { "private-network", no_argument,       NULL, ARG_PRIVATE_NETWORK },
++                { "boot",            no_argument,       NULL, 'b'                 },
+                 { NULL,              0,                 NULL, 0                   }
+         };
+ 
+@@ -91,7 +94,7 @@ static int parse_argv(int argc, char *argv[]) {
+         assert(argc >= 0);
+         assert(argv);
+ 
+-        while ((c = getopt_long(argc, argv, "+hD:u:C:", options, NULL)) >= 0) {
++        while ((c = getopt_long(argc, argv, "+hD:u:C:b", options, NULL)) >= 0) {
+ 
+                 switch (c) {
+ 
+@@ -133,6 +136,10 @@ static int parse_argv(int argc, char *argv[]) {
+                         arg_private_network = true;
+                         break;
+ 
++                case 'b':
++                        arg_boot = true;
++                        break;
++
+                 case '?':
+                         return -EINVAL;
+ 
+@@ -1024,7 +1031,25 @@ int main(int argc, char *argv[]) {
+ 
+                 setup_hostname();
+ 
+-                if (argc > optind)
++                if (arg_boot) {
++                        char **a;
++                        size_t l;
++
++                        /* Automatically search for the init system */
++
++                        l = 1 + argc - optind;
++                        a = newa(char*, l + 1);
++                        memcpy(a + 1, argv + optind, l * sizeof(char*));
++
++                        a[0] = (char*) "/usr/lib/systemd/systemd";
++                        execve(a[0], a, (char**) envp);
++
++                        a[0] = (char*) "/lib/systemd/systemd";
++                        execve(a[0], a, (char**) envp);
++
++                        a[0] = (char*) "/sbin/init";
++                        execve(a[0], a, (char**) envp);
++                } else if (argc > optind)
+                         execvpe(argv[optind], argv + optind, (char**) envp);
+                 else {
+                         chdir(home ? home : "/root");
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 42d1f0c..f4190a3 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -100,6 +100,8 @@ bool streq_ptr(const char *a, const char *b);
+ 
+ #define new0(t, n) ((t*) calloc((n), sizeof(t)))
+ 
++#define newa(t, n) ((t*) alloca(sizeof(t)*(n)))
++
+ #define newdup(t, p, n) ((t*) memdup(p, sizeof(t)*(n))
+ 
+ #define malloc0(n) (calloc((n), 1))

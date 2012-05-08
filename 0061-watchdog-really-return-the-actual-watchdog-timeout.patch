@@ -1,0 +1,39 @@
+From 9683b66ab886093fb46c886093cae2e66f44fec4 Mon Sep 17 00:00:00 2001
+From: Michael Olbrich <m.olbrich@pengutronix.de>
+Date: Fri, 6 Apr 2012 21:37:26 +0200
+Subject: [PATCH] watchdog: really return the actual watchdog timeout
+
+In the current code setting the return argument is never reached.
+(cherry picked from commit 56bcbfa5f80ce6f1da5bb38e336b213be5ed0df0)
+---
+ src/watchdog.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/watchdog.c b/src/watchdog.c
+index 9625e15..372c16f 100644
+--- a/src/watchdog.c
++++ b/src/watchdog.c
+@@ -98,6 +98,7 @@ static int open_watchdog(void) {
+ }
+ 
+ int watchdog_set_timeout(usec_t *usec) {
++        int r;
+ 
+         watchdog_timeout = *usec;
+ 
+@@ -107,11 +108,13 @@ int watchdog_set_timeout(usec_t *usec) {
+                 return 0;
+ 
+         if (watchdog_fd < 0)
+-                return open_watchdog();
++                r = open_watchdog();
+         else
+-                return update_timeout();
++                r = update_timeout();
+ 
+         *usec = watchdog_timeout;
++
++        return r;
+ }
+ 
+ int watchdog_ping(void) {

@@ -1,0 +1,37 @@
+From 3786d3b91efa016b89538a907bfcafd93dd7ed4b Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 12 May 2012 22:01:27 +0200
+Subject: [PATCH] units: do not quit plymouth too early (cherry picked from
+ commit 7c99edf85b8245ccf3446a85781f200f030779ad)
+
+---
+ units/plymouth-quit-wait.service |    2 +-
+ units/plymouth-quit.service      |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/units/plymouth-quit-wait.service b/units/plymouth-quit-wait.service
+index 45c67bd..7fa4fe0 100644
+--- a/units/plymouth-quit-wait.service
++++ b/units/plymouth-quit-wait.service
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Wait for Plymouth Boot Screen to Quit
+-After=rc-local.service plymouth-start.service
++After=rc-local.service plymouth-start.service systemd-user-sessions.service
+ 
+ [Service]
+ ExecStart=-/bin/plymouth --wait
+diff --git a/units/plymouth-quit.service b/units/plymouth-quit.service
+index 164499a..deb418a 100644
+--- a/units/plymouth-quit.service
++++ b/units/plymouth-quit.service
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Terminate Plymouth Boot Screen
+-After=rc-local.service plymouth-start.service
++After=rc-local.service plymouth-start.service systemd-user-sessions.service
+ 
+ [Service]
+ ExecStart=-/bin/plymouth quit

@@ -1,0 +1,36 @@
+From 918af780fbb635875e345bd38400b02966e15e99 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 18 Apr 2012 18:15:49 +0200
+Subject: [PATCH] transaction: do not add installed jobs to the transaction
+
+Do not attempt to optimize away the job creation by refering to installed jobs.
+We do not want to disturb installed jobs until commiting the transaction.
+
+(A later patch to job merging will make the separation of transaction jobs and
+installed jobs complete.)
+(cherry picked from commit 3c956cfee29fe2642fbe257f55adb3583a4af878)
+---
+ src/core/transaction.c |   10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 2a6f1de..c00dd45 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -760,13 +760,9 @@ static Job* transaction_add_one_job(Transaction *tr, JobType type, Unit *unit, b
+                 }
+         }
+ 
+-        if (unit->job && unit->job->type == type)
+-                j = unit->job;
+-        else {
+-                j = job_new(unit, type);
+-                if (!j)
+-                        return NULL;
+-        }
++        j = job_new(unit, type);
++        if (!j)
++                return NULL;
+ 
+         j->generation = 0;
+         j->marker = NULL;

@@ -1,0 +1,37 @@
+From 49f319691a94efead1e7759bf397f820de9280e1 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Fri, 13 Apr 2012 13:21:20 +0200
+Subject: [PATCH] build-sys: execute test programs with 'make check' (cherry
+ picked from commit
+ e0eaab7cd1e8282be3061b1fa8bab9012708b010)
+
+---
+ Makefile.am |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index eab5676..a678cc5 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -859,6 +859,11 @@ check_PROGRAMS += \
+ 	test-install \
+ 	test-watchdog
+ 
++TESTS += \
++	test-job-type \
++	test-env-replace \
++	test-strv
++
+ test_engine_SOURCES = \
+ 	src/test/test-engine.c
+ 
+@@ -1338,6 +1343,9 @@ test_id128_LDADD = \
+ check_PROGRAMS += \
+ 	test-id128
+ 
++TESTS += \
++	test-id128
++
+ pkginclude_HEADERS += \
+ 	src/systemd/sd-id128.h
+ 

@@ -1,0 +1,1278 @@
+From 1e84a9da9b38edd5156b446065ca059b0f0fb363 Mon Sep 17 00:00:00 2001
+From: Michael Olbrich <m.olbrich@pengutronix.de>
+Date: Fri, 6 Apr 2012 21:38:02 +0200
+Subject: [PATCH] dbus: make the service property StartLimitAction writeable
+ (cherry picked from commit
+ 69df6f00f232af788746c410cb4cccd8209bd11c)
+
+---
+ Makefile.am                           |  159 +++++++++++++++++----------------
+ src/ask-password-api.c                |    1 +
+ src/automount.c                       |    1 +
+ src/cryptsetup/cryptsetup-generator.c |    1 +
+ src/dbus-service.c                    |    5 +-
+ src/dbus.c                            |    1 +
+ src/getty-generator.c                 |    1 +
+ src/install.c                         |    1 +
+ src/journal/coredump.c                |    1 +
+ src/journal/journald.c                |    1 +
+ src/locale/localed.c                  |    1 +
+ src/login/logind-dbus.c               |    1 +
+ src/login/logind-seat.c               |    1 +
+ src/login/logind-session.c            |    1 +
+ src/login/logind-user.c               |    1 +
+ src/login/multi-seat-x.c              |    1 +
+ src/machine-id-setup.c                |    1 +
+ src/manager.c                         |    1 +
+ src/mount-setup.c                     |    1 +
+ src/mount.c                           |    1 +
+ src/nspawn.c                          |    1 +
+ src/path-lookup.c                     |    1 +
+ src/path.c                            |    1 +
+ src/random-seed.c                     |    1 +
+ src/rc-local-generator.c              |    1 +
+ src/shared/cgroup-util.c              |    1 +
+ src/shared/mkdir.c                    |   99 ++++++++++++++++++++
+ src/shared/mkdir.h                    |   28 ++++++
+ src/shared/socket-util.c              |    1 +
+ src/shared/util.c                     |   68 --------------
+ src/shared/util.h                     |    3 -
+ src/shutdown.c                        |    1 +
+ src/socket.c                          |    1 +
+ src/tmpfiles.c                        |    1 +
+ src/tty-ask-password-agent.c          |    1 +
+ 35 files changed, 243 insertions(+), 148 deletions(-)
+ create mode 100644 src/shared/mkdir.c
+ create mode 100644 src/shared/mkdir.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 041ffa1..6e322f9 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -537,15 +537,13 @@ EXTRA_DIST += \
+ 
+ # ------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+-libsystemd_basic_la_SOURCES = \
++libsystemd_shared_la_SOURCES = \
+ 	src/shared/util.c \
+ 	src/shared/util.h \
+ 	src/shared/virt.c \
+ 	src/shared/virt.h \
+-	src/shared/label.c \
+-	src/shared/label.h \
+ 	src/shared/hashmap.c \
+ 	src/shared/hashmap.h \
+ 	src/shared/set.c \
+@@ -554,8 +552,6 @@ libsystemd_basic_la_SOURCES = \
+ 	src/shared/strv.h \
+ 	src/shared/conf-parser.c \
+ 	src/shared/conf-parser.h \
+-	src/shared/socket-util.c \
+-	src/shared/socket-util.h \
+ 	src/shared/log.c \
+ 	src/shared/log.h \
+ 	src/shared/ratelimit.h \
+@@ -564,19 +560,32 @@ libsystemd_basic_la_SOURCES = \
+ 	src/shared/exit-status.h \
+ 	src/shared/utf8.c \
+ 	src/shared/utf8.h \
+-	src/shared/cgroup-util.c \
+-	src/shared/cgroup-util.h \
+ 	src/shared/pager.c \
+ 	src/shared/pager.h \
+ 	src/shared/ioprio.h \
+ 	src/shared/list.h \
+ 	src/shared/macro.h
+ 
+-libsystemd_basic_la_CFLAGS = \
++# ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-shared-selinux.la
++
++libsystemd_shared_selinux_la_SOURCES = \
++	src/shared/cgroup-util.c \
++	src/shared/cgroup-util.h \
++	src/shared/socket-util.c \
++	src/shared/socket-util.h \
++	src/shared/label.c \
++	src/shared/label.h \
++	src/shared/mkdir.c \
++	src/shared/mkdir.h
++
++libsystemd_shared_selinux_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+ 	$(SELINUX_CFLAGS)
+ 
+-libsystemd_basic_la_LIBADD = \
++libsystemd_shared_selinux_la_LIBADD = \
++	libsystemd-shared.la \
+ 	$(SELINUX_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -766,7 +775,7 @@ libsystemd_core_la_CFLAGS = \
+ 	$(KMOD_CFLAGS)
+ 
+ libsystemd_core_la_LIBADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-capability.la \
+ 	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS) \
+@@ -823,40 +832,40 @@ test_loopback_SOURCES = \
+ 	src/loopback-setup.c
+ 
+ test_loopback_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ test_hostname_SOURCES = \
+ 	src/test-hostname.c \
+ 	src/hostname-setup.c
+ 
+ test_hostname_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ test_daemon_SOURCES = \
+ 	src/test-daemon.c
+ 
+ test_daemon_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la
+ 
+ test_cgroup_SOURCES = \
+ 	src/test-cgroup.c
+ 
+ test_cgroup_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ test_env_replace_SOURCES = \
+ 	src/test-env-replace.c
+ 
+ test_env_replace_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ test_strv_SOURCES = \
+ 	src/test-strv.c \
+ 	src/specifier.c
+ 
+ test_strv_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ test_install_SOURCES = \
+ 	src/test-install.c \
+@@ -869,7 +878,7 @@ test_install_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ test_install_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ test_watchdog_SOURCES = \
+ 	src/test-watchdog.c \
+@@ -877,7 +886,7 @@ test_watchdog_SOURCES = \
+ 	src/watchdog.h
+ 
+ test_watchdog_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_initctl_SOURCES = \
+@@ -889,7 +898,7 @@ systemd_initctl_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_initctl_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	$(DBUS_LIBS)
+ 
+@@ -905,7 +914,7 @@ systemd_update_utmp_CFLAGS = \
+ 	$(AUDIT_CFLAGS)
+ 
+ systemd_update_utmp_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	$(DBUS_LIBS) \
+ 	$(AUDIT_LIBS)
+ 
+@@ -915,7 +924,7 @@ systemd_shutdownd_SOURCES = \
+ 	src/shutdownd.c
+ 
+ systemd_shutdownd_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la
+ 
+ systemd_shutdown_SOURCES = \
+@@ -930,7 +939,7 @@ systemd_shutdown_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ systemd_shutdown_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	$(UDEV_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -942,7 +951,7 @@ systemd_modules_load_CFLAGS = \
+ 	$(KMOD_CFLAGS)
+ 
+ systemd_modules_load_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	$(KMOD_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -950,7 +959,7 @@ systemd_tmpfiles_SOURCES = \
+ 	src/tmpfiles.c
+ 
+ systemd_tmpfiles_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+@@ -958,7 +967,7 @@ systemd_machine_id_setup_SOURCES = \
+ 	src/machine-id-main.c
+ 
+ systemd_machine_id_setup_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-id128.la
+ 
+ # ------------------------------------------------------------------------------
+@@ -966,7 +975,7 @@ systemd_sysctl_SOURCES = \
+ 	src/sysctl.c
+ 
+ systemd_sysctl_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_fsck_SOURCES = \
+@@ -979,7 +988,7 @@ systemd_fsck_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_fsck_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	$(UDEV_LIBS) \
+ 	$(DBUS_LIBS)
+ 
+@@ -988,7 +997,7 @@ systemd_timestamp_SOURCES = \
+ 	src/timestamp.c
+ 
+ systemd_timestamp_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_ac_power_SOURCES = \
+@@ -999,7 +1008,7 @@ systemd_ac_power_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ systemd_ac_power_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	$(UDEV_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1007,7 +1016,7 @@ systemd_detect_virt_SOURCES = \
+ 	src/detect-virt.c
+ 
+ systemd_detect_virt_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_getty_generator_SOURCES = \
+@@ -1015,14 +1024,14 @@ systemd_getty_generator_SOURCES = \
+ 	src/unit-name.c
+ 
+ systemd_getty_generator_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_rc_local_generator_SOURCES = \
+ 	src/rc-local-generator.c
+ 
+ systemd_rc_local_generator_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_remount_api_vfs_SOURCES = \
+@@ -1030,7 +1039,7 @@ systemd_remount_api_vfs_SOURCES = \
+ 	src/mount-setup.c
+ 
+ systemd_remount_api_vfs_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgroups_agent_SOURCES = \
+@@ -1042,7 +1051,7 @@ systemd_cgroups_agent_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_cgroups_agent_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1062,7 +1071,7 @@ systemctl_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemctl_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-daemon.la \
+ 	libsystemd-journal.la \
+ 	libsystemd-id128.la \
+@@ -1074,7 +1083,7 @@ systemd_notify_SOURCES = \
+ 	src/readahead/sd-readahead.c
+ 
+ systemd_notify_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la
+ 
+ # ------------------------------------------------------------------------------
+@@ -1083,14 +1092,14 @@ systemd_ask_password_SOURCES = \
+ 	src/ask-password-api.c
+ 
+ systemd_ask_password_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_reply_password_SOURCES = \
+ 	src/reply-password.c
+ 
+ systemd_reply_password_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgls_SOURCES = \
+@@ -1098,14 +1107,14 @@ systemd_cgls_SOURCES = \
+ 	src/cgroup-show.c
+ 
+ systemd_cgls_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgtop_SOURCES = \
+ 	src/cgtop.c
+ 
+ systemd_cgtop_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_nspawn_SOURCES = \
+@@ -1113,7 +1122,7 @@ systemd_nspawn_SOURCES = \
+ 	src/loopback-setup.c
+ 
+ systemd_nspawn_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-capability.la \
+ 	libsystemd-daemon.la
+ 
+@@ -1122,7 +1131,7 @@ systemd_stdio_bridge_SOURCES = \
+ 	src/bridge.c
+ 
+ systemd_stdio_bridge_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ systemadm_SOURCES = \
+ 	src/systemadm.vala \
+@@ -1177,7 +1186,7 @@ systemd_tty_ask_password_agent_SOURCES = \
+ 	src/utmp-wtmp.c
+ 
+ systemd_tty_ask_password_agent_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ # ------------------------------------------------------------------------------
+ libsystemd_daemon_la_SOURCES = \
+@@ -1259,13 +1268,13 @@ libsystemd_id128_la_LDFLAGS = \
+ 	-Wl,--version-script=$(top_srcdir)/src/libsystemd-id128.sym
+ 
+ libsystemd_id128_la_LIBADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ test_id128_SOURCES = \
+ 	src/test-id128.c
+ 
+ test_id128_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-id128.la
+ 
+ noinst_PROGRAMS += \
+@@ -1318,7 +1327,7 @@ nodist_systemd_journald_SOURCES = \
+ systemd_journald_CFLAGS =
+ 
+ systemd_journald_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+ 	libsystemd-login.la \
+@@ -1345,7 +1354,7 @@ systemd_cat_SOURCES = \
+ 	src/journal/cat.c
+ 
+ systemd_cat_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-journal.la
+ 
+ journalctl_SOURCES = \
+@@ -1353,7 +1362,7 @@ journalctl_SOURCES = \
+ 	src/logs-show.c
+ 
+ journalctl_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-journal.la \
+ 	libsystemd-id128.la
+ 
+@@ -1375,7 +1384,7 @@ test_journal_SOURCES = \
+ 	src/journal/journal-send.c
+ 
+ test_journal_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-id128.la
+ 
+ if HAVE_XZ
+@@ -1394,7 +1403,7 @@ test_journal_send_SOURCES = \
+ 	src/journal/test-journal-send.c
+ 
+ test_journal_send_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-journal.la
+ 
+ libsystemd_journal_la_SOURCES = \
+@@ -1413,7 +1422,7 @@ libsystemd_journal_la_LDFLAGS = \
+ 	-Wl,--version-script=$(top_srcdir)/src/journal/libsystemd-journal.sym
+ 
+ libsystemd_journal_la_LIBADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-id128.la
+ 
+ if HAVE_XZ
+@@ -1449,7 +1458,7 @@ UNINSTALL_EXEC_HOOKS += \
+ 
+ noinst_PROGRAMS += \
+ 	test-journal \
+-        test-journal-send
++	test-journal-send
+ 
+ pkginclude_HEADERS += \
+ 	src/systemd/sd-journal.h \
+@@ -1515,9 +1524,9 @@ systemd_coredump_SOURCES = \
+ 	src/journal/coredump.c
+ 
+ systemd_coredump_LDADD = \
+-	libsystemd-basic.la \
+ 	libsystemd-journal.la \
+-	libsystemd-login.la
++	libsystemd-login.la \
++	libsystemd-shared-selinux.la
+ 
+ rootlibexec_PROGRAMS += \
+ 	systemd-coredump
+@@ -1538,7 +1547,7 @@ systemd_binfmt_SOURCES = \
+ 	src/binfmt/binfmt.c
+ 
+ systemd_binfmt_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ rootlibexec_PROGRAMS += \
+ 	systemd-binfmt
+@@ -1577,7 +1586,7 @@ systemd_vconsole_setup_SOURCES = \
+ 	src/vconsole/vconsole-setup.c
+ 
+ systemd_vconsole_setup_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ 
+ rootlibexec_PROGRAMS += \
+ 	systemd-vconsole-setup
+@@ -1609,7 +1618,7 @@ systemd_readahead_collect_SOURCES = \
+ 	src/readahead/readahead-common.c
+ 
+ systemd_readahead_collect_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	$(UDEV_LIBS)
+ 
+@@ -1626,7 +1635,7 @@ systemd_readahead_replay_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ systemd_readahead_replay_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	$(UDEV_LIBS)
+ 
+@@ -1669,7 +1678,7 @@ systemd_quotacheck_SOURCES = \
+ 	src/quotacheck.c
+ 
+ systemd_quotacheck_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared.la
+ endif
+ 
+ # ------------------------------------------------------------------------------
+@@ -1689,7 +1698,7 @@ systemd_random_seed_SOURCES = \
+ 	src/random-seed.c
+ 
+ systemd_random_seed_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ randomseed-install-data-hook:
+ 	$(MKDIR_P) -m 0755 \
+@@ -1727,16 +1736,16 @@ systemd_cryptsetup_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ systemd_cryptsetup_LDADD = \
+-	$(LIBCRYPTSETUP_LIBS) \
++	libsystemd-shared-selinux.la \
+ 	$(UDEV_LIBS) \
+-	libsystemd-basic.la
++	$(LIBCRYPTSETUP_LIBS)
+ 
+ systemd_cryptsetup_generator_SOURCES = \
+ 	src/cryptsetup/cryptsetup-generator.c \
+ 	src/unit-name.c
+ 
+ systemd_cryptsetup_generator_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ cryptsetup-install-data-hook:
+ 	$(MKDIR_P) -m 0755 \
+@@ -1761,7 +1770,7 @@ systemd_hostnamed_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_hostnamed_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	$(DBUS_LIBS)
+ 
+@@ -1812,7 +1821,7 @@ systemd_localed_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_localed_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-daemon.la \
+ 	$(DBUS_LIBS)
+ 
+@@ -1873,7 +1882,7 @@ systemd_timedated_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_timedated_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	$(DBUS_LIBS)
+ 
+@@ -1937,7 +1946,7 @@ systemd_logind_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemd_logind_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+ 	$(UDEV_LIBS) \
+@@ -1955,7 +1964,7 @@ systemd_user_sessions_SOURCES = \
+ 	src/login/user-sessions.c
+ 
+ systemd_user_sessions_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ rootlibexec_PROGRAMS += \
+ 	systemd-logind \
+@@ -1973,7 +1982,7 @@ loginctl_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ loginctl_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS)
+ 
+@@ -1984,8 +1993,8 @@ test_login_SOURCES = \
+ 	src/login/test-login.c
+ 
+ test_login_LDADD = \
+-	libsystemd-basic.la \
+-	libsystemd-login.la
++	libsystemd-login.la \
++	libsystemd-shared-selinux.la
+ 
+ noinst_PROGRAMS += \
+ 	test-login
+@@ -2003,7 +2012,7 @@ libsystemd_login_la_LDFLAGS = \
+ 	-Wl,--version-script=$(top_srcdir)/src/login/libsystemd-login.sym
+ 
+ libsystemd_login_la_LIBADD = \
+-	libsystemd-basic.la
++	libsystemd-shared-selinux.la
+ 
+ if HAVE_PAM
+ pam_systemd_la_SOURCES = \
+@@ -2024,7 +2033,7 @@ pam_systemd_la_LDFLAGS = \
+ 	-export-symbols-regex '^pam_sm_.*'
+ 
+ pam_systemd_la_LIBADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	$(PAM_LIBS) \
+ 	$(DBUS_LIBS)
+@@ -2100,7 +2109,7 @@ systemd_multi_seat_x_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ systemd_multi_seat_x_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared-selinux.la \
+ 	$(UDEV_LIBS)
+ 
+ rootlibexec_PROGRAMS += \
+diff --git a/src/ask-password-api.c b/src/ask-password-api.c
+index ce2f3cb..4b50d28 100644
+--- a/src/ask-password-api.c
++++ b/src/ask-password-api.c
+@@ -32,6 +32,7 @@
+ #include <sys/signalfd.h>
+ 
+ #include "util.h"
++#include "mkdir.h"
+ #include "strv.h"
+ 
+ #include "ask-password-api.h"
+diff --git a/src/automount.c b/src/automount.c
+index cf2fb60..6857a6f 100644
+--- a/src/automount.c
++++ b/src/automount.c
+@@ -38,6 +38,7 @@
+ #include "bus-errors.h"
+ #include "special.h"
+ #include "label.h"
++#include "mkdir.h"
+ 
+ static const UnitActiveState state_translation_table[_AUTOMOUNT_STATE_MAX] = {
+         [AUTOMOUNT_DEAD] = UNIT_INACTIVE,
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index ba59b49..5e92fb9 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -26,6 +26,7 @@
+ #include "log.h"
+ #include "util.h"
+ #include "unit-name.h"
++#include "mkdir.h"
+ 
+ const char *arg_dest = "/tmp";
+ 
+diff --git a/src/dbus-service.c b/src/dbus-service.c
+index 7809164..d840415 100644
+--- a/src/dbus-service.c
++++ b/src/dbus-service.c
+@@ -48,7 +48,7 @@
+         "  <property name=\"WatchdogTimestampMonotonic\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"StartLimitInterval\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"StartLimitBurst\" type=\"u\" access=\"read\"/>\n" \
+-        "  <property name=\"StartLimitAction\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"StartLimitAction\" type=\"s\" access=\"readwrite\"/>\n" \
+         BUS_EXEC_COMMAND_INTERFACE("ExecStartPre")                      \
+         BUS_EXEC_COMMAND_INTERFACE("ExecStart")                         \
+         BUS_EXEC_COMMAND_INTERFACE("ExecStartPost")                     \
+@@ -105,6 +105,7 @@ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_service_append_restart, service_resta
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_service_append_notify_access, notify_access, NotifyAccess);
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_service_append_service_result, service_result, ServiceResult);
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_service_append_start_limit_action, start_limit_action, StartLimitAction);
++static DEFINE_BUS_PROPERTY_SET_ENUM(bus_service_set_start_limit_action, start_limit_action, StartLimitAction);
+ 
+ static const BusProperty bus_exec_main_status_properties[] = {
+         { "ExecMainStartTimestamp",         bus_property_append_usec, "t", offsetof(ExecStatus, start_timestamp.realtime)  },
+@@ -129,7 +130,7 @@ static const BusProperty bus_service_properties[] = {
+         { "WatchdogTimestampMonotonic",bus_property_append_usec,      "t", offsetof(Service, watchdog_timestamp.monotonic) },
+         { "StartLimitInterval",     bus_property_append_usec,         "t", offsetof(Service, start_limit.interval)         },
+         { "StartLimitBurst",        bus_property_append_uint32,       "u", offsetof(Service, start_limit.burst)            },
+-        { "StartLimitAction",       bus_service_append_start_limit_action,"s", offsetof(Service, start_limit_action)       },
++        { "StartLimitAction",       bus_service_append_start_limit_action,"s", offsetof(Service, start_limit_action), false, bus_service_set_start_limit_action},
+         BUS_EXEC_COMMAND_PROPERTY("ExecStartPre",  offsetof(Service, exec_command[SERVICE_EXEC_START_PRE]),  true ),
+         BUS_EXEC_COMMAND_PROPERTY("ExecStart",     offsetof(Service, exec_command[SERVICE_EXEC_START]),      true ),
+         BUS_EXEC_COMMAND_PROPERTY("ExecStartPost", offsetof(Service, exec_command[SERVICE_EXEC_START_POST]), true ),
+diff --git a/src/dbus.c b/src/dbus.c
+index 8e6e9fd..ddf91f2 100644
+--- a/src/dbus.c
++++ b/src/dbus.c
+@@ -29,6 +29,7 @@
+ #include "log.h"
+ #include "strv.h"
+ #include "cgroup.h"
++#include "mkdir.h"
+ #include "dbus-unit.h"
+ #include "dbus-job.h"
+ #include "dbus-manager.h"
+diff --git a/src/getty-generator.c b/src/getty-generator.c
+index 7fac43a..dc979e9 100644
+--- a/src/getty-generator.c
++++ b/src/getty-generator.c
+@@ -25,6 +25,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "unit-name.h"
+ #include "virt.h"
+ 
+diff --git a/src/install.c b/src/install.c
+index 9256116..4501804 100644
+--- a/src/install.c
++++ b/src/install.c
+@@ -26,6 +26,7 @@
+ #include <fnmatch.h>
+ 
+ #include "util.h"
++#include "mkdir.h"
+ #include "hashmap.h"
+ #include "set.h"
+ #include "path-lookup.h"
+diff --git a/src/journal/coredump.c b/src/journal/coredump.c
+index 7dea66e..5ecdef3 100644
+--- a/src/journal/coredump.c
++++ b/src/journal/coredump.c
+@@ -29,6 +29,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "special.h"
+ 
+ #define COREDUMP_MAX (24*1024*1024)
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 858bb4e..18efd32 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -35,6 +35,7 @@
+ #include <systemd/sd-messages.h>
+ #include <systemd/sd-daemon.h>
+ 
++#include "mkdir.h"
+ #include "hashmap.h"
+ #include "journal-file.h"
+ #include "socket-util.h"
+diff --git a/src/locale/localed.c b/src/locale/localed.c
+index e9f9f86..e6aaa5c 100644
+--- a/src/locale/localed.c
++++ b/src/locale/localed.c
+@@ -26,6 +26,7 @@
+ #include <unistd.h>
+ 
+ #include "util.h"
++#include "mkdir.h"
+ #include "strv.h"
+ #include "dbus-common.h"
+ #include "polkit.h"
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index ea6b89f..1c6dc97 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -27,6 +27,7 @@
+ #include "logind.h"
+ #include "dbus-common.h"
+ #include "strv.h"
++#include "mkdir.h"
+ #include "polkit.h"
+ #include "special.h"
+ 
+diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
+index be37c1c..906ede6 100644
+--- a/src/login/logind-seat.c
++++ b/src/login/logind-seat.c
+@@ -30,6 +30,7 @@
+ #include "logind-seat.h"
+ #include "logind-acl.h"
+ #include "util.h"
++#include "mkdir.h"
+ 
+ Seat *seat_new(Manager *m, const char *id) {
+         Seat *s;
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 4e0af86..6416782 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -28,6 +28,7 @@
+ #include "logind-session.h"
+ #include "strv.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "cgroup-util.h"
+ 
+ #define IDLE_THRESHOLD_USEC (5*USEC_PER_MINUTE)
+diff --git a/src/login/logind-user.c b/src/login/logind-user.c
+index 717f0e2..92ba2c2 100644
+--- a/src/login/logind-user.c
++++ b/src/login/logind-user.c
+@@ -25,6 +25,7 @@
+ 
+ #include "logind-user.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "cgroup-util.h"
+ #include "hashmap.h"
+ #include "strv.h"
+diff --git a/src/login/multi-seat-x.c b/src/login/multi-seat-x.c
+index 7133e02..9655446 100644
+--- a/src/login/multi-seat-x.c
++++ b/src/login/multi-seat-x.c
+@@ -25,6 +25,7 @@
+ #include <libudev.h>
+ 
+ #include "util.h"
++#include "mkdir.h"
+ 
+ int main(int argc, char *argv[]) {
+ 
+diff --git a/src/machine-id-setup.c b/src/machine-id-setup.c
+index 0f97433..0ee3cd7 100644
+--- a/src/machine-id-setup.c
++++ b/src/machine-id-setup.c
+@@ -32,6 +32,7 @@
+ #include "machine-id-setup.h"
+ #include "macro.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "log.h"
+ #include "virt.h"
+ 
+diff --git a/src/manager.c b/src/manager.c
+index be47766..971990b 100644
+--- a/src/manager.c
++++ b/src/manager.c
+@@ -49,6 +49,7 @@
+ #include "strv.h"
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "ratelimit.h"
+ #include "cgroup.h"
+ #include "mount-setup.h"
+diff --git a/src/mount-setup.c b/src/mount-setup.c
+index aaffb65..7d6cdf6 100644
+--- a/src/mount-setup.c
++++ b/src/mount-setup.c
+@@ -36,6 +36,7 @@
+ #include "label.h"
+ #include "set.h"
+ #include "strv.h"
++#include "mkdir.h"
+ 
+ #ifndef TTY_GID
+ #define TTY_GID 5
+diff --git a/src/mount.c b/src/mount.c
+index ed0f819..7dbeaf9 100644
+--- a/src/mount.c
++++ b/src/mount.c
+@@ -31,6 +31,7 @@
+ #include "load-dropin.h"
+ #include "log.h"
+ #include "strv.h"
++#include "mkdir.h"
+ #include "mount-setup.h"
+ #include "unit-name.h"
+ #include "dbus-mount.h"
+diff --git a/src/nspawn.c b/src/nspawn.c
+index 66910bc..9e21c5e 100644
+--- a/src/nspawn.c
++++ b/src/nspawn.c
+@@ -43,6 +43,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "audit.h"
+ #include "missing.h"
+ #include "cgroup-util.h"
+diff --git a/src/path-lookup.c b/src/path-lookup.c
+index 5464ced..d33ebc7 100644
+--- a/src/path-lookup.c
++++ b/src/path-lookup.c
+@@ -26,6 +26,7 @@
+ #include <errno.h>
+ 
+ #include "util.h"
++#include "mkdir.h"
+ #include "strv.h"
+ 
+ #include "path-lookup.h"
+diff --git a/src/path.c b/src/path.c
+index e97cd09..1d50885 100644
+--- a/src/path.c
++++ b/src/path.c
+@@ -28,6 +28,7 @@
+ #include "unit.h"
+ #include "unit-name.h"
+ #include "path.h"
++#include "mkdir.h"
+ #include "dbus-path.h"
+ #include "special.h"
+ #include "bus-errors.h"
+diff --git a/src/random-seed.c b/src/random-seed.c
+index 8b43bac..c1022c7 100644
+--- a/src/random-seed.c
++++ b/src/random-seed.c
+@@ -27,6 +27,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ 
+ #define POOL_SIZE_MIN 512
+ 
+diff --git a/src/rc-local-generator.c b/src/rc-local-generator.c
+index 56785cf..108827d 100644
+--- a/src/rc-local-generator.c
++++ b/src/rc-local-generator.c
+@@ -26,6 +26,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ 
+ #if defined(TARGET_FEDORA) || defined(TARGET_MANDRIVA) || defined(TARGET_MAGEIA)
+ #define SCRIPT_PATH "/etc/rc.d/rc.local"
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index 904d300..5647624 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -34,6 +34,7 @@
+ #include "set.h"
+ #include "macro.h"
+ #include "util.h"
++#include "mkdir.h"
+ 
+ int cg_enumerate_processes(const char *controller, const char *path, FILE **_f) {
+         char *fs;
+diff --git a/src/shared/mkdir.c b/src/shared/mkdir.c
+new file mode 100644
+index 0000000..e668cc2
+--- /dev/null
++++ b/src/shared/mkdir.c
+@@ -0,0 +1,99 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <assert.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdlib.h>
++#include <stdio.h>
++
++#include "mkdir.h"
++#include "label.h"
++#include "util.h"
++#include "log.h"
++
++int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid) {
++        struct stat st;
++
++        if (label_mkdir(path, mode) >= 0)
++                if (chmod_and_chown(path, mode, uid, gid) < 0)
++                        return -errno;
++
++        if (lstat(path, &st) < 0)
++                return -errno;
++
++        if ((st.st_mode & 0777) != mode ||
++            st.st_uid != uid ||
++            st.st_gid != gid ||
++            !S_ISDIR(st.st_mode)) {
++                errno = EEXIST;
++                return -errno;
++        }
++
++        return 0;
++}
++
++int mkdir_parents(const char *path, mode_t mode) {
++        const char *p, *e;
++
++        assert(path);
++
++        /* Creates every parent directory in the path except the last
++         * component. */
++
++        p = path + strspn(path, "/");
++        for (;;) {
++                int r;
++                char *t;
++
++                e = p + strcspn(p, "/");
++                p = e + strspn(e, "/");
++
++                /* Is this the last component? If so, then we're
++                 * done */
++                if (*p == 0)
++                        return 0;
++
++                if (!(t = strndup(path, e - path)))
++                        return -ENOMEM;
++
++                r = label_mkdir(t, mode);
++                free(t);
++
++                if (r < 0 && errno != EEXIST)
++                        return -errno;
++        }
++}
++
++int mkdir_p(const char *path, mode_t mode) {
++        int r;
++
++        /* Like mkdir -p */
++
++        if ((r = mkdir_parents(path, mode)) < 0)
++                return r;
++
++        if (label_mkdir(path, mode) < 0 && errno != EEXIST)
++                return -errno;
++
++        return 0;
++}
+diff --git a/src/shared/mkdir.h b/src/shared/mkdir.h
+new file mode 100644
+index 0000000..c006e7c
+--- /dev/null
++++ b/src/shared/mkdir.h
+@@ -0,0 +1,28 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foomkdirhfoo
++#define foomkdirhfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid);
++int mkdir_parents(const char *path, mode_t mode);
++int mkdir_p(const char *path, mode_t mode);
++#endif
+diff --git a/src/shared/socket-util.c b/src/shared/socket-util.c
+index acc4d33..554f8ac 100644
+--- a/src/shared/socket-util.c
++++ b/src/shared/socket-util.c
+@@ -34,6 +34,7 @@
+ 
+ #include "macro.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "socket-util.h"
+ #include "missing.h"
+ #include "label.h"
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 563853f..fef58d5 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -1591,74 +1591,6 @@ char *file_in_same_dir(const char *path, const char *filename) {
+         return r;
+ }
+ 
+-int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid) {
+-        struct stat st;
+-
+-        if (label_mkdir(path, mode) >= 0)
+-                if (chmod_and_chown(path, mode, uid, gid) < 0)
+-                        return -errno;
+-
+-        if (lstat(path, &st) < 0)
+-                return -errno;
+-
+-        if ((st.st_mode & 0777) != mode ||
+-            st.st_uid != uid ||
+-            st.st_gid != gid ||
+-            !S_ISDIR(st.st_mode)) {
+-                errno = EEXIST;
+-                return -errno;
+-        }
+-
+-        return 0;
+-}
+-
+-
+-int mkdir_parents(const char *path, mode_t mode) {
+-        const char *p, *e;
+-
+-        assert(path);
+-
+-        /* Creates every parent directory in the path except the last
+-         * component. */
+-
+-        p = path + strspn(path, "/");
+-        for (;;) {
+-                int r;
+-                char *t;
+-
+-                e = p + strcspn(p, "/");
+-                p = e + strspn(e, "/");
+-
+-                /* Is this the last component? If so, then we're
+-                 * done */
+-                if (*p == 0)
+-                        return 0;
+-
+-                if (!(t = strndup(path, e - path)))
+-                        return -ENOMEM;
+-
+-                r = label_mkdir(t, mode);
+-                free(t);
+-
+-                if (r < 0 && errno != EEXIST)
+-                        return -errno;
+-        }
+-}
+-
+-int mkdir_p(const char *path, mode_t mode) {
+-        int r;
+-
+-        /* Like mkdir -p */
+-
+-        if ((r = mkdir_parents(path, mode)) < 0)
+-                return r;
+-
+-        if (label_mkdir(path, mode) < 0 && errno != EEXIST)
+-                return -errno;
+-
+-        return 0;
+-}
+-
+ int rmdir_parents(const char *path, const char *stop) {
+         size_t l;
+         int r = 0;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index e96d56d..a45f54d 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -242,9 +242,6 @@ char *delete_chars(char *s, const char *bad);
+ char *truncate_nl(char *s);
+ 
+ char *file_in_same_dir(const char *path, const char *filename);
+-int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid);
+-int mkdir_parents(const char *path, mode_t mode);
+-int mkdir_p(const char *path, mode_t mode);
+ 
+ int parent_of_path(const char *path, char **parent);
+ 
+diff --git a/src/shutdown.c b/src/shutdown.c
+index 9f65b1d..b0c680a 100644
+--- a/src/shutdown.c
++++ b/src/shutdown.c
+@@ -41,6 +41,7 @@
+ #include "log.h"
+ #include "umount.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "virt.h"
+ #include "watchdog.h"
+ 
+diff --git a/src/socket.c b/src/socket.c
+index bb75d96..5b24b34 100644
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -36,6 +36,7 @@
+ #include "load-dropin.h"
+ #include "load-fragment.h"
+ #include "strv.h"
++#include "mkdir.h"
+ #include "unit-name.h"
+ #include "dbus-socket.h"
+ #include "missing.h"
+diff --git a/src/tmpfiles.c b/src/tmpfiles.c
+index 873bf23..5e85e37 100644
+--- a/src/tmpfiles.c
++++ b/src/tmpfiles.c
+@@ -41,6 +41,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "mkdir.h"
+ #include "strv.h"
+ #include "label.h"
+ #include "set.h"
+diff --git a/src/tty-ask-password-agent.c b/src/tty-ask-password-agent.c
+index 13481b2..c928b5f 100644
+--- a/src/tty-ask-password-agent.c
++++ b/src/tty-ask-password-agent.c
+@@ -33,6 +33,7 @@
+ #include <fcntl.h>
+ 
+ #include "util.h"
++#include "mkdir.h"
+ #include "conf-parser.h"
+ #include "utmp-wtmp.h"
+ #include "socket-util.h"

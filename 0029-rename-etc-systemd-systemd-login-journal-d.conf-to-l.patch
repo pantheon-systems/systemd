@@ -1,0 +1,118 @@
+From d754b66d864817a0ce7e75c0de783f9037fb5d11 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Fri, 30 Mar 2012 23:18:33 +0200
+Subject: [PATCH] rename /etc/systemd/systemd-{login,journal}d.conf to
+ {login,journal}d.conf (cherry picked from commit
+ 18b754d345ecb0b15e369978aaffa72e9814b86a)
+
+[ F17: do not actually rename within a stable release -- michich ]
+---
+ Makefile.am |   36 ++++++------------------------------
+ NEWS        |    9 +++++++++
+ TODO        |    1 +
+ 3 files changed, 16 insertions(+), 30 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 63bb817..7805476 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -692,17 +692,17 @@ MANPAGES = \
+ 	man/sysctl.d.5 \
+ 	man/systemd-ask-password.1 \
+ 	man/systemd-cat.1 \
+-        man/systemd-machine-id-setup.1 \
+-        man/systemd-journald.conf.5 \
+-        man/journalctl.1
++	man/systemd-machine-id-setup.1 \
++	man/systemd-journald.conf.5 \
++	man/journalctl.1
+ 
+ MANPAGES_ALIAS = \
+ 	man/reboot.8 \
+ 	man/poweroff.8 \
+ 	man/init.1 \
+-        man/systemd-systemctl.1 \
+-        man/systemd-loginctl.1 \
+-        man/systemd-journalctl.1
++	man/systemd-systemctl.1 \
++	man/systemd-loginctl.1 \
++	man/systemd-journalctl.1
+ 
+ man/reboot.8: man/halt.8
+ man/poweroff.8: man/halt.8
+@@ -989,14 +989,6 @@ systemctl_LDADD = \
+ 	libsystemd-id128.la \
+ 	$(DBUS_LIBS)
+ 
+-systemctl-install-hook:
+-	cd $(DESTDIR)$(rootbindir) && \
+-		rm -f systemd-systemctl && \
+-		$(LN_S) systemctl systemd-systemctl
+-
+-INSTALL_EXEC_HOOKS += \
+-        systemctl-install-hook
+-
+ systemd_notify_SOURCES = \
+ 	src/notify.c \
+ 	src/readahead/sd-readahead.c
+@@ -1291,14 +1283,6 @@ journalctl_LDADD += \
+ 	$(XZ_LIBS)
+ endif
+ 
+-journalctl-install-hook:
+-	cd $(DESTDIR)$(rootbindir) && \
+-		rm -f systemd-journalctl && \
+-		$(LN_S) journalctl systemd-journalctl
+-
+-INSTALL_EXEC_HOOKS += \
+-        journalctl-install-hook
+-
+ test_journal_SOURCES = \
+ 	src/journal/test-journal.c \
+ 	src/journal/sd-journal.c \
+@@ -1906,14 +1890,6 @@ loginctl_LDADD = \
+ rootbin_PROGRAMS += \
+ 	loginctl
+ 
+-loginctl-install-hook:
+-	cd $(DESTDIR)$(rootbindir) && \
+-		rm -f systemd-loginctl && \
+-		$(LN_S) loginctl systemd-loginctl
+-
+-INSTALL_EXEC_HOOKS += \
+-        loginctl-install-hook
+-
+ test_login_SOURCES = \
+ 	src/login/test-login.c
+ 
+diff --git a/NEWS b/NEWS
+index 7991373..c82e637 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1,5 +1,14 @@
+ systemd System and Service Manager
+ 
++CHANGES WITH:
++        * systemd-logingctl and systemd-journalctl have been renamed
++          to logingctl and journalctl to match systemctl.
++
++        * The config files: /etc/systemd/systemd-logind.conf and
++          /etc/systemd/systemd-journald.conf have been renamed to
++          logind.conf and journald.conf. Package updates should rename
++          the files to the new names on upgrade.
++
+ CHANGES WITH 44:
+         * This is mostly a bugfix release
+ 
+diff --git a/TODO b/TODO
+index 2fe676a..84718bb 100644
+--- a/TODO
++++ b/TODO
+@@ -17,6 +17,7 @@ Bugfixes:
+ * properly handle .mount unit state tracking when two mount points are stacked one on top of another on the exact same mount point.
+ 
+ Features:
++* cleanup syslog 'priority' vs. 'level' wording
+ 
+ * Make -f in systemctl enable both --follow and --force
+ 

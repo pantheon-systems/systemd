@@ -1,0 +1,22 @@
+From a39d25a4685f932ac42bef3290701a87802eee5f Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 18:05:12 +0200
+Subject: [PATCH] pam_systemd: add dbus.la (cherry picked from commit
+ 43a1ab9b9019fd2432089ffcfe163e0fa9dd9eae)
+
+---
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index a3a8d72..bd69281 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2097,6 +2097,7 @@ pam_systemd_la_LDFLAGS = \
+ pam_systemd_la_LIBADD = \
+ 	libsystemd-daemon.la \
+ 	libsystemd-audit.la \
++	libsystemd-dbus.la \
+ 	libsystemd-shared.la \
+ 	$(PAM_LIBS) \
+ 	$(DBUS_LIBS)

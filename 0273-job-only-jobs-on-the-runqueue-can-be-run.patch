@@ -1,0 +1,29 @@
+From 7b185572bd67033e0883cc321d074e03abc8f736 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 12 May 2012 21:06:27 +0200
+Subject: [PATCH] job: only jobs on the runqueue can be run (cherry picked
+ from commit 66aa6f7fbb16f441b28196c46a8c3fd60ed39d1b)
+
+---
+ src/core/job.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 48fdae9..b51be69 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -470,11 +470,10 @@ int job_run_and_invalidate(Job *j) {
+         assert(j);
+         assert(j->installed);
+         assert(j->type < _JOB_TYPE_MAX_IN_TRANSACTION);
++        assert(j->in_run_queue);
+ 
+-        if (j->in_run_queue) {
+-                LIST_REMOVE(Job, run_queue, j->manager->run_queue, j);
+-                j->in_run_queue = false;
+-        }
++        LIST_REMOVE(Job, run_queue, j->manager->run_queue, j);
++        j->in_run_queue = false;
+ 
+         if (j->state != JOB_WAITING)
+                 return 0;

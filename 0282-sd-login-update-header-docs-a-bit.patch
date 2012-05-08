@@ -1,0 +1,25 @@
+From c917694803ba8dac4563857b5b81528f960235bc Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 14 May 2012 22:41:17 +0200
+Subject: [PATCH] sd-login: update header docs a bit (cherry picked from
+ commit ee1f44bd9a63e776810a31bd8394e8d481b6c34d)
+
+---
+ src/systemd/sd-login.h |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/systemd/sd-login.h b/src/systemd/sd-login.h
+index 6e99cfc..315700e 100644
+--- a/src/systemd/sd-login.h
++++ b/src/systemd/sd-login.h
+@@ -34,7 +34,9 @@ extern "C" {
+  * Instead of returning an empty string array or empty uid array, we
+  * may return NULL.
+  *
+- * Free the data we return with libc free().
++ * Free the data the library returns with libc free(). String arrays
++ * are NULL terminated and you need to free the array itself in
++ * addition to the strings contained.
+  *
+  * We return error codes as negative errno, kernel-style. 0 or
+  * positive on success.

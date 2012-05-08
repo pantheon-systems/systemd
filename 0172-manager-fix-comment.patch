@@ -1,0 +1,31 @@
+From 9ae6f8b8816711799c70db64f8c4a58127754a13 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 17 Apr 2012 22:54:23 +0200
+Subject: [PATCH] manager: fix comment (cherry picked from commit
+ 153bda8f03c670caf137f745350c0215b9be2147)
+
+---
+ src/core/manager.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index f132b81..480b7cd 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -758,7 +758,7 @@ static void transaction_merge_and_delete_job(Manager *m, Job *j, Job *other, Job
+         assert(j->unit == other->unit);
+         assert(!j->installed);
+ 
+-        /* Merges 'other' into 'j' and then deletes j. */
++        /* Merges 'other' into 'j' and then deletes 'other'. */
+ 
+         j->type = t;
+         j->state = JOB_WAITING;
+@@ -803,6 +803,7 @@ static void transaction_merge_and_delete_job(Manager *m, Job *j, Job *other, Job
+         other->object_list = NULL;
+         transaction_delete_job(m, other, true);
+ }
++
+ static bool job_is_conflicted_by(Job *j) {
+         JobDependency *l;
+ 

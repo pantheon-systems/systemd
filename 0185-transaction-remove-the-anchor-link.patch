@@ -1,0 +1,160 @@
+From 141e15effd541e280c1e7118e01c0c7118341f20 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 20 Apr 2012 02:11:14 +0200
+Subject: [PATCH] transaction: remove the anchor link
+
+tr->anchor_job is sufficient.
+(cherry picked from commit e6eda1f23efab618bb26e7015230d8552b401dc6)
+---
+ src/core/job.c         |   12 ------------
+ src/core/job.h         |    2 --
+ src/core/transaction.c |   31 ++++++++-----------------------
+ src/core/transaction.h |    1 -
+ 4 files changed, 8 insertions(+), 38 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index a7cab13..07388f1 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -151,18 +151,6 @@ void job_dump(Job *j, FILE*f, const char *prefix) {
+                 prefix, yes_no(j->override));
+ }
+ 
+-bool job_is_anchor(Job *j) {
+-        JobDependency *l;
+-
+-        assert(j);
+-
+-        LIST_FOREACH(object, l, j->object_list)
+-                if (!l->subject)
+-                        return true;
+-
+-        return false;
+-}
+-
+ /*
+  * Merging is commutative, so imagine the matrix as symmetric. We store only
+  * its lower triangle to avoid duplication. We don't store the main diagonal,
+diff --git a/src/core/job.h b/src/core/job.h
+index cbd10c5..6b06c2a 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -144,8 +144,6 @@ void job_dump(Job *j, FILE*f, const char *prefix);
+ JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts);
+ void job_dependency_free(JobDependency *l);
+ 
+-bool job_is_anchor(Job *j);
+-
+ int job_merge(Job *j, Job *other);
+ 
+ JobType job_type_lookup_merge(JobType a, JobType b);
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index ddb02c0..39cfe54 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -34,8 +34,6 @@ void transaction_abort(Transaction *tr) {
+                 transaction_delete_job(tr, j, true);
+ 
+         assert(hashmap_isempty(tr->jobs));
+-
+-        assert(!tr->anchor);
+ }
+ 
+ static void transaction_find_jobs_that_matter_to_anchor(Job *j, unsigned generation) {
+@@ -287,7 +285,7 @@ static void transaction_drop_redundant(Transaction *tr) {
+ 
+                         LIST_FOREACH(transaction, k, j) {
+ 
+-                                if (!job_is_anchor(k) &&
++                                if (tr->anchor_job != k &&
+                                     (k->installed || job_type_is_redundant(k->type, unit_active_state(k->unit))) &&
+                                     (!k->unit->job || !job_type_is_conflicting(k->type, k->unit->job->type)))
+                                         continue;
+@@ -626,8 +624,6 @@ static int transaction_apply(Transaction *tr, Manager *m, JobMode mode) {
+                 log_debug("Installed new job %s/%s as %u", j->unit->id, job_type_to_string(j->type), (unsigned) j->id);
+         }
+ 
+-        assert(!tr->anchor);
+-
+         return 0;
+ 
+ rollback:
+@@ -726,7 +722,6 @@ int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e
+         }
+ 
+         assert(hashmap_isempty(tr->jobs));
+-        assert(!tr->anchor);
+ 
+         return 0;
+ }
+@@ -778,12 +773,6 @@ static Job* transaction_add_one_job(Transaction *tr, JobType type, Unit *unit, b
+         return j;
+ }
+ 
+-static void transaction_job_dependency_free(Transaction *tr, JobDependency *l) {
+-        if (!l->subject)
+-                LIST_REMOVE(JobDependency, subject, tr->anchor, l);
+-        job_dependency_free(l);
+-}
+-
+ static void transaction_unlink_job(Transaction *tr, Job *j, bool delete_dependencies) {
+         assert(tr);
+         assert(j);
+@@ -801,12 +790,12 @@ static void transaction_unlink_job(Transaction *tr, Job *j, bool delete_dependen
+         j->transaction_prev = j->transaction_next = NULL;
+ 
+         while (j->subject_list)
+-                transaction_job_dependency_free(tr, j->subject_list);
++                job_dependency_free(j->subject_list);
+ 
+         while (j->object_list) {
+                 Job *other = j->object_list->matters ? j->object_list->subject : NULL;
+ 
+-                transaction_job_dependency_free(tr, j->object_list);
++                job_dependency_free(j->object_list);
+ 
+                 if (other && delete_dependencies) {
+                         log_debug("Deleting job %s/%s as dependency of job %s/%s",
+@@ -829,7 +818,6 @@ int transaction_add_job_and_dependencies(
+                 bool ignore_order,
+                 DBusError *e) {
+         Job *ret;
+-        JobDependency *l;
+         Iterator i;
+         Unit *dep;
+         int r;
+@@ -879,17 +867,14 @@ int transaction_add_job_and_dependencies(
+         ret->ignore_order = ret->ignore_order || ignore_order;
+ 
+         /* Then, add a link to the job. */
+-        l = job_dependency_new(by, ret, matters, conflicts);
+-        if (!l)
+-                return -ENOMEM;
+-
+-        /* If the link has no subject job, it's the anchor link. */
+-        if (!by) {
+-                LIST_PREPEND(JobDependency, subject, tr->anchor, l);
++        if (by) {
++                if (!job_dependency_new(by, ret, matters, conflicts))
++                        return -ENOMEM;
++        } else {
++                /* If the job has no parent job, it is the anchor job. */
+                 assert(!tr->anchor_job);
+                 tr->anchor_job = ret;
+         }
+-
+         if (is_new && !ignore_requirements) {
+                 Set *following;
+ 
+diff --git a/src/core/transaction.h b/src/core/transaction.h
+index 4818cea..74d7461 100644
+--- a/src/core/transaction.h
++++ b/src/core/transaction.h
+@@ -11,7 +11,6 @@ typedef struct Transaction Transaction;
+ struct Transaction {
+         /* Jobs to be added */
+         Hashmap *jobs;      /* Unit object => Job object list 1:1 */
+-        JobDependency *anchor;
+         Job *anchor_job;      /* the job the user asked for */
+ };
+ 

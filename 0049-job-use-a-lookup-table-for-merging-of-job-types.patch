@@ -1,0 +1,220 @@
+From 2e63bd0bb387ddf97ec7dab3afe07ff816d575d6 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 5 Apr 2012 08:34:05 +0200
+Subject: [PATCH] job: use a lookup table for merging of job types
+
+It is easier to see what job_type_merge() is doing when the merging
+rules are written in the form of a table.
+
+job_type_is_superset() contained redundant information. It can be
+simplified to a simple rule: Type A is a superset of B iff merging A
+with B gives A.
+
+Two job types are conflicting iff they are not mergeable.
+
+Make job_type_lookup_merge() the core function to decide the type
+merging. All other job_type_*() are just short wrappers around it.
+They can be inline.
+
+test-job-type gives the same results as before.
+btw, the systemd binary is smaller by almost 1 KB.
+(cherry picked from commit 348e27fedfd4cdd2238ff31a46785a70b9dc6fc0)
+---
+ src/job.c |  123 ++++++++++++++++++-------------------------------------------
+ src/job.h |   29 +++++++++++++--
+ 2 files changed, 60 insertions(+), 92 deletions(-)
+
+diff --git a/src/job.c b/src/job.c
+index 8e944b3..bae6ab9 100644
+--- a/src/job.c
++++ b/src/job.c
+@@ -164,100 +164,47 @@ bool job_is_anchor(Job *j) {
+         return false;
+ }
+ 
+-static bool types_match(JobType a, JobType b, JobType c, JobType d) {
+-        return
+-                (a == c && b == d) ||
+-                (a == d && b == c);
+-}
+-
+-int job_type_merge(JobType *a, JobType b) {
+-        if (*a == b)
+-                return 0;
+-
+-        /* Merging is associative! a merged with b merged with c is
+-         * the same as a merged with c merged with b. */
+-
+-        /* Mergeability is transitive! if a can be merged with b and b
+-         * with c then a also with c */
+-
+-        /* Also, if a merged with b cannot be merged with c, then
+-         * either a or b cannot be merged with c either */
+-
+-        if (types_match(*a, b, JOB_START, JOB_VERIFY_ACTIVE))
+-                *a = JOB_START;
+-        else if (types_match(*a, b, JOB_START, JOB_RELOAD) ||
+-                 types_match(*a, b, JOB_START, JOB_RELOAD_OR_START) ||
+-                 types_match(*a, b, JOB_VERIFY_ACTIVE, JOB_RELOAD_OR_START) ||
+-                 types_match(*a, b, JOB_RELOAD, JOB_RELOAD_OR_START))
+-                *a = JOB_RELOAD_OR_START;
+-        else if (types_match(*a, b, JOB_START, JOB_RESTART) ||
+-                 types_match(*a, b, JOB_START, JOB_TRY_RESTART) ||
+-                 types_match(*a, b, JOB_VERIFY_ACTIVE, JOB_RESTART) ||
+-                 types_match(*a, b, JOB_RELOAD, JOB_RESTART) ||
+-                 types_match(*a, b, JOB_RELOAD_OR_START, JOB_RESTART) ||
+-                 types_match(*a, b, JOB_RELOAD_OR_START, JOB_TRY_RESTART) ||
+-                 types_match(*a, b, JOB_RESTART, JOB_TRY_RESTART))
+-                *a = JOB_RESTART;
+-        else if (types_match(*a, b, JOB_VERIFY_ACTIVE, JOB_RELOAD))
+-                *a = JOB_RELOAD;
+-        else if (types_match(*a, b, JOB_VERIFY_ACTIVE, JOB_TRY_RESTART) ||
+-                 types_match(*a, b, JOB_RELOAD, JOB_TRY_RESTART))
+-                *a = JOB_TRY_RESTART;
+-        else
+-                return -EEXIST;
+-
+-        return 0;
+-}
+-
+-bool job_type_is_mergeable(JobType a, JobType b) {
+-        return job_type_merge(&a, b) >= 0;
+-}
+-
+-bool job_type_is_superset(JobType a, JobType b) {
++/*
++ * Merging is commutative, so imagine the matrix as symmetric. We store only
++ * its lower triangle to avoid duplication. We don't store the main diagonal,
++ * because A merged with A is simply A.
++ *
++ * Merging is associative! A merged with B merged with C is the same as
++ * A merged with C merged with B.
++ *
++ * Mergeability is transitive! If A can be merged with B and B with C then
++ * A also with C.
++ *
++ * Also, if A merged with B cannot be merged with C, then either A or B cannot
++ * be merged with C either.
++ */
++static const JobType job_merging_table[] = {
++/* What \ With       *  JOB_START         JOB_VERIFY_ACTIVE  JOB_STOP JOB_RELOAD   JOB_RELOAD_OR_START  JOB_RESTART JOB_TRY_RESTART */
++/************************************************************************************************************************************/
++/*JOB_START          */
++/*JOB_VERIFY_ACTIVE  */ JOB_START,
++/*JOB_STOP           */ -1,                  -1,
++/*JOB_RELOAD         */ JOB_RELOAD_OR_START, JOB_RELOAD,          -1,
++/*JOB_RELOAD_OR_START*/ JOB_RELOAD_OR_START, JOB_RELOAD_OR_START, -1, JOB_RELOAD_OR_START,
++/*JOB_RESTART        */ JOB_RESTART,         JOB_RESTART,         -1, JOB_RESTART,         JOB_RESTART,
++/*JOB_TRY_RESTART    */ JOB_RESTART,         JOB_TRY_RESTART,     -1, JOB_TRY_RESTART,     JOB_RESTART, JOB_RESTART,
++};
+ 
+-        /* Checks whether operation a is a "superset" of b in its
+-         * actions */
++JobType job_type_lookup_merge(JobType a, JobType b) {
++        assert_cc(ELEMENTSOF(job_merging_table) == _JOB_TYPE_MAX * (_JOB_TYPE_MAX - 1) / 2);
++        assert(a >= 0 && a < _JOB_TYPE_MAX);
++        assert(b >= 0 && b < _JOB_TYPE_MAX);
+ 
+         if (a == b)
+-                return true;
+-
+-        switch (a) {
+-                case JOB_START:
+-                        return b == JOB_VERIFY_ACTIVE;
+-
+-                case JOB_RELOAD:
+-                        return
+-                                b == JOB_VERIFY_ACTIVE;
+-
+-                case JOB_RELOAD_OR_START:
+-                        return
+-                                b == JOB_RELOAD ||
+-                                b == JOB_START ||
+-                                b == JOB_VERIFY_ACTIVE;
+-
+-                case JOB_RESTART:
+-                        return
+-                                b == JOB_START ||
+-                                b == JOB_VERIFY_ACTIVE ||
+-                                b == JOB_RELOAD ||
+-                                b == JOB_RELOAD_OR_START ||
+-                                b == JOB_TRY_RESTART;
+-
+-                case JOB_TRY_RESTART:
+-                        return
+-                                b == JOB_VERIFY_ACTIVE ||
+-                                b == JOB_RELOAD;
+-                default:
+-                        return false;
++                return a;
+ 
++        if (a < b) {
++                JobType tmp = a;
++                a = b;
++                b = tmp;
+         }
+-}
+-
+-bool job_type_is_conflicting(JobType a, JobType b) {
+-        assert(a >= 0 && a < _JOB_TYPE_MAX);
+-        assert(b >= 0 && b < _JOB_TYPE_MAX);
+ 
+-        return (a == JOB_STOP) != (b == JOB_STOP);
++        return job_merging_table[(a - 1) * a / 2 + b];
+ }
+ 
+ bool job_type_is_redundant(JobType a, UnitActiveState b) {
+diff --git a/src/job.h b/src/job.h
+index 2121426..60a43e0 100644
+--- a/src/job.h
++++ b/src/job.h
+@@ -24,6 +24,7 @@
+ 
+ #include <stdbool.h>
+ #include <inttypes.h>
++#include <errno.h>
+ 
+ typedef struct Job Job;
+ typedef struct JobDependency JobDependency;
+@@ -37,6 +38,7 @@ typedef enum JobResult JobResult;
+ #include "hashmap.h"
+ #include "list.h"
+ 
++/* Be careful when changing the job types! Adjust job_merging_table[] accordingly! */
+ enum JobType {
+         JOB_START,                  /* if a unit does not support being started, we'll just wait until it becomes active */
+         JOB_VERIFY_ACTIVE,
+@@ -145,10 +147,29 @@ bool job_is_anchor(Job *j);
+ 
+ int job_merge(Job *j, Job *other);
+ 
+-int job_type_merge(JobType *a, JobType b);
+-bool job_type_is_mergeable(JobType a, JobType b);
+-bool job_type_is_superset(JobType a, JobType b);
+-bool job_type_is_conflicting(JobType a, JobType b);
++JobType job_type_lookup_merge(JobType a, JobType b);
++
++static inline int job_type_merge(JobType *a, JobType b) {
++        JobType t = job_type_lookup_merge(*a, b);
++        if (t < 0)
++                return -EEXIST;
++        *a = t;
++        return 0;
++}
++
++static inline bool job_type_is_mergeable(JobType a, JobType b) {
++        return job_type_lookup_merge(a, b) >= 0;
++}
++
++static inline bool job_type_is_conflicting(JobType a, JobType b) {
++        return !job_type_is_mergeable(a, b);
++}
++
++static inline bool job_type_is_superset(JobType a, JobType b) {
++        /* Checks whether operation a is a "superset" of b in its actions */
++        return a == job_type_lookup_merge(a, b);
++}
++
+ bool job_type_is_redundant(JobType a, UnitActiveState b);
+ 
+ bool job_is_runnable(Job *j);

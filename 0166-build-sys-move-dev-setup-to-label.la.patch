@@ -1,0 +1,39 @@
+From 5be9f66cc915af85f13ca9f9afb0763b1fee5074 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 18 Apr 2012 16:13:37 +0200
+Subject: [PATCH] build-sys: move dev-setup to label.la (cherry picked from
+ commit 88f642c00b1708c5e0203c1753a9ef91d1de5442)
+
+Conflicts:
+
+	TODO
+---
+ Makefile.am |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index dd1832e..2b51e89 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -545,9 +545,7 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/specifier.c \
+ 	src/shared/specifier.h \
+ 	src/shared/spawn-polkit-agent.c \
+-	src/shared/spawn-polkit-agent.h \
+-	src/shared/dev-setup.c \
+-	src/shared/dev-setup.h
++	src/shared/spawn-polkit-agent.h
+ 
+ libsystemd_shared_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -588,7 +586,9 @@ libsystemd_label_la_SOURCES = \
+ 	src/shared/mkdir.c \
+ 	src/shared/mkdir.h \
+ 	src/shared/ask-password-api.c \
+-	src/shared/ask-password-api.h
++	src/shared/ask-password-api.h \
++	src/shared/dev-setup.c \
++	src/shared/dev-setup.h
+ 
+ libsystemd_label_la_CFLAGS = \
+ 	$(AM_CFLAGS) \

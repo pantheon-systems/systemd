@@ -1,0 +1,23 @@
+From c98bc9ec1ba7f15d4c4955b6e7f6835a6485ace7 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 9 May 2012 11:20:06 +0200
+Subject: [PATCH] main: fix uninitialized variable (cherry picked from commit
+ b809bd0940b3c12d49cfc79d2a2c1a449b3dcf50)
+
+---
+ src/core/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index a7c41ef..c2a8922 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1189,7 +1189,7 @@ static int do_switch_root(const char *switch_root) {
+         }
+ 
+         if (chroot(".") < 0)
+-                log_warning("Failed to change root, ignoring: %s", strerror(-r));
++                log_warning("Failed to change root, ignoring: %m");
+ 
+         /* FIXME: remove old root */
+ 

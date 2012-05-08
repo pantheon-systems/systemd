@@ -1,0 +1,136 @@
+From 27e02c5963efe678f97d77abd295695f681a19b3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 00:11:18 +0200
+Subject: [PATCH] units: introduce nss-user-lookup.target
+
+This separates user/group NSS lookups from host/network NSS lookups.
+
+By default order all network mounts after host/network NSS lookups now,
+and logind execution after user/group NSS lookups.
+(cherry picked from commit 082694b75f0217f1c5b8b89590e5018f6d8b0949)
+---
+ Makefile.am                     |    1 +
+ man/systemd.special.xml         |   34 ++++++++++++++++++++++++++++------
+ units/nss-lookup.target         |    2 +-
+ units/nss-user-lookup.target    |   15 +++++++++++++++
+ units/remote-fs-pre.target      |    2 +-
+ units/systemd-logind.service.in |    1 +
+ 6 files changed, 47 insertions(+), 8 deletions(-)
+ create mode 100644 units/nss-user-lookup.target
+
+diff --git a/Makefile.am b/Makefile.am
+index 3156f26..78d5dcc 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -279,6 +279,7 @@ dist_systemunit_DATA = \
+ 	units/remote-fs-pre.target \
+ 	units/network.target \
+ 	units/nss-lookup.target \
++	units/nss-user-lookup.target \
+ 	units/mail-transfer-agent.target \
+ 	units/http-daemon.target \
+ 	units/poweroff.target \
+diff --git a/man/systemd.special.xml b/man/systemd.special.xml
+index fe85137..4c64a0f 100644
+--- a/man/systemd.special.xml
++++ b/man/systemd.special.xml
+@@ -383,17 +383,39 @@
+                         <varlistentry>
+                                 <term><filename>nss-lookup.target</filename></term>
+                                 <listitem>
+-                                        <para>systemd automatically
+-                                        adds dependencies of type
+-                                        After for this target unit to
+-                                        all SysV init script service
+-                                        units with an LSB header
+-                                        referring to the
++                                        <para>A target that should be
++                                        used as synchronization point
++                                        for all host/network name
++                                        service lookups. Note that
++                                        this is independent of
++                                        user/group name lookups for
++                                        which
++                                        <filename>nss-user-lookup.target</filename>
++                                        should be used. systemd
++                                        automatically adds
++                                        dependencies of type After for
++                                        this target unit to all SysV
++                                        init script service units with
++                                        an LSB header referring to the
+                                         <literal>$named</literal>
+                                         facility.</para>
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>nss-user-lookup.target</filename></term>
++                                <listitem>
++                                        <para>A target that should be
++                                        used as synchronization point
++                                        for all user/group name
++                                        service lookups. Note that
++                                        this is independent of
++                                        host/network name lookups for
++                                        which
++                                        <filename>nss-lookup.target</filename>
++                                        should be used. </para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>poweroff.target</filename></term>
+                                 <listitem>
+                                         <para>A special target unit
+diff --git a/units/nss-lookup.target b/units/nss-lookup.target
+index bdca03c..f7b0b5c 100644
+--- a/units/nss-lookup.target
++++ b/units/nss-lookup.target
+@@ -11,5 +11,5 @@
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+-Description=Name Lookups
++Description=Host and Network Name Lookups
+ After=network.target
+diff --git a/units/nss-user-lookup.target b/units/nss-user-lookup.target
+new file mode 100644
+index 0000000..40e2148
+--- /dev/null
++++ b/units/nss-user-lookup.target
+@@ -0,0 +1,15 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU General Public License as published by
++#  the Free Software Foundation; either version 2 of the License, or
++#  (at your option) any later version.
++
++# See systemd.special(7) for details
++
++# This exists mostly for implementations lacking socket/bus
++# activation.
++
++[Unit]
++Description=User and Group Name Lookups
++After=network.target
+diff --git a/units/remote-fs-pre.target b/units/remote-fs-pre.target
+index 8aceb08..eca271b 100644
+--- a/units/remote-fs-pre.target
++++ b/units/remote-fs-pre.target
+@@ -9,4 +9,4 @@
+ 
+ [Unit]
+ Description=Remote File Systems (Pre)
+-After=network.target
++After=network.target nss-lookup.target
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index 531b8f7..48c1f2c 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -9,6 +9,7 @@
+ 
+ [Unit]
+ Description=Login Service
++After=nss-user-lookup.target
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-logind

@@ -1,0 +1,46 @@
+From c3370a17ebc48b621a9ec5260442d61564e018ca Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 4 Apr 2012 00:43:40 +0200
+Subject: [PATCH] man: document the _TRANSPORT journal field (cherry picked
+ from commit 6bc3bf5b05f4e79f9d6e42b7fb877b60070e048b)
+
+---
+ man/systemd.journal-fields.xml |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/man/systemd.journal-fields.xml b/man/systemd.journal-fields.xml
+index becffc7..e638893 100644
+--- a/man/systemd.journal-fields.xml
++++ b/man/systemd.journal-fields.xml
+@@ -261,6 +261,31 @@
+                                         originating host.</para>
+                                 </listitem>
+                         </varlistentry>
++
++                        <varlistentry>
++                                <term>_TRANSPORT=</term>
++                                <listitem>
++                                        <para>How the entry was
++                                        received by the journal
++                                        service. One of
++                                        <literal>driver</literal>,
++                                        <literal>syslog</literal>,
++                                        <literal>journal</literal>,
++                                        <literal>stdout</literal>,
++                                        <literal>kernel</literal> for
++                                        internally generated messages,
++                                        for those received via the
++                                        local syslog socket with the
++                                        syslog protocol, for those
++                                        received via the native
++                                        journal protocol, for the
++                                        those read from a services'
++                                        standard output or error
++                                        output, resp. for those read
++                                        from the kernel.
++                                        </para>
++                                </listitem>
++                        </varlistentry>
+                 </variablelist>
+         </refsect1>
+ 

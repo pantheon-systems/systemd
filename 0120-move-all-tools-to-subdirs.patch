@@ -1,0 +1,367 @@
+From cf5c3668744193386ef925df5bd04e87c89dd80a Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 17:15:18 +0200
+Subject: [PATCH] move all tools to subdirs (cherry picked from commit
+ dce818b390a857a11f7dd634684500675cf79833)
+
+---
+ Makefile.am                                        |   48 ++++++++++----------
+ src/{ => ac-power}/ac-power.c                      |    0
+ src/{ => ask-password}/ask-password.c              |    0
+ src/{ => cgls}/cgls.c                              |    0
+ src/{ => cgroups-agent}/cgroups-agent.c            |    0
+ src/{ => cgtop}/cgtop.c                            |    0
+ src/{ => detect-virt}/detect-virt.c                |    0
+ src/{ => fsck}/fsck.c                              |    0
+ src/{ => getty-generator}/getty-generator.c        |    0
+ src/{ => initctl}/initctl.c                        |    0
+ src/{ => modules-load}/modules-load.c              |    0
+ src/{ => notify}/notify.c                          |    0
+ src/{ => nspawn}/nspawn.c                          |    0
+ src/{ => quotacheck}/quotacheck.c                  |    0
+ src/{ => random-seed}/random-seed.c                |    0
+ src/{ => rc-local-generator}/rc-local-generator.c  |    0
+ src/{ => remount-api-vfs}/remount-api-vfs.c        |    0
+ src/{ => reply-password}/reply-password.c          |    0
+ src/{ => shutdownd}/shutdownd.c                    |    0
+ src/{ => sysctl}/sysctl.c                          |    0
+ src/{ => systemctl}/systemctl.c                    |    0
+ src/{ => timestamp}/timestamp.c                    |    0
+ src/{ => tmpfiles}/tmpfiles.c                      |    0
+ .../tty-ask-password-agent.c                       |    0
+ src/{ => update-utmp}/update-utmp.c                |    0
+ 25 files changed, 24 insertions(+), 24 deletions(-)
+ rename src/{ => ac-power}/ac-power.c (100%)
+ rename src/{ => ask-password}/ask-password.c (100%)
+ rename src/{ => cgls}/cgls.c (100%)
+ rename src/{ => cgroups-agent}/cgroups-agent.c (100%)
+ rename src/{ => cgtop}/cgtop.c (100%)
+ rename src/{ => detect-virt}/detect-virt.c (100%)
+ rename src/{ => fsck}/fsck.c (100%)
+ rename src/{ => getty-generator}/getty-generator.c (100%)
+ rename src/{ => initctl}/initctl.c (100%)
+ rename src/{ => modules-load}/modules-load.c (100%)
+ rename src/{ => notify}/notify.c (100%)
+ rename src/{ => nspawn}/nspawn.c (100%)
+ rename src/{ => quotacheck}/quotacheck.c (100%)
+ rename src/{ => random-seed}/random-seed.c (100%)
+ rename src/{ => rc-local-generator}/rc-local-generator.c (100%)
+ rename src/{ => remount-api-vfs}/remount-api-vfs.c (100%)
+ rename src/{ => reply-password}/reply-password.c (100%)
+ rename src/{ => shutdownd}/shutdownd.c (100%)
+ rename src/{ => sysctl}/sysctl.c (100%)
+ rename src/{ => systemctl}/systemctl.c (100%)
+ rename src/{ => timestamp}/timestamp.c (100%)
+ rename src/{ => tmpfiles}/tmpfiles.c (100%)
+ rename src/{ => tty-ask-password-agent}/tty-ask-password-agent.c (100%)
+ rename src/{ => update-utmp}/update-utmp.c (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 60aad55..04b7cb7 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -943,7 +943,7 @@ test_watchdog_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_initctl_SOURCES = \
+-	src/initctl.c
++	src/initctl/initctl.c
+ 
+ systemd_initctl_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -957,7 +957,7 @@ systemd_initctl_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_update_utmp_SOURCES = \
+-	src/update-utmp.c
++	src/update-utmp/update-utmp.c
+ 
+ systemd_update_utmp_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -972,7 +972,7 @@ systemd_update_utmp_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_shutdownd_SOURCES = \
+-	src/shutdownd.c
++	src/shutdownd/shutdownd.c
+ 
+ systemd_shutdownd_LDADD = \
+ 	libsystemd-label.la \
+@@ -999,7 +999,7 @@ systemd_shutdown_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_modules_load_SOURCES = \
+-	src/modules-load.c
++	src/modules-load/modules-load.c
+ 
+ systemd_modules_load_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1011,7 +1011,7 @@ systemd_modules_load_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_tmpfiles_SOURCES = \
+-	src/tmpfiles.c
++	src/tmpfiles/tmpfiles.c
+ 
+ systemd_tmpfiles_LDADD = \
+ 	libsystemd-label.la \
+@@ -1030,14 +1030,14 @@ systemd_machine_id_setup_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_sysctl_SOURCES = \
+-	src/sysctl.c
++	src/sysctl/sysctl.c
+ 
+ systemd_sysctl_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_fsck_SOURCES = \
+-	src/fsck.c
++	src/fsck/fsck.c
+ 
+ systemd_fsck_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1052,14 +1052,14 @@ systemd_fsck_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_timestamp_SOURCES = \
+-	src/timestamp.c
++	src/timestamp/timestamp.c
+ 
+ systemd_timestamp_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_ac_power_SOURCES = \
+-	src/ac-power.c
++	src/ac-power/ac-power.c
+ 
+ systemd_ac_power_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1071,14 +1071,14 @@ systemd_ac_power_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_detect_virt_SOURCES = \
+-	src/detect-virt.c
++	src/detect-virt/detect-virt.c
+ 
+ systemd_detect_virt_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_getty_generator_SOURCES = \
+-	src/getty-generator.c
++	src/getty-generator/getty-generator.c
+ 
+ systemd_getty_generator_LDADD = \
+ 	libsystemd-label.la \
+@@ -1086,7 +1086,7 @@ systemd_getty_generator_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_rc_local_generator_SOURCES = \
+-	src/rc-local-generator.c
++	src/rc-local-generator/rc-local-generator.c
+ 
+ systemd_rc_local_generator_LDADD = \
+ 	libsystemd-label.la \
+@@ -1094,14 +1094,14 @@ systemd_rc_local_generator_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_remount_api_vfs_SOURCES = \
+-	src/remount-api-vfs.c
++	src/remount-api-vfs/remount-api-vfs.c
+ 
+ systemd_remount_api_vfs_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgroups_agent_SOURCES = \
+-	src/cgroups-agent.c
++	src/cgroups-agent/cgroups-agent.c
+ 
+ systemd_cgroups_agent_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1114,7 +1114,7 @@ systemd_cgroups_agent_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemctl_SOURCES = \
+-	src/systemctl.c
++	src/systemctl/systemctl.c
+ 
+ systemctl_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1132,7 +1132,7 @@ systemctl_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_notify_SOURCES = \
+-	src/notify.c \
++	src/notify/notify.c \
+ 	src/readahead/sd-readahead.c
+ 
+ systemd_notify_LDADD = \
+@@ -1141,7 +1141,7 @@ systemd_notify_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_ask_password_SOURCES = \
+-	src/ask-password.c
++	src/ask-password/ask-password.c
+ 
+ systemd_ask_password_LDADD = \
+ 	libsystemd-label.la \
+@@ -1149,28 +1149,28 @@ systemd_ask_password_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_reply_password_SOURCES = \
+-	src/reply-password.c
++	src/reply-password/reply-password.c
+ 
+ systemd_reply_password_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgls_SOURCES = \
+-	src/cgls.c
++	src/cgls/cgls.c
+ 
+ systemd_cgls_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgtop_SOURCES = \
+-	src/cgtop.c
++	src/cgtop/cgtop.c
+ 
+ systemd_cgtop_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_nspawn_SOURCES = \
+-	src/nspawn.c
++	src/nspawn/nspawn.c
+ 
+ systemd_nspawn_LDADD = \
+ 	libsystemd-label.la \
+@@ -1233,7 +1233,7 @@ systemd_gnome_ask_password_agent_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_tty_ask_password_agent_SOURCES = \
+-	src/tty-ask-password-agent.c
++	src/tty-ask-password-agent/tty-ask-password-agent.c
+ 
+ systemd_tty_ask_password_agent_LDADD = \
+ 	libsystemd-label.la \
+@@ -1724,7 +1724,7 @@ EXTRA_DIST += \
+ 	units/quotacheck.service.in
+ 
+ systemd_quotacheck_SOURCES = \
+-	src/quotacheck.c
++	src/quotacheck/quotacheck.c
+ 
+ systemd_quotacheck_LDADD = \
+ 	libsystemd-shared.la
+@@ -1744,7 +1744,7 @@ EXTRA_DIST += \
+ 	units/systemd-random-seed-load.service.in
+ 
+ systemd_random_seed_SOURCES = \
+-	src/random-seed.c
++	src/random-seed/random-seed.c
+ 
+ systemd_random_seed_LDADD = \
+ 	libsystemd-label.la \
+diff --git a/src/ac-power.c b/src/ac-power/ac-power.c
+similarity index 100%
+rename from src/ac-power.c
+rename to src/ac-power/ac-power.c
+diff --git a/src/ask-password.c b/src/ask-password/ask-password.c
+similarity index 100%
+rename from src/ask-password.c
+rename to src/ask-password/ask-password.c
+diff --git a/src/cgls.c b/src/cgls/cgls.c
+similarity index 100%
+rename from src/cgls.c
+rename to src/cgls/cgls.c
+diff --git a/src/cgroups-agent.c b/src/cgroups-agent/cgroups-agent.c
+similarity index 100%
+rename from src/cgroups-agent.c
+rename to src/cgroups-agent/cgroups-agent.c
+diff --git a/src/cgtop.c b/src/cgtop/cgtop.c
+similarity index 100%
+rename from src/cgtop.c
+rename to src/cgtop/cgtop.c
+diff --git a/src/detect-virt.c b/src/detect-virt/detect-virt.c
+similarity index 100%
+rename from src/detect-virt.c
+rename to src/detect-virt/detect-virt.c
+diff --git a/src/fsck.c b/src/fsck/fsck.c
+similarity index 100%
+rename from src/fsck.c
+rename to src/fsck/fsck.c
+diff --git a/src/getty-generator.c b/src/getty-generator/getty-generator.c
+similarity index 100%
+rename from src/getty-generator.c
+rename to src/getty-generator/getty-generator.c
+diff --git a/src/initctl.c b/src/initctl/initctl.c
+similarity index 100%
+rename from src/initctl.c
+rename to src/initctl/initctl.c
+diff --git a/src/modules-load.c b/src/modules-load/modules-load.c
+similarity index 100%
+rename from src/modules-load.c
+rename to src/modules-load/modules-load.c
+diff --git a/src/notify.c b/src/notify/notify.c
+similarity index 100%
+rename from src/notify.c
+rename to src/notify/notify.c
+diff --git a/src/nspawn.c b/src/nspawn/nspawn.c
+similarity index 100%
+rename from src/nspawn.c
+rename to src/nspawn/nspawn.c
+diff --git a/src/quotacheck.c b/src/quotacheck/quotacheck.c
+similarity index 100%
+rename from src/quotacheck.c
+rename to src/quotacheck/quotacheck.c
+diff --git a/src/random-seed.c b/src/random-seed/random-seed.c
+similarity index 100%
+rename from src/random-seed.c
+rename to src/random-seed/random-seed.c
+diff --git a/src/rc-local-generator.c b/src/rc-local-generator/rc-local-generator.c
+similarity index 100%
+rename from src/rc-local-generator.c
+rename to src/rc-local-generator/rc-local-generator.c
+diff --git a/src/remount-api-vfs.c b/src/remount-api-vfs/remount-api-vfs.c
+similarity index 100%
+rename from src/remount-api-vfs.c
+rename to src/remount-api-vfs/remount-api-vfs.c
+diff --git a/src/reply-password.c b/src/reply-password/reply-password.c
+similarity index 100%
+rename from src/reply-password.c
+rename to src/reply-password/reply-password.c
+diff --git a/src/shutdownd.c b/src/shutdownd/shutdownd.c
+similarity index 100%
+rename from src/shutdownd.c
+rename to src/shutdownd/shutdownd.c
+diff --git a/src/sysctl.c b/src/sysctl/sysctl.c
+similarity index 100%
+rename from src/sysctl.c
+rename to src/sysctl/sysctl.c
+diff --git a/src/systemctl.c b/src/systemctl/systemctl.c
+similarity index 100%
+rename from src/systemctl.c
+rename to src/systemctl/systemctl.c
+diff --git a/src/timestamp.c b/src/timestamp/timestamp.c
+similarity index 100%
+rename from src/timestamp.c
+rename to src/timestamp/timestamp.c
+diff --git a/src/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+similarity index 100%
+rename from src/tmpfiles.c
+rename to src/tmpfiles/tmpfiles.c
+diff --git a/src/tty-ask-password-agent.c b/src/tty-ask-password-agent/tty-ask-password-agent.c
+similarity index 100%
+rename from src/tty-ask-password-agent.c
+rename to src/tty-ask-password-agent/tty-ask-password-agent.c
+diff --git a/src/update-utmp.c b/src/update-utmp/update-utmp.c
+similarity index 100%
+rename from src/update-utmp.c
+rename to src/update-utmp/update-utmp.c

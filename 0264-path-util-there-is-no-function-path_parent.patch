@@ -1,0 +1,22 @@
+From 9463cfa64779738c74635b4a75dd3075dcc080f3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 8 May 2012 23:37:25 +0200
+Subject: [PATCH] path-util: there is no function path_parent() (cherry picked
+ from commit 14753f341937b75b244261f36807330456fa33a8)
+
+---
+ src/shared/path-util.h |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/shared/path-util.h b/src/shared/path-util.h
+index 181b981..a441783 100644
+--- a/src/shared/path-util.h
++++ b/src/shared/path-util.h
+@@ -31,7 +31,6 @@ int path_get_parent(const char *path, char **parent);
+ bool path_is_absolute(const char *p);
+ char *path_make_absolute(const char *p, const char *prefix);
+ char *path_make_absolute_cwd(const char *p);
+-int path_parent(const char *path, char **parent);
+ char *path_kill_slashes(char *path);
+ bool path_startswith(const char *path, const char *prefix);
+ bool path_equal(const char *a, const char *b);

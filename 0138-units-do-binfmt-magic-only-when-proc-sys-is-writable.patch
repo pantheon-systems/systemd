@@ -1,0 +1,38 @@
+From 536e3cc7e4057807ddfd17ee8fa21a8198692393 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 17:39:37 +0200
+Subject: [PATCH] units: do binfmt magic only when /proc/sys is writable
+ (cherry picked from commit
+ 41807efb1594ae8e71e0255e154ea7d17be2251a)
+
+---
+ units/proc-sys-fs-binfmt_misc.automount |    3 ++-
+ units/systemd-binfmt.service.in         |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/units/proc-sys-fs-binfmt_misc.automount b/units/proc-sys-fs-binfmt_misc.automount
+index acbbcbb..9540fbb 100644
+--- a/units/proc-sys-fs-binfmt_misc.automount
++++ b/units/proc-sys-fs-binfmt_misc.automount
+@@ -9,7 +9,8 @@
+ Description=Arbitrary Executable File Formats File System Automount Point
+ DefaultDependencies=no
+ Before=sysinit.target
+-ConditionPathExists=/proc/sys/fs/binfmt_misc
++ConditionPathExists=/proc/sys/fs/binfmt_misc/
++ConditionPathIsReadWrite=/proc/sys/
+ 
+ [Automount]
+ Where=/proc/sys/fs/binfmt_misc
+diff --git a/units/systemd-binfmt.service.in b/units/systemd-binfmt.service.in
+index d43497c..515c81b 100644
+--- a/units/systemd-binfmt.service.in
++++ b/units/systemd-binfmt.service.in
+@@ -11,6 +11,7 @@ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service proc-sys-fs-binfmt_misc.automount
+ Before=sysinit.target shutdown.target
++ConditionPathIsReadWrite=/proc/sys/
+ ConditionDirectoryNotEmpty=|/usr/lib/binfmt.d
+ ConditionDirectoryNotEmpty=|/usr/local/lib/binfmt.d
+ ConditionDirectoryNotEmpty=|/etc/binfmt.d

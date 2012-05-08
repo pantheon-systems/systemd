@@ -1,0 +1,207 @@
+From 521a1607865f9a5288a4b19f4a240e9f2577e461 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 24 Apr 2012 16:42:42 +0200
+Subject: [PATCH] remount: consolidate remount-api-vfs and remount-rootfs into
+ one
+
+This has the advantage of removing a confusing warning by mount if the
+root directory is not listed in fstab.
+(cherry picked from commit 2b93b027d3a68b5d7ae26d0c2cd487eb5019d2a9)
+
+Conflicts:
+
+	.gitignore
+	Makefile.am
+	src/remount-fs/Makefile
+---
+ Makefile.am                                        |   19 ++++++++-----------
+ src/core/special.h                                 |    2 +-
+ src/core/swap.c                                    |    4 ++--
+ .../remount-api-vfs.c => remount-fs/remount-fs.c}  |    4 +++-
+ units/quotacheck.service.in                        |    2 +-
+ units/systemd-remount-api-vfs.service.in           |   20 --------------------
+ ...ootfs.service => systemd-remount-fs.service.in} |    4 ++--
+ 7 files changed, 17 insertions(+), 38 deletions(-)
+ rename src/{remount-api-vfs/remount-api-vfs.c => remount-fs/remount-fs.c} (96%)
+ delete mode 100644 units/systemd-remount-api-vfs.service.in
+ rename units/{remount-rootfs.service => systemd-remount-fs.service.in} (86%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 7a980a6..aad5757 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -210,7 +210,7 @@ rootlibexec_PROGRAMS = \
+ 	systemd-shutdownd \
+ 	systemd-shutdown \
+ 	systemd-modules-load \
+-	systemd-remount-api-vfs \
++	systemd-remount-fs \
+ 	systemd-reply-password \
+ 	systemd-fsck \
+ 	systemd-timestamp \
+@@ -275,7 +275,6 @@ dist_systemunit_DATA = \
+ 	units/sys-kernel-debug.mount \
+ 	units/sys-fs-fuse-connections.mount \
+ 	units/media.mount \
+-	units/remount-rootfs.service \
+ 	units/printer.target \
+ 	units/sound.target \
+ 	units/bluetooth.target \
+@@ -294,7 +293,7 @@ nodist_systemunit_DATA = \
+ 	units/systemd-initctl.service \
+ 	units/systemd-shutdownd.service \
+ 	units/systemd-modules-load.service \
+-	units/systemd-remount-api-vfs.service \
++	units/systemd-remount-fs.service \
+ 	units/systemd-update-utmp-runlevel.service \
+ 	units/systemd-update-utmp-shutdown.service \
+ 	units/systemd-tmpfiles-setup.service \
+@@ -328,7 +327,7 @@ EXTRA_DIST += \
+ 	units/systemd-initctl.service.in \
+ 	units/systemd-shutdownd.service.in \
+ 	units/systemd-modules-load.service.in \
+-	units/systemd-remount-api-vfs.service.in \
++	units/systemd-remount-fs.service.in \
+ 	units/systemd-update-utmp-runlevel.service.in \
+ 	units/systemd-update-utmp-shutdown.service.in \
+ 	units/systemd-tmpfiles-setup.service.in \
+@@ -1107,12 +1106,12 @@ systemd_rc_local_generator_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+-systemd_remount_api_vfs_SOURCES = \
+-	src/remount-api-vfs/remount-api-vfs.c \
++systemd_remount_fs_SOURCES = \
++	src/remount-fs/remount-fs.c \
+ 	src/core/mount-setup.c \
+ 	src/core/mount-setup.h
+ 
+-systemd_remount_api_vfs_LDADD = \
++systemd_remount_fs_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+@@ -2487,13 +2486,11 @@ systemd-install-data-hook:
+ 		rm -f systemd-update-utmp-shutdown.service && \
+ 		$(LN_S) ../systemd-update-utmp-shutdown.service systemd-update-utmp-shutdown.service )
+ 	( cd $(DESTDIR)$(systemunitdir)/local-fs.target.wants && \
+-		rm -f systemd-remount-api-vfs.service \
++		rm -f systemd-remount-fs.service \
+ 			fsck-root.service \
+-			remount-rootfs.service \
+ 			media.mount && \
+-		$(LN_S) ../systemd-remount-api-vfs.service systemd-remount-api-vfs.service && \
++		$(LN_S) ../systemd-remount-fs.service systemd-remount-fs.service && \
+ 		$(LN_S) ../fsck-root.service fsck-root.service && \
+-		$(LN_S) ../remount-rootfs.service remount-rootfs.service && \
+ 		$(LN_S) ../media.mount media.mount )
+ 	( cd $(DESTDIR)$(userunitdir) && \
+ 		rm -f shutdown.target sockets.target bluetooth.target printer.target sound.target && \
+diff --git a/src/core/special.h b/src/core/special.h
+index 43e2e6f..d910d2a 100644
+--- a/src/core/special.h
++++ b/src/core/special.h
+@@ -65,7 +65,7 @@
+ #define SPECIAL_FSCK_SERVICE "fsck@.service"
+ #define SPECIAL_QUOTACHECK_SERVICE "quotacheck.service"
+ #define SPECIAL_QUOTAON_SERVICE "quotaon.service"
+-#define SPECIAL_REMOUNT_ROOTFS_SERVICE "remount-rootfs.service"
++#define SPECIAL_REMOUNT_FS_SERVICE "systemd-remount-fs.service"
+ 
+ /* Services systemd relies on */
+ #define SPECIAL_DBUS_SERVICE "dbus.service"
+diff --git a/src/core/swap.c b/src/core/swap.c
+index c0606d0..18b1ae2 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -212,9 +212,9 @@ static int swap_add_device_links(Swap *s) {
+                                           UNIT(s)->manager->running_as == MANAGER_SYSTEM);
+         else
+                 /* File based swap devices need to be ordered after
+-                 * remount-rootfs.service, since they might need a
++                 * systemd-remount-fs.service, since they might need a
+                  * writable file system. */
+-                return unit_add_dependency_by_name(UNIT(s), UNIT_AFTER, SPECIAL_REMOUNT_ROOTFS_SERVICE, NULL, true);
++                return unit_add_dependency_by_name(UNIT(s), UNIT_AFTER, SPECIAL_REMOUNT_FS_SERVICE, NULL, true);
+ }
+ 
+ static int swap_add_default_dependencies(Swap *s) {
+diff --git a/src/remount-api-vfs/remount-api-vfs.c b/src/remount-fs/remount-fs.c
+similarity index 96%
+rename from src/remount-api-vfs/remount-api-vfs.c
+rename to src/remount-fs/remount-fs.c
+index 976eb06..24ecaff 100644
+--- a/src/remount-api-vfs/remount-api-vfs.c
++++ b/src/remount-fs/remount-fs.c
+@@ -78,7 +78,9 @@ int main(int argc, char *argv[]) {
+                 int k;
+                 char *s;
+ 
+-                if (!mount_point_is_api(me->mnt_dir))
++                /* Remount the root fs and all API VFS */
++                if (!mount_point_is_api(me->mnt_dir) &&
++                    !path_equal(me->mnt_dir, "/"))
+                         continue;
+ 
+                 log_debug("Remounting %s", me->mnt_dir);
+diff --git a/units/quotacheck.service.in b/units/quotacheck.service.in
+index c97b7a4..e8d3bca 100644
+--- a/units/quotacheck.service.in
++++ b/units/quotacheck.service.in
+@@ -8,7 +8,7 @@
+ [Unit]
+ Description=File System Quota Check
+ DefaultDependencies=no
+-After=systemd-readahead-collect.service systemd-readahead-replay.service remount-rootfs.service
++After=systemd-readahead-collect.service systemd-readahead-replay.service systemd-remount-fs.service
+ Before=local-fs.target shutdown.target
+ ConditionPathExists=/sbin/quotacheck
+ 
+diff --git a/units/systemd-remount-api-vfs.service.in b/units/systemd-remount-api-vfs.service.in
+deleted file mode 100644
+index 0df742a..0000000
+--- a/units/systemd-remount-api-vfs.service.in
++++ /dev/null
+@@ -1,20 +0,0 @@
+-#  This file is part of systemd.
+-#
+-#  systemd is free software; you can redistribute it and/or modify it
+-#  under the terms of the GNU General Public License as published by
+-#  the Free Software Foundation; either version 2 of the License, or
+-#  (at your option) any later version.
+-
+-[Unit]
+-Description=Remount API VFS
+-DefaultDependencies=no
+-Conflicts=shutdown.target
+-After=systemd-readahead-collect.service systemd-readahead-replay.service
+-Before=local-fs-pre.target local-fs.target shutdown.target
+-Wants=local-fs-pre.target
+-ConditionPathExists=/etc/fstab
+-
+-[Service]
+-Type=oneshot
+-RemainAfterExit=yes
+-ExecStart=@rootlibexecdir@/systemd-remount-api-vfs
+diff --git a/units/remount-rootfs.service b/units/systemd-remount-fs.service.in
+similarity index 86%
+rename from units/remount-rootfs.service
+rename to units/systemd-remount-fs.service.in
+index b95d5f4..866c173 100644
+--- a/units/remount-rootfs.service
++++ b/units/systemd-remount-fs.service.in
+@@ -6,7 +6,7 @@
+ #  (at your option) any later version.
+ 
+ [Unit]
+-Description=Remount Root FS
++Description=Remount Root and Kernel File Systems
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service fsck-root.service
+@@ -17,4 +17,4 @@ ConditionPathExists=/etc/fstab
+ [Service]
+ Type=oneshot
+ RemainAfterExit=yes
+-ExecStart=/bin/mount / -o remount
++ExecStart=@rootlibexecdir@/systemd-remount-fs

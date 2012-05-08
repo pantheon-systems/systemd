@@ -1,0 +1,613 @@
+From 96328b40613f5b850ee41b39a96f0b1cb609452c Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 7 May 2012 21:06:55 +0200
+Subject: [PATCH] util: split-out hwclock.[ch] (cherry picked from commit
+ bbc98d32560cc456531bf254f7b69054921082bd)
+
+---
+ Makefile.am              |    4 +-
+ src/core/dbus-manager.c  |    1 +
+ src/core/main.c          |    1 +
+ src/shared/hwclock.c     |  228 ++++++++++++++++++++++++++++++++++++++++++++++
+ src/shared/hwclock.h     |   31 +++++++
+ src/shared/macro.h       |   11 +++
+ src/shared/util.c        |  187 -------------------------------------
+ src/shared/util.h        |   19 ----
+ src/timedate/timedated.c |    1 +
+ 9 files changed, 276 insertions(+), 207 deletions(-)
+ create mode 100644 src/shared/hwclock.c
+ create mode 100644 src/shared/hwclock.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 6baba53..9823cdb 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -550,7 +550,9 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/specifier.c \
+ 	src/shared/specifier.h \
+ 	src/shared/spawn-polkit-agent.c \
+-	src/shared/spawn-polkit-agent.h
++	src/shared/spawn-polkit-agent.h \
++	src/shared/hwclock.c \
++	src/shared/hwclock.h
+ 
+ #-------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 2c9a4e4..ab6f8a0 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -31,6 +31,7 @@
+ #include "dbus-common.h"
+ #include "install.h"
+ #include "watchdog.h"
++#include "hwclock.h"
+ 
+ #define BUS_MANAGER_INTERFACE_BEGIN                                     \
+         " <interface name=\"org.freedesktop.systemd1.Manager\">\n"
+diff --git a/src/core/main.c b/src/core/main.c
+index 81f76b2..1b021ee 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -54,6 +54,7 @@
+ #include "hostname-setup.h"
+ #include "machine-id-setup.h"
+ #include "locale-setup.h"
++#include "hwclock.h"
+ #include "selinux-setup.h"
+ #include "ima-setup.h"
+ 
+diff --git a/src/shared/hwclock.c b/src/shared/hwclock.c
+new file mode 100644
+index 0000000..d40bb26
+--- /dev/null
++++ b/src/shared/hwclock.c
+@@ -0,0 +1,228 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010-2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <assert.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdlib.h>
++#include <signal.h>
++#include <stdio.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <sys/ioctl.h>
++#include <stdarg.h>
++#include <ctype.h>
++#include <sys/prctl.h>
++#include <sys/time.h>
++#include <linux/rtc.h>
++
++#include "macro.h"
++#include "util.h"
++#include "log.h"
++#include "strv.h"
++#include "hwclock.h"
++
++static int rtc_open(int flags) {
++        int fd;
++        DIR *d;
++
++        /* First, we try to make use of the /dev/rtc symlink. If that
++         * doesn't exist, we open the first RTC which has hctosys=1
++         * set. If we don't find any we just take the first RTC that
++         * exists at all. */
++
++        fd = open("/dev/rtc", flags);
++        if (fd >= 0)
++                return fd;
++
++        d = opendir("/sys/class/rtc");
++        if (!d)
++                goto fallback;
++
++        for (;;) {
++                char *p, *v;
++                struct dirent buf, *de;
++                int r;
++
++                r = readdir_r(d, &buf, &de);
++                if (r != 0)
++                        goto fallback;
++
++                if (!de)
++                        goto fallback;
++
++                if (ignore_file(de->d_name))
++                        continue;
++
++                p = join("/sys/class/rtc/", de->d_name, "/hctosys", NULL);
++                if (!p) {
++                        closedir(d);
++                        return -ENOMEM;
++                }
++
++                r = read_one_line_file(p, &v);
++                free(p);
++
++                if (r < 0)
++                        continue;
++
++                r = parse_boolean(v);
++                free(v);
++
++                if (r <= 0)
++                        continue;
++
++                p = strappend("/dev/", de->d_name);
++                fd = open(p, flags);
++                free(p);
++
++                if (fd >= 0) {
++                        closedir(d);
++                        return fd;
++                }
++        }
++
++fallback:
++        if (d)
++                closedir(d);
++
++        fd = open("/dev/rtc0", flags);
++        if (fd < 0)
++                return -errno;
++
++        return fd;
++}
++
++int hwclock_get_time(struct tm *tm) {
++        int fd;
++        int err = 0;
++
++        assert(tm);
++
++        fd = rtc_open(O_RDONLY|O_CLOEXEC);
++        if (fd < 0)
++                return -errno;
++
++        /* This leaves the timezone fields of struct tm
++         * uninitialized! */
++        if (ioctl(fd, RTC_RD_TIME, tm) < 0)
++                err = -errno;
++
++        /* We don't know daylight saving, so we reset this in order not
++         * to confused mktime(). */
++        tm->tm_isdst = -1;
++
++        close_nointr_nofail(fd);
++
++        return err;
++}
++
++int hwclock_set_time(const struct tm *tm) {
++        int fd;
++        int err = 0;
++
++        assert(tm);
++
++        fd = rtc_open(O_RDONLY|O_CLOEXEC);
++        if (fd < 0)
++                return -errno;
++
++        if (ioctl(fd, RTC_SET_TIME, tm) < 0)
++                err = -errno;
++
++        close_nointr_nofail(fd);
++
++        return err;
++}
++int hwclock_is_localtime(void) {
++        FILE *f;
++        bool local = false;
++
++        /*
++         * The third line of adjtime is "UTC" or "LOCAL" or nothing.
++         *   # /etc/adjtime
++         *   0.0 0 0
++         *   0
++         *   UTC
++         */
++        f = fopen("/etc/adjtime", "re");
++        if (f) {
++                char line[LINE_MAX];
++                bool b;
++
++                b = fgets(line, sizeof(line), f) &&
++                        fgets(line, sizeof(line), f) &&
++                        fgets(line, sizeof(line), f);
++
++                fclose(f);
++
++                if (!b)
++                        return -EIO;
++
++                truncate_nl(line);
++                local = streq(line, "LOCAL");
++
++        } else if (errno != -ENOENT)
++                return -errno;
++
++        return local;
++}
++
++int hwclock_apply_localtime_delta(int *min) {
++        const struct timeval *tv_null = NULL;
++        struct timespec ts;
++        struct tm *tm;
++        int minuteswest;
++        struct timezone tz;
++
++        assert_se(clock_gettime(CLOCK_REALTIME, &ts) == 0);
++        assert_se(tm = localtime(&ts.tv_sec));
++        minuteswest = tm->tm_gmtoff / 60;
++
++        tz.tz_minuteswest = -minuteswest;
++        tz.tz_dsttime = 0; /* DST_NONE*/
++
++        /*
++         * If the hardware clock does not run in UTC, but in local time:
++         * The very first time we set the kernel's timezone, it will warp
++         * the clock so that it runs in UTC instead of local time.
++         */
++        if (settimeofday(tv_null, &tz) < 0)
++                return -errno;
++        if (min)
++                *min = minuteswest;
++        return 0;
++}
++
++int hwclock_reset_localtime_delta(void) {
++        const struct timeval *tv_null = NULL;
++        struct timezone tz;
++
++        tz.tz_minuteswest = 0;
++        tz.tz_dsttime = 0; /* DST_NONE*/
++
++        if (settimeofday(tv_null, &tz) < 0)
++                return -errno;
++
++        return 0;
++}
+diff --git a/src/shared/hwclock.h b/src/shared/hwclock.h
+new file mode 100644
+index 0000000..26d1b44
+--- /dev/null
++++ b/src/shared/hwclock.h
+@@ -0,0 +1,31 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foohwclockhfoo
++#define foohwclockhfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010-2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++int hwclock_is_localtime(void);
++int hwclock_apply_localtime_delta(int *min);
++int hwclock_reset_localtime_delta(void);
++int hwclock_get_time(struct tm *tm);
++int hwclock_set_time(const struct tm *tm);
++
++#endif
+diff --git a/src/shared/macro.h b/src/shared/macro.h
+index 19f259e..2c23af4 100644
+--- a/src/shared/macro.h
++++ b/src/shared/macro.h
+@@ -57,6 +57,17 @@ static inline size_t ALIGN_TO(size_t l, size_t ali) {
+ 
+ #define ELEMENTSOF(x) (sizeof(x)/sizeof((x)[0]))
+ 
++/*
++ * container_of - cast a member of a structure out to the containing structure
++ * @ptr: the pointer to the member.
++ * @type: the type of the container struct this is embedded in.
++ * @member: the name of the member within the struct.
++ *
++ */
++#define container_of(ptr, type, member) ({ \
++        const typeof( ((type *)0)->member ) *__mptr = (ptr); \
++        (type *)( (char *)__mptr - offsetof(type,member) );})
++
+ #ifndef MAX
+ #define MAX(a,b)                                \
+         __extension__ ({                        \
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 0803a21..96a35c1 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -52,7 +52,6 @@
+ #include <sys/wait.h>
+ #include <sys/capability.h>
+ #include <sys/time.h>
+-#include <linux/rtc.h>
+ #include <glob.h>
+ #include <grp.h>
+ #include <sys/mman.h>
+@@ -4863,192 +4862,6 @@ int vt_disallocate(const char *name) {
+         return 0;
+ }
+ 
+-int hwclock_is_localtime(void) {
+-        FILE *f;
+-        bool local = false;
+-
+-        /*
+-         * The third line of adjtime is "UTC" or "LOCAL" or nothing.
+-         *   # /etc/adjtime
+-         *   0.0 0 0
+-         *   0
+-         *   UTC
+-         */
+-        f = fopen("/etc/adjtime", "re");
+-        if (f) {
+-                char line[LINE_MAX];
+-                bool b;
+-
+-                b = fgets(line, sizeof(line), f) &&
+-                        fgets(line, sizeof(line), f) &&
+-                        fgets(line, sizeof(line), f);
+-
+-                fclose(f);
+-
+-                if (!b)
+-                        return -EIO;
+-
+-                truncate_nl(line);
+-                local = streq(line, "LOCAL");
+-
+-        } else if (errno != -ENOENT)
+-                return -errno;
+-
+-        return local;
+-}
+-
+-int hwclock_apply_localtime_delta(int *min) {
+-        const struct timeval *tv_null = NULL;
+-        struct timespec ts;
+-        struct tm *tm;
+-        int minuteswest;
+-        struct timezone tz;
+-
+-        assert_se(clock_gettime(CLOCK_REALTIME, &ts) == 0);
+-        assert_se(tm = localtime(&ts.tv_sec));
+-        minuteswest = tm->tm_gmtoff / 60;
+-
+-        tz.tz_minuteswest = -minuteswest;
+-        tz.tz_dsttime = 0; /* DST_NONE*/
+-
+-        /*
+-         * If the hardware clock does not run in UTC, but in local time:
+-         * The very first time we set the kernel's timezone, it will warp
+-         * the clock so that it runs in UTC instead of local time.
+-         */
+-        if (settimeofday(tv_null, &tz) < 0)
+-                return -errno;
+-        if (min)
+-                *min = minuteswest;
+-        return 0;
+-}
+-
+-int hwclock_reset_localtime_delta(void) {
+-        const struct timeval *tv_null = NULL;
+-        struct timezone tz;
+-
+-        tz.tz_minuteswest = 0;
+-        tz.tz_dsttime = 0; /* DST_NONE*/
+-
+-        if (settimeofday(tv_null, &tz) < 0)
+-                return -errno;
+-
+-        return 0;
+-}
+-
+-int rtc_open(int flags) {
+-        int fd;
+-        DIR *d;
+-
+-        /* First, we try to make use of the /dev/rtc symlink. If that
+-         * doesn't exist, we open the first RTC which has hctosys=1
+-         * set. If we don't find any we just take the first RTC that
+-         * exists at all. */
+-
+-        fd = open("/dev/rtc", flags);
+-        if (fd >= 0)
+-                return fd;
+-
+-        d = opendir("/sys/class/rtc");
+-        if (!d)
+-                goto fallback;
+-
+-        for (;;) {
+-                char *p, *v;
+-                struct dirent buf, *de;
+-                int r;
+-
+-                r = readdir_r(d, &buf, &de);
+-                if (r != 0)
+-                        goto fallback;
+-
+-                if (!de)
+-                        goto fallback;
+-
+-                if (ignore_file(de->d_name))
+-                        continue;
+-
+-                p = join("/sys/class/rtc/", de->d_name, "/hctosys", NULL);
+-                if (!p) {
+-                        closedir(d);
+-                        return -ENOMEM;
+-                }
+-
+-                r = read_one_line_file(p, &v);
+-                free(p);
+-
+-                if (r < 0)
+-                        continue;
+-
+-                r = parse_boolean(v);
+-                free(v);
+-
+-                if (r <= 0)
+-                        continue;
+-
+-                p = strappend("/dev/", de->d_name);
+-                fd = open(p, flags);
+-                free(p);
+-
+-                if (fd >= 0) {
+-                        closedir(d);
+-                        return fd;
+-                }
+-        }
+-
+-fallback:
+-        if (d)
+-                closedir(d);
+-
+-        fd = open("/dev/rtc0", flags);
+-        if (fd < 0)
+-                return -errno;
+-
+-        return fd;
+-}
+-
+-int hwclock_get_time(struct tm *tm) {
+-        int fd;
+-        int err = 0;
+-
+-        assert(tm);
+-
+-        fd = rtc_open(O_RDONLY|O_CLOEXEC);
+-        if (fd < 0)
+-                return -errno;
+-
+-        /* This leaves the timezone fields of struct tm
+-         * uninitialized! */
+-        if (ioctl(fd, RTC_RD_TIME, tm) < 0)
+-                err = -errno;
+-
+-        /* We don't know daylight saving, so we reset this in order not
+-         * to confused mktime(). */
+-        tm->tm_isdst = -1;
+-
+-        close_nointr_nofail(fd);
+-
+-        return err;
+-}
+-
+-int hwclock_set_time(const struct tm *tm) {
+-        int fd;
+-        int err = 0;
+-
+-        assert(tm);
+-
+-        fd = rtc_open(O_RDONLY|O_CLOEXEC);
+-        if (fd < 0)
+-                return -errno;
+-
+-        if (ioctl(fd, RTC_SET_TIME, tm) < 0)
+-                err = -errno;
+-
+-        close_nointr_nofail(fd);
+-
+-        return err;
+-}
+-
+ int copy_file(const char *from, const char *to) {
+         int r, fdf, fdt;
+ 
+diff --git a/src/shared/util.h b/src/shared/util.h
+index ac8997d..ab5c8df 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -59,17 +59,6 @@ typedef struct dual_timestamp {
+ #define USEC_PER_MONTH (2629800ULL*USEC_PER_SEC)
+ #define USEC_PER_YEAR (31557600ULL*USEC_PER_SEC)
+ 
+-/*
+- * container_of - cast a member of a structure out to the containing structure
+- * @ptr: the pointer to the member.
+- * @type: the type of the container struct this is embedded in.
+- * @member: the name of the member within the struct.
+- *
+- */
+-#define container_of(ptr, type, member) ({ \
+-        const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+-        (type *)( (char *)__mptr - offsetof(type,member) );})
+-
+ /* What is interpreted as whitespace? */
+ #define WHITESPACE " \t\n\r"
+ #define NEWLINE "\n\r"
+@@ -460,12 +449,6 @@ int symlink_or_copy_atomic(const char *from, const char *to);
+ 
+ int fchmod_umask(int fd, mode_t mode);
+ 
+-int hwclock_is_localtime(void);
+-int hwclock_apply_localtime_delta(int *min);
+-int hwclock_reset_localtime_delta(void);
+-int hwclock_get_time(struct tm *tm);
+-int hwclock_set_time(const struct tm *tm);
+-
+ bool display_is_local(const char *display);
+ int socket_from_display(const char *display, char **path);
+ 
+@@ -538,8 +521,6 @@ int fd_wait_for_event(int fd, int event, usec_t timeout);
+ 
+ void* memdup(const void *p, size_t l);
+ 
+-int rtc_open(int flags);
+-
+ int is_kernel_thread(pid_t pid);
+ 
+ int fd_inc_sndbuf(int fd, size_t n);
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index 75a8536..b008f15 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -30,6 +30,7 @@
+ #include "dbus-common.h"
+ #include "polkit.h"
+ #include "def.h"
++#include "hwclock.h"
+ 
+ #define NULL_ADJTIME_UTC "0.0 0 0\n0\nUTC\n"
+ #define NULL_ADJTIME_LOCAL "0.0 0 0\n0\nLOCAL\n"

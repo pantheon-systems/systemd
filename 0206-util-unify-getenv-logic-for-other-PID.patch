@@ -1,0 +1,253 @@
+From c22907908362b93f723f9161c81f8d55310d9647 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 14:48:46 +0200
+Subject: [PATCH] util: unify getenv() logic for other PID (cherry picked from
+ commit ab94af9201496ea3aa59bbf2a01eb750fbd1c08a)
+
+---
+ src/core/machine-id-setup.c |   45 +++++++------------------
+ src/shared/util.c           |   62 ++++++++++++++++++++++++++++++++++
+ src/shared/util.h           |    2 ++
+ src/shared/virt.c           |   77 +++++++++++++------------------------------
+ 4 files changed, 97 insertions(+), 89 deletions(-)
+
+diff --git a/src/core/machine-id-setup.c b/src/core/machine-id-setup.c
+index 94198cb..d53757c 100644
+--- a/src/core/machine-id-setup.c
++++ b/src/core/machine-id-setup.c
+@@ -110,45 +110,22 @@ static int generate(char id[34]) {
+         /* If that didn't work either, see if we are running in a
+          * container, and a machine ID was passed in via
+          * $container_uuid the way libvirt/LXC does it */
+-
+         r = detect_container(NULL);
+         if (r > 0) {
+-                FILE *f;
+-
+-                f = fopen("/proc/1/environ", "re");
+-                if (f) {
+-                        bool done = false;
+-
+-                        do {
+-                                char line[LINE_MAX];
+-                                unsigned i;
+-
+-                                for (i = 0; i < sizeof(line)-1; i++) {
+-                                        int c;
+-
+-                                        c = getc(f);
+-                                        if (_unlikely_(c == EOF)) {
+-                                                done = true;
+-                                                break;
+-                                        } else if (c == 0)
+-                                                break;
++                char *e;
+ 
+-                                        line[i] = c;
+-                                }
+-                                line[i] = 0;
+-
+-                                if (startswith(line, "container_uuid=") &&
+-                                    strlen(line + 15) >= 36) {
+-                                        r = shorten_uuid(id, line + 15);
+-                                        if (r >= 0) {
+-                                                log_info("Initializing machine ID from container UUID");
+-                                                return 0;
+-                                        }
++                r = getenv_for_pid(1, "container_uuid", &e);
++                if (r > 0) {
++                        if (strlen(e) >= 36) {
++                                r = shorten_uuid(id, e);
++                                if (r >= 0) {
++                                        log_info("Initializing machine ID from container UUID");
++                                        free(e);
++                                        return 0;
+                                 }
++                        }
+ 
+-                        } while (!done);
+-
+-                        fclose(f);
++                        free(e);
+                 }
+         }
+ 
+diff --git a/src/shared/util.c b/src/shared/util.c
+index e314827..7a5e57c 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -6168,3 +6168,65 @@ int path_is_read_only_fs(const char *path) {
+ 
+         return !!(st.f_flag & ST_RDONLY);
+ }
++
++int getenv_for_pid(pid_t pid, const char *field, char **_value) {
++        char path[sizeof("/proc/")-1+10+sizeof("/environ")], *value = NULL;
++        int r;
++        FILE *f;
++        bool done = false;
++        size_t l;
++
++        assert(field);
++        assert(_value);
++
++        if (pid == 0)
++                pid = getpid();
++
++        snprintf(path, sizeof(path), "/proc/%lu/environ", (unsigned long) pid);
++        char_array_0(path);
++
++        f = fopen(path, "re");
++        if (!f)
++                return -errno;
++
++        l = strlen(field);
++        r = 0;
++
++        do {
++                char line[LINE_MAX];
++                unsigned i;
++
++                for (i = 0; i < sizeof(line)-1; i++) {
++                        int c;
++
++                        c = getc(f);
++                        if (_unlikely_(c == EOF)) {
++                                done = true;
++                                break;
++                        } else if (c == 0)
++                                break;
++
++                        line[i] = c;
++                }
++                line[i] = 0;
++
++                if (memcmp(line, field, l) == 0 && line[l] == '=') {
++                        value = strdup(line + l + 1);
++                        if (!value) {
++                                r = -ENOMEM;
++                                break;
++                        }
++
++                        r = 1;
++                        break;
++                }
++
++        } while (!done);
++
++        fclose(f);
++
++        if (r >= 0)
++                *_value = value;
++
++        return r;
++}
+diff --git a/src/shared/util.h b/src/shared/util.h
+index f4190a3..a69807d 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -540,4 +540,6 @@ int fork_agent(pid_t *pid, const int except[], unsigned n_except, const char *pa
+ 
+ int setrlimit_closest(int resource, const struct rlimit *rlim);
+ 
++int getenv_for_pid(pid_t pid, const char *field, char **_value);
++
+ #endif
+diff --git a/src/shared/virt.c b/src/shared/virt.c
+index 4c526ff..a31b9e4 100644
+--- a/src/shared/virt.c
++++ b/src/shared/virt.c
+@@ -153,7 +153,8 @@ int detect_vm(const char **id) {
+ }
+ 
+ int detect_container(const char **id) {
+-        FILE *f;
++        char *e = NULL;
++        int r;
+ 
+         /* Unfortunately many of these operations require root access
+          * in one way or another */
+@@ -180,63 +181,29 @@ int detect_container(const char **id) {
+                 return 1;
+         }
+ 
+-        f = fopen("/proc/1/environ", "re");
+-        if (f) {
+-                bool done = false;
+-
+-                do {
+-                        char line[LINE_MAX];
+-                        unsigned i;
+-
+-                        for (i = 0; i < sizeof(line)-1; i++) {
+-                                int c;
+-
+-                                c = getc(f);
+-                                if (_unlikely_(c == EOF)) {
+-                                        done = true;
+-                                        break;
+-                                } else if (c == 0)
+-                                        break;
+-
+-                                line[i] = c;
+-                        }
+-                        line[i] = 0;
+-
+-                        if (streq(line, "container=lxc")) {
+-                                fclose(f);
+-
+-                                if (id)
+-                                        *id = "lxc";
+-                                return 1;
+-
+-                        } else if (streq(line, "container=lxc-libvirt")) {
+-                                fclose(f);
+-
+-                                if (id)
+-                                        *id = "lxc-libvirt";
+-                                return 1;
++        r = getenv_for_pid(1, "container", &e);
++        if (r <= 0)
++                return r;
+ 
+-                        } else if (streq(line, "container=systemd-nspawn")) {
+-                                fclose(f);
+-
+-                                if (id)
+-                                        *id = "systemd-nspawn";
+-                                return 1;
+-
+-                        } else if (startswith(line, "container=")) {
+-                                fclose(f);
+-
+-                                if (id)
+-                                        *id = "other";
+-                                return 1;
+-                        }
+-
+-                } while (!done);
+-
+-                fclose(f);
++        /* We only recognize a selected few here, since we want to
++         * enforce a redacted namespace */
++        if (streq(e, "lxc")) {
++                if (id)
++                        *id = "lxc";
++        } else if (streq(e, "lxc-libvirt")) {
++                if (id)
++                        *id = "lxc-libvirt";
++        } else if (streq(e, "systemd-nspawn")) {
++                if (id)
++                        *id = "systemd-nspawn";
++        } else {
++                if (id)
++                        *id = "other";
+         }
+ 
+-        return 0;
++        free(e);
++
++        return r;
+ }
+ 
+ /* Returns a short identifier for the various VM/container implementations */

@@ -1,0 +1,78 @@
+From 9d0cd9ad81bc9cd1e2e69187af99dff789326728 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 11 Apr 2012 03:54:23 +0200
+Subject: [PATCH] build-sys: move remaining headers out EXTRA_DIST, install
+ sd-readahead.h (cherry picked from commit
+ 6ac405b493feb1041a9f83561323b642d84381a7)
+
+---
+ Makefile.am |   24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index f86bd9b..87c94b2 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1321,11 +1321,18 @@ EXTRA_DIST += \
+ # ------------------------------------------------------------------------------
+ systemd_journald_SOURCES = \
+ 	src/journal/journald.c \
++	src/journal/journald.h \
+ 	src/journal/sd-journal.c \
+ 	src/journal/journal-file.c \
++	src/journal/journal-file.h \
+ 	src/journal/lookup3.c \
++	src/journal/lookup3.h \
+ 	src/journal/journal-rate-limit.c \
+-	src/journal/sparse-endian.h
++	src/journal/journal-rate-limit.h \
++	src/journal/sparse-endian.h \
++	src/journal/journal-def.h \
++	src/journal/journal-internal.h \
++	src/journal/compress.h
+ 
+ nodist_systemd_journald_SOURCES = \
+ 	src/journal/journald-gperf.c
+@@ -1510,13 +1517,6 @@ INSTALL_DATA_HOOKS += \
+ 	journal-install-data-hook
+ 
+ EXTRA_DIST += \
+-	src/journal/journald.h \
+-	src/journal/journal-def.h \
+-	src/journal/journal-internal.h \
+-	src/journal/journal-file.h \
+-	src/journal/lookup3.h \
+-	src/journal/compress.h \
+-	src/journal/journal-rate-limit.h \
+ 	src/journal/libsystemd-journal.pc.in \
+ 	src/journal/libsystemd-journal.sym \
+ 	units/systemd-journald.service.in \
+@@ -1622,7 +1622,8 @@ endif
+ if ENABLE_READAHEAD
+ systemd_readahead_collect_SOURCES = \
+ 	src/readahead/readahead-collect.c \
+-	src/readahead/readahead-common.c
++	src/readahead/readahead-common.c \
++	src/readahead/readahead-common.h
+ 
+ systemd_readahead_collect_LDADD = \
+ 	libsystemd-shared.la \
+@@ -1646,6 +1647,9 @@ systemd_readahead_replay_LDADD = \
+ 	libsystemd-daemon.la \
+ 	$(UDEV_LIBS)
+ 
++pkginclude_HEADERS += \
++	src/systemd/sd-readahead.h
++
+ rootlibexec_PROGRAMS += \
+ 	systemd-readahead-collect \
+ 	systemd-readahead-replay
+@@ -1659,8 +1663,6 @@ nodist_systemunit_DATA += \
+ 	units/systemd-readahead-done.service
+ 
+ EXTRA_DIST += \
+-	src/systemd/sd-readahead.h \
+-	src/readahead/readahead-common.h \
+ 	units/systemd-readahead-collect.service.in \
+ 	units/systemd-readahead-replay.service.in \
+ 	units/systemd-readahead-done.service.in

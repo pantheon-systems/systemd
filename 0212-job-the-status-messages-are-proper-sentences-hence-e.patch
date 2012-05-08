@@ -1,0 +1,55 @@
+From 89d0ed0b04a470caddcf90af9551132b1d70c3a8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 15:39:26 +0200
+Subject: [PATCH] job: the status messages are proper sentences, hence end
+ them with a full stop (cherry picked from commit
+ 78ff1acdfe6a1f50d4ac62dc354c667999be0508)
+
+---
+ src/core/job.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 43e7575..dc99c7a 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -489,20 +489,20 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+ 
+                 case JOB_DONE:
+                         if (u->condition_result)
+-                                unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Started %s", unit_description(u));
++                                unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Started %s.", unit_description(u));
+                         break;
+ 
+                 case JOB_FAILED:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON "FAILED" ANSI_HIGHLIGHT_OFF, "Failed to start %s", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON "FAILED" ANSI_HIGHLIGHT_OFF, "Failed to start %s.", unit_description(u));
+                         unit_status_printf(u, NULL, "See 'systemctl status %s' for details.", u->id);
+                         break;
+ 
+                 case JOB_DEPENDENCY:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " ABORT" ANSI_HIGHLIGHT_OFF, "Dependency failed. Aborted start of %s", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " ABORT" ANSI_HIGHLIGHT_OFF, "Dependency failed. Aborted start of %s.", unit_description(u));
+                         break;
+ 
+                 case JOB_TIMEOUT:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out starting %s", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out starting %s.", unit_description(u));
+                         break;
+ 
+                 default:
+@@ -514,12 +514,12 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                 switch (result) {
+ 
+                 case JOB_TIMEOUT:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out stopping %s", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out stopping %s.", unit_description(u));
+                         break;
+ 
+                 case JOB_DONE:
+                 case JOB_FAILED:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Stopped %s", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Stopped %s.", unit_description(u));
+                         break;
+ 
+                 default:

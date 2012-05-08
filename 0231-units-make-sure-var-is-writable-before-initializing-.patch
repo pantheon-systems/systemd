@@ -1,0 +1,24 @@
+From 3639e3857d4a90ced354bc286eeaf76405f684d2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 30 Apr 2012 10:56:46 +0200
+Subject: [PATCH] units: make sure /var is writable before initializing random
+ seed (cherry picked from commit
+ 86fff248642cc9c0daef6da4e6e0a443bcb271d2)
+
+---
+ units/systemd-random-seed-load.service.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/systemd-random-seed-load.service.in b/units/systemd-random-seed-load.service.in
+index 6636ad4..a577036 100644
+--- a/units/systemd-random-seed-load.service.in
++++ b/units/systemd-random-seed-load.service.in
+@@ -9,7 +9,7 @@
+ Description=Load Random Seed
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+-After=systemd-readahead-collect.service systemd-readahead-replay.service
++After=systemd-readahead-collect.service systemd-readahead-replay.service systemd-remount-fs.service
+ Before=sysinit.target shutdown.target
+ RequiresMountsFor=@RANDOM_SEED@
+ 

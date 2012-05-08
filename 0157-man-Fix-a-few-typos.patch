@@ -1,0 +1,39 @@
+From 96ec8434d140e4b1c3ecd4e614e88ccf2ff62cc1 Mon Sep 17 00:00:00 2001
+From: Michael Biebl <biebl@debian.org>
+Date: Tue, 17 Apr 2012 14:35:48 +0200
+Subject: [PATCH] man: Fix a few typos
+
+Reported-by: A. Costa <agcosta@gis.net>
+Bug-Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=668344
+(cherry picked from commit dc786b29c309bed4edc3c42e950e445c176c8a0c)
+---
+ man/systemd.path.xml |    2 +-
+ man/systemd.unit.xml |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.path.xml b/man/systemd.path.xml
+index 5b1ff75..306d8d2 100644
+--- a/man/systemd.path.xml
++++ b/man/systemd.path.xml
+@@ -125,7 +125,7 @@
+                                 is
+                                 activated. <varname>PathExistsGlob=</varname>
+                                 works similar, but checks for the
+-                                existance of at least one file
++                                existence of at least one file
+                                 matching the globbing pattern
+                                 specified. <varname>PathChanged=</varname>
+                                 may be used to watch a file or
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index fac6388..1eb7944 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -122,7 +122,7 @@
+                 <para>If a line starts with <option>.include</option>
+                 followed by a file name, the specified file will be
+                 parsed at this point. Make sure that the file that is
+-                included has the appropiate section headers before
++                included has the appropriate section headers before
+                 any directives.</para>
+ 
+                 <para>Along with a unit file

@@ -1,0 +1,29 @@
+From cf2ef07389b461ad8bbe714dab445420f8886fc0 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 2 Apr 2012 21:49:00 +0200
+Subject: [PATCH] Revert "socket: if we fail to create an instantiated service
+ for a socket, don't put the socket in failure mode"
+
+This reverts commit 9586cdfab6a2638078702b7fea7e16b3a71899e2.
+(but not the TODO hunk).
+
+The bug was already fixed by 1a710b43. And if other errors occur, we
+don't want to leave the socket active in order to avoid having socket
+tarpits.
+(cherry picked from commit 60089004254c68173c4e3a2ca2eda0b6102ba96f)
+---
+ src/socket.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/socket.c b/src/socket.c
+index 1cd98e2..bb75d96 100644
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -1494,6 +1494,7 @@ static void socket_enter_running(Socket *s, int cfd) {
+ 
+ fail:
+         log_warning("%s failed to queue socket startup job: %s", UNIT(s)->id, bus_error(&error, r));
++        socket_enter_stop_pre(s, SOCKET_FAILURE_RESOURCES);
+ 
+         if (cfd >= 0)
+                 close_nointr_nofail(cfd);

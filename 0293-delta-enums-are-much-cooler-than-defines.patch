@@ -1,0 +1,49 @@
+From bcffb38ae1088a83116833c058cb50a64d95e6ed Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 16 May 2012 18:53:46 +0200
+Subject: [PATCH] delta: enums are much cooler than defines (cherry picked
+ from commit 4c4e6431613c8005220ede59a0d4642814142cb9)
+
+---
+ src/delta/delta.c |   20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 585bb0c..7b50bce 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -34,6 +34,18 @@
+ 
+ static bool arg_no_pager = false;
+ 
++enum {
++        SHOW_MASKED = 1 << 0,
++        SHOW_EQUIV = 1 << 1,
++        SHOW_REDIR = 1 << 2,
++        SHOW_OVERRIDEN = 1 << 3,
++        SHOW_UNCHANGED = 1 << 4,
++        SHOW_DIFF = 1 << 5,
++
++        SHOW_DEFAULTS =
++        (SHOW_MASKED | SHOW_EQUIV | SHOW_REDIR | SHOW_OVERRIDEN | SHOW_DIFF)
++};
++
+ static int equivalent(const char *a, const char *b) {
+         char *x, *y;
+         int r;
+@@ -55,15 +67,7 @@ static int equivalent(const char *a, const char *b) {
+         return r;
+ }
+ 
+-#define SHOW_MASKED		1 << 0
+-#define SHOW_EQUIV		1 << 1
+-#define SHOW_REDIR		1 << 2
+-#define SHOW_OVERRIDEN		1 << 3
+-#define SHOW_UNCHANGED		1 << 4
+-#define SHOW_DIFF		1 << 5
+ 
+-#define SHOW_DEFAULTS \
+-        (SHOW_MASKED | SHOW_EQUIV | SHOW_REDIR | SHOW_OVERRIDEN | SHOW_DIFF)
+ 
+ static int notify_override_masked(int flags, const char *top, const char *bottom) {
+         if (!(flags & SHOW_MASKED))

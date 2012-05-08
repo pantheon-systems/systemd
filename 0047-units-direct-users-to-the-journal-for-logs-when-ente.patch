@@ -1,0 +1,24 @@
+From 532d99698464cfb5566f678b6f76559a1cfa95be Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 4 Apr 2012 13:52:02 +0200
+Subject: [PATCH] units: direct users to the journal for logs when entering
+ rescue mode (cherry picked from commit
+ 704179d8398a8f74e1adc461882d98ca204f5478)
+
+---
+ units/rescue.service.m4.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/rescue.service.m4.in b/units/rescue.service.m4.in
+index df0b54f..da4c4da 100644
+--- a/units/rescue.service.m4.in
++++ b/units/rescue.service.m4.in
+@@ -18,7 +18,7 @@ Before=shutdown.target
+ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStartPre=-/bin/plymouth quit
+-ExecStartPre=-/bin/echo 'Welcome to rescue mode. Use "systemctl default" or ^D to enter default mode.'
++ExecStartPre=-/bin/echo -e 'Welcome to rescue mode! Type "systemctl default" or ^D to enter default mode.\\nType "journalctl" to view system logs. Type "systemctl reboot" to reboot.'
+ m4_ifdef(`TARGET_FEDORA',
+ `EnvironmentFile=/etc/sysconfig/init
+ ExecStart=-/bin/bash -c "exec ${SINGLE}"',

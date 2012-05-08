@@ -1,0 +1,76 @@
+From c91783952ebe224d39c349453b65f3cdf0a4075d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 02:30:13 +0200
+Subject: [PATCH] login: assing /dev/console logins to seat0 (cherry picked
+ from commit d1122ad5e3222cc17bfb556c23273598a5fb60fa)
+
+---
+ src/login/logind-dbus.c |   13 +++++++++++--
+ src/shared/util.c       |    9 +++++++++
+ src/shared/util.h       |    1 +
+ 3 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 8d8c245..bcf4bb7 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -351,16 +351,25 @@ static int bus_manager_create_session(Manager *m, DBusMessage *message, DBusMess
+                         vtnr = (uint32_t) v;
+                 else if (vtnr != (uint32_t) v)
+                         return -EINVAL;
++        } else if (tty_is_console(tty)) {
++
++                if (!s)
++                        s = m->vtconsole;
++                else if (s != m->vtconsole)
++                        return -EINVAL;
++
++                if (vtnr != 0)
++                        return -EINVAL;
+ 
+         } else if (!isempty(tty) && s && seat_is_vtconsole(s))
+                 return -EINVAL;
+ 
+         if (s) {
+                 if (seat_can_multi_session(s)) {
+-                        if (vtnr <= 0 || vtnr > 63)
++                        if (vtnr > 63)
+                                 return -EINVAL;
+                 } else {
+-                        if (vtnr > 0)
++                        if (vtnr != 0)
+                                 return -EINVAL;
+                 }
+         }
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 6d12766..cf29452 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4287,6 +4287,15 @@ bool tty_is_vc(const char *tty) {
+         return vtnr_from_tty(tty) >= 0;
+ }
+ 
++bool tty_is_console(const char *tty) {
++        assert(tty);
++
++        if (startswith(tty, "/dev/"))
++                tty += 5;
++
++        return streq(tty, "console");
++}
++
+ int vtnr_from_tty(const char *tty) {
+         int i, r;
+ 
+diff --git a/src/shared/util.h b/src/shared/util.h
+index aaa0426..42d1f0c 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -415,6 +415,7 @@ char *fstab_node_to_udev_node(const char *p);
+ 
+ bool tty_is_vc(const char *tty);
+ bool tty_is_vc_resolve(const char *tty);
++bool tty_is_console(const char *tty);
+ int vtnr_from_tty(const char *tty);
+ const char *default_term_for_tty(const char *tty);
+ 

@@ -1,0 +1,26 @@
+From 882e8a219d08dac4562b6dded6a8eed022598751 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 21:52:25 +0200
+Subject: [PATCH] polkit: spawn agent in --fallback mode (cherry picked from
+ commit 8aec53fb902563208f27a4452cec52190e901f32)
+
+Conflicts:
+
+	TODO
+---
+ src/shared/spawn-polkit-agent.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/spawn-polkit-agent.c b/src/shared/spawn-polkit-agent.c
+index 97bc9f5..120439f 100644
+--- a/src/shared/spawn-polkit-agent.c
++++ b/src/shared/spawn-polkit-agent.c
+@@ -57,7 +57,7 @@ int polkit_agent_open(void) {
+         r = fork_agent(&agent_pid,
+                        &pipe_fd[1], 1,
+                        POLKIT_AGENT_BINARY_PATH,
+-                       POLKIT_AGENT_BINARY_PATH, "--notify-fd", notify_fd, NULL);
++                       POLKIT_AGENT_BINARY_PATH, "--notify-fd", notify_fd, "--fallback", NULL);
+ 
+         /* Close the writing side, because that's the one for the agent */
+         close_nointr_nofail(pipe_fd[1]);

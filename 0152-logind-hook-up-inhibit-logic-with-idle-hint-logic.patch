@@ -1,0 +1,123 @@
+From acf327888aa78592e0821b4b93290bcdfe175930 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Apr 2012 17:05:15 +0200
+Subject: [PATCH] logind: hook up inhibit logic with idle hint logic (cherry
+ picked from commit
+ c7b5eb98e8eeafe63a079ee3c51e9670872437ae)
+
+---
+ src/login/logind-dbus.c    |    4 ++--
+ src/login/logind-inhibit.c |   28 ++++++++++++++++++++++++++++
+ src/login/logind-inhibit.h |    3 +++
+ src/login/logind.c         |    4 +++-
+ 4 files changed, 36 insertions(+), 3 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index dd7eddc..8d8c245 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -1649,7 +1649,7 @@ static DBusHandlerResult manager_message_handler(
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+                 multiple_sessions = r > 0;
+-                inhibit = !!(manager_inhibit_what(m) & INHIBIT_SHUTDOWN);
++                inhibit = manager_is_inhibited(m, INHIBIT_SHUTDOWN, NULL);
+ 
+                 if (multiple_sessions) {
+                         action = streq(dbus_message_get_member(message), "PowerOff") ?
+@@ -1723,7 +1723,7 @@ static DBusHandlerResult manager_message_handler(
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+                 multiple_sessions = r > 0;
+-                inhibit = !!(manager_inhibit_what(m) & INHIBIT_SHUTDOWN);
++                inhibit = manager_is_inhibited(m, INHIBIT_SHUTDOWN, NULL);
+ 
+                 if (multiple_sessions) {
+                         action = streq(dbus_message_get_member(message), "CanPowerOff") ?
+diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
+index 2f7a758..78afee3 100644
+--- a/src/login/logind-inhibit.c
++++ b/src/login/logind-inhibit.c
+@@ -150,6 +150,8 @@ int inhibitor_start(Inhibitor *i) {
+         if (i->started)
+                 return 0;
+ 
++        dual_timestamp_get(&i->since);
++
+         log_debug("Inhibitor %s (%s) pid=%lu uid=%lu started.",
+                   strna(i->who), strna(i->why),
+                   (unsigned long) i->pid, (unsigned long) i->uid);
+@@ -325,6 +327,32 @@ InhibitWhat manager_inhibit_what(Manager *m) {
+         return what;
+ }
+ 
++bool manager_is_inhibited(Manager *m, InhibitWhat w, dual_timestamp *since) {
++        Inhibitor *i;
++        Iterator j;
++        struct dual_timestamp ts = { 0, 0 };
++        bool inhibited = false;
++
++        assert(m);
++        assert(w > 0 && w < _INHIBIT_WHAT_MAX);
++
++        HASHMAP_FOREACH(i, m->inhibitor_fds, j) {
++                if (!(i->what & w))
++                        continue;
++
++                if (!inhibited ||
++                    i->since.monotonic < ts.monotonic)
++                        ts = i->since;
++
++                inhibited = true;
++        }
++
++        if (since)
++                *since = ts;
++
++        return inhibited;
++}
++
+ const char *inhibit_what_to_string(InhibitWhat w) {
+ 
+         static const char* const table[_INHIBIT_WHAT_MAX] = {
+diff --git a/src/login/logind-inhibit.h b/src/login/logind-inhibit.h
+index 0670a7f..1d47cfc 100644
+--- a/src/login/logind-inhibit.h
++++ b/src/login/logind-inhibit.h
+@@ -52,6 +52,8 @@ struct Inhibitor {
+         pid_t pid;
+         uid_t uid;
+ 
++        dual_timestamp since;
++
+         char *fifo_path;
+         int fifo_fd;
+ };
+@@ -69,6 +71,7 @@ int inhibitor_create_fifo(Inhibitor *i);
+ void inhibitor_remove_fifo(Inhibitor *i);
+ 
+ InhibitWhat manager_inhibit_what(Manager *m);
++bool manager_is_inhibited(Manager *m, InhibitWhat w, dual_timestamp *since);
+ 
+ const char *inhibit_what_to_string(InhibitWhat k);
+ InhibitWhat inhibit_what_from_string(const char *s);
+diff --git a/src/login/logind.c b/src/login/logind.c
+index a3bf46b..36c187b 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -1157,12 +1157,14 @@ void manager_gc(Manager *m, bool drop_not_started) {
+ 
+ int manager_get_idle_hint(Manager *m, dual_timestamp *t) {
+         Session *s;
+-        bool idle_hint = true;
++        bool idle_hint;
+         dual_timestamp ts = { 0, 0 };
+         Iterator i;
+ 
+         assert(m);
+ 
++        idle_hint = !manager_is_inhibited(m, INHIBIT_IDLE, t);
++
+         HASHMAP_FOREACH(s, m->sessions, i) {
+                 dual_timestamp k;
+                 int ih;

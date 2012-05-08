@@ -1,0 +1,38 @@
+From 29436b936e63c2fbc8574a14287824782f2ba6fc Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 17:29:42 +0200
+Subject: [PATCH] getty: VC devices are always available, we don't need to
+ wait until they show up (cherry picked from commit
+ 88e995fd720a93460e7c3f38ac24512e6d96b3e8)
+
+---
+ src/99-systemd.rules.in |    1 -
+ units/getty@.service.m4 |    3 +--
+ 2 files changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/src/99-systemd.rules.in b/src/99-systemd.rules.in
+index d306f71..8cc7523 100644
+--- a/src/99-systemd.rules.in
++++ b/src/99-systemd.rules.in
+@@ -7,7 +7,6 @@
+ 
+ ACTION=="remove", GOTO="systemd_end"
+ 
+-SUBSYSTEM=="tty", KERNEL=="tty[0-9]|tty1[0-2]", TAG+="systemd"
+ SUBSYSTEM=="tty", KERNEL=="tty[a-zA-Z]*|hvc*|xvc*|hvsi*", TAG+="systemd"
+ 
+ KERNEL=="vport*", TAG+="systemd"
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index 6b931fb..4588c56 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -7,8 +7,7 @@
+ 
+ [Unit]
+ Description=Getty on %I
+-BindTo=dev-%i.device
+-After=dev-%i.device systemd-user-sessions.service plymouth-quit-wait.service
++After=systemd-user-sessions.service plymouth-quit-wait.service
+ m4_ifdef(`TARGET_FEDORA',
+ After=rc-local.service
+ )m4_dnl

@@ -1,0 +1,28 @@
+From a2af88df633f28b861607485416f2fa839a51de2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 2 Apr 2012 19:04:56 +0200
+Subject: [PATCH] journal: decrease default mmap window size to allow a bigger
+ number of journals to be traversed in parallel (cherry
+ picked from commit
+ 1fa80181aecd4b9db513f16c136157a4546686d3)
+
+Conflicts:
+
+	TODO
+---
+ src/journal/journal-file.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index c7ebcdb..be92c90 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -35,7 +35,7 @@
+ #define DEFAULT_DATA_HASH_TABLE_SIZE (2047ULL*16ULL)
+ #define DEFAULT_FIELD_HASH_TABLE_SIZE (2047ULL*16ULL)
+ 
+-#define DEFAULT_WINDOW_SIZE (128ULL*1024ULL*1024ULL)
++#define DEFAULT_WINDOW_SIZE (8ULL*1024ULL*1024ULL)
+ 
+ #define COMPRESSION_SIZE_THRESHOLD (512ULL)
+ 

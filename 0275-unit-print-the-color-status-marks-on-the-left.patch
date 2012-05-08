@@ -1,0 +1,153 @@
+From 6df26e405d57057f082c4bee700a2fc28e1dd266 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 14 May 2012 12:50:33 +0200
+Subject: [PATCH] unit: print the color status marks on the left
+
+The alignment of the "[  OK  ]" and "[FAILED]" status marks to the right
+side of the terminal makes it difficult to link them with the messages
+on the left if your console is wide.
+
+I considered the options:
+ 1. Align them to the 80th column regardless of the console width.
+    Disadvantage - either:
+    - truncating messages needlessly, not using available space; or
+    - If the message is long, write the mark over it. => ugly
+ 2. Write them to the 80th column for short messages,
+    and further to the right for longer ones.
+    Disadvantage:
+    - jagged look
+ 3. Write the marks on the left, before the message.
+    Disadvantage:
+    - Breaks tradition from RHL.
+    Advantages:
+    + slightly simpler code
+    + Will annoy holy-traditionalists.
+
+I chose option 3.
+BTW, Debian now uses similar marks on the left with its makefile-style
+boot.
+
+Special values of the "status" argument to status_vprintf are:
+  NULL - no status mark, no message indentation
+  ""   - no status mark, message indented as if the mark was there
+(cherry picked from commit 9ab7a8d2a30f440c008d127113419030e4572cb4)
+---
+ src/core/unit.c   |    4 ++--
+ src/shared/util.c |   51 ++++++++++++++++++++++-----------------------------
+ 2 files changed, 24 insertions(+), 31 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index b34355e..6d5c9c7 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -981,7 +981,7 @@ int unit_start(Unit *u) {
+ 
+         unit_add_to_dbus_queue(u);
+ 
+-        unit_status_printf(u, NULL, "Starting %s...", unit_description(u));
++        unit_status_printf(u, "", "Starting %s...", unit_description(u));
+         return UNIT_VTABLE(u)->start(u);
+ }
+ 
+@@ -1023,7 +1023,7 @@ int unit_stop(Unit *u) {
+ 
+         unit_add_to_dbus_queue(u);
+ 
+-        unit_status_printf(u, NULL, "Stopping %s...", unit_description(u));
++        unit_status_printf(u, "", "Stopping %s...", unit_description(u));
+         return UNIT_VTABLE(u)->stop(u);
+ }
+ 
+diff --git a/src/shared/util.c b/src/shared/util.c
+index b9b8d51..fb7631d 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -3329,15 +3329,15 @@ cpu_set_t* cpu_set_malloc(unsigned *ncpus) {
+ }
+ 
+ void status_vprintf(const char *status, bool ellipse, const char *format, va_list ap) {
+-        char *s = NULL, *spaces = NULL, *e;
+-        int fd = -1, c;
+-        size_t emax, sl, left;
++        char *s = NULL;
++        static const char status_indent[] = "         "; /* "[" STATUS "] " */
++        int fd = -1;
+         struct iovec iovec[5];
+         int n = 0;
+ 
+         assert(format);
+ 
+-        /* This independent of logging, as status messages are
++        /* This is independent of logging, as status messages are
+          * optional and go exclusively to the console. */
+ 
+         if (vasprintf(&s, format, ap) < 0)
+@@ -3348,15 +3348,19 @@ void status_vprintf(const char *status, bool ellipse, const char *format, va_lis
+                 goto finish;
+ 
+         if (ellipse) {
++                char *e;
++                size_t emax, sl;
++                int c;
++
+                 c = fd_columns(fd);
+                 if (c <= 0)
+                         c = 80;
+ 
+-                if (status) {
+-                        sl = 2 + 6 + 1; /* " [" status "]" */
+-                        emax = (size_t) c > sl ? c - sl - 1 : 0;
+-                } else
+-                        emax = c - 1;
++                sl = status ? strlen(status_indent) : 0;
++
++                emax = c - sl - 1;
++                if (emax < 3)
++                        emax = 3;
+ 
+                 e = ellipsize(s, emax, 75);
+                 if (e) {
+@@ -3366,34 +3370,23 @@ void status_vprintf(const char *status, bool ellipse, const char *format, va_lis
+         }
+ 
+         zero(iovec);
+-        IOVEC_SET_STRING(iovec[n++], s);
+ 
+-        if (ellipse) {
+-                sl = strlen(s);
+-                left = emax > sl ? emax - sl : 0;
+-                if (left > 0) {
+-                        spaces = malloc(left);
+-                        if (spaces) {
+-                                memset(spaces, ' ', left);
+-                                iovec[n].iov_base = spaces;
+-                                iovec[n].iov_len = left;
+-                                n++;
+-                        }
+-                }
++        if (status) {
++                if (!isempty(status)) {
++                        IOVEC_SET_STRING(iovec[n++], "[");
++                        IOVEC_SET_STRING(iovec[n++], status);
++                        IOVEC_SET_STRING(iovec[n++], "] ");
++                } else
++                        IOVEC_SET_STRING(iovec[n++], status_indent);
+         }
+ 
+-        if (status) {
+-                IOVEC_SET_STRING(iovec[n++], " [");
+-                IOVEC_SET_STRING(iovec[n++], status);
+-                IOVEC_SET_STRING(iovec[n++], "]\n");
+-        } else
+-                IOVEC_SET_STRING(iovec[n++], "\n");
++        IOVEC_SET_STRING(iovec[n++], s);
++        IOVEC_SET_STRING(iovec[n++], "\n");
+ 
+         writev(fd, iovec, n);
+ 
+ finish:
+         free(s);
+-        free(spaces);
+ 
+         if (fd >= 0)
+                 close_nointr_nofail(fd);

@@ -1,0 +1,74 @@
+From 63eb5cffa2f47c8169a619279cd7dfbad0499630 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 17:42:09 +0200
+Subject: [PATCH] build-sys: split off logs-show into its own convenience
+ library (cherry picked from commit
+ 41e5171419f5f9c08a338ea8b2ab8ea89c23c4ab)
+
+---
+ Makefile.am |   31 ++++++++++++++++++-------------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 32a2edf..17069d2 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -541,8 +541,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/socket-util.h \
+ 	src/shared/cgroup-util.c \
+ 	src/shared/cgroup-util.h \
+-	src/shared/logs-show.c \
+-	src/shared/logs-show.h \
+ 	src/shared/cgroup-show.c \
+ 	src/shared/cgroup-show.h \
+ 	src/shared/unit-name.c \
+@@ -615,6 +613,21 @@ libsystemd_label_la_LIBADD = \
+ 
+ # ------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
++	libsystemd-logs.la
++
++libsystemd_logs_la_SOURCES = \
++	src/shared/logs-show.c \
++	src/shared/logs-show.h
++
++libsystemd_logs_la_CFLAGS = \
++	$(AM_CFLAGS)
++
++libsystemd_logs_la_LIBADD = \
++	libsystemd-journal.la \
++	libsystemd-id128.la
++
++# ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
+ 	libsystemd-capability.la
+ 
+ libsystemd_capability_la_SOURCES = \
+@@ -1112,6 +1125,7 @@ systemctl_LDADD = \
+ 	libsystemd-journal.la \
+ 	libsystemd-id128.la \
+ 	libsystemd-dbus.la \
++	libsystemd-logs.la
+ 	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1408,17 +1422,8 @@ journalctl_SOURCES = \
+ journalctl_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-journal.la \
+-	libsystemd-id128.la
+-
+-if HAVE_XZ
+-journalctl_SOURCES += \
+-	src/journal/compress.c
+-journalctl_CFLAGS = \
+-	$(AM_CFLAGS) \
+-	$(XZ_CFLAGS)
+-journalctl_LDADD += \
+-	$(XZ_LIBS)
+-endif
++	libsystemd-id128.la \
++	libsystemd-logs.la
+ 
+ test_journal_SOURCES = \
+ 	src/journal/test-journal.c \

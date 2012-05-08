@@ -1,0 +1,112 @@
+From 7a56487795ab805940d1025459605bf36df3fdd5 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Wed, 4 Apr 2012 00:22:21 -0400
+Subject: [PATCH] units/: use @SYSTEMCTL@ instead of hardcoded paths
+
+Especially in the case of --enable-split-usr, several units will point
+to the wrong location for systemctl. Use @SYSTEMCTL@ which will always
+contain the proper path.
+(cherry picked from commit 9cf2578683de834026f501c24a0f5d3d0991d0a6)
+---
+ Makefile.am                                                     |    6 ++++--
+ units/{console-shell.service.m4 => console-shell.service.m4.in} |    2 +-
+ units/{emergency.service => emergency.service.in}               |    2 +-
+ units/{rescue.service.m4 => rescue.service.m4.in}               |    2 +-
+ units/systemd-ask-password-wall.service.in                      |    4 ++--
+ 5 files changed, 9 insertions(+), 7 deletions(-)
+ rename units/{console-shell.service.m4 => console-shell.service.m4.in} (96%)
+ rename units/{emergency.service => emergency.service.in} (94%)
+ rename units/{rescue.service.m4 => rescue.service.m4.in} (95%)
+
+diff --git a/Makefile.am b/Makefile.am
+index aface06..f5b401e 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -323,6 +323,7 @@ nodist_systemunit_DATA = \
+ 	units/systemd-ask-password-console.service \
+ 	units/systemd-sysctl.service \
+ 	units/halt.service \
++	units/emergency.service \
+ 	units/poweroff.service \
+ 	units/reboot.service \
+ 	units/kexec.service \
+@@ -341,8 +342,8 @@ nodist_userunit_DATA = \
+ EXTRA_DIST += \
+ 	units/getty@.service.m4 \
+ 	units/serial-getty@.service.m4 \
+-	units/console-shell.service.m4 \
+-	units/rescue.service.m4 \
++	units/console-shell.service.m4.in \
++	units/rescue.service.m4.in \
+ 	units/systemd-initctl.service.in \
+ 	units/systemd-shutdownd.service.in \
+ 	units/systemd-modules-load.service.in \
+@@ -354,6 +355,7 @@ EXTRA_DIST += \
+ 	units/systemd-ask-password-wall.service.in \
+ 	units/systemd-ask-password-console.service.in \
+ 	units/systemd-sysctl.service.in \
++	units/emergency.service.in \
+ 	units/halt.service.in \
+ 	units/poweroff.service.in \
+ 	units/reboot.service.in \
+diff --git a/units/console-shell.service.m4 b/units/console-shell.service.m4.in
+similarity index 96%
+rename from units/console-shell.service.m4
+rename to units/console-shell.service.m4.in
+index fef9e1b..b0ced10 100644
+--- a/units/console-shell.service.m4
++++ b/units/console-shell.service.m4.in
+@@ -32,7 +32,7 @@ Before=getty.target
+ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStart=-/sbin/sulogin
+-ExecStopPost=-/bin/systemctl poweroff
++ExecStopPost=-@SYSTEMCTL@ poweroff
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/emergency.service b/units/emergency.service.in
+similarity index 94%
+rename from units/emergency.service
+rename to units/emergency.service.in
+index 43a74d7..11ff472 100644
+--- a/units/emergency.service
++++ b/units/emergency.service.in
+@@ -19,7 +19,7 @@ WorkingDirectory=/root
+ ExecStartPre=-/bin/plymouth quit
+ ExecStartPre=-/bin/echo 'Welcome to emergency mode. Use "systemctl default" or ^D to enter default mode.'
+ ExecStart=-/sbin/sulogin
+-ExecStopPost=/bin/systemctl --fail --no-block default
++ExecStopPost=@SYSTEMCTL@ --fail --no-block default
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/rescue.service.m4 b/units/rescue.service.m4.in
+similarity index 95%
+rename from units/rescue.service.m4
+rename to units/rescue.service.m4.in
+index 310bbce..df0b54f 100644
+--- a/units/rescue.service.m4
++++ b/units/rescue.service.m4.in
+@@ -32,7 +32,7 @@ m4_ifdef(`TARGET_MEEGO',
+ `EnvironmentFile=/etc/sysconfig/init
+ ExecStart=-/bin/bash -c "exec ${SINGLE}"',
+ `ExecStart=-/sbin/sulogin'))))
+-ExecStopPost=-/bin/systemctl --fail --no-block default
++ExecStopPost=-@SYSTEMCTL@ --fail --no-block default
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/systemd-ask-password-wall.service.in b/units/systemd-ask-password-wall.service.in
+index 71ec1d6..d8e27bf 100644
+--- a/units/systemd-ask-password-wall.service.in
++++ b/units/systemd-ask-password-wall.service.in
+@@ -10,6 +10,6 @@ Description=Forward Password Requests to Wall
+ After=systemd-user-sessions.service
+ 
+ [Service]
+-ExecStartPre=-@rootbindir@/systemctl stop systemd-ask-password-console.path systemd-ask-password-console.service
+-ExecStartPre=-@rootbindir@/systemctl stop systemd-ask-password-plymouth.path systemd-ask-password-plymouth.service
++ExecStartPre=-@SYSTEMCTL@ stop systemd-ask-password-console.path systemd-ask-password-console.service
++ExecStartPre=-@SYSTEMCTL@ stop systemd-ask-password-plymouth.path systemd-ask-password-plymouth.service
+ ExecStart=@rootbindir@/systemd-tty-ask-password-agent --wall

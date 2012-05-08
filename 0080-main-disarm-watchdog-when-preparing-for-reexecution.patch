@@ -1,0 +1,30 @@
+From 7e108893d0a0ad887c1260ed452dea247435c77a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 18:40:22 +0200
+Subject: [PATCH] main: disarm watchdog when preparing for reexecution (cherry
+ picked from commit
+ f25626edf4c39bb9409cb165e6ce9551dd130661)
+
+Conflicts:
+
+	TODO
+---
+ src/main.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/main.c b/src/main.c
+index 6656cb4..4e800e7 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1631,6 +1631,11 @@ finish:
+ 
+                 assert(i <= ELEMENTSOF(args));
+ 
++                /* Close and disarm the watchdog, so that the new
++                 * instance can reinitialize it, but doesn't get
++                 * rebooted while we do that */
++                watchdog_close(true);
++
+                 execv(args[0], (char* const*) args);
+ 
+                 log_error("Failed to reexecute: %m");

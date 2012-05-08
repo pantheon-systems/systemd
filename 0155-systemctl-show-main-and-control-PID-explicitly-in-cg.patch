@@ -1,0 +1,533 @@
+From 99fc14a7434fdc8ad4179b4927945dc409a357b5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Apr 2012 18:56:18 +0200
+Subject: [PATCH] systemctl: show main and control PID explicitly in
+ cgroup-show
+
+In some cases the main/control PID of a service can be outside of the
+services cgroups (for example, if logind readjusts the processes'
+cgroup). In order to clarify this for the user show the main/control PID
+in the cgroup tree nonetheless, but mark them specially.
+(cherry picked from commit b69d29ce049f12d463a589e18561dd10ee8c09f1)
+
+Conflicts:
+
+	TODO
+---
+ src/login/loginctl.c            |   24 +++---
+ src/login/logind-session-dbus.c |   24 +++++-
+ src/login/logind-user-dbus.c    |   24 +++++-
+ src/shared/cgroup-show.c        |  182 +++++++++++++++++++++++++++------------
+ src/shared/cgroup-show.h        |    4 +
+ src/shared/cgroup-util.c        |    9 +-
+ src/systemctl/systemctl.c       |   14 ++-
+ 7 files changed, 204 insertions(+), 77 deletions(-)
+
+diff --git a/src/login/loginctl.c b/src/login/loginctl.c
+index 7968b05..172fb7f 100644
+--- a/src/login/loginctl.c
++++ b/src/login/loginctl.c
+@@ -352,7 +352,7 @@ typedef struct SessionStatusInfo {
+         uid_t uid;
+         const char *name;
+         usec_t timestamp;
+-        const char *control_group;
++        const char *default_control_group;
+         int vtnr;
+         const char *seat;
+         const char *tty;
+@@ -371,7 +371,7 @@ typedef struct UserStatusInfo {
+         uid_t uid;
+         const char *name;
+         usec_t timestamp;
+-        const char *control_group;
++        const char *default_control_group;
+         const char *state;
+         char **sessions;
+         const char *display;
+@@ -461,10 +461,10 @@ static void print_session_status_info(SessionStatusInfo *i) {
+ 
+         printf("\t  Active: %s\n", yes_no(i->active));
+ 
+-        if (i->control_group) {
++        if (i->default_control_group) {
+                 unsigned c;
+ 
+-                printf("\t  CGroup: %s\n", i->control_group);
++                printf("\t  CGroup: %s\n", i->default_control_group);
+ 
+                 if (arg_transport != TRANSPORT_SSH) {
+                         c = columns();
+@@ -473,7 +473,7 @@ static void print_session_status_info(SessionStatusInfo *i) {
+                         else
+                                 c = 0;
+ 
+-                        show_cgroup_by_path(i->control_group, "\t\t  ", c, false, arg_all);
++                        show_cgroup_and_extra_by_spec(i->default_control_group, "\t\t  ", c, false, arg_all, &i->leader, i->leader > 0 ? 1 : 0);
+                 }
+         }
+ }
+@@ -513,10 +513,10 @@ static void print_user_status_info(UserStatusInfo *i) {
+                 printf("\n");
+         }
+ 
+-        if (i->control_group) {
++        if (i->default_control_group) {
+                 unsigned c;
+ 
+-                printf("\t  CGroup: %s\n", i->control_group);
++                printf("\t  CGroup: %s\n", i->default_control_group);
+ 
+                 if (arg_transport != TRANSPORT_SSH) {
+                         c = columns();
+@@ -525,7 +525,7 @@ static void print_user_status_info(UserStatusInfo *i) {
+                         else
+                                 c = 0;
+ 
+-                        show_cgroup_by_path(i->control_group, "\t\t  ", c, false, arg_all);
++                        show_cgroup_by_path(i->default_control_group, "\t\t  ", c, false, arg_all);
+                 }
+         }
+ }
+@@ -581,8 +581,8 @@ static int status_property_session(const char *name, DBusMessageIter *iter, Sess
+                                 i->id = s;
+                         else if (streq(name, "Name"))
+                                 i->name = s;
+-                        else if (streq(name, "ControlGroupPath"))
+-                                i->control_group = s;
++                        else if (streq(name, "DefaultControlGroup"))
++                                i->default_control_group = s;
+                         else if (streq(name, "TTY"))
+                                 i->tty = s;
+                         else if (streq(name, "Display"))
+@@ -680,8 +680,8 @@ static int status_property_user(const char *name, DBusMessageIter *iter, UserSta
+                 if (!isempty(s)) {
+                         if (streq(name, "Name"))
+                                 i->name = s;
+-                        else if (streq(name, "ControlGroupPath"))
+-                                i->control_group = s;
++                        else if (streq(name, "DefaultControlGroup"))
++                                i->default_control_group = s;
+                         else if (streq(name, "State"))
+                                 i->state = s;
+                 }
+diff --git a/src/login/logind-session-dbus.c b/src/login/logind-session-dbus.c
+index 102f8ac..e9fd5a3 100644
+--- a/src/login/logind-session-dbus.c
++++ b/src/login/logind-session-dbus.c
+@@ -45,7 +45,7 @@
+         "  <property name=\"Name\" type=\"s\" access=\"read\"/>\n"      \
+         "  <property name=\"Timestamp\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"TimestampMonotonic\" type=\"t\" access=\"read\"/>\n" \
+-        "  <property name=\"ControlGroupPath\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"DefaultControlGroup\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"VTNr\" type=\"u\" access=\"read\"/>\n"      \
+         "  <property name=\"Seat\" type=\"(so)\" access=\"read\"/>\n"   \
+         "  <property name=\"TTY\" type=\"s\" access=\"read\"/>\n"       \
+@@ -196,6 +196,26 @@ static int bus_session_append_idle_hint_since(DBusMessageIter *i, const char *pr
+         return 0;
+ }
+ 
++static int bus_session_append_default_cgroup(DBusMessageIter *i, const char *property, void *data) {
++        Session *s = data;
++        char *t;
++        int r;
++        bool success;
++
++        assert(i);
++        assert(property);
++        assert(s);
++
++        r = cg_join_spec(SYSTEMD_CGROUP_CONTROLLER, s->cgroup_path, &t);
++        if (r < 0)
++                return r;
++
++        success = dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &t);
++        free(t);
++
++        return success ? 0 : -ENOMEM;
++}
++
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_session_append_type, session_type, SessionType);
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_session_append_class, session_class, SessionClass);
+ 
+@@ -228,7 +248,7 @@ static const BusProperty bus_login_session_properties[] = {
+         { "Id",                     bus_property_append_string,         "s", offsetof(Session, id),                 true },
+         { "Timestamp",              bus_property_append_usec,           "t", offsetof(Session, timestamp.realtime)  },
+         { "TimestampMonotonic",     bus_property_append_usec,           "t", offsetof(Session, timestamp.monotonic) },
+-        { "ControlGroupPath",       bus_property_append_string,         "s", offsetof(Session, cgroup_path),        true },
++        { "DefaultControlGroup",    bus_session_append_default_cgroup,  "s", 0,                                     },
+         { "VTNr",                   bus_property_append_uint32,         "u", offsetof(Session, vtnr)                },
+         { "Seat",                   bus_session_append_seat,         "(so)", 0 },
+         { "TTY",                    bus_property_append_string,         "s", offsetof(Session, tty),                true },
+diff --git a/src/login/logind-user-dbus.c b/src/login/logind-user-dbus.c
+index a9d680f..296c455 100644
+--- a/src/login/logind-user-dbus.c
++++ b/src/login/logind-user-dbus.c
+@@ -38,7 +38,7 @@
+         "  <property name=\"Timestamp\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"TimestampMonotonic\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"RuntimePath\" type=\"s\" access=\"read\"/>\n" \
+-        "  <property name=\"ControlGroupPath\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"DefaultControlGroup\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"Service\" type=\"s\" access=\"read\"/>\n"   \
+         "  <property name=\"Display\" type=\"(so)\" access=\"read\"/>\n" \
+         "  <property name=\"State\" type=\"s\" access=\"read\"/>\n"     \
+@@ -189,6 +189,26 @@ static int bus_user_append_idle_hint_since(DBusMessageIter *i, const char *prope
+         return 0;
+ }
+ 
++static bus_user_append_default_cgroup(DBusMessageIter *i, const char *property, void *data) {
++        User *u = data;
++        char *t;
++        int r;
++        bool success;
++
++        assert(i);
++        assert(property);
++        assert(u);
++
++        r = cg_join_spec(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, &t);
++        if (r < 0)
++                return r;
++
++        success = dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &t);
++        free(t);
++
++        return success ? 0 : -ENOMEM;
++}
++
+ static int get_user_for_path(Manager *m, const char *path, User **_u) {
+         User *u;
+         unsigned long lu;
+@@ -220,7 +240,7 @@ static const BusProperty bus_login_user_properties[] = {
+         { "Timestamp",              bus_property_append_usec,        "t", offsetof(User, timestamp.realtime)  },
+         { "TimestampMonotonic",     bus_property_append_usec,        "t", offsetof(User, timestamp.monotonic) },
+         { "RuntimePath",            bus_property_append_string,      "s", offsetof(User, runtime_path),       true },
+-        { "ControlGroupPath",       bus_property_append_string,      "s", offsetof(User, cgroup_path),        true },
++        { "DefaultControlGroup",    bus_user_append_default_cgroup,  "s", 0 },
+         { "Service",                bus_property_append_string,      "s", offsetof(User, service),            true },
+         { "Display",                bus_user_append_display,      "(so)", 0 },
+         { "State",                  bus_user_append_state,           "s", 0 },
+diff --git a/src/shared/cgroup-show.c b/src/shared/cgroup-show.c
+index c7c8840..22d432c 100644
+--- a/src/shared/cgroup-show.c
++++ b/src/shared/cgroup-show.c
+@@ -50,33 +50,72 @@ static unsigned ilog10(unsigned long ul) {
+         return n;
+ }
+ 
++static void show_pid_array(int pids[], unsigned n_pids, const char *prefix, unsigned n_columns, bool extra, bool more, bool kernel_threads) {
++        unsigned i, m;
++        pid_t biggest = 0;
++
++        /* Filter duplicates */
++        m = 0;
++        for (i = 0; i < n_pids; i++) {
++                unsigned j;
++
++                if (pids[i] > biggest)
++                        biggest = pids[i];
++
++                for (j = i+1; j < n_pids; j++)
++                        if (pids[i] == pids[j])
++                                break;
++
++                if (j >= n_pids)
++                        pids[m++] = pids[i];
++        }
++        n_pids = m;
++
++        /* And sort */
++        qsort(pids, n_pids, sizeof(pid_t), compare);
++
++        if (n_columns > 8)
++                n_columns -= 8;
++        else
++                n_columns = 20;
++
++        for (i = 0; i < n_pids; i++) {
++                char *t = NULL;
++
++                get_process_cmdline(pids[i], n_columns, true, &t);
++
++                printf("%s%s %*lu %s\n",
++                       prefix,
++                       extra ? "\342\200\243" : ((more || i < n_pids-1) ? "\342\224\234" : "\342\224\224"),
++                       (int) ilog10(biggest),
++                       (unsigned long) pids[i],
++                       strna(t));
++
++                free(t);
++        }
++}
++
++
+ static int show_cgroup_one_by_path(const char *path, const char *prefix, unsigned n_columns, bool more, bool kernel_threads) {
+         char *fn;
+         FILE *f;
+         size_t n = 0, n_allocated = 0;
+         pid_t *pids = NULL;
+         char *p;
+-        pid_t pid, biggest = 0;
++        pid_t pid;
+         int r;
+ 
+-        if (n_columns <= 0)
+-                n_columns = columns();
+-
+-        if (!prefix)
+-                prefix = "";
+-
+-        if ((r = cg_fix_path(path, &p)) < 0)
++        r = cg_fix_path(path, &p);
++        if (r < 0)
+                 return r;
+ 
+         r = asprintf(&fn, "%s/cgroup.procs", p);
+         free(p);
+-
+         if (r < 0)
+                 return -ENOMEM;
+ 
+         f = fopen(fn, "re");
+         free(fn);
+-
+         if (!f)
+                 return -errno;
+ 
+@@ -90,7 +129,8 @@ static int show_cgroup_one_by_path(const char *path, const char *prefix, unsigne
+ 
+                         n_allocated = MAX(16U, n*2U);
+ 
+-                        if (!(npids = realloc(pids, sizeof(pid_t) * n_allocated))) {
++                        npids = realloc(pids, sizeof(pid_t) * n_allocated);
++                        if (!npids) {
+                                 r = -ENOMEM;
+                                 goto finish;
+                         }
+@@ -100,54 +140,13 @@ static int show_cgroup_one_by_path(const char *path, const char *prefix, unsigne
+ 
+                 assert(n < n_allocated);
+                 pids[n++] = pid;
+-
+-                if (pid > biggest)
+-                        biggest = pid;
+         }
+ 
+         if (r < 0)
+                 goto finish;
+ 
+-        if (n > 0) {
+-                unsigned i, m;
+-
+-                /* Filter duplicates */
+-                m = 0;
+-                for (i = 0; i < n; i++) {
+-                        unsigned j;
+-
+-                        for (j = i+1; j < n; j++)
+-                                if (pids[i] == pids[j])
+-                                        break;
+-
+-                        if (j >= n)
+-                                pids[m++] = pids[i];
+-                }
+-                n = m;
+-
+-                /* And sort */
+-                qsort(pids, n, sizeof(pid_t), compare);
+-
+-                if (n_columns > 8)
+-                        n_columns -= 8;
+-                else
+-                        n_columns = 20;
+-
+-                for (i = 0; i < n; i++) {
+-                        char *t = NULL;
+-
+-                        get_process_cmdline(pids[i], n_columns, true, &t);
+-
+-                        printf("%s%s %*lu %s\n",
+-                               prefix,
+-                               (more || i < n-1) ? "\342\224\234" : "\342\224\224",
+-                               (int) ilog10(biggest),
+-                               (unsigned long) pids[i],
+-                               strna(t));
+-
+-                        free(t);
+-                }
+-        }
++        if (n > 0)
++                show_pid_array(pids, n, prefix, n_columns, false, more, kernel_threads);
+ 
+         r = 0;
+ 
+@@ -167,6 +166,8 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+         bool shown_pids = false;
+         int r;
+ 
++        assert(path);
++
+         if (n_columns <= 0)
+                 n_columns = columns();
+ 
+@@ -188,7 +189,6 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+ 
+                 r = asprintf(&k, "%s/%s", fn, gn);
+                 free(gn);
+-
+                 if (r < 0) {
+                         r = -ENOMEM;
+                         goto finish;
+@@ -272,3 +272,75 @@ int show_cgroup(const char *controller, const char *path, const char *prefix, un
+ 
+         return r;
+ }
++
++static int show_extra_pids(const char *controller, const char *path, const char *prefix, unsigned n_columns, const pid_t pids[], unsigned n_pids) {
++        pid_t *copy;
++        unsigned i, j;
++        int r;
++
++        assert(controller);
++        assert(path);
++
++        if (n_pids <= 0)
++                return 0;
++
++        if (n_columns <= 0)
++                n_columns = columns();
++
++        if (!prefix)
++                prefix = "";
++
++        copy = new(pid_t, n_pids);
++        if (!copy)
++                return -ENOMEM;
++
++        for (i = 0, j = 0; i < n_pids; i++) {
++                char *k;
++
++                r = cg_get_by_pid(controller, pids[i], &k);
++                if (r < 0) {
++                        free(copy);
++                        return r;
++                }
++
++                if (path_startswith(k, path))
++                        continue;
++
++                copy[j++] = pids[i];
++        }
++
++        show_pid_array(copy, j, prefix, n_columns, true, false, false);
++
++        free(copy);
++        return 0;
++}
++
++int show_cgroup_and_extra(const char *controller, const char *path, const char *prefix, unsigned n_columns, bool kernel_threads, bool all, const pid_t extra_pids[], unsigned n_extra_pids) {
++        int r;
++
++        assert(controller);
++        assert(path);
++
++        r = show_cgroup(controller, path, prefix, n_columns, kernel_threads, all);
++        if (r < 0)
++                return r;
++
++        return show_extra_pids(controller, path, prefix, n_columns, extra_pids, n_extra_pids);
++}
++
++int show_cgroup_and_extra_by_spec(const char *spec, const char *prefix, unsigned n_columns, bool kernel_threads, bool all, const pid_t extra_pids[], unsigned n_extra_pids) {
++        int r;
++        char *controller, *path;
++
++        assert(spec);
++
++        r = cg_split_spec(spec, &controller, &path);
++        if (r < 0)
++                return r;
++
++        r = show_cgroup_and_extra(controller, path, prefix, n_columns, kernel_threads, all, extra_pids, n_extra_pids);
++        free(controller);
++        free(path);
++
++        return r;
++}
+diff --git a/src/shared/cgroup-show.h b/src/shared/cgroup-show.h
+index c409231..621bfa3 100644
+--- a/src/shared/cgroup-show.h
++++ b/src/shared/cgroup-show.h
+@@ -23,8 +23,12 @@
+ ***/
+ 
+ #include <stdbool.h>
++#include <sys/types.h>
+ 
+ int show_cgroup_by_path(const char *path, const char *prefix, unsigned columns, bool kernel_threads, bool all);
+ int show_cgroup(const char *controller, const char *path, const char *prefix, unsigned columns, bool kernel_threads, bool all);
+ 
++int show_cgroup_and_extra_by_spec(const char *spec, const char *prefix, unsigned n_columns, bool kernel_threads, bool all, const pid_t extra_pids[], unsigned n_extra_pids);
++int show_cgroup_and_extra(const char *controller, const char *path, const char *prefix, unsigned n_columns, bool kernel_threads, bool all, const pid_t extra_pids[], unsigned n_extra_pids);
++
+ #endif
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index 43e24bd..34c82fa 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -1050,11 +1050,11 @@ int cg_fix_path(const char *path, char **result) {
+         assert(result);
+ 
+         /* First check if it already is a filesystem path */
+-        if (path_is_absolute(path) &&
+-            path_startswith(path, "/sys/fs/cgroup") &&
++        if (path_startswith(path, "/sys/fs/cgroup") &&
+             access(path, F_OK) >= 0) {
+ 
+-                if (!(t = strdup(path)))
++                t = strdup(path);
++                if (!t)
+                         return -ENOMEM;
+ 
+                 *result = t;
+@@ -1062,7 +1062,8 @@ int cg_fix_path(const char *path, char **result) {
+         }
+ 
+         /* Otherwise treat it as cg spec */
+-        if ((r = cg_split_spec(path, &c, &p)) < 0)
++        r = cg_split_spec(path, &c, &p);
++        if (r < 0)
+                 return r;
+ 
+         r = cg_get_path(c ? c : SYSTEMD_CGROUP_CONTROLLER, p ? p : "/", NULL, result);
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 04bd9ca..c2beabe 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2378,12 +2378,22 @@ static void print_status_info(UnitStatusInfo *i) {
+                 printf("\t  CGroup: %s\n", i->default_control_group);
+ 
+                 if (arg_transport != TRANSPORT_SSH) {
+-                        if ((c = columns()) > 18)
++                        unsigned k = 0;
++                        pid_t extra[2];
++
++                        c = columns();
++                        if (c > 18)
+                                 c -= 18;
+                         else
+                                 c = 0;
+ 
+-                        show_cgroup_by_path(i->default_control_group, "\t\t  ", c, false, arg_all);
++                        if (i->main_pid > 0)
++                                extra[k++] = i->main_pid;
++
++                        if (i->control_pid > 0)
++                                extra[k++] = i->control_pid;
++
++                        show_cgroup_and_extra_by_spec(i->default_control_group, "\t\t  ", c, false, arg_all, extra, k);
+                 }
+         }
+ 

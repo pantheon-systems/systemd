@@ -1,0 +1,113 @@
+From eedd9b75414bcd8220862af6b7f5acb965e79af1 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 14:28:43 +0200
+Subject: [PATCH] main: we want all setup functions to be in files called
+ xxx-setup.[ch] (cherry picked from commit
+ b6e661357ce25601829943c7f98981a92b3f1b68)
+
+---
+ Makefile.am                                           |    6 +++---
+ src/core/main.c                                       |   17 +++++++++--------
+ .../machine-id-setup-main.c}                          |    2 +-
+ src/shared/{machine-id-util.c => machine-id-setup.c}  |    2 +-
+ src/shared/{machine-id-util.h => machine-id-setup.h}  |    0
+ 5 files changed, 14 insertions(+), 13 deletions(-)
+ rename src/{machine-id-setup.c => machine-id-setup/machine-id-setup-main.c} (97%)
+ rename src/shared/{machine-id-util.c => machine-id-setup.c} (99%)
+ rename src/shared/{machine-id-util.h => machine-id-setup.h} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index c9c643d..bc4e367 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -552,8 +552,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/spawn-ask-password-agent.h \
+ 	src/shared/mount-setup.c \
+ 	src/shared/mount-setup.h \
+-	src/shared/machine-id-util.c \
+-	src/shared/machine-id-util.h \
++	src/shared/machine-id-setup.c \
++	src/shared/machine-id-setup.h \
+ 	src/shared/loopback-setup.h \
+ 	src/shared/loopback-setup.c \
+ 	src/shared/specifier.c \
+@@ -981,7 +981,7 @@ systemd_tmpfiles_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+-	src/machine-id-setup.c
++	src/machine-id-setup/machine-id-setup-main.c
+ 
+ systemd_machine_id_setup_LDADD = \
+ 	libsystemd-label.la \
+diff --git a/src/core/main.c b/src/core/main.c
+index 450b37f..7b41554 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -35,14 +35,6 @@
+ 
+ #include "manager.h"
+ #include "log.h"
+-#include "mount-setup.h"
+-#include "hostname-setup.h"
+-#include "loopback-setup.h"
+-#include "kmod-setup.h"
+-#include "locale-setup.h"
+-#include "selinux-setup.h"
+-#include "ima-setup.h"
+-#include "machine-id-util.h"
+ #include "load-fragment.h"
+ #include "fdset.h"
+ #include "special.h"
+@@ -56,6 +48,15 @@
+ #include "virt.h"
+ #include "watchdog.h"
+ 
++#include "mount-setup.h"
++#include "loopback-setup.h"
++#include "kmod-setup.h"
++#include "hostname-setup.h"
++#include "machine-id-setup.h"
++#include "locale-setup.h"
++#include "selinux-setup.h"
++#include "ima-setup.h"
++
+ static enum {
+         ACTION_RUN,
+         ACTION_HELP,
+diff --git a/src/machine-id-setup.c b/src/machine-id-setup/machine-id-setup-main.c
+similarity index 97%
+rename from src/machine-id-setup.c
+rename to src/machine-id-setup/machine-id-setup-main.c
+index 5f3640b..03970a2 100644
+--- a/src/machine-id-setup.c
++++ b/src/machine-id-setup/machine-id-setup-main.c
+@@ -22,7 +22,7 @@
+ #include <unistd.h>
+ #include <stdlib.h>
+ 
+-#include "machine-id-util.h"
++#include "machine-id-setup.h"
+ #include "log.h"
+ 
+ int main(int argc, char *argv[]) {
+diff --git a/src/shared/machine-id-util.c b/src/shared/machine-id-setup.c
+similarity index 99%
+rename from src/shared/machine-id-util.c
+rename to src/shared/machine-id-setup.c
+index a5435a2..94198cb 100644
+--- a/src/shared/machine-id-util.c
++++ b/src/shared/machine-id-setup.c
+@@ -29,7 +29,7 @@
+ 
+ #include <systemd/sd-id128.h>
+ 
+-#include "machine-id-util.h"
++#include "machine-id-setup.h"
+ #include "macro.h"
+ #include "util.h"
+ #include "mkdir.h"
+diff --git a/src/shared/machine-id-util.h b/src/shared/machine-id-setup.h
+similarity index 100%
+rename from src/shared/machine-id-util.h
+rename to src/shared/machine-id-setup.h

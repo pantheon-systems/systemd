@@ -1,0 +1,157 @@
+From d39b75b457195e5dd3a1c3d9550ee9a3da80e6ff Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 5 May 2012 00:46:31 +0200
+Subject: [PATCH] logind: use "sleep" as generic term for "suspend",
+ "hibernate", and later on "hybrid suspend" (cherry picked
+ from commit 4943c1c94ba751c98763f4232b4350481b22c90a)
+
+Conflicts:
+
+	TODO
+---
+ man/systemd-inhibit.xml     |    8 ++++----
+ man/systemd-logind.conf.xml |   11 ++++++-----
+ src/login/inhibit.c         |    6 +++---
+ src/login/logind-inhibit.c  |   12 ++++++------
+ src/login/logind-inhibit.h  |    2 +-
+ src/login/test-inhibit.c    |    2 +-
+ 6 files changed, 21 insertions(+), 20 deletions(-)
+
+diff --git a/man/systemd-inhibit.xml b/man/systemd-inhibit.xml
+index 3409590..c71a954 100644
+--- a/man/systemd-inhibit.xml
++++ b/man/systemd-inhibit.xml
+@@ -60,14 +60,14 @@
+                 <title>Description</title>
+ 
+                 <para><command>systemd-inhibit</command> may be used
+-                to execute a program with a shutdown, suspend or idle
++                to execute a program with a shutdown, sleep or idle
+                 inhibitor lock taken. The lock will be acquired before
+                 the specified command line is executed and released
+                 afterwards.</para>
+ 
+                 <para>Inhibitor locks may be used to block or delay
+-                suspend and shutdown requests from the user, as well
+-                as automatic idle handling of the OS. This may be used
++                system sleep and shutdown requests from the user, as well
++                as automatic idle handling of the OS. This is useful
+                 to avoid system suspends while an optical disc is
+                 being recorded, or similar operations that should not
+                 be interrupted.</para>
+@@ -101,7 +101,7 @@
+                                 separated list of one or more
+                                 operations to inhibit:
+                                 <literal>shutdown</literal>,
+-                                <literal>suspend</literal>,
++                                <literal>sleep</literal>,
+                                 <literal>idle</literal>, for
+                                 inhibiting reboot/power-off/halt/kexec,
+                                 suspending/hibernating, resp. the
+diff --git a/man/systemd-logind.conf.xml b/man/systemd-logind.conf.xml
+index 8da0625..a765f44 100644
+--- a/man/systemd-logind.conf.xml
++++ b/man/systemd-logind.conf.xml
+@@ -151,11 +151,12 @@
+                                 <term><varname>InhibitDelayMaxSec=</varname></term>
+ 
+                                 <listitem><para>Specifies the maximum
+-                                time a suspend or reboot is delayed
+-                                due to an inhibitor lock of type
+-                                <literal>delay</literal> being taken
+-                                before it is ignored and the operation
+-                                executed anyway. Defaults to
++                                time a system shutdown or sleep
++                                request is delayed due to an inhibitor
++                                lock of type <literal>delay</literal>
++                                being taken before it is ignored and
++                                the operation executed
++                                anyway. Defaults to
+                                 5s.</para></listitem>
+ 
+                         </varlistentry>
+diff --git a/src/login/inhibit.c b/src/login/inhibit.c
+index a817c84..6f24a1b 100644
+--- a/src/login/inhibit.c
++++ b/src/login/inhibit.c
+@@ -31,7 +31,7 @@
+ #include "build.h"
+ #include "strv.h"
+ 
+-static const char* arg_what = "idle:suspend:shutdown";
++static const char* arg_what = "idle:sleep:shutdown";
+ static const char* arg_who = NULL;
+ static const char* arg_why = "Unknown reason";
+ static const char* arg_mode = "block";
+@@ -182,11 +182,11 @@ finish:
+ static int help(void) {
+ 
+         printf("%s [OPTIONS...] {COMMAND} ...\n\n"
+-               "Execute a process while inhibiting shutdown/suspend/idle.\n\n"
++               "Execute a process while inhibiting shutdown/sleep/idle.\n\n"
+                "  -h --help               Show this help\n"
+                "     --version            Show package version\n"
+                "     --what=WHAT          Operations to inhibit, colon separated list of idle,\n"
+-               "                          suspend, shutdown\n"
++               "                          sleep, shutdown\n"
+                "     --who=STRING         A descriptive string who is inhibiting\n"
+                "     --why=STRING         A descriptive string why is being inhibited\n"
+                "     --mode=MODE          One of block or delay\n"
+diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
+index b5b801e..2007ec7 100644
+--- a/src/login/logind-inhibit.c
++++ b/src/login/logind-inhibit.c
+@@ -376,12 +376,12 @@ const char *inhibit_what_to_string(InhibitWhat w) {
+         static const char* const table[_INHIBIT_WHAT_MAX] = {
+                 [0] = "",
+                 [INHIBIT_SHUTDOWN] = "shutdown",
+-                [INHIBIT_SUSPEND] = "suspend",
++                [INHIBIT_SLEEP] = "sleep",
+                 [INHIBIT_IDLE] = "idle",
+-                [INHIBIT_SHUTDOWN|INHIBIT_SUSPEND] = "shutdown:suspend",
++                [INHIBIT_SHUTDOWN|INHIBIT_SLEEP] = "shutdown:sleep",
+                 [INHIBIT_SHUTDOWN|INHIBIT_IDLE] = "shutdown:idle",
+-                [INHIBIT_SHUTDOWN|INHIBIT_SUSPEND|INHIBIT_IDLE] = "shutdown:suspend:idle",
+-                [INHIBIT_SUSPEND|INHIBIT_IDLE] = "suspend:idle"
++                [INHIBIT_SHUTDOWN|INHIBIT_SLEEP|INHIBIT_IDLE] = "shutdown:sleep:idle",
++                [INHIBIT_SLEEP|INHIBIT_IDLE] = "sleep:idle"
+         };
+ 
+         if (w < 0 || w >= _INHIBIT_WHAT_MAX)
+@@ -398,8 +398,8 @@ InhibitWhat inhibit_what_from_string(const char *s) {
+         FOREACH_WORD_SEPARATOR(w, l, s, ":", state) {
+                 if (l == 8 && strncmp(w, "shutdown", l) == 0)
+                         what |= INHIBIT_SHUTDOWN;
+-                else if (l == 7 && strncmp(w, "suspend", l) == 0)
+-                        what |= INHIBIT_SUSPEND;
++                else if (l == 5 && strncmp(w, "sleep", l) == 0)
++                        what |= INHIBIT_SLEEP;
+                 else if (l == 4 && strncmp(w, "idle", l) == 0)
+                         what |= INHIBIT_IDLE;
+                 else
+diff --git a/src/login/logind-inhibit.h b/src/login/logind-inhibit.h
+index 823af39..6364b00 100644
+--- a/src/login/logind-inhibit.h
++++ b/src/login/logind-inhibit.h
+@@ -31,7 +31,7 @@ typedef struct Inhibitor Inhibitor;
+ 
+ typedef enum InhibitWhat {
+         INHIBIT_SHUTDOWN = 1,
+-        INHIBIT_SUSPEND = 2,
++        INHIBIT_SLEEP = 2,
+         INHIBIT_IDLE = 4,
+         _INHIBIT_WHAT_MAX = 8,
+         _INHIBIT_WHAT_INVALID = -1
+diff --git a/src/login/test-inhibit.c b/src/login/test-inhibit.c
+index 634f1e1..7b6deff 100644
+--- a/src/login/test-inhibit.c
++++ b/src/login/test-inhibit.c
+@@ -119,7 +119,7 @@ int main(int argc, char*argv[]) {
+ 
+         print_inhibitors(bus);
+ 
+-        fd1 = inhibit(bus, "suspend");
++        fd1 = inhibit(bus, "sleep");
+         assert(fd1 >= 0);
+         print_inhibitors(bus);
+ 

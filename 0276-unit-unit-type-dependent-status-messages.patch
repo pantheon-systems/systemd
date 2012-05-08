@@ -1,0 +1,492 @@
+From b7708d824195f8ac5a231564096bd26da08e519e Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 13 May 2012 18:18:54 +0200
+Subject: [PATCH] unit: unit type dependent status messages
+
+Instead of generic "Starting..." and "Started" messages for all unit use
+type-dependent messages. For example, mounts will announce "Mounting..."
+and "Mounted".
+
+Add status messages to units of types that used to be entirely silent
+(automounts, sockets, targets, devices). For unit types whose jobs are
+instantaneous, report only the job completion, not the starting event.
+Socket units with non-instantaneous jobs are rare (Exec*= is not used
+often in socket units), so I chose not to print the starting messages
+for them either.
+
+This will hopefully give people better understanding of the boot.
+(cherry picked from commit c69182961b00707d977957cf81d5c41cfbeab429)
+---
+ src/core/automount.c |   14 +++++++++++++-
+ src/core/device.c    |   12 +++++++++++-
+ src/core/job.c       |   49 +++++++++++++++++++++++++++++++------------------
+ src/core/job.h       |   10 +++++-----
+ src/core/mount.c     |   21 +++++++++++++++++++--
+ src/core/service.c   |   20 ++++++++++++++++++--
+ src/core/socket.c    |   20 +++++++++++++++++++-
+ src/core/swap.c      |   21 +++++++++++++++++++--
+ src/core/target.c    |   12 +++++++++++-
+ src/core/unit.c      |   24 +++++++++++++++++++-----
+ src/core/unit.h      |   12 +++++++++---
+ 11 files changed, 174 insertions(+), 41 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index 98064a7..398b484 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -885,5 +885,17 @@ const UnitVTable automount_vtable = {
+         .bus_message_handler = bus_automount_message_handler,
+         .bus_invalidating_properties = bus_automount_invalidating_properties,
+ 
+-        .shutdown = automount_shutdown
++        .shutdown = automount_shutdown,
++
++        .status_message_formats = {
++                .finished_start_job = {
++                        [JOB_DONE]       = "Set up automount %s.",
++                        [JOB_FAILED]     = "Failed to set up automount %s.",
++                        [JOB_DEPENDENCY] = "Dependency failed for %s.",
++                },
++                .finished_stop_job = {
++                        [JOB_DONE]       = "Unset automount %s.",
++                        [JOB_FAILED]     = "Failed to unset automount %s.",
++                },
++        },
+ };
+diff --git a/src/core/device.c b/src/core/device.c
+index 65fd9ef..ff51e36 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -613,5 +613,15 @@ const UnitVTable device_vtable = {
+         .following_set = device_following_set,
+ 
+         .enumerate = device_enumerate,
+-        .shutdown = device_shutdown
++        .shutdown = device_shutdown,
++
++        .status_message_formats = {
++                .starting_stopping = {
++                        [0] = "Expecting device %s...",
++                },
++                .finished_start_job = {
++                        [JOB_DONE]       = "Found device %s.",
++                        [JOB_TIMEOUT]    = "Timed out waiting for device %s.",
++                },
++        },
+ };
+diff --git a/src/core/job.c b/src/core/job.c
+index 4ad60e1..8348617 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -550,28 +550,37 @@ int job_run_and_invalidate(Job *j) {
+ }
+ 
+ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+-        assert(u);
++        const UnitStatusMessageFormats *format_table;
++        const char *format;
++
++        format_table = &UNIT_VTABLE(u)->status_message_formats;
++        if (!format_table)
++                return;
+ 
+         if (t == JOB_START) {
+ 
++                format = format_table->finished_start_job[result];
++                if (!format)
++                        return;
++
+                 switch (result) {
+ 
+                 case JOB_DONE:
+                         if (u->condition_result)
+-                                unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Started %s.", unit_description(u));
++                                unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, format, unit_description(u));
+                         break;
+ 
+                 case JOB_FAILED:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON "FAILED" ANSI_HIGHLIGHT_OFF, "Failed to start %s.", unit_description(u));
+-                        unit_status_printf(u, NULL, "See 'systemctl status %s' for details.", u->id);
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON "FAILED" ANSI_HIGHLIGHT_OFF, format, unit_description(u));
++                        unit_status_printf(u, "", "See 'systemctl status %s' for details.", u->id);
+                         break;
+ 
+                 case JOB_DEPENDENCY:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_YELLOW_ON "DEPEND" ANSI_HIGHLIGHT_OFF, "Dependency failed. Aborted start of %s.", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_YELLOW_ON "DEPEND" ANSI_HIGHLIGHT_OFF, format, unit_description(u));
+                         break;
+ 
+                 case JOB_TIMEOUT:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out starting %s.", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, format, unit_description(u));
+                         break;
+ 
+                 default:
+@@ -580,15 +589,19 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+ 
+         } else if (t == JOB_STOP) {
+ 
++                format = format_table->finished_stop_job[result];
++                if (!format)
++                        return;
++
+                 switch (result) {
+ 
+                 case JOB_TIMEOUT:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out stopping %s.", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " TIME " ANSI_HIGHLIGHT_OFF, format, unit_description(u));
+                         break;
+ 
+                 case JOB_DONE:
+                 case JOB_FAILED:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Stopped %s.", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, format, unit_description(u));
+                         break;
+ 
+                 default:
+@@ -607,34 +620,34 @@ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive) {
+         assert(j->installed);
+         assert(j->type < _JOB_TYPE_MAX_IN_TRANSACTION);
+ 
++        u = j->unit;
++        t = j->type;
++
++        j->result = result;
++
++        log_debug("Job %s/%s finished, result=%s", u->id, job_type_to_string(t), job_result_to_string(result));
++
++        job_print_status_message(u, t, result);
++
+         job_add_to_dbus_queue(j);
+ 
+         /* Patch restart jobs so that they become normal start jobs */
+-        if (result == JOB_DONE && j->type == JOB_RESTART) {
++        if (result == JOB_DONE && t == JOB_RESTART) {
+ 
+                 job_change_type(j, JOB_START);
+                 j->state = JOB_WAITING;
+ 
+                 job_add_to_run_queue(j);
+ 
+-                u = j->unit;
+                 goto finish;
+         }
+ 
+-        j->result = result;
+-
+-        log_debug("Job %s/%s finished, result=%s", j->unit->id, job_type_to_string(j->type), job_result_to_string(result));
+-
+         if (result == JOB_FAILED)
+                 j->manager->n_failed_jobs ++;
+ 
+-        u = j->unit;
+-        t = j->type;
+         job_uninstall(j);
+         job_free(j);
+ 
+-        job_print_status_message(u, t, result);
+-
+         /* Fail depending jobs on failure */
+         if (result != JOB_DONE && recursive) {
+ 
+diff --git a/src/core/job.h b/src/core/job.h
+index 4edf3b9..c0a51db 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -34,11 +34,6 @@ typedef enum JobState JobState;
+ typedef enum JobMode JobMode;
+ typedef enum JobResult JobResult;
+ 
+-#include "manager.h"
+-#include "unit.h"
+-#include "hashmap.h"
+-#include "list.h"
+-
+ /* Be careful when changing the job types! Adjust job_merging_table[] accordingly! */
+ enum JobType {
+         JOB_START,                  /* if a unit does not support being started, we'll just wait until it becomes active */
+@@ -107,6 +102,11 @@ enum JobResult {
+         _JOB_RESULT_INVALID = -1
+ };
+ 
++#include "manager.h"
++#include "unit.h"
++#include "hashmap.h"
++#include "list.h"
++
+ struct JobDependency {
+         /* Encodes that the 'subject' job needs the 'object' job in
+          * some way. This structure is used only while building a transaction. */
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 5c79e3a..68792da 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1917,7 +1917,6 @@ const UnitVTable mount_vtable = {
+ 
+         .no_alias = true,
+         .no_instances = true,
+-        .show_status = true,
+ 
+         .init = mount_init,
+         .load = mount_load,
+@@ -1951,5 +1950,23 @@ const UnitVTable mount_vtable = {
+         .bus_invalidating_properties =  bus_mount_invalidating_properties,
+ 
+         .enumerate = mount_enumerate,
+-        .shutdown = mount_shutdown
++        .shutdown = mount_shutdown,
++
++        .status_message_formats = {
++                .starting_stopping = {
++                        [0] = "Mounting %s...",
++                        [1] = "Unmounting %s...",
++                },
++                .finished_start_job = {
++                        [JOB_DONE]       = "Mounted %s.",
++                        [JOB_FAILED]     = "Failed to mount %s.",
++                        [JOB_DEPENDENCY] = "Dependency failed for %s.",
++                        [JOB_TIMEOUT]    = "Timed out mounting %s.",
++                },
++                .finished_stop_job = {
++                        [JOB_DONE]       = "Unmounted %s.",
++                        [JOB_FAILED]     = "Failed unmounting %s.",
++                        [JOB_TIMEOUT]    = "Timed out unmounting %s.",
++                },
++        },
+ };
+diff --git a/src/core/service.c b/src/core/service.c
+index 803153b..18e3a67 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -3777,7 +3777,6 @@ const UnitVTable service_vtable = {
+                 "Unit\0"
+                 "Service\0"
+                 "Install\0",
+-        .show_status = true,
+ 
+         .init = service_init,
+         .done = service_done,
+@@ -3823,6 +3822,23 @@ const UnitVTable service_vtable = {
+         .bus_invalidating_properties =  bus_service_invalidating_properties,
+ 
+ #ifdef HAVE_SYSV_COMPAT
+-        .enumerate = service_enumerate
++        .enumerate = service_enumerate,
+ #endif
++        .status_message_formats = {
++                .starting_stopping = {
++                        [0] = "Starting %s...",
++                        [1] = "Stopping %s...",
++                },
++                .finished_start_job = {
++                        [JOB_DONE]       = "Started %s.",
++                        [JOB_FAILED]     = "Failed to start %s.",
++                        [JOB_DEPENDENCY] = "Dependency failed for %s.",
++                        [JOB_TIMEOUT]    = "Timed out starting %s.",
++                },
++                .finished_stop_job = {
++                        [JOB_DONE]       = "Stopped %s.",
++                        [JOB_FAILED]     = "Stopped (with error) %s.",
++                        [JOB_TIMEOUT]    = "Timed out stopping %s.",
++                },
++        },
+ };
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 8152f06..5098391 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -2220,5 +2220,23 @@ const UnitVTable socket_vtable = {
+ 
+         .bus_interface = "org.freedesktop.systemd1.Socket",
+         .bus_message_handler = bus_socket_message_handler,
+-        .bus_invalidating_properties =  bus_socket_invalidating_properties
++        .bus_invalidating_properties =  bus_socket_invalidating_properties,
++
++        .status_message_formats = {
++                /*.starting_stopping = {
++                        [0] = "Starting socket %s...",
++                        [1] = "Stopping socket %s...",
++                },*/
++                .finished_start_job = {
++                        [JOB_DONE]       = "Listening on %s.",
++                        [JOB_FAILED]     = "Failed to listen on %s.",
++                        [JOB_DEPENDENCY] = "Dependency failed for %s.",
++                        [JOB_TIMEOUT]    = "Timed out starting %s.",
++                },
++                .finished_stop_job = {
++                        [JOB_DONE]       = "Closed %s.",
++                        [JOB_FAILED]     = "Failed stopping %s.",
++                        [JOB_TIMEOUT]    = "Timed out stopping %s.",
++                },
++        },
+ };
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 5ee8a1e..7bfe117 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -1380,7 +1380,6 @@ const UnitVTable swap_vtable = {
+ 
+         .no_alias = true,
+         .no_instances = true,
+-        .show_status = true,
+ 
+         .init = swap_init,
+         .load = swap_load,
+@@ -1416,5 +1415,23 @@ const UnitVTable swap_vtable = {
+         .following_set = swap_following_set,
+ 
+         .enumerate = swap_enumerate,
+-        .shutdown = swap_shutdown
++        .shutdown = swap_shutdown,
++
++        .status_message_formats = {
++                .starting_stopping = {
++                        [0] = "Activating swap %s...",
++                        [1] = "Deactivating swap %s...",
++                },
++                .finished_start_job = {
++                        [JOB_DONE]       = "Activated swap %s.",
++                        [JOB_FAILED]     = "Failed to activate swap %s.",
++                        [JOB_DEPENDENCY] = "Dependency failed for %s.",
++                        [JOB_TIMEOUT]    = "Timed out activating swap %s.",
++                },
++                .finished_stop_job = {
++                        [JOB_DONE]       = "Deactivated swap %s.",
++                        [JOB_FAILED]     = "Failed deactivating swap %s.",
++                        [JOB_TIMEOUT]    = "Timed out deactivating swap %s.",
++                },
++        },
+ };
+diff --git a/src/core/target.c b/src/core/target.c
+index 6c1e0c3..e285f0e 100644
+--- a/src/core/target.c
++++ b/src/core/target.c
+@@ -220,5 +220,15 @@ const UnitVTable target_vtable = {
+         .sub_state_to_string = target_sub_state_to_string,
+ 
+         .bus_interface = "org.freedesktop.systemd1.Target",
+-        .bus_message_handler = bus_target_message_handler
++        .bus_message_handler = bus_target_message_handler,
++
++        .status_message_formats = {
++                .finished_start_job = {
++                        [JOB_DONE]       = "Reached target %s.",
++                        [JOB_DEPENDENCY] = "Dependency failed for %s.",
++                },
++                .finished_stop_job = {
++                        [JOB_DONE]       = "Stopped target %s.",
++                },
++        },
+ };
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 6d5c9c7..8a51d6b 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -930,6 +930,21 @@ bool unit_condition_test(Unit *u) {
+         return u->condition_result;
+ }
+ 
++static void unit_status_print_starting_stopping(Unit *u, bool stopping) {
++        const UnitStatusMessageFormats *format_table;
++        const char *format;
++
++        format_table = &UNIT_VTABLE(u)->status_message_formats;
++        if (!format_table)
++                return;
++
++        format = format_table->starting_stopping[stopping];
++        if (!format)
++                return;
++
++        unit_status_printf(u, "", format, unit_description(u));
++}
++
+ /* Errors:
+  *         -EBADR:     This unit type does not support starting.
+  *         -EALREADY:  Unit is already started.
+@@ -969,6 +984,8 @@ int unit_start(Unit *u) {
+                 return unit_start(following);
+         }
+ 
++        unit_status_print_starting_stopping(u, false);
++
+         /* If it is stopped, but we cannot start it, then fail */
+         if (!UNIT_VTABLE(u)->start)
+                 return -EBADR;
+@@ -981,7 +998,6 @@ int unit_start(Unit *u) {
+ 
+         unit_add_to_dbus_queue(u);
+ 
+-        unit_status_printf(u, "", "Starting %s...", unit_description(u));
+         return UNIT_VTABLE(u)->start(u);
+ }
+ 
+@@ -1018,12 +1034,13 @@ int unit_stop(Unit *u) {
+                 return unit_stop(following);
+         }
+ 
++        unit_status_print_starting_stopping(u, true);
++
+         if (!UNIT_VTABLE(u)->stop)
+                 return -EBADR;
+ 
+         unit_add_to_dbus_queue(u);
+ 
+-        unit_status_printf(u, "", "Stopping %s...", unit_description(u));
+         return UNIT_VTABLE(u)->stop(u);
+ }
+ 
+@@ -2544,9 +2561,6 @@ void unit_status_printf(Unit *u, const char *status, const char *format, ...) {
+         assert(u);
+         assert(format);
+ 
+-        if (!UNIT_VTABLE(u)->show_status)
+-                return;
+-
+         if (!manager_get_show_status(u->manager))
+                 return;
+ 
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 8922622..3c20850 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -32,6 +32,7 @@ typedef enum UnitLoadState UnitLoadState;
+ typedef enum UnitActiveState UnitActiveState;
+ typedef enum UnitDependency UnitDependency;
+ typedef struct UnitRef UnitRef;
++typedef struct UnitStatusMessageFormats UnitStatusMessageFormats;
+ 
+ #include "set.h"
+ #include "util.h"
+@@ -266,6 +267,12 @@ struct UnitRef {
+         LIST_FIELDS(UnitRef, refs);
+ };
+ 
++struct UnitStatusMessageFormats {
++        const char *starting_stopping[2];
++        const char *finished_start_job[_JOB_RESULT_MAX];
++        const char *finished_stop_job[_JOB_RESULT_MAX];
++};
++
+ #include "service.h"
+ #include "timer.h"
+ #include "socket.h"
+@@ -392,6 +399,8 @@ struct UnitVTable {
+         /* The interface name */
+         const char *bus_interface;
+ 
++        UnitStatusMessageFormats status_message_formats;
++
+         /* Can units of this type have multiple names? */
+         bool no_alias:1;
+ 
+@@ -400,9 +409,6 @@ struct UnitVTable {
+ 
+         /* Exclude from automatic gc */
+         bool no_gc:1;
+-
+-        /* Show status updates on the console */
+-        bool show_status:1;
+ };
+ 
+ extern const UnitVTable * const unit_vtable[_UNIT_TYPE_MAX];

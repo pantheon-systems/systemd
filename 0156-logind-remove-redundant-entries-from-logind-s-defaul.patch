@@ -1,0 +1,174 @@
+From 32a546ed720673394c64a48631160368a392001d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Apr 2012 19:14:11 +0200
+Subject: [PATCH] logind: remove redundant entries from logind's default
+ controller lists too (cherry picked from commit
+ b59e246565337d6c6967059dd15a52a15277433e)
+
+Conflicts:
+
+	TODO
+---
+ src/core/cgroup.c        |   31 +------------------------------
+ src/core/cgroup.h        |    1 -
+ src/core/manager.c       |    3 ++-
+ src/login/logind.c       |    3 +++
+ src/shared/cgroup-util.c |   33 +++++++++++++++++++++++++++++++++
+ src/shared/cgroup-util.h |    2 ++
+ 6 files changed, 41 insertions(+), 32 deletions(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 0ea6395..82b0410 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -373,7 +373,7 @@ int manager_setup_cgroup(Manager *m) {
+ 
+         log_debug("Created root group.");
+ 
+-        manager_shorten_default_controllers(m);
++        cg_shorten_controllers(m->default_controllers);
+ 
+ finish:
+         free(current);
+@@ -397,35 +397,6 @@ void manager_shutdown_cgroup(Manager *m, bool delete) {
+         m->cgroup_hierarchy = NULL;
+ }
+ 
+-void manager_shorten_default_controllers(Manager *m) {
+-        char **f, **t;
+-
+-        strv_uniq(m->default_controllers);
+-
+-        if (!m->default_controllers)
+-                return;
+-
+-        for (f = m->default_controllers, t = m->default_controllers; *f; f++) {
+-
+-                if (!streq(*f, "systemd") && !streq(*f, "name=systemd")) {
+-                        char *cc;
+-
+-                        cc = alloca(sizeof("/sys/fs/cgroup/") + strlen(*f));
+-                        strcpy(stpcpy(cc, "/sys/fs/cgroup/"), *f);
+-
+-                        if (access(cc, F_OK) >= 0) {
+-                                *(t++) = *f;
+-                                continue;
+-                        }
+-                }
+-
+-                log_debug("Controller %s not available or redundant, removing from default controllers list.", *f);
+-                free(*f);
+-        }
+-
+-        *t = NULL;
+-}
+-
+ int cgroup_bonding_get(Manager *m, const char *cgroup, CGroupBonding **bonding) {
+         CGroupBonding *b;
+         char *p;
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 17ae14f..35ae52b 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -85,7 +85,6 @@ pid_t cgroup_bonding_search_main_pid_list(CGroupBonding *b);
+ 
+ int manager_setup_cgroup(Manager *m);
+ void manager_shutdown_cgroup(Manager *m, bool delete);
+-void manager_shorten_default_controllers(Manager *m);
+ 
+ int cgroup_bonding_get(Manager *m, const char *cgroup, CGroupBonding **bonding);
+ int cgroup_notify_empty(Manager *m, const char *group);
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 97be7ce..f132b81 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -63,6 +63,7 @@
+ #include "exit-status.h"
+ #include "virt.h"
+ #include "watchdog.h"
++#include "cgroup-util.h"
+ 
+ /* As soon as 16 units are in our GC queue, make sure to run a gc sweep */
+ #define GC_QUEUE_ENTRIES_MAX 16
+@@ -3172,7 +3173,7 @@ int manager_set_default_controllers(Manager *m, char **controllers) {
+         strv_free(m->default_controllers);
+         m->default_controllers = l;
+ 
+-        manager_shorten_default_controllers(m);
++        cg_shorten_controllers(m->default_controllers);
+ 
+         return 0;
+ }
+diff --git a/src/login/logind.c b/src/login/logind.c
+index 36c187b..a299402 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -1205,6 +1205,9 @@ int manager_startup(Manager *m) {
+         assert(m);
+         assert(m->epoll_fd <= 0);
+ 
++        cg_shorten_controllers(m->reset_controllers);
++        cg_shorten_controllers(m->controllers);
++
+         m->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+         if (m->epoll_fd < 0)
+                 return -errno;
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index 34c82fa..f379419 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -34,6 +34,7 @@
+ #include "set.h"
+ #include "macro.h"
+ #include "util.h"
++#include "strv.h"
+ 
+ int cg_enumerate_processes(const char *controller, const char *path, FILE **_f) {
+         char *fs;
+@@ -1100,3 +1101,35 @@ int cg_get_user_path(char **path) {
+         *path = p;
+         return 0;
+ }
++
++char **cg_shorten_controllers(char **controllers) {
++        char **f, **t;
++
++        controllers = strv_uniq(controllers);
++
++        if (!controllers)
++                return controllers;
++
++        for (f = controllers, t = controllers; *f; f++) {
++                char *cc;
++
++                if (streq(*f, "systemd") || streq(*f, SYSTEMD_CGROUP_CONTROLLER)) {
++                        free(*f);
++                        continue;
++                }
++
++                cc = alloca(sizeof("/sys/fs/cgroup/") + strlen(*f));
++                strcpy(stpcpy(cc, "/sys/fs/cgroup/"), *f);
++
++                if (access(cc, F_OK) < 0) {
++                        log_debug("Controller %s is not available, removing from controllers list.", *f);
++                        free(*f);
++                        continue;
++                }
++
++                *(t++) = *f;
++        }
++
++        *t = NULL;
++        return controllers;
++}
+diff --git a/src/shared/cgroup-util.h b/src/shared/cgroup-util.h
+index 1d1f93e..8b2c046 100644
+--- a/src/shared/cgroup-util.h
++++ b/src/shared/cgroup-util.h
+@@ -70,4 +70,6 @@ int cg_is_empty_recursive(const char *controller, const char *path, bool ignore_
+ 
+ int cg_get_user_path(char **path);
+ 
++char **cg_shorten_controllers(char **controllers);
++
+ #endif

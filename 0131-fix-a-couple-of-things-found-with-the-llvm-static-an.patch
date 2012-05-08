@@ -1,0 +1,66 @@
+From f673cb03fa36fcda277b883f355b4eaa6e82eb0d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 13:58:50 +0200
+Subject: [PATCH] fix a couple of things found with the llvm static analyzer
+ (cherry picked from commit
+ 7ea07dcddafe573c699fc48171b57b912897e7e2)
+
+---
+ src/core/manager.c         |    2 +-
+ src/journal/journal-file.c |    2 +-
+ src/journal/journald.c     |    2 +-
+ src/shared/logs-show.c     |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 312527a..533d4cd 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3015,7 +3015,7 @@ bool manager_unit_pending_inactive(Manager *m, const char *name) {
+ 
+ void manager_check_finished(Manager *m) {
+         char userspace[FORMAT_TIMESPAN_MAX], initrd[FORMAT_TIMESPAN_MAX], kernel[FORMAT_TIMESPAN_MAX], sum[FORMAT_TIMESPAN_MAX];
+-        usec_t kernel_usec = 0, initrd_usec = 0, userspace_usec = 0, total_usec = 0;
++        usec_t kernel_usec, initrd_usec, userspace_usec, total_usec;
+ 
+         assert(m);
+ 
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index be92c90..a4df704 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -1977,7 +1977,7 @@ int journal_directory_vacuum(const char *directory, uint64_t max_use, uint64_t m
+                 size_t q;
+                 struct stat st;
+                 char *p;
+-                unsigned long long seqnum, realtime;
++                unsigned long long seqnum = 0, realtime;
+                 sd_id128_t seqnum_id;
+                 bool have_seqnum;
+ 
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index f54a006..89f1bb7 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1148,7 +1148,7 @@ static void process_native_message(
+         char *identifier = NULL, *message = NULL;
+ 
+         assert(s);
+-        assert(buffer || n == 0);
++        assert(buffer || buffer_size == 0);
+ 
+         p = buffer;
+         remaining = buffer_size;
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index 42d84ed..95df3bb 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -554,7 +554,7 @@ int show_journal_by_unit(
+                 bool follow) {
+ 
+         char *m = NULL;
+-        sd_journal *j;
++        sd_journal *j = NULL;
+         int r;
+         int fd;
+         unsigned line = 0;

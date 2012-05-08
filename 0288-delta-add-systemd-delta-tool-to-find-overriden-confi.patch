@@ -1,0 +1,50 @@
+From 3ba256f70937ae0178831d6c1ba68bc897f7fffa Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 16 May 2012 03:23:28 +0200
+Subject: [PATCH] delta: add systemd-delta tool to find overriden
+ configuration and unit files (cherry picked from commit
+ 27b5482cc08b7fac1b6b15d980d42ae04f3ae1ca)
+
+Conflicts:
+	.gitignore
+	TODO
+---
+ Makefile.am |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index a8382d5..85ffa01 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -193,7 +193,8 @@ bin_PROGRAMS = \
+ 	systemd-cgtop \
+ 	systemd-stdio-bridge \
+ 	systemd-nspawn \
+-	systemd-detect-virt
++	systemd-detect-virt \
++	systemd-delta
+ 
+ dist_bin_SCRIPTS = \
+ 	src/analyze/systemd-analyze
+@@ -432,6 +433,7 @@ MANPAGES = \
+ 	man/systemctl.1 \
+ 	man/systemadm.1 \
+ 	man/systemd-cgls.1 \
++	man/systemd-delta.1 \
+ 	man/systemd-cgtop.1 \
+ 	man/systemd-nspawn.1 \
+ 	man/systemd-tmpfiles.8 \
+@@ -1112,6 +1114,13 @@ systemd_detect_virt_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
++systemd_delta_SOURCES = \
++	src/delta/delta.c
++
++systemd_delta_LDADD = \
++	libsystemd-shared.la
++
++# ------------------------------------------------------------------------------
+ systemd_getty_generator_SOURCES = \
+ 	src/getty-generator/getty-generator.c
+ 

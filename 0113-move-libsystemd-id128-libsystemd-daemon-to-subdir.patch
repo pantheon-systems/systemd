@@ -1,0 +1,123 @@
+From 1ed0281a8ddf6cccffd684924a3dd1a693901fd8 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 15:26:39 +0200
+Subject: [PATCH] move libsystemd-id128, libsystemd-daemon to subdir (cherry
+ picked from commit
+ d41ba529b4d7a57456c030e5d20546e6f0abfef3)
+
+---
+ Makefile.am                                        |   20 ++++++++++----------
+ .../libsystemd-daemon.pc.in                        |    0
+ src/{ => libsystemd-daemon}/libsystemd-daemon.sym  |    0
+ src/{ => libsystemd-daemon}/sd-daemon.c            |    0
+ src/{ => libsystemd-id128}/libsystemd-id128.pc.in  |    0
+ src/{ => libsystemd-id128}/libsystemd-id128.sym    |    0
+ src/{ => libsystemd-id128}/sd-id128.c              |    0
+ 7 files changed, 10 insertions(+), 10 deletions(-)
+ rename src/{ => libsystemd-daemon}/libsystemd-daemon.pc.in (100%)
+ rename src/{ => libsystemd-daemon}/libsystemd-daemon.sym (100%)
+ rename src/{ => libsystemd-daemon}/sd-daemon.c (100%)
+ rename src/{ => libsystemd-id128}/libsystemd-id128.pc.in (100%)
+ rename src/{ => libsystemd-id128}/libsystemd-id128.sym (100%)
+ rename src/{ => libsystemd-id128}/sd-id128.c (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index d54d5df..6dcef81 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1204,7 +1204,7 @@ systemd_tty_ask_password_agent_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ libsystemd_daemon_la_SOURCES = \
+-	src/sd-daemon.c
++	src/libsystemd-daemon/sd-daemon.c
+ 
+ libsystemd_daemon_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1215,7 +1215,7 @@ libsystemd_daemon_la_LDFLAGS = \
+ 	$(AM_LDFLAGS) \
+ 	-shared \
+ 	-version-info $(LIBSYSTEMD_DAEMON_CURRENT):$(LIBSYSTEMD_DAEMON_REVISION):$(LIBSYSTEMD_DAEMON_AGE) \
+-	-Wl,--version-script=$(top_srcdir)/src/libsystemd-daemon.sym
++	-Wl,--version-script=$(top_srcdir)/src/libsystemd-daemon/libsystemd-daemon.sym
+ 
+ pkginclude_HEADERS += \
+ 	src/systemd/sd-daemon.h
+@@ -1243,7 +1243,7 @@ lib_LTLIBRARIES += \
+ 	libsystemd-daemon.la
+ 
+ pkgconfiglib_DATA += \
+-	src/libsystemd-daemon.pc
++	src/libsystemd-daemon/libsystemd-daemon.pc
+ 
+ MANPAGES += \
+ 	man/sd-daemon.7 \
+@@ -1266,12 +1266,12 @@ man/sd_is_mq.3: man/sd_is_fifo.3
+ man/sd_notifyf.3: man/sd_notify.3
+ 
+ EXTRA_DIST += \
+-	src/libsystemd-daemon.pc.in \
+-	src/libsystemd-daemon.sym
++	src/libsystemd-daemon/libsystemd-daemon.pc.in \
++	src/libsystemd-daemon/libsystemd-daemon.sym
+ 
+ # ------------------------------------------------------------------------------
+ libsystemd_id128_la_SOURCES = \
+-	src/sd-id128.c
++	src/libsystemd-id128/sd-id128.c
+ 
+ libsystemd_id128_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1281,7 +1281,7 @@ libsystemd_id128_la_LDFLAGS = \
+ 	$(AM_LDFLAGS) \
+ 	-shared \
+ 	-version-info $(LIBSYSTEMD_ID128_CURRENT):$(LIBSYSTEMD_ID128_REVISION):$(LIBSYSTEMD_ID128_AGE) \
+-	-Wl,--version-script=$(top_srcdir)/src/libsystemd-id128.sym
++	-Wl,--version-script=$(top_srcdir)/src/libsystemd-id128/libsystemd-id128.sym
+ 
+ libsystemd_id128_la_LIBADD = \
+ 	libsystemd-shared.la
+@@ -1303,7 +1303,7 @@ lib_LTLIBRARIES += \
+ 	libsystemd-id128.la
+ 
+ pkgconfiglib_DATA += \
+-	src/libsystemd-id128.pc
++	src/libsystemd-id128/libsystemd-id128.pc
+ 
+ # move lib from $(libdir) to $(rootlibdir) and update devel link, if needed
+ libsystemd-id128-install-hook:
+@@ -1325,8 +1325,8 @@ UNINSTALL_EXEC_HOOKS += \
+ 	libsystemd-id128-uninstall-hook
+ 
+ EXTRA_DIST += \
+-	src/libsystemd-id128.pc.in \
+-	src/libsystemd-id128.sym
++	src/libsystemd-id128/libsystemd-id128.pc.in \
++	src/libsystemd-id128/libsystemd-id128.sym
+ 
+ # ------------------------------------------------------------------------------
+ systemd_journald_SOURCES = \
+diff --git a/src/libsystemd-daemon.pc.in b/src/libsystemd-daemon/libsystemd-daemon.pc.in
+similarity index 100%
+rename from src/libsystemd-daemon.pc.in
+rename to src/libsystemd-daemon/libsystemd-daemon.pc.in
+diff --git a/src/libsystemd-daemon.sym b/src/libsystemd-daemon/libsystemd-daemon.sym
+similarity index 100%
+rename from src/libsystemd-daemon.sym
+rename to src/libsystemd-daemon/libsystemd-daemon.sym
+diff --git a/src/sd-daemon.c b/src/libsystemd-daemon/sd-daemon.c
+similarity index 100%
+rename from src/sd-daemon.c
+rename to src/libsystemd-daemon/sd-daemon.c
+diff --git a/src/libsystemd-id128.pc.in b/src/libsystemd-id128/libsystemd-id128.pc.in
+similarity index 100%
+rename from src/libsystemd-id128.pc.in
+rename to src/libsystemd-id128/libsystemd-id128.pc.in
+diff --git a/src/libsystemd-id128.sym b/src/libsystemd-id128/libsystemd-id128.sym
+similarity index 100%
+rename from src/libsystemd-id128.sym
+rename to src/libsystemd-id128/libsystemd-id128.sym
+diff --git a/src/sd-id128.c b/src/libsystemd-id128/sd-id128.c
+similarity index 100%
+rename from src/sd-id128.c
+rename to src/libsystemd-id128/sd-id128.c

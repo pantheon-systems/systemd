@@ -1,0 +1,26 @@
+From 6fe988068111c0b3689b0e499c986801a1b908b5 Mon Sep 17 00:00:00 2001
+From: Shawn Landden <shawnlandden@gmail.com>
+Date: Thu, 3 May 2012 15:19:01 -0700
+Subject: [PATCH] man: clarify _TRANSPORT
+
+"resp." where it was confuses reader that stdout and stderr might go to differn't places
+(cherry picked from commit 57da3da15abe16446e7121a1a5b5b3f7a5b58e72)
+---
+ man/systemd.journal-fields.xml |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.journal-fields.xml b/man/systemd.journal-fields.xml
+index e638893..aa32693 100644
+--- a/man/systemd.journal-fields.xml
++++ b/man/systemd.journal-fields.xml
+@@ -281,8 +281,8 @@
+                                         journal protocol, for the
+                                         those read from a services'
+                                         standard output or error
+-                                        output, resp. for those read
+-                                        from the kernel.
++                                        output, and for those read
++                                        from the kernel, resp.
+                                         </para>
+                                 </listitem>
+                         </varlistentry>

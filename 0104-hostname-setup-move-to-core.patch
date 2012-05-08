@@ -1,0 +1,53 @@
+From 59fb8d4eef762bb6d035ad0a8912f8659f7c3fdb Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 14:22:48 +0200
+Subject: [PATCH] hostname-setup: move to core/ (cherry picked from commit
+ 4d8961391719a1dd7a20f15e3f7d4df47988fbcf)
+
+---
+ Makefile.am                           |    6 +++---
+ src/{shared => core}/hostname-setup.c |    0
+ src/{shared => core}/hostname-setup.h |    0
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+ rename src/{shared => core}/hostname-setup.c (100%)
+ rename src/{shared => core}/hostname-setup.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 0f45415..8114524 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -575,8 +575,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/cgroup-util.h \
+ 	src/shared/dbus-common.c \
+ 	src/shared/dbus-common.h \
+-	src/shared/hostname-setup.c \
+-	src/shared/hostname-setup.h \
+ 	src/shared/logs-show.c \
+ 	src/shared/logs-show.h \
+ 	src/shared/cgroup-show.c \
+@@ -752,6 +750,8 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/kmod-setup.h \
+ 	src/core/locale-setup.h \
+ 	src/core/locale-setup.c \
++	src/core/hostname-setup.c \
++	src/core/hostname-setup.h \
+ 	src/core/fdset.c \
+ 	src/core/fdset.h \
+ 	src/core/condition.c \
+@@ -849,7 +849,7 @@ test_hostname_SOURCES = \
+ 	src/test/test-hostname.c
+ 
+ test_hostname_LDADD = \
+-	libsystemd-shared.la
++	libsystemd-core.la
+ 
+ test_daemon_SOURCES = \
+ 	src/test/test-daemon.c
+diff --git a/src/shared/hostname-setup.c b/src/core/hostname-setup.c
+similarity index 100%
+rename from src/shared/hostname-setup.c
+rename to src/core/hostname-setup.c
+diff --git a/src/shared/hostname-setup.h b/src/core/hostname-setup.h
+similarity index 100%
+rename from src/shared/hostname-setup.h
+rename to src/core/hostname-setup.h

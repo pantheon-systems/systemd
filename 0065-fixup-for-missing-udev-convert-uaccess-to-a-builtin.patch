@@ -1,0 +1,22 @@
+From 309bc54bbb104e3147fbd4c7df65e70d6bbf14a2 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 6 May 2012 23:04:21 +0200
+Subject: [PATCH] fixup for missing "udev: convert 'uaccess' to a builtin"
+
+---
+ Makefile.am |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 6e322f9..3156f26 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2124,7 +2124,7 @@ systemd_uaccess_CFLAGS = \
+ 	$(ACL_CFLAGS)
+ 
+ systemd_uaccess_LDADD = \
+-	libsystemd-basic.la \
++	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+ 	libsystemd-login.la \
+ 	$(UDEV_LIBS) \

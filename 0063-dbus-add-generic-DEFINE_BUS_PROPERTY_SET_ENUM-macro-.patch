@@ -1,0 +1,38 @@
+From d04ddbbb5355de31762b9d113d025fdd6728a988 Mon Sep 17 00:00:00 2001
+From: Michael Olbrich <m.olbrich@pengutronix.de>
+Date: Fri, 6 Apr 2012 21:38:01 +0200
+Subject: [PATCH] dbus: add generic DEFINE_BUS_PROPERTY_SET_ENUM() macro for
+ enum properties
+
+The defined function can be used as BusPropertySetCallback.
+(cherry picked from commit c57c09eed40704363256149e7b50582a68de6162)
+---
+ src/dbus-common.h |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/src/dbus-common.h b/src/dbus-common.h
+index 1dc0f59..892d129 100644
+--- a/src/dbus-common.h
++++ b/src/dbus-common.h
+@@ -160,6 +160,21 @@ int bus_property_append_long(DBusMessageIter *i, const char *property, void *dat
+                 return 0;                                               \
+         }
+ 
++#define DEFINE_BUS_PROPERTY_SET_ENUM(function,name,type)                \
++        int function(DBusMessageIter *i, const char *property, void *data) { \
++                const char *value;                                      \
++                type *field = data;                                     \
++                                                                        \
++                assert(i);                                              \
++                assert(property);                                       \
++                                                                        \
++                dbus_message_iter_get_basic(i, &value);                 \
++                                                                        \
++                *field = name##_from_string(value);                     \
++                                                                        \
++                return 0;                                               \
++        }
++
+ const char *bus_errno_to_dbus(int error);
+ 
+ DBusMessage* bus_properties_changed_new(const char *path, const char *interface, const char *properties);

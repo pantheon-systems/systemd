@@ -1,0 +1,24 @@
+From f6aca30f5cb5c6b68d05eccbdbe2b59d7debd6ea Mon Sep 17 00:00:00 2001
+From: Andreas Schwab <schwab@linux-m68k.org>
+Date: Tue, 8 May 2012 19:18:26 +0200
+Subject: [PATCH] missing: Fix broken syscall(__NR_fanotify_mark... on ppc32
+
+The same situation as on o32 mips.
+(cherry picked from commit 990478a0ef17c59a29a644c3b2efaca2db66021e)
+---
+ src/shared/missing.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/missing.h b/src/shared/missing.h
+index 095bf1f..638d4d7 100644
+--- a/src/shared/missing.h
++++ b/src/shared/missing.h
+@@ -133,7 +133,7 @@ static inline int fanotify_init(unsigned int flags, unsigned int event_f_flags)
+ 
+ static inline int fanotify_mark(int fanotify_fd, unsigned int flags, uint64_t mask,
+                                 int dfd, const char *pathname) {
+-#if defined _MIPS_SIM && _MIPS_SIM == _MIPS_SIM_ABI32
++#if defined _MIPS_SIM && _MIPS_SIM == _MIPS_SIM_ABI32 || defined __powerpc__ && !defined __powerpc64__
+         union {
+                 uint64_t _64;
+                 uint32_t _32[2];

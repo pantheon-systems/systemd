@@ -1,0 +1,25 @@
+From 9a62688d4ff44fbedf62621a431428f441b44bce Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Mar 2012 20:56:54 +0200
+Subject: [PATCH] build-sys: fix make dist-check (cherry picked from commit
+ c64c338e31f6e96f20560a426dce3cda0a0cc3ab)
+
+---
+ Makefile.am |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 36a385f..ab22a30 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -651,7 +651,9 @@ EXTRA_DIST += \
+ 	src/spawn-agent.h \
+ 	src/acl-util.h \
+ 	src/logs-show.h \
+-        src/utf8.h
++        src/utf8.h \
++        src/journal/sparse-endian.h \
++        src/ima-setup.h
+ 
+ MANPAGES = \
+ 	man/systemd.1 \

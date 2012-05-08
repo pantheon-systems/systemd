@@ -1,0 +1,30 @@
+From 5f37f9cd7014898873349142a30fa8fc11d07225 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 20:25:16 +0200
+Subject: [PATCH] build-sys: move systemd-analyze into its own subdir (cherry
+ picked from commit
+ ae572d87c59d76fce1b1a3194ca43649a3116079)
+
+---
+ Makefile.am                               |    2 +-
+ src/{ => systemd-analyze}/systemd-analyze |    0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename src/{ => systemd-analyze}/systemd-analyze (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 9f37802..eab5676 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -192,7 +192,7 @@ bin_PROGRAMS = \
+ 	systemd-detect-virt
+ 
+ dist_bin_SCRIPTS = \
+-	src/systemd-analyze
++	src/systemd-analyze/systemd-analyze
+ 
+ if HAVE_GTK
+ bin_PROGRAMS += \
+diff --git a/src/systemd-analyze b/src/systemd-analyze/systemd-analyze
+similarity index 100%
+rename from src/systemd-analyze
+rename to src/systemd-analyze/systemd-analyze

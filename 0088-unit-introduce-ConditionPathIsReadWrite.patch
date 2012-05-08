@@ -1,0 +1,120 @@
+From 04d1a9bf02d38024e6c8c6428b2e2da7519d64b8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 02:39:02 +0200
+Subject: [PATCH] unit: introduce ConditionPathIsReadWrite (cherry picked from
+ commit d051610953754ce2b79d23b83c1d5c167defd5be)
+
+---
+ man/systemd.unit.xml             |   22 +++++++++++++++-------
+ src/core/condition.c             |   11 +++++++++++
+ src/core/condition.h             |    1 +
+ src/load-fragment-gperf.gperf.m4 |    1 +
+ 4 files changed, 28 insertions(+), 7 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 3cc126b..fac6388 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -684,6 +684,7 @@
+                                 <term><varname>ConditionPathIsDirectory=</varname></term>
+                                 <term><varname>ConditionPathIsSymbolicLink=</varname></term>
+                                 <term><varname>ConditionPathIsMountPoint=</varname></term>
++                                <term><varname>ConditionPathIsReadWrite=</varname></term>
+                                 <term><varname>ConditionDirectoryNotEmpty=</varname></term>
+                                 <term><varname>ConditionFileIsExecutable=</varname></term>
+                                 <term><varname>ConditionKernelCommandLine=</varname></term>
+@@ -731,7 +732,13 @@
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+                                 exists and is a mount
+-                                point. <varname>ConditionFileIsExecutable=</varname>
++                                point. <varname>ConditionPathIsReadWrite=</varname>
++                                is similar to
++                                <varname>ConditionPathExists=</varname>
++                                but verifies whether the underlying
++                                file system is read and writable
++                                (i.e. not mounted
++                                read-only). <varname>ConditionFileIsExecutable=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+@@ -780,12 +787,13 @@
+                                 <varname>openvz</varname>,
+                                 <varname>lxc</varname>,
+                                 <varname>lxc-libvirt</varname>,
+-                                <varname>systemd-nspawn</varname> to test
+-                                against a specific implementation. If
+-                                multiple virtualization technologies
+-                                are nested only the innermost is
+-                                considered. The test may be negated by
+-                                prepending an exclamation mark.
++                                <varname>systemd-nspawn</varname> to
++                                test against a specific
++                                implementation. If multiple
++                                virtualization technologies are nested
++                                only the innermost is considered. The
++                                test may be negated by prepending an
++                                exclamation mark.
+                                 <varname>ConditionSecurity=</varname>
+                                 may be used to check whether the given
+                                 security module is enabled on the
+diff --git a/src/core/condition.c b/src/core/condition.c
+index 2b51a16..4ed4eee 100644
+--- a/src/core/condition.c
++++ b/src/core/condition.c
+@@ -24,6 +24,7 @@
+ #include <string.h>
+ #include <unistd.h>
+ #include <sys/capability.h>
++#include <sys/statvfs.h>
+ 
+ #ifdef HAVE_SELINUX
+ #include <selinux/selinux.h>
+@@ -222,6 +223,15 @@ bool condition_test(Condition *c) {
+         case CONDITION_PATH_IS_MOUNT_POINT:
+                 return (path_is_mount_point(c->parameter, true) > 0) == !c->negate;
+ 
++        case CONDITION_PATH_IS_READ_WRITE: {
++                struct statvfs st;
++
++                if (statvfs(c->parameter, &st) < 0)
++                        return c->negate;
++
++                return !(st.f_flag & ST_RDONLY) == !c->negate;
++        }
++
+         case CONDITION_DIRECTORY_NOT_EMPTY: {
+                 int k;
+ 
+@@ -313,6 +323,7 @@ static const char* const condition_type_table[_CONDITION_TYPE_MAX] = {
+         [CONDITION_PATH_IS_DIRECTORY] = "ConditionPathIsDirectory",
+         [CONDITION_PATH_IS_SYMBOLIC_LINK] = "ConditionPathIsSymbolicLink",
+         [CONDITION_PATH_IS_MOUNT_POINT] = "ConditionPathIsMountPoint",
++        [CONDITION_PATH_IS_READ_WRITE] = "ConditionPathIsReadWrite",
+         [CONDITION_DIRECTORY_NOT_EMPTY] = "ConditionDirectoryNotEmpty",
+         [CONDITION_KERNEL_COMMAND_LINE] = "ConditionKernelCommandLine",
+         [CONDITION_VIRTUALIZATION] = "ConditionVirtualization",
+diff --git a/src/core/condition.h b/src/core/condition.h
+index 71b1c67..087010c 100644
+--- a/src/core/condition.h
++++ b/src/core/condition.h
+@@ -32,6 +32,7 @@ typedef enum ConditionType {
+         CONDITION_PATH_IS_DIRECTORY,
+         CONDITION_PATH_IS_SYMBOLIC_LINK,
+         CONDITION_PATH_IS_MOUNT_POINT,
++        CONDITION_PATH_IS_READ_WRITE,
+         CONDITION_DIRECTORY_NOT_EMPTY,
+         CONDITION_FILE_IS_EXECUTABLE,
+         CONDITION_KERNEL_COMMAND_LINE,
+diff --git a/src/load-fragment-gperf.gperf.m4 b/src/load-fragment-gperf.gperf.m4
+index 4b02e31..c65db30 100644
+--- a/src/load-fragment-gperf.gperf.m4
++++ b/src/load-fragment-gperf.gperf.m4
+@@ -118,6 +118,7 @@ Unit.ConditionPathExistsGlob,    config_parse_unit_condition_path,   CONDITION_P
+ Unit.ConditionPathIsDirectory,   config_parse_unit_condition_path,   CONDITION_PATH_IS_DIRECTORY,   0
+ Unit.ConditionPathIsSymbolicLink,config_parse_unit_condition_path,   CONDITION_PATH_IS_SYMBOLIC_LINK,0
+ Unit.ConditionPathIsMountPoint,  config_parse_unit_condition_path,   CONDITION_PATH_IS_MOUNT_POINT, 0
++Unit.ConditionPathIsReadWrite,   config_parse_unit_condition_path,   CONDITION_PATH_IS_READ_WRITE,  0
+ Unit.ConditionDirectoryNotEmpty, config_parse_unit_condition_path,   CONDITION_DIRECTORY_NOT_EMPTY, 0
+ Unit.ConditionFileIsExecutable,  config_parse_unit_condition_path,   CONDITION_FILE_IS_EXECUTABLE,  0
+ Unit.ConditionKernelCommandLine, config_parse_unit_condition_string, CONDITION_KERNEL_COMMAND_LINE, 0

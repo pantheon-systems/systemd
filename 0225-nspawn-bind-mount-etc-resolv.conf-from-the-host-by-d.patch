@@ -1,0 +1,54 @@
+From c0d4005087205a3d14e9037eb6db9fe22ade2006 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 25 Apr 2012 15:08:00 +0200
+Subject: [PATCH] nspawn: bind mount /etc/resolv.conf from the host by default
+ (cherry picked from commit
+ 2547bb414c69b7a5b3eb8d7a10768e0cf4114447)
+
+---
+ src/nspawn/nspawn.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index f703c5f..4b77a91 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -263,6 +263,28 @@ static int setup_timezone(const char *dest) {
+         return 0;
+ }
+ 
++static int setup_resolv_conf(const char *dest) {
++        char *where;
++
++        assert(dest);
++
++        if (arg_private_network)
++                return 0;
++
++        /* Fix resolv.conf, if possible */
++        if (asprintf(&where, "%s/etc/resolv.conf", dest) < 0) {
++                log_error("Out of memory");
++                return -ENOMEM;
++        }
++
++        if (mount("/etc/resolv.conf", where, "bind", MS_BIND, NULL) >= 0)
++                mount("/etc/resolv.conf", where, "bind", MS_BIND|MS_REMOUNT|MS_RDONLY, NULL);
++
++        free(where);
++
++        return 0;
++}
++
+ static int copy_devnodes(const char *dest) {
+ 
+         static const char devnodes[] =
+@@ -966,6 +988,9 @@ int main(int argc, char *argv[]) {
+                 if (setup_timezone(arg_directory) < 0)
+                         goto child_fail;
+ 
++                if (setup_resolv_conf(arg_directory) < 0)
++                        goto child_fail;
++
+                 if (chdir(arg_directory) < 0) {
+                         log_error("chdir(%s) failed: %m", arg_directory);
+                         goto child_fail;

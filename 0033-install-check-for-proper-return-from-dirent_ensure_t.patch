@@ -1,0 +1,26 @@
+From 803fde6a91d3079d2ce4b6c8fad5ad6a76c242f0 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Mon, 2 Apr 2012 09:08:35 -0400
+Subject: [PATCH] install: check for proper return from dirent_ensure_type
+
+Fixes 'systemctl list-unit-files', which previously returned only:
+
+  Failed to issue method call: No such file or directory
+(cherry picked from commit fb5ef067c493c5c59b72296d9c520be1dc54b79e)
+---
+ src/install.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/install.c b/src/install.c
+index 174d79b..9256116 100644
+--- a/src/install.c
++++ b/src/install.c
+@@ -1853,7 +1853,7 @@ int unit_file_get_list(
+ 
+                         r = dirent_ensure_type(d, de);
+                         if (r < 0) {
+-                                if (errno == ENOENT)
++                                if (r == -ENOENT)
+                                         continue;
+ 
+                                 goto finish;

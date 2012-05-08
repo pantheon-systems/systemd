@@ -1,0 +1,34 @@
+From 67076c89cec881950d7675931de2cf98c16d8fb9 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 18:59:47 +0200
+Subject: [PATCH] move libsystemd-capability.la dep from basic to core (cherry
+ picked from commit
+ 159baa1bb03c7844c2c127b4acb3adefc0e44649)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 5423d05..c697ecc 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -572,7 +572,6 @@ libsystemd_basic_la_CFLAGS = \
+ 	$(SELINUX_CFLAGS)
+ 
+ libsystemd_basic_la_LIBADD = \
+-	libsystemd-capability.la \
+ 	$(SELINUX_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -769,6 +768,7 @@ libsystemd_core_la_CFLAGS = \
+ 
+ libsystemd_core_la_LIBADD = \
+ 	libsystemd-basic.la \
++	libsystemd-capability.la \
+ 	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS) \
+ 	$(LIBWRAP_LIBS) \

@@ -1,0 +1,737 @@
+From 8700830696b0db6b32358d89494e3463e83b745c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 18:50:16 +0200
+Subject: [PATCH] polkit: temporarily spawn of a polkit agent in terminals for
+ possibly authenticated operations (cherry picked from
+ commit 6bb92a169e8a65e7def5545798001e0dbecc7d4f)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am                                        |   11 +-
+ man/loginctl.xml                                   |    8 ++
+ man/systemctl.xml                                  |   12 +-
+ src/login/loginctl.c                               |   31 ++++-
+ src/shared/util.c                                  |   85 ++++++++++++++
+ src/shared/util.h                                  |    3 +
+ src/spawn-agent.c                                  |  120 --------------------
+ src/spawn-ask-password-agent.c                     |   64 +++++++++++
+ .../spawn-agent.h => spawn-ask-password-agent.h}   |    8 +-
+ src/spawn-polkit-agent.c                           |   64 +++++++++++
+ src/spawn-polkit-agent.h                           |   28 +++++
+ src/systemctl.c                                    |   32 ++++--
+ 12 files changed, 322 insertions(+), 144 deletions(-)
+ delete mode 100644 src/spawn-agent.c
+ create mode 100644 src/spawn-ask-password-agent.c
+ rename src/{core/spawn-agent.h => spawn-ask-password-agent.h} (84%)
+ create mode 100644 src/spawn-polkit-agent.c
+ create mode 100644 src/spawn-polkit-agent.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 23ca11a..abe2e7f 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -101,6 +101,7 @@ AM_CPPFLAGS = \
+ 	-DSYSTEM_SHUTDOWN_PATH=\"$(systemshutdowndir)\" \
+ 	-DSYSTEMD_KBD_MODEL_MAP=\"$(pkgdatadir)/kbd-model-map\" \
+         -DX_SERVER=\"$(bindir)/X\" \
++        -DPOLKIT_AGENT_BINARY_PATH=\"$(bindir)/pkttyagent\" \
+ 	-I $(top_srcdir)/src \
+ 	-I $(top_srcdir)/src/shared \
+ 	-I $(top_srcdir)/src/readahead \
+@@ -755,8 +756,7 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/ask-password-api.h \
+ 	src/core/sysfs-show.h \
+ 	src/core/polkit.h \
+-	src/core/dbus-loop.h \
+-	src/core/spawn-agent.h
++	src/core/dbus-loop.h
+ 
+ nodist_libsystemd_core_la_SOURCES = \
+ 	src/load-fragment-gperf.c \
+@@ -1078,7 +1078,10 @@ systemctl_SOURCES = \
+ 	src/cgroup-show.h \
+ 	src/unit-name.c \
+ 	src/install.c \
+-	src/spawn-agent.c \
++	src/spawn-ask-password-agent.c \
++	src/spawn-ask-password-agent.h \
++	src/spawn-polkit-agent.c \
++	src/spawn-polkit-agent.h \
+ 	src/logs-show.c \
+ 	src/logs-show.h
+ 
+@@ -2015,6 +2018,8 @@ loginctl_SOURCES = \
+ 	src/login/loginctl.c \
+ 	src/login/sysfs-show.c \
+ 	src/dbus-common.c \
++	src/spawn-polkit-agent.c \
++	src/spawn-polkit-agent.h \
+ 	src/cgroup-show.c \
+ 	src/cgroup-show.h
+ 
+diff --git a/man/loginctl.xml b/man/loginctl.xml
+index be72cc3..7cfb194 100644
+--- a/man/loginctl.xml
++++ b/man/loginctl.xml
+@@ -120,6 +120,14 @@
+ 			</varlistentry>
+ 
+                         <varlistentry>
++                                <term><option>--no-ask-password</option></term>
++
++                                <listitem><para>Don't query the user
++                                for authentication for privileged
++                                operations.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><option>--kill-who=</option></term>
+ 
+                                 <listitem><para>When used with
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index ffe0164..97280fd 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -300,11 +300,13 @@
+                                 <command>systemctl</command> will
+                                 query the user on the terminal for the
+                                 necessary secrets. Use this option to
+-                                switch this behavior off. In this
+-                                case the password must be supplied by
+-                                some other means (for example
+-                                graphical password agents) or the
+-                                service might fail.</para></listitem>
++                                switch this behavior off. In this case
++                                the password must be supplied by some
++                                other means (for example graphical
++                                password agents) or the service might
++                                fail. This also disables querying the
++                                user for authentication for privileged
++                                operations.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/src/login/loginctl.c b/src/login/loginctl.c
+index 30e97e3..2633b47 100644
+--- a/src/login/loginctl.c
++++ b/src/login/loginctl.c
+@@ -35,6 +35,7 @@
+ #include "strv.h"
+ #include "cgroup-show.h"
+ #include "sysfs-show.h"
++#include "spawn-polkit-agent.h"
+ 
+ static char **arg_property = NULL;
+ static bool arg_all = false;
+@@ -46,6 +47,7 @@ static enum transport {
+         TRANSPORT_SSH,
+         TRANSPORT_POLKIT
+ } arg_transport = TRANSPORT_NORMAL;
++static bool arg_ask_password = true;
+ static const char *arg_host = NULL;
+ 
+ static bool on_tty(void) {
+@@ -68,8 +70,20 @@ static void pager_open_if_enabled(void) {
+         /* Cache result before we open the pager */
+         on_tty();
+ 
+-        if (!arg_no_pager)
+-                pager_open();
++        if (arg_no_pager)
++                return;
++
++        pager_open();
++}
++
++static void polkit_agent_open_if_enabled(void) {
++
++        /* Open the polkit agent as a child process if necessary */
++
++        if (!arg_ask_password)
++                return;
++
++        polkit_agent_open();
+ }
+ 
+ static int list_sessions(DBusConnection *bus, char **args, unsigned n) {
+@@ -1286,6 +1300,8 @@ static int enable_linger(DBusConnection *bus, char **args, unsigned n) {
+ 
+         dbus_error_init(&error);
+ 
++        polkit_agent_open_if_enabled();
++
+         b = streq(args[0], "enable-linger");
+ 
+         for (i = 1; i < n; i++) {
+@@ -1490,6 +1506,8 @@ static int attach(DBusConnection *bus, char **args, unsigned n) {
+ 
+         dbus_error_init(&error);
+ 
++        polkit_agent_open_if_enabled();
++
+         for (i = 2; i < n; i++) {
+                 DBusMessage *reply;
+ 
+@@ -1546,6 +1564,8 @@ static int flush_devices(DBusConnection *bus, char **args, unsigned n) {
+ 
+         dbus_error_init(&error);
+ 
++        polkit_agent_open_if_enabled();
++
+         m = dbus_message_new_method_call(
+                         "org.freedesktop.login1",
+                         "/org/freedesktop/login1",
+@@ -1684,7 +1704,8 @@ static int parse_argv(int argc, char *argv[]) {
+         enum {
+                 ARG_VERSION = 0x100,
+                 ARG_NO_PAGER,
+-                ARG_KILL_WHO
++                ARG_KILL_WHO,
++                ARG_NO_ASK_PASSWORD
+         };
+ 
+         static const struct option options[] = {
+@@ -1697,6 +1718,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "signal",    required_argument, NULL, 's'           },
+                 { "host",      required_argument, NULL, 'H'           },
+                 { "privileged",no_argument,       NULL, 'P'           },
++                { "no-ask-password", no_argument, NULL, ARG_NO_ASK_PASSWORD },
+                 { NULL,        0,                 NULL, 0             }
+         };
+ 
+@@ -1744,6 +1766,9 @@ static int parse_argv(int argc, char *argv[]) {
+                         arg_no_pager = true;
+                         break;
+ 
++                case ARG_NO_ASK_PASSWORD:
++                        arg_ask_password = false;
++
+                 case ARG_KILL_WHO:
+                         arg_kill_who = optarg;
+                         break;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 73e0a29..7f41fc4 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -6035,3 +6035,88 @@ int fd_inc_rcvbuf(int fd, size_t n) {
+ 
+         return 1;
+ }
++
++int fork_agent(pid_t *pid, const char *path, ...) {
++        pid_t parent_pid, agent_pid;
++        int fd;
++        bool stdout_is_tty, stderr_is_tty;
++        unsigned n, i;
++        va_list ap;
++        char **l;
++
++        assert(pid);
++        assert(path);
++
++        parent_pid = getpid();
++
++        /* Spawns a temporary TTY agent, making sure it goes away when
++         * we go away */
++
++        agent_pid = fork();
++        if (agent_pid < 0)
++                return -errno;
++
++        if (agent_pid != 0) {
++                *pid = agent_pid;
++                return 0;
++        }
++
++        /* In the child:
++         *
++         * Make sure the agent goes away when the parent dies */
++        if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
++                _exit(EXIT_FAILURE);
++
++        /* Check whether our parent died before we were able
++         * to set the death signal */
++        if (getppid() != parent_pid)
++                _exit(EXIT_SUCCESS);
++
++        /* Don't leak fds to the agent */
++        close_all_fds(NULL, 0);
++
++        stdout_is_tty = isatty(STDOUT_FILENO);
++        stderr_is_tty = isatty(STDERR_FILENO);
++
++        if (!stdout_is_tty || !stderr_is_tty) {
++                /* Detach from stdout/stderr. and reopen
++                 * /dev/tty for them. This is important to
++                 * ensure that when systemctl is started via
++                 * popen() or a similar call that expects to
++                 * read EOF we actually do generate EOF and
++                 * not delay this indefinitely by because we
++                 * keep an unused copy of stdin around. */
++                fd = open("/dev/tty", O_WRONLY);
++                if (fd < 0) {
++                        log_error("Failed to open /dev/tty: %m");
++                        _exit(EXIT_FAILURE);
++                }
++
++                if (!stdout_is_tty)
++                        dup2(fd, STDOUT_FILENO);
++
++                if (!stderr_is_tty)
++                        dup2(fd, STDERR_FILENO);
++
++                if (fd > 2)
++                        close(fd);
++        }
++
++        /* Count arguments */
++        va_start(ap, path);
++        for (n = 0; va_arg(ap, char*); n++)
++                ;
++        va_end(ap);
++
++        /* Allocate strv */
++        l = alloca(sizeof(char *) * (n + 1));
++
++        /* Fill in arguments */
++        va_start(ap, path);
++        for (i = 0; i <= n; i++)
++                l[i] = va_arg(ap, char*);
++        va_end(ap);
++
++        execv(path, l);
++        _exit(EXIT_FAILURE);
++}
+diff --git a/src/shared/util.h b/src/shared/util.h
+index e0934e5..5e927df 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -528,4 +528,7 @@ int is_kernel_thread(pid_t pid);
+ 
+ int fd_inc_sndbuf(int fd, size_t n);
+ int fd_inc_rcvbuf(int fd, size_t n);
++
++int fork_agent(pid_t *pid, const char *path, ...);
++
+ #endif
+diff --git a/src/spawn-agent.c b/src/spawn-agent.c
+deleted file mode 100644
+index 2de2530..0000000
+--- a/src/spawn-agent.c
++++ /dev/null
+@@ -1,120 +0,0 @@
+-/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
+-
+-/***
+-  This file is part of systemd.
+-
+-  Copyright 2011 Lennart Poettering
+-
+-  systemd is free software; you can redistribute it and/or modify it
+-  under the terms of the GNU General Public License as published by
+-  the Free Software Foundation; either version 2 of the License, or
+-  (at your option) any later version.
+-
+-  systemd is distributed in the hope that it will be useful, but
+-  WITHOUT ANY WARRANTY; without even the implied warranty of
+-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+-  General Public License for more details.
+-
+-  You should have received a copy of the GNU General Public License
+-  along with systemd; If not, see <http://www.gnu.org/licenses/>.
+-***/
+-
+-#include <sys/types.h>
+-#include <stdlib.h>
+-#include <unistd.h>
+-#include <string.h>
+-#include <sys/prctl.h>
+-#include <signal.h>
+-#include <fcntl.h>
+-
+-#include "log.h"
+-#include "util.h"
+-#include "spawn-agent.h"
+-
+-static pid_t agent_pid = 0;
+-
+-void agent_open(void) {
+-        pid_t parent_pid;
+-
+-        if (agent_pid > 0)
+-                return;
+-
+-        /* We check STDIN here, not STDOUT, since this is about input,
+-         * not output */
+-        if (!isatty(STDIN_FILENO))
+-                return;
+-
+-        parent_pid = getpid();
+-
+-        /* Spawns a temporary TTY agent, making sure it goes away when
+-         * we go away */
+-
+-        agent_pid = fork();
+-        if (agent_pid < 0) {
+-                log_error("Failed to fork agent: %m");
+-                return;
+-        }
+-
+-        if (agent_pid == 0) {
+-                /* In the child */
+-
+-                int fd;
+-                bool stdout_is_tty, stderr_is_tty;
+-
+-                /* Make sure the agent goes away when the parent dies */
+-                if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
+-                        _exit(EXIT_FAILURE);
+-
+-                /* Check whether our parent died before we were able
+-                 * to set the death signal */
+-                if (getppid() != parent_pid)
+-                        _exit(EXIT_SUCCESS);
+-
+-                /* Don't leak fds to the agent */
+-                close_all_fds(NULL, 0);
+-
+-                stdout_is_tty = isatty(STDOUT_FILENO);
+-                stderr_is_tty = isatty(STDERR_FILENO);
+-
+-                if (!stdout_is_tty || !stderr_is_tty) {
+-                        /* Detach from stdout/stderr. and reopen
+-                         * /dev/tty for them. This is important to
+-                         * ensure that when systemctl is started via
+-                         * popen() or a similar call that expects to
+-                         * read EOF we actually do generate EOF and
+-                         * not delay this indefinitely by because we
+-                         * keep an unused copy of stdin around. */
+-                        fd = open("/dev/tty", O_WRONLY);
+-                        if (fd < 0) {
+-                                log_error("Failed to open /dev/tty: %m");
+-                                _exit(EXIT_FAILURE);
+-                        }
+-
+-                        if (!stdout_is_tty)
+-                                dup2(fd, STDOUT_FILENO);
+-
+-                        if (!stderr_is_tty)
+-                                dup2(fd, STDERR_FILENO);
+-
+-                        if (fd > 2)
+-                                close(fd);
+-                }
+-
+-                execl(SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, "--watch", NULL);
+-
+-                log_error("Unable to execute agent: %m");
+-                _exit(EXIT_FAILURE);
+-        }
+-}
+-
+-void agent_close(void) {
+-
+-        if (agent_pid <= 0)
+-                return;
+-
+-        /* Inform agent that we are done */
+-        kill(agent_pid, SIGTERM);
+-        kill(agent_pid, SIGCONT);
+-        wait_for_terminate(agent_pid, NULL);
+-        agent_pid = 0;
+-}
+diff --git a/src/spawn-ask-password-agent.c b/src/spawn-ask-password-agent.c
+new file mode 100644
+index 0000000..82db08c
+--- /dev/null
++++ b/src/spawn-ask-password-agent.c
+@@ -0,0 +1,64 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2011 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <sys/types.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <string.h>
++#include <sys/prctl.h>
++#include <signal.h>
++#include <fcntl.h>
++
++#include "log.h"
++#include "util.h"
++#include "spawn-ask-password-agent.h"
++
++static pid_t agent_pid = 0;
++
++int ask_password_agent_open(void) {
++        int r;
++
++        if (agent_pid > 0)
++                return 0;
++
++        /* We check STDIN here, not STDOUT, since this is about input,
++         * not output */
++        if (!isatty(STDIN_FILENO))
++                return 0;
++
++        r = fork_agent(&agent_pid, SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, "--watch", NULL);
++        if (r < 0)
++                log_error("Failed to fork TTY ask password agent: %s", strerror(-r));
++
++        return r;
++}
++
++void ask_password_agent_close(void) {
++
++        if (agent_pid <= 0)
++                return;
++
++        /* Inform agent that we are done */
++        kill(agent_pid, SIGTERM);
++        kill(agent_pid, SIGCONT);
++        wait_for_terminate(agent_pid, NULL);
++        agent_pid = 0;
++}
+diff --git a/src/core/spawn-agent.h b/src/spawn-ask-password-agent.h
+similarity index 84%
+rename from src/core/spawn-agent.h
+rename to src/spawn-ask-password-agent.h
+index fd0a910..dae039a 100644
+--- a/src/core/spawn-agent.h
++++ b/src/spawn-ask-password-agent.h
+@@ -1,7 +1,7 @@
+ /*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
+ 
+-#ifndef foospawnagenthfoo
+-#define foospawnagenthfoo
++#ifndef foospawnaskpasswordagenthfoo
++#define foospawnaskpasswordagenthfoo
+ 
+ /***
+   This file is part of systemd.
+@@ -22,7 +22,7 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
+-void agent_open(void);
+-void agent_close(void);
++int ask_password_agent_open(void);
++void ask_password_agent_close(void);
+ 
+ #endif
+diff --git a/src/spawn-polkit-agent.c b/src/spawn-polkit-agent.c
+new file mode 100644
+index 0000000..0da9abb
+--- /dev/null
++++ b/src/spawn-polkit-agent.c
+@@ -0,0 +1,64 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2011 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <sys/types.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <string.h>
++#include <sys/prctl.h>
++#include <signal.h>
++#include <fcntl.h>
++
++#include "log.h"
++#include "util.h"
++#include "spawn-polkit-agent.h"
++
++static pid_t agent_pid = 0;
++
++int polkit_agent_open(void) {
++        int r;
++
++        if (agent_pid > 0)
++                return 0;
++
++        /* We check STDIN here, not STDOUT, since this is about input,
++         * not output */
++        if (!isatty(STDIN_FILENO))
++                return 0;
++
++        r = fork_agent(&agent_pid, POLKIT_AGENT_BINARY_PATH, POLKIT_AGENT_BINARY_PATH, NULL);
++        if (r < 0)
++                log_error("Failed to fork TTY ask password agent: %s", strerror(-r));
++
++        return r;
++}
++
++void polkit_agent_close(void) {
++
++        if (agent_pid <= 0)
++                return;
++
++        /* Inform agent that we are done */
++        kill(agent_pid, SIGTERM);
++        kill(agent_pid, SIGCONT);
++        wait_for_terminate(agent_pid, NULL);
++        agent_pid = 0;
++}
+diff --git a/src/spawn-polkit-agent.h b/src/spawn-polkit-agent.h
+new file mode 100644
+index 0000000..34131f0
+--- /dev/null
++++ b/src/spawn-polkit-agent.h
+@@ -0,0 +1,28 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foospawnpolkitagenthfoo
++#define foospawnpolkitagenthfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++int polkit_agent_open(void);
++void polkit_agent_close(void);
++
++#endif
+diff --git a/src/systemctl.c b/src/systemctl.c
+index 43a1446..7abd928 100644
+--- a/src/systemctl.c
++++ b/src/systemctl.c
+@@ -57,7 +57,8 @@
+ #include "build.h"
+ #include "unit-name.h"
+ #include "pager.h"
+-#include "spawn-agent.h"
++#include "spawn-ask-password-agent.h"
++#include "spawn-polkit-agent.h"
+ #include "install.h"
+ #include "logs-show.h"
+ 
+@@ -78,7 +79,7 @@ static bool arg_dry = false;
+ static bool arg_quiet = false;
+ static bool arg_full = false;
+ static int arg_force = 0;
+-static bool arg_ask_password = false;
++static bool arg_ask_password = true;
+ static bool arg_failed = false;
+ static bool arg_runtime = false;
+ static char **arg_wall = NULL;
+@@ -154,7 +155,7 @@ static void pager_open_if_enabled(void) {
+         pager_open();
+ }
+ 
+-static void agent_open_if_enabled(void) {
++static void ask_password_agent_open_if_enabled(void) {
+ 
+         /* Open the password agent as a child process if necessary */
+ 
+@@ -164,7 +165,20 @@ static void agent_open_if_enabled(void) {
+         if (arg_scope != UNIT_FILE_SYSTEM)
+                 return;
+ 
+-        agent_open();
++        ask_password_agent_open();
++}
++
++static void polkit_agent_open_if_enabled(void) {
++
++        /* Open the polkit agent as a child process if necessary */
++
++        if (!arg_ask_password)
++                return;
++
++        if (arg_scope != UNIT_FILE_SYSTEM)
++                return;
++
++        polkit_agent_open();
+ }
+ 
+ static const char *ansi_highlight_red(bool b) {
+@@ -1601,7 +1615,7 @@ static int start_unit(DBusConnection *bus, char **args) {
+ 
+         assert(bus);
+ 
+-        agent_open_if_enabled();
++        ask_password_agent_open_if_enabled();
+ 
+         if (arg_action == ACTION_SYSTEMCTL) {
+                 method =
+@@ -1695,6 +1709,8 @@ static int reboot_with_logind(DBusConnection *bus, enum action a) {
+ 
+         dbus_error_init(&error);
+ 
++        polkit_agent_open_if_enabled();
++
+         switch (a) {
+ 
+         case ACTION_REBOOT:
+@@ -4290,9 +4306,6 @@ static int systemctl_parse_argv(int argc, char *argv[]) {
+         assert(argc >= 0);
+         assert(argv);
+ 
+-        /* Only when running as systemctl we ask for passwords */
+-        arg_ask_password = true;
+-
+         while ((c = getopt_long(argc, argv, "ht:p:aqfs:H:Pn:o:", options, NULL)) >= 0) {
+ 
+                 switch (c) {
+@@ -5503,7 +5516,8 @@ finish:
+         strv_free(arg_property);
+ 
+         pager_close();
+-        agent_close();
++        ask_password_agent_close();
++        polkit_agent_close();
+ 
+         return retval;
+ }

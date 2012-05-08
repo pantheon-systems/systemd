@@ -1,0 +1,42 @@
+From 9f25585832754b81e20a24ae13ada20465b4ae85 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 17 Apr 2012 18:42:09 +0200
+Subject: [PATCH] silence a bunch of gcc warnings (cherry picked from commit
+ 018ef268b1667ba0dbfc15804ab33deed6092147)
+
+Conflicts:
+
+	docs/gudev/Makefile.am
+	src/udev/udev-builtin.c
+---
+ src/detect-virt/detect-virt.c |    3 ++-
+ src/shared/cgroup-util.c      |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/detect-virt/detect-virt.c b/src/detect-virt/detect-virt.c
+index a5a6b30..6f8187d 100644
+--- a/src/detect-virt/detect-virt.c
++++ b/src/detect-virt/detect-virt.c
+@@ -115,7 +115,8 @@ static int parse_argv(int argc, char *argv[]) {
+ 
+ int main(int argc, char *argv[]) {
+         const char *id = NULL;
+-        int retval, r;
++        int r;
++        int retval = EXIT_SUCCESS;
+ 
+         /* This is mostly intended to be used for scripts which want
+          * to detect whether we are being run in a virtualized
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index f379419..7e76396 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -514,7 +514,7 @@ static const char *normalize_controller(const char *controller) {
+ }
+ 
+ static int join_path(const char *controller, const char *path, const char *suffix, char **fs) {
+-        char *t;
++        char *t = NULL;
+ 
+         if (!(controller || path))
+                 return -EINVAL;

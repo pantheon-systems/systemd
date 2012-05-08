@@ -1,0 +1,1420 @@
+From 7ada43a8c8da3b4fcb5fb350d880e7ba50dbb032 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 5 May 2012 00:34:48 +0200
+Subject: [PATCH] logind: implement delay inhibitor locks in addition to block
+ inhibitor locks
+
+This is useful to allow applications to synchronously save data before
+the system is suspended or shut down.
+(cherry picked from commit eecd1362f7f4de432483b5d77c56726c3621a83a)
+
+Conflicts:
+
+	.gitignore
+	TODO
+---
+ Makefile.am                                |   17 +-
+ man/systemd-inhibit.xml                    |  179 ++++++++++++++
+ man/systemd-logind.conf.xml                |   14 ++
+ src/login/inhibit.c                        |  353 ++++++++++++++++++++++++++++
+ src/login/logind-dbus.c                    |  196 ++++++++++++---
+ src/login/logind-gperf.gperf               |    1 +
+ src/login/logind-inhibit.c                 |   47 +++-
+ src/login/logind-inhibit.h                 |   15 +-
+ src/login/logind.c                         |   21 +-
+ src/login/logind.h                         |   10 +
+ src/login/org.freedesktop.login1.policy.in |   32 ++-
+ src/login/systemd-logind.conf              |    1 +
+ src/shared/dbus-common.c                   |   11 +-
+ src/shared/dbus-common.h                   |    1 +
+ 14 files changed, 832 insertions(+), 66 deletions(-)
+ create mode 100644 man/systemd-inhibit.xml
+ create mode 100644 src/login/inhibit.c
+
+diff --git a/Makefile.am b/Makefile.am
+index 3ddbb7b..3f33886 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -461,7 +461,8 @@ MANPAGES = \
+ 	man/systemd-machine-id-setup.1 \
+ 	man/systemd-detect-virt.1 \
+ 	man/systemd-journald.conf.5 \
+-	man/journalctl.1
++	man/journalctl.1 \
++	man/systemd-inhibit.1
+ 
+ MANPAGES_ALIAS = \
+ 	man/reboot.8 \
+@@ -2060,6 +2061,20 @@ loginctl_LDADD = \
+ rootbin_PROGRAMS += \
+ 	loginctl
+ 
++systemd_inhibit_SOURCES = \
++	src/login/inhibit.c
++
++systemd_inhibit_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(DBUS_CFLAGS)
++
++systemd_inhibit_LDADD = \
++	libsystemd-shared.la \
++	libsystemd-dbus.la
++
++rootbin_PROGRAMS += \
++	systemd-inhibit
++
+ test_login_SOURCES = \
+ 	src/login/test-login.c
+ 
+diff --git a/man/systemd-inhibit.xml b/man/systemd-inhibit.xml
+new file mode 100644
+index 0000000..3409590
+--- /dev/null
++++ b/man/systemd-inhibit.xml
+@@ -0,0 +1,179 @@
++<?xml version='1.0'?> <!--*-nxml-*-->
++<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
++        "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
++
++<!--
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++
++<refentry id="systemd-inhibit">
++
++        <refentryinfo>
++                <title>systemd-inhibit</title>
++                <productname>systemd</productname>
++
++                <authorgroup>
++                        <author>
++                                <contrib>Developer</contrib>
++                                <firstname>Lennart</firstname>
++                                <surname>Poettering</surname>
++                                <email>lennart@poettering.net</email>
++                        </author>
++                </authorgroup>
++        </refentryinfo>
++
++        <refmeta>
++                <refentrytitle>systemd-inhibit</refentrytitle>
++                <manvolnum>1</manvolnum>
++        </refmeta>
++
++        <refnamediv>
++                <refname>systemd-inhibit</refname>
++                <refpurpose>Execute a program with an inhibition lock taken</refpurpose>
++        </refnamediv>
++
++        <refsynopsisdiv>
++                <cmdsynopsis>
++                        <command>systemd-inhibit <arg choice="opt" rep="repeat">OPTIONS</arg> <arg>COMMAND</arg> <arg choice="opt" rep="repeat">ARGUMENTS</arg></command>
++                </cmdsynopsis>
++                <cmdsynopsis>
++                        <command>systemd-inhibit <arg choice="opt" rep="repeat">OPTIONS</arg> --list</command>
++                </cmdsynopsis>
++        </refsynopsisdiv>
++
++        <refsect1>
++                <title>Description</title>
++
++                <para><command>systemd-inhibit</command> may be used
++                to execute a program with a shutdown, suspend or idle
++                inhibitor lock taken. The lock will be acquired before
++                the specified command line is executed and released
++                afterwards.</para>
++
++                <para>Inhibitor locks may be used to block or delay
++                suspend and shutdown requests from the user, as well
++                as automatic idle handling of the OS. This may be used
++                to avoid system suspends while an optical disc is
++                being recorded, or similar operations that should not
++                be interrupted.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>Options</title>
++
++                <para>The following options are understood:</para>
++
++                <variablelist>
++                        <varlistentry>
++                                <term><option>--h</option></term>
++                                <term><option>--help</option></term>
++
++                                <listitem><para>Prints a short help
++                                text and exits.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--version</option></term>
++
++                                <listitem><para>Prints a short version
++                                string and exits.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--what=</option></term>
++
++                                <listitem><para>Takes a colon
++                                separated list of one or more
++                                operations to inhibit:
++                                <literal>shutdown</literal>,
++                                <literal>suspend</literal>,
++                                <literal>idle</literal>, for
++                                inhibiting reboot/power-off/halt/kexec,
++                                suspending/hibernating, resp. the
++                                automatic idle
++                                detection.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--who=</option></term>
++
++                                <listitem><para>Takes a short human
++                                readable descriptive string for the
++                                program taking the lock. If not passed
++                                defaults to the command line
++                                string.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--why=</option></term>
++
++                                <listitem><para>Takes a short human
++                                readable descriptive string for the
++                                reason for taking the lock. Defaults
++                                to "Unknown reason".</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--mode=</option></term>
++
++                                <listitem><para>Takes either
++                                <literal>block</literal> or
++                                <literal>delay</literal> and describes
++                                how the lock is applied. If
++                                <literal>block</literal> is used (the
++                                default), the lock prohibits any of
++                                the requested operations without time
++                                limit, and only privileged users may
++                                override it. If
++                                <literal>delay</literal> is used, the
++                                lock can only delay the requested
++                                operations for a limited time. If the
++                                time elapses the lock is ignored and
++                                the operation executed. The time limit
++                                may be specified in
++                                <citerefentry><refentrytitle>systemd-logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--list</option></term>
++
++                                <listitem><para>Lists all active
++                                inhibition locks instead of acquiring
++                                one.</para></listitem>
++                        </varlistentry>
++
++
++                </variablelist>
++
++        </refsect1>
++
++        <refsect1>
++                <title>Exit status</title>
++
++                <para>Returns the exit status of the executed program.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>See Also</title>
++                <para>
++                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
++                </para>
++        </refsect1>
++
++</refentry>
+diff --git a/man/systemd-logind.conf.xml b/man/systemd-logind.conf.xml
+index 27c11c2..8da0625 100644
+--- a/man/systemd-logind.conf.xml
++++ b/man/systemd-logind.conf.xml
+@@ -146,6 +146,20 @@
+                                 defaults to
+                                 <literal>cpu</literal>.</para></listitem>
+                         </varlistentry>
++
++                        <varlistentry>
++                                <term><varname>InhibitDelayMaxSec=</varname></term>
++
++                                <listitem><para>Specifies the maximum
++                                time a suspend or reboot is delayed
++                                due to an inhibitor lock of type
++                                <literal>delay</literal> being taken
++                                before it is ignored and the operation
++                                executed anyway. Defaults to
++                                5s.</para></listitem>
++
++                        </varlistentry>
++
+                 </variablelist>
+ 
+                 <para>Note that setting
+diff --git a/src/login/inhibit.c b/src/login/inhibit.c
+new file mode 100644
+index 0000000..a817c84
+--- /dev/null
++++ b/src/login/inhibit.c
+@@ -0,0 +1,353 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <getopt.h>
++#include <assert.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <dbus.h>
++#include <unistd.h>
++
++#include "dbus-common.h"
++#include "util.h"
++#include "build.h"
++#include "strv.h"
++
++static const char* arg_what = "idle:suspend:shutdown";
++static const char* arg_who = NULL;
++static const char* arg_why = "Unknown reason";
++static const char* arg_mode = "block";
++
++static enum {
++        ACTION_INHIBIT,
++        ACTION_LIST
++} arg_action = ACTION_INHIBIT;
++
++static int inhibit(DBusConnection *bus, DBusError *error) {
++        DBusMessage *m = NULL, *reply = NULL;
++        int fd;
++
++        assert(bus);
++
++        m = dbus_message_new_method_call(
++                        "org.freedesktop.login1",
++                        "/org/freedesktop/login1",
++                        "org.freedesktop.login1.Manager",
++                        "Inhibit");
++        if (!m)
++                return -ENOMEM;
++
++        if (!dbus_message_append_args(m,
++                                      DBUS_TYPE_STRING, &arg_what,
++                                      DBUS_TYPE_STRING, &arg_who,
++                                      DBUS_TYPE_STRING, &arg_why,
++                                      DBUS_TYPE_STRING, &arg_mode,
++                                      DBUS_TYPE_INVALID)) {
++                fd = -ENOMEM;
++                goto finish;
++        }
++
++        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
++        if (!reply) {
++                fd = -EIO;
++                goto finish;
++        }
++
++        if (!dbus_message_get_args(reply, error,
++                                   DBUS_TYPE_UNIX_FD, &fd,
++                                   DBUS_TYPE_INVALID)){
++                fd = -EIO;
++                goto finish;
++        }
++
++finish:
++        if (m)
++                dbus_message_unref(m);
++
++        if (reply)
++                dbus_message_unref(reply);
++
++        return fd;
++}
++
++static int print_inhibitors(DBusConnection *bus, DBusError *error) {
++        DBusMessage *m, *reply;
++        unsigned n = 0;
++        DBusMessageIter iter, sub, sub2;
++        int r;
++
++        assert(bus);
++
++        m = dbus_message_new_method_call(
++                        "org.freedesktop.login1",
++                        "/org/freedesktop/login1",
++                        "org.freedesktop.login1.Manager",
++                        "ListInhibitors");
++        if (!m)
++                return -ENOMEM;
++
++        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
++        if (!reply) {
++                r = -EIO;
++                goto finish;
++        }
++
++        if (!dbus_message_iter_init(reply, &iter)) {
++                r = -ENOMEM;
++                goto finish;
++        }
++
++        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_ARRAY) {
++                r = -EIO;
++                goto finish;
++        }
++        dbus_message_iter_recurse(&iter, &sub);
++
++        printf("%-21s %-20s %-20s %-5s %6s %6s\n",
++               "WHAT",
++               "WHO",
++               "WHY",
++               "MODE",
++               "UID",
++               "PID");
++
++
++        while (dbus_message_iter_get_arg_type(&sub) != DBUS_TYPE_INVALID) {
++                const char *what, *who, *why, *mode;
++                char *ewho, *ewhy;
++                dbus_uint32_t uid, pid;
++
++                if (dbus_message_iter_get_arg_type(&sub) != DBUS_TYPE_STRUCT) {
++                        r = -EIO;
++                        goto finish;
++                }
++
++                dbus_message_iter_recurse(&sub, &sub2);
++
++                if (bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &what, true) < 0 ||
++                    bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &who, true) < 0 ||
++                    bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &why, true) < 0 ||
++                    bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &mode, true) < 0 ||
++                    bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_UINT32, &uid, true) < 0 ||
++                    bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_UINT32, &pid, false) < 0) {
++                        r = -EIO;
++                        goto finish;
++                }
++
++                ewho = ellipsize(who, 20, 66);
++                ewhy = ellipsize(why, 20, 66);
++
++                printf("%-21s %-20s %-20s %-5s %6lu %6lu\n",
++                       what, ewho ? ewho : who, ewhy ? ewhy : why, mode, (unsigned long) uid, (unsigned long) pid);
++
++                free(ewho);
++                free(ewhy);
++
++                dbus_message_iter_next(&sub);
++
++                n++;
++        }
++
++        printf("\n%u inhibitors listed.\n", n);
++        r = 0;
++
++finish:
++        if (m)
++                dbus_message_unref(m);
++
++        if (reply)
++                dbus_message_unref(reply);
++
++        return r;
++}
++
++static int help(void) {
++
++        printf("%s [OPTIONS...] {COMMAND} ...\n\n"
++               "Execute a process while inhibiting shutdown/suspend/idle.\n\n"
++               "  -h --help               Show this help\n"
++               "     --version            Show package version\n"
++               "     --what=WHAT          Operations to inhibit, colon separated list of idle,\n"
++               "                          suspend, shutdown\n"
++               "     --who=STRING         A descriptive string who is inhibiting\n"
++               "     --why=STRING         A descriptive string why is being inhibited\n"
++               "     --mode=MODE          One of block or delay\n"
++               "     --list               List active inhibitors\n",
++               program_invocation_short_name);
++
++        return 0;
++}
++
++static int parse_argv(int argc, char *argv[]) {
++
++        enum {
++                ARG_VERSION = 0x100,
++                ARG_WHAT,
++                ARG_WHO,
++                ARG_WHY,
++                ARG_MODE,
++                ARG_LIST,
++        };
++
++        static const struct option options[] = {
++                { "help",         no_argument,       NULL, 'h'              },
++                { "version",      no_argument,       NULL, ARG_VERSION      },
++                { "what",         required_argument, NULL, ARG_WHAT         },
++                { "who",          required_argument, NULL, ARG_WHO          },
++                { "why",          required_argument, NULL, ARG_WHY          },
++                { "mode",         required_argument, NULL, ARG_MODE         },
++                { "list",         no_argument,       NULL, ARG_LIST         },
++                { NULL,           0,                 NULL, 0                }
++        };
++
++        int c;
++
++        assert(argc >= 0);
++        assert(argv);
++
++        while ((c = getopt_long(argc, argv, "+h", options, NULL)) >= 0) {
++
++                switch (c) {
++
++                case 'h':
++                        help();
++                        return 0;
++
++                case ARG_VERSION:
++                        puts(PACKAGE_STRING);
++                        puts(DISTRIBUTION);
++                        puts(SYSTEMD_FEATURES);
++                        return 0;
++
++                case ARG_WHAT:
++                        arg_what = optarg;
++                        break;
++
++                case ARG_WHO:
++                        arg_who = optarg;
++                        break;
++
++                case ARG_WHY:
++                        arg_why = optarg;
++                        break;
++
++                case ARG_MODE:
++                        arg_mode = optarg;
++                        break;
++
++                case ARG_LIST:
++                        arg_action = ACTION_LIST;
++                        break;
++
++                default:
++                        log_error("Unknown option code %c", c);
++                        return -EINVAL;
++                }
++        }
++
++        if (arg_action == ACTION_INHIBIT && optind >= argc) {
++                log_error("Missing command line to execute.");
++                return -EINVAL;
++        }
++
++        return 1;
++}
++
++int main(int argc, char *argv[]) {
++        int r, exit_code = 0;
++        DBusConnection *bus = NULL;
++        DBusError error;
++        int fd = -1;
++
++        dbus_error_init(&error);
++
++        log_parse_environment();
++        log_open();
++
++        r = parse_argv(argc, argv);
++        if (r <= 0)
++                goto finish;
++
++        bus = dbus_bus_get_private(DBUS_BUS_SYSTEM, &error);
++        if (!bus) {
++                log_error("Failed to connect to bus: %s", bus_error_message(&error));
++                r = -EIO;
++                goto finish;
++        }
++
++        if (arg_action == ACTION_LIST) {
++
++                r = print_inhibitors(bus, &error);
++                if (r < 0) {
++                        log_error("Failed to list inhibitors: %s", bus_error_message_or_strerror(&error, -r));
++                        goto finish;
++                }
++
++        } else {
++                char *w = NULL;
++                pid_t pid;
++
++                if (!arg_who)
++                        arg_who = w = strv_join(argv + optind, " ");
++
++                fd = inhibit(bus, &error);
++                free(w);
++
++                if (fd < 0) {
++                        log_error("Failed to inhibit: %s", bus_error_message_or_strerror(&error, -r));
++                        r = fd;
++                        goto finish;
++                }
++
++                pid = fork();
++                if (pid < 0) {
++                        log_error("Failed to fork: %m");
++                        r = -errno;
++                        goto finish;
++                }
++
++                if (pid == 0) {
++                        /* Child */
++
++                        close_nointr_nofail(fd);
++                        execvp(argv[optind], argv + optind);
++                        log_error("Failed to execute %s: %m", argv[optind]);
++                        _exit(EXIT_FAILURE);
++                }
++
++                r = wait_for_terminate_and_warn(argv[optind], pid);
++                if (r >= 0)
++                        exit_code = r;
++        }
++
++finish:
++        if (bus) {
++                dbus_connection_close(bus);
++                dbus_connection_unref(bus);
++        }
++
++        dbus_error_free(&error);
++
++        if (fd >= 0)
++                close_nointr_nofail(fd);
++
++        return r < 0 ? EXIT_FAILURE : exit_code;
++}
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index bcf4bb7..b86f470 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -144,10 +144,11 @@
+         "   <arg name=\"what\" type=\"s\" direction=\"in\"/>\n"         \
+         "   <arg name=\"who\" type=\"s\" direction=\"in\"/>\n"          \
+         "   <arg name=\"why\" type=\"s\" direction=\"in\"/>\n"          \
++        "   <arg name=\"mode\" type=\"s\" direction=\"in\"/>\n"         \
+         "   <arg name=\"fd\" type=\"h\" direction=\"out\"/>\n"          \
+         "  </method>\n"                                                 \
+         "  <method name=\"ListInhibitors\">\n"                          \
+-        "   <arg name=\"inhibitors\" type=\"a(sssuu)\" direction=\"out\"/>\n" \
++        "   <arg name=\"inhibitors\" type=\"a(ssssuu)\" direction=\"out\"/>\n" \
+         "  </method>\n"                                                 \
+         "  <signal name=\"SessionNew\">\n"                              \
+         "   <arg name=\"id\" type=\"s\"/>\n"                            \
+@@ -173,6 +174,9 @@
+         "   <arg name=\"id\" type=\"s\"/>\n"                            \
+         "   <arg name=\"path\" type=\"o\"/>\n"                          \
+         "  </signal>\n"                                                 \
++        "  <signal name=\"PrepareForShutdown\">\n"                      \
++        "   <arg name=\"active\" type=\"b\"/>\n"                        \
++        "  </signal>\n"                                                 \
+         "  <property name=\"ControlGroupHierarchy\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"Controllers\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"ResetControllers\" type=\"as\" access=\"read\"/>\n" \
+@@ -183,7 +187,9 @@
+         "  <property name=\"IdleHint\" type=\"b\" access=\"read\"/>\n"  \
+         "  <property name=\"IdleSinceHint\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"IdleSinceHintMonotonic\" type=\"t\" access=\"read\"/>\n" \
+-        "  <property name=\"Inhibited\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"BlockInhibited\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"DelayInhibited\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"InhibitDelayMaxUSec\" type=\"t\" access=\"read\"/>\n" \
+         " </interface>\n"
+ 
+ #define INTROSPECTION_BEGIN                                             \
+@@ -239,7 +245,7 @@ static int bus_manager_append_inhibited(DBusMessageIter *i, const char *property
+         InhibitWhat w;
+         const char *p;
+ 
+-        w = manager_inhibit_what(m);
++        w = manager_inhibit_what(m, streq(property, "BlockInhibited") ? INHIBIT_BLOCK : INHIBIT_DELAY);
+         p = inhibit_what_to_string(w);
+ 
+         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &p))
+@@ -638,9 +644,10 @@ fail:
+ static int bus_manager_inhibit(Manager *m, DBusConnection *connection, DBusMessage *message, DBusError *error, DBusMessage **_reply) {
+         Inhibitor *i = NULL;
+         char *id = NULL;
+-        const char *who, *why, *what;
++        const char *who, *why, *what, *mode;
+         pid_t pid;
+         InhibitWhat w;
++        InhibitMode mm;
+         unsigned long ul;
+         int r, fifo_fd = -1;
+         DBusMessage *reply = NULL;
+@@ -657,6 +664,7 @@ static int bus_manager_inhibit(Manager *m, DBusConnection *connection, DBusMessa
+                             DBUS_TYPE_STRING, &what,
+                             DBUS_TYPE_STRING, &who,
+                             DBUS_TYPE_STRING, &why,
++                            DBUS_TYPE_STRING, &mode,
+                             DBUS_TYPE_INVALID)) {
+                 r = -EIO;
+                 goto fail;
+@@ -668,7 +676,16 @@ static int bus_manager_inhibit(Manager *m, DBusConnection *connection, DBusMessa
+                 goto fail;
+         }
+ 
+-        r = verify_polkit(connection, message, "org.freedesktop.login1.inhibit", false, NULL, error);
++        mm = inhibit_mode_from_string(mode);
++        if (mm < 0) {
++                r = -EINVAL;
++                goto fail;
++        }
++
++        r = verify_polkit(connection, message,
++                          m == INHIBIT_BLOCK ?
++                          "org.freedesktop.login1.inhibit-block" :
++                          "org.freedesktop.login1.inhibit-delay", false, NULL, error);
+         if (r < 0)
+                 goto fail;
+ 
+@@ -701,6 +718,7 @@ static int bus_manager_inhibit(Manager *m, DBusConnection *connection, DBusMessa
+                 goto fail;
+ 
+         i->what = w;
++        i->mode = mm;
+         i->pid = pid;
+         i->uid = (uid_t) ul;
+         i->why = strdup(why);
+@@ -918,6 +936,76 @@ static int have_multiple_sessions(
+         return false;
+ }
+ 
++static int send_start_unit(DBusConnection *connection, const char *name, DBusError *error) {
++        DBusMessage *message, *reply;
++        const char *mode = "replace";
++
++        assert(connection);
++        assert(name);
++
++        message = dbus_message_new_method_call(
++                        "org.freedesktop.systemd1",
++                        "/org/freedesktop/systemd1",
++                        "org.freedesktop.systemd1.Manager",
++                        "StartUnit");
++        if (!message)
++                return -ENOMEM;
++
++        if (!dbus_message_append_args(message,
++                                      DBUS_TYPE_STRING, &name,
++                                      DBUS_TYPE_STRING, &mode,
++                                      DBUS_TYPE_INVALID)) {
++                dbus_message_unref(message);
++                return -ENOMEM;
++        }
++
++        reply = dbus_connection_send_with_reply_and_block(connection, message, -1, error);
++        dbus_message_unref(message);
++
++        if (!reply)
++                return -EIO;
++
++        dbus_message_unref(reply);
++        return 0;
++}
++
++static int send_prepare_for_shutdown(Manager *m, bool _active) {
++        dbus_bool_t active = _active;
++        DBusMessage *message;
++        int r = 0;
++
++        assert(m);
++
++        message = dbus_message_new_signal("/org/freedesktop/login1", "org.freedesktop.login1.Manager", "PrepareForShutdown");
++        if (!message)
++                return -ENOMEM;
++
++        if (!dbus_message_append_args(message, DBUS_TYPE_BOOLEAN, &active, DBUS_TYPE_INVALID) ||
++            !dbus_connection_send(m->bus, message, NULL))
++                r = -ENOMEM;
++
++        dbus_message_unref(message);
++        return r;
++}
++
++static int delay_shutdown(Manager *m, const char *name) {
++        assert(m);
++
++        if (!m->delayed_shutdown) {
++                /* Tell everybody to prepare for shutdown */
++                send_prepare_for_shutdown(m, true);
++
++                /* Update timestamp for timeout */
++                m->delayed_shutdown_timestamp = now(CLOCK_MONOTONIC);
++        }
++
++        /* Remember what we want to do, possibly overriding what kind
++         * of shutdown we previously queued. */
++        m->delayed_shutdown = name;
++
++        return 0;
++}
++
+ static const BusProperty bus_login_manager_properties[] = {
+         { "ControlGroupHierarchy",  bus_property_append_string,         "s",  offsetof(Manager, cgroup_path),        true },
+         { "Controllers",            bus_property_append_strv,           "as", offsetof(Manager, controllers),        true },
+@@ -929,7 +1017,9 @@ static const BusProperty bus_login_manager_properties[] = {
+         { "IdleHint",               bus_manager_append_idle_hint,       "b",  0 },
+         { "IdleSinceHint",          bus_manager_append_idle_hint_since, "t",  0 },
+         { "IdleSinceHintMonotonic", bus_manager_append_idle_hint_since, "t",  0 },
+-        { "Inhibited",              bus_manager_append_inhibited,       "s",  0 },
++        { "BlockInhibited",         bus_manager_append_inhibited,       "s",  0 },
++        { "DelayInhibited",         bus_manager_append_inhibited,       "s",  0 },
++        { "InhibitDelayMaxUSec",    bus_property_append_usec,           "t",  offsetof(Manager, inhibit_delay_max)   },
+         { NULL, }
+ };
+ 
+@@ -1228,26 +1318,28 @@ static DBusHandlerResult manager_message_handler(
+ 
+                 dbus_message_iter_init_append(reply, &iter);
+ 
+-                if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "(sssuu)", &sub))
++                if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "(ssssuu)", &sub))
+                         goto oom;
+ 
+                 HASHMAP_FOREACH(inhibitor, m->inhibitors, i) {
+                         DBusMessageIter sub2;
+                         dbus_uint32_t uid, pid;
+-                        const char *what, *who, *why;
++                        const char *what, *who, *why, *mode;
+ 
+                         if (!dbus_message_iter_open_container(&sub, DBUS_TYPE_STRUCT, NULL, &sub2))
+                                 goto oom;
+ 
+-                        what = inhibit_what_to_string(inhibitor->what);
++                        what = strempty(inhibit_what_to_string(inhibitor->what));
+                         who = strempty(inhibitor->who);
+                         why = strempty(inhibitor->why);
++                        mode = strempty(inhibit_mode_to_string(inhibitor->mode));
+                         uid = (dbus_uint32_t) inhibitor->uid;
+                         pid = (dbus_uint32_t) inhibitor->pid;
+ 
+                         if (!dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &what) ||
+                             !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &who) ||
+                             !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &why) ||
++                            !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &mode) ||
+                             !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_UINT32, &uid) ||
+                             !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_UINT32, &pid))
+                                 goto oom;
+@@ -1641,10 +1733,8 @@ static DBusHandlerResult manager_message_handler(
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "PowerOff") ||
+                    dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "Reboot")) {
+                 dbus_bool_t interactive;
+-                bool multiple_sessions, inhibit;
+-                DBusMessage *forward, *freply;
++                bool multiple_sessions, blocked, delayed;
+                 const char *name, *action;
+-                const char *mode = "replace";
+ 
+                 if (!dbus_message_get_args(
+                                     message,
+@@ -1658,7 +1748,7 @@ static DBusHandlerResult manager_message_handler(
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+                 multiple_sessions = r > 0;
+-                inhibit = manager_is_inhibited(m, INHIBIT_SHUTDOWN, NULL);
++                blocked = manager_is_inhibited(m, INHIBIT_SHUTDOWN, INHIBIT_BLOCK, NULL);
+ 
+                 if (multiple_sessions) {
+                         action = streq(dbus_message_get_member(message), "PowerOff") ?
+@@ -1670,7 +1760,7 @@ static DBusHandlerResult manager_message_handler(
+                                 return bus_send_error_reply(connection, message, &error, r);
+                 }
+ 
+-                if (inhibit) {
++                if (blocked) {
+                         action = streq(dbus_message_get_member(message), "PowerOff") ?
+                                 "org.freedesktop.login1.power-off-ignore-inhibit" :
+                                 "org.freedesktop.login1.reboot-ignore-inhibit";
+@@ -1680,7 +1770,7 @@ static DBusHandlerResult manager_message_handler(
+                                 return bus_send_error_reply(connection, message, &error, r);
+                 }
+ 
+-                if (!multiple_sessions && !inhibit) {
++                if (!multiple_sessions && !blocked) {
+                         action = streq(dbus_message_get_member(message), "PowerOff") ?
+                                 "org.freedesktop.login1.power-off" :
+                                 "org.freedesktop.login1.reboot";
+@@ -1690,32 +1780,26 @@ static DBusHandlerResult manager_message_handler(
+                                 return bus_send_error_reply(connection, message, &error, r);
+                 }
+ 
+-                forward = dbus_message_new_method_call(
+-                              "org.freedesktop.systemd1",
+-                              "/org/freedesktop/systemd1",
+-                              "org.freedesktop.systemd1.Manager",
+-                              "StartUnit");
+-                if (!forward)
+-                        return bus_send_error_reply(connection, message, NULL, -ENOMEM);
+-
+                 name = streq(dbus_message_get_member(message), "PowerOff") ?
+                         SPECIAL_POWEROFF_TARGET : SPECIAL_REBOOT_TARGET;
+ 
+-                if (!dbus_message_append_args(forward,
+-                                              DBUS_TYPE_STRING, &name,
+-                                              DBUS_TYPE_STRING, &mode,
+-                                              DBUS_TYPE_INVALID)) {
+-                        dbus_message_unref(forward);
+-                        return bus_send_error_reply(connection, message, NULL, -ENOMEM);
+-                }
+-
+-                freply = dbus_connection_send_with_reply_and_block(connection, forward, -1, &error);
+-                dbus_message_unref(forward);
++                delayed =
++                        m->inhibit_delay_max > 0 &&
++                        manager_is_inhibited(m, INHIBIT_SHUTDOWN, INHIBIT_DELAY, NULL);
+ 
+-                if (!freply)
+-                        return bus_send_error_reply(connection, message, &error, -EIO);
+-
+-                dbus_message_unref(freply);
++                if (delayed) {
++                        /* Shutdown is delayed, keep in mind what we
++                         * want to do, and start a timeout */
++                        r = delay_shutdown(m, name);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, NULL, r);
++                } else {
++                        /* Shutdown is not delayed, execute it
++                         * immediately */
++                        r = send_start_unit(connection, name, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
++                }
+ 
+                 reply = dbus_message_new_method_return(message);
+                 if (!reply)
+@@ -1732,7 +1816,7 @@ static DBusHandlerResult manager_message_handler(
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+                 multiple_sessions = r > 0;
+-                inhibit = manager_is_inhibited(m, INHIBIT_SHUTDOWN, NULL);
++                inhibit = manager_is_inhibited(m, INHIBIT_SHUTDOWN, INHIBIT_BLOCK, NULL);
+ 
+                 if (multiple_sessions) {
+                         action = streq(dbus_message_get_member(message), "CanPowerOff") ?
+@@ -1943,3 +2027,39 @@ finish:
+ 
+         return r;
+ }
++
++int manager_dispatch_delayed_shutdown(Manager *manager) {
++        const char *name;
++        DBusError error;
++        bool delayed;
++        int r;
++
++        assert(manager);
++
++        if (!manager->delayed_shutdown)
++                return 0;
++
++        /* Continue delay? */
++        delayed =
++                manager->delayed_shutdown_timestamp + manager->inhibit_delay_max > now(CLOCK_MONOTONIC) &&
++                manager_is_inhibited(manager, INHIBIT_SHUTDOWN, INHIBIT_DELAY, NULL);
++        if (delayed)
++                return 0;
++
++        /* Reset delay data */
++        name = manager->delayed_shutdown;
++        manager->delayed_shutdown = NULL;
++
++        /* Actually do the shutdown */
++        dbus_error_init(&error);
++        r = send_start_unit(manager->bus, name, &error);
++        if (r < 0) {
++                log_warning("Failed to send delayed shutdown message: %s", bus_error_message_or_strerror(&error, -r));
++                return r;
++        }
++
++        /* Tell people about it */
++        send_prepare_for_shutdown(manager, false);
++
++        return 1;
++}
+diff --git a/src/login/logind-gperf.gperf b/src/login/logind-gperf.gperf
+index 940fe10..d8ef92a 100644
+--- a/src/login/logind-gperf.gperf
++++ b/src/login/logind-gperf.gperf
+@@ -20,3 +20,4 @@ Login.KillOnlyUsers,     config_parse_strv,     0, offsetof(Manager, kill_only_u
+ Login.KillExcludeUsers,  config_parse_strv,     0, offsetof(Manager, kill_exclude_users)
+ Login.Controllers,       config_parse_strv,     0, offsetof(Manager, controllers)
+ Login.ResetControllers,  config_parse_strv,     0, offsetof(Manager, reset_controllers)
++Login.InhibitDelayMaxSec,config_parse_usec,     0, offsetof(Manager, inhibit_delay_max)
+diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
+index 78afee3..e4eefd0 100644
+--- a/src/login/logind-inhibit.c
++++ b/src/login/logind-inhibit.c
+@@ -97,9 +97,11 @@ int inhibitor_save(Inhibitor *i) {
+         fprintf(f,
+                 "# This is private data. Do not parse.\n"
+                 "WHAT=%s\n"
++                "MODE=%s\n"
+                 "UID=%lu\n"
+                 "PID=%lu\n",
+                 inhibit_what_to_string(i->what),
++                inhibit_mode_to_string(i->mode),
+                 (unsigned long) i->uid,
+                 (unsigned long) i->pid);
+ 
+@@ -152,9 +154,10 @@ int inhibitor_start(Inhibitor *i) {
+ 
+         dual_timestamp_get(&i->since);
+ 
+-        log_debug("Inhibitor %s (%s) pid=%lu uid=%lu started.",
++        log_debug("Inhibitor %s (%s) pid=%lu uid=%lu mode=%s started.",
+                   strna(i->who), strna(i->why),
+-                  (unsigned long) i->pid, (unsigned long) i->uid);
++                  (unsigned long) i->pid, (unsigned long) i->uid,
++                  inhibit_mode_to_string(i->mode));
+ 
+         inhibitor_save(i);
+ 
+@@ -169,9 +172,10 @@ int inhibitor_stop(Inhibitor *i) {
+         assert(i);
+ 
+         if (i->started)
+-                log_debug("Inhibitor %s (%s) pid=%lu uid=%lu stopped.",
++                log_debug("Inhibitor %s (%s) pid=%lu uid=%lu mode=%s stopped.",
+                           strna(i->who), strna(i->why),
+-                          (unsigned long) i->pid, (unsigned long) i->uid);
++                          (unsigned long) i->pid, (unsigned long) i->uid,
++                          inhibit_mode_to_string(i->mode));
+ 
+         if (i->state_file)
+                 unlink(i->state_file);
+@@ -185,13 +189,15 @@ int inhibitor_stop(Inhibitor *i) {
+ 
+ int inhibitor_load(Inhibitor *i) {
+         InhibitWhat w;
++        InhibitMode mm;
+         int r;
+         char *cc,
+                 *what = NULL,
+                 *uid = NULL,
+                 *pid = NULL,
+                 *who = NULL,
+-                *why = NULL;
++                *why = NULL,
++                *mode = NULL;
+ 
+         r = parse_env_file(i->state_file, NEWLINE,
+                            "WHAT", &what,
+@@ -199,17 +205,25 @@ int inhibitor_load(Inhibitor *i) {
+                            "PID", &pid,
+                            "WHO", &who,
+                            "WHY", &why,
++                           "MODE", &mode,
+                            "FIFO", &i->fifo_path,
+                            NULL);
+         if (r < 0)
+                 goto finish;
+ 
+-        w = inhibit_what_from_string(what);
++        w = what ? inhibit_what_from_string(what) : 0;
+         if (w >= 0)
+                 i->what = w;
+ 
+-        parse_uid(uid, &i->uid);
+-        parse_pid(pid, &i->pid);
++        mm = mode ? inhibit_mode_from_string(mode) : INHIBIT_BLOCK;
++        if  (mm >= 0)
++                i->mode = mm;
++
++        if (uid)
++                parse_uid(uid, &i->uid);
++
++        if (pid)
++                parse_pid(pid, &i->pid);
+ 
+         if (who) {
+                 cc = cunescape(who);
+@@ -314,7 +328,7 @@ void inhibitor_remove_fifo(Inhibitor *i) {
+         }
+ }
+ 
+-InhibitWhat manager_inhibit_what(Manager *m) {
++InhibitWhat manager_inhibit_what(Manager *m, InhibitMode mm) {
+         Inhibitor *i;
+         Iterator j;
+         InhibitWhat what = 0;
+@@ -322,12 +336,13 @@ InhibitWhat manager_inhibit_what(Manager *m) {
+         assert(m);
+ 
+         HASHMAP_FOREACH(i, m->inhibitor_fds, j)
+-                what |= i->what;
++                if (i->mode == mm)
++                        what |= i->what;
+ 
+         return what;
+ }
+ 
+-bool manager_is_inhibited(Manager *m, InhibitWhat w, dual_timestamp *since) {
++bool manager_is_inhibited(Manager *m, InhibitWhat w, InhibitMode mm, dual_timestamp *since) {
+         Inhibitor *i;
+         Iterator j;
+         struct dual_timestamp ts = { 0, 0 };
+@@ -340,6 +355,9 @@ bool manager_is_inhibited(Manager *m, InhibitWhat w, dual_timestamp *since) {
+                 if (!(i->what & w))
+                         continue;
+ 
++                if (i->mode != mm)
++                        continue;
++
+                 if (!inhibited ||
+                     i->since.monotonic < ts.monotonic)
+                         ts = i->since;
+@@ -391,3 +409,10 @@ InhibitWhat inhibit_what_from_string(const char *s) {
+         return what;
+ 
+ }
++
++static const char* const inhibit_mode_table[_INHIBIT_MODE_MAX] = {
++        [INHIBIT_BLOCK] = "block",
++        [INHIBIT_DELAY] = "delay"
++};
++
++DEFINE_STRING_TABLE_LOOKUP(inhibit_mode, InhibitMode);
+diff --git a/src/login/logind-inhibit.h b/src/login/logind-inhibit.h
+index 1d47cfc..823af39 100644
+--- a/src/login/logind-inhibit.h
++++ b/src/login/logind-inhibit.h
+@@ -37,6 +37,13 @@ typedef enum InhibitWhat {
+         _INHIBIT_WHAT_INVALID = -1
+ } InhibitWhat;
+ 
++typedef enum InhibitMode {
++        INHIBIT_BLOCK,
++        INHIBIT_DELAY,
++        _INHIBIT_MODE_MAX,
++        _INHIBIT_MODE_INVALID = -1
++} InhibitMode;
++
+ struct Inhibitor {
+         Manager *manager;
+ 
+@@ -48,6 +55,7 @@ struct Inhibitor {
+         InhibitWhat what;
+         char *who;
+         char *why;
++        InhibitMode mode;
+ 
+         pid_t pid;
+         uid_t uid;
+@@ -70,10 +78,13 @@ int inhibitor_stop(Inhibitor *i);
+ int inhibitor_create_fifo(Inhibitor *i);
+ void inhibitor_remove_fifo(Inhibitor *i);
+ 
+-InhibitWhat manager_inhibit_what(Manager *m);
+-bool manager_is_inhibited(Manager *m, InhibitWhat w, dual_timestamp *since);
++InhibitWhat manager_inhibit_what(Manager *m, InhibitMode mm);
++bool manager_is_inhibited(Manager *m, InhibitWhat w, InhibitMode mm, dual_timestamp *since);
+ 
+ const char *inhibit_what_to_string(InhibitWhat k);
+ InhibitWhat inhibit_what_from_string(const char *s);
+ 
++const char *inhibit_mode_to_string(InhibitMode k);
++InhibitMode inhibit_mode_from_string(const char *s);
++
+ #endif
+diff --git a/src/login/logind.c b/src/login/logind.c
+index a299402..1002fae 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -50,6 +50,7 @@ Manager *manager_new(void) {
+         m->udev_vcsa_fd = -1;
+         m->epoll_fd = -1;
+         m->n_autovts = 6;
++        m->inhibit_delay_max = 5 * USEC_PER_SEC;
+ 
+         m->devices = hashmap_new(string_hash_func, string_compare_func);
+         m->seats = hashmap_new(string_hash_func, string_compare_func);
+@@ -1163,7 +1164,7 @@ int manager_get_idle_hint(Manager *m, dual_timestamp *t) {
+ 
+         assert(m);
+ 
+-        idle_hint = !manager_is_inhibited(m, INHIBIT_IDLE, t);
++        idle_hint = !manager_is_inhibited(m, INHIBIT_IDLE, INHIBIT_BLOCK, t);
+ 
+         HASHMAP_FOREACH(s, m->sessions, i) {
+                 dual_timestamp k;
+@@ -1264,15 +1265,28 @@ int manager_run(Manager *m) {
+         for (;;) {
+                 struct epoll_event event;
+                 int n;
++                int msec = -1;
+ 
+                 manager_gc(m, true);
+ 
++                if (manager_dispatch_delayed_shutdown(m) > 0)
++                        continue;
++
+                 if (dbus_connection_dispatch(m->bus) != DBUS_DISPATCH_COMPLETE)
+                         continue;
+ 
+                 manager_gc(m, true);
+ 
+-                n = epoll_wait(m->epoll_fd, &event, 1, -1);
++                if (m->delayed_shutdown) {
++                        usec_t x, y;
++
++                        x = now(CLOCK_MONOTONIC);
++                        y = m->delayed_shutdown_timestamp + m->inhibit_delay_max;
++
++                        msec = x >= y ? 0 : (int) ((y - x) / USEC_PER_MSEC);
++                }
++
++                n = epoll_wait(m->epoll_fd, &event, 1, msec);
+                 if (n < 0) {
+                         if (errno == EINTR || errno == EAGAIN)
+                                 continue;
+@@ -1281,6 +1295,9 @@ int manager_run(Manager *m) {
+                         return -errno;
+                 }
+ 
++                if (n == 0)
++                        continue;
++
+                 switch (event.data.u32) {
+ 
+                 case FD_SEAT_UDEV:
+diff --git a/src/login/logind.h b/src/login/logind.h
+index 65d396d..94808e6 100644
+--- a/src/login/logind.h
++++ b/src/login/logind.h
+@@ -81,6 +81,14 @@ struct Manager {
+         Hashmap *cgroups;
+         Hashmap *session_fds;
+         Hashmap *inhibitor_fds;
++
++        /* If a shutdown was delayed due to a inhibitor this contains
++           the unit name we are supposed to start after the delay is
++           over */
++        const char *delayed_shutdown;
++        usec_t delayed_shutdown_timestamp;
++
++        usec_t inhibit_delay_max;
+ };
+ 
+ enum {
+@@ -132,6 +140,8 @@ DBusHandlerResult bus_message_filter(DBusConnection *c, DBusMessage *message, vo
+ 
+ int manager_send_changed(Manager *manager, const char *properties);
+ 
++int manager_dispatch_delayed_shutdown(Manager *manager);
++
+ /* gperf lookup function */
+ const struct ConfigPerfItem* logind_gperf_lookup(const char *key, unsigned length);
+ 
+diff --git a/src/login/org.freedesktop.login1.policy.in b/src/login/org.freedesktop.login1.policy.in
+index 0b4dd51..901f295 100644
+--- a/src/login/org.freedesktop.login1.policy.in
++++ b/src/login/org.freedesktop.login1.policy.in
+@@ -16,9 +16,9 @@
+         <vendor>The systemd Project</vendor>
+         <vendor_url>http://www.freedesktop.org/wiki/Software/systemd</vendor_url>
+ 
+-        <action id="org.freedesktop.login1.inhibit">
++        <action id="org.freedesktop.login1.inhibit-block">
+                 <_description>Allow applications to inhibit system shutdown and suspend</_description>
+-                <_message>Authentication is required to allow an application to inhibit system shutdown or suspend</_message>
++                <_message>Authentication is required to allow an application to inhibit system shutdown or suspend.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>yes</allow_inactive>
+@@ -26,9 +26,19 @@
+                 </defaults>
+         </action>
+ 
++        <action id="org.freedesktop.login1.inhibit-delay">
++                <_description>Allow applications to delay system shutdown and suspend</_description>
++                <_message>Authentication is required to allow an application to delay system shutdown or suspend.</_message>
++                <defaults>
++                        <allow_any>yes</allow_any>
++                        <allow_inactive>yes</allow_inactive>
++                        <allow_active>yes</allow_active>
++                </defaults>
++        </action>
++
+         <action id="org.freedesktop.login1.set-user-linger">
+                 <_description>Allow non-logged-in users to run programs</_description>
+-                <_message>Authentication is required to allow a non-logged-in user to run programs</_message>
++                <_message>Authentication is required to allow a non-logged-in user to run programs.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -38,7 +48,7 @@
+ 
+         <action id="org.freedesktop.login1.attach-device">
+                 <_description>Allow attaching devices to seats</_description>
+-                <_message>Authentication is required to allow attaching a device to a seat</_message>
++                <_message>Authentication is required to allow attaching a device to a seat.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -48,7 +58,7 @@
+ 
+         <action id="org.freedesktop.login1.flush-devices">
+                 <_description>Flush device to seat attachments</_description>
+-                <_message>Authentication is required to allow resetting how devices are attached to seats</_message>
++                <_message>Authentication is required to allow resetting how devices are attached to seats.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -58,7 +68,7 @@
+ 
+         <action id="org.freedesktop.login1.power-off">
+                 <_description>Power off the system</_description>
+-                <_message>Authentication is required to allow powering off the system</_message>
++                <_message>Authentication is required to allow powering off the system.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -68,7 +78,7 @@
+ 
+         <action id="org.freedesktop.login1.power-off-multiple-sessions">
+                 <_description>Power off the system when other users are logged in</_description>
+-                <_message>Authentication is required to allow powering off the system while other users are logged in</_message>
++                <_message>Authentication is required to allow powering off the system while other users are logged in.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -78,7 +88,7 @@
+ 
+         <action id="org.freedesktop.login1.power-off-ignore-inhibit">
+                 <_description>Power off the system when an application asked to inhibit it</_description>
+-                <_message>Authentication is required to allow powering off the system while an application asked to inhibit it</_message>
++                <_message>Authentication is required to allow powering off the system while an application asked to inhibit it.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -88,7 +98,7 @@
+ 
+         <action id="org.freedesktop.login1.reboot">
+                 <_description>Reboot the system</_description>
+-                <_message>Authentication is required to allow rebooting the system</_message>
++                <_message>Authentication is required to allow rebooting the system.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -98,7 +108,7 @@
+ 
+         <action id="org.freedesktop.login1.reboot-multiple-sessions">
+                 <_description>Reboot the system when other users are logged in</_description>
+-                <_message>Authentication is required to allow rebooting the system while other users are logged in</_message>
++                <_message>Authentication is required to allow rebooting the system while other users are logged in.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+@@ -108,7 +118,7 @@
+ 
+         <action id="org.freedesktop.login1.reboot-ignore-inhibit">
+                 <_description>Reboot the system when an application asked to inhibit it</_description>
+-                <_message>Authentication is required to allow rebooting the system while an application asked to inhibit it</_message>
++                <_message>Authentication is required to allow rebooting the system while an application asked to inhibit it.</_message>
+                 <defaults>
+                         <allow_any>auth_admin_keep</allow_any>
+                         <allow_inactive>auth_admin_keep</allow_inactive>
+diff --git a/src/login/systemd-logind.conf b/src/login/systemd-logind.conf
+index a8d9833..287246e 100644
+--- a/src/login/systemd-logind.conf
++++ b/src/login/systemd-logind.conf
+@@ -14,3 +14,4 @@
+ #KillExcludeUsers=root
+ #Controllers=
+ #ResetControllers=cpu
++#InhibitDelayMaxSec=5
+diff --git a/src/shared/dbus-common.c b/src/shared/dbus-common.c
+index 6f68287..0020ce7 100644
+--- a/src/shared/dbus-common.c
++++ b/src/shared/dbus-common.c
+@@ -245,7 +245,8 @@ int bus_connect_system_polkit(DBusConnection **_bus, DBusError *error) {
+ }
+ 
+ const char *bus_error_message(const DBusError *error) {
+-        assert(error);
++        if (!error)
++                return NULL;
+ 
+         /* Sometimes the D-Bus server is a little bit too verbose with
+          * its error messages, so let's override them here */
+@@ -255,6 +256,14 @@ const char *bus_error_message(const DBusError *error) {
+         return error->message;
+ }
+ 
++const char *bus_error_message_or_strerror(const DBusError *error, int err) {
++
++        if (error && dbus_error_is_set(error))
++                return bus_error_message(error);
++
++        return strerror(err);
++}
++
+ DBusHandlerResult bus_default_message_handler(
+                 DBusConnection *c,
+                 DBusMessage *message,
+diff --git a/src/shared/dbus-common.h b/src/shared/dbus-common.h
+index ceb571f..dd07919 100644
+--- a/src/shared/dbus-common.h
++++ b/src/shared/dbus-common.h
+@@ -91,6 +91,7 @@ int bus_connect_system_ssh(const char *user, const char *host, DBusConnection **
+ int bus_connect_system_polkit(DBusConnection **_bus, DBusError *error);
+ 
+ const char *bus_error_message(const DBusError *error);
++const char *bus_error_message_or_strerror(const DBusError *error, int err);
+ 
+ typedef int (*BusPropertyCallback)(DBusMessageIter *iter, const char *property, void *data);
+ typedef int (*BusPropertySetCallback)(DBusMessageIter *iter, const char *property, void *data);

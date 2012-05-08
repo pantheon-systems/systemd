@@ -1,0 +1,508 @@
+From 7ddd9f646c750eb872a871e6d0e4a82aefb86b7d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 2 Apr 2012 19:24:30 +0200
+Subject: [PATCH] journal: implicitly add code location to all messages logged
+ with the native interface
+
+This logic can be turned off by defining SD_JOURNAL_SUPPRESS_LOCATION
+before including sd-journal.h.
+
+This also saves/restores errno in all logging functions, in order to be
+useful as logging calls without side-effects.
+
+This also adds a couple of __unlikely__ around the early checks in the
+logging calls, in order to minimize the runtime impact.
+(cherry picked from commit b070e7f3c9ed680c821bd89d42506695f2438506)
+
+Conflicts:
+
+	TODO
+---
+ Makefile.am                        |   10 +-
+ src/journal/journal-send.c         |  238 +++++++++++++++++++++++++++++++-----
+ src/journal/libsystemd-journal.sym |    8 ++
+ src/journal/test-journal-send.c    |   32 +++++
+ src/log.h                          |    2 +-
+ src/systemd/sd-journal.h           |   22 +++-
+ 6 files changed, 280 insertions(+), 32 deletions(-)
+ create mode 100644 src/journal/test-journal-send.c
+
+diff --git a/Makefile.am b/Makefile.am
+index 7805476..73c3556 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1306,6 +1306,13 @@ test_journal_LDADD += \
+ 	$(XZ_LIBS)
+ endif
+ 
++test_journal_send_SOURCES = \
++	src/journal/test-journal-send.c
++
++test_journal_send_LDADD = \
++	libsystemd-basic.la \
++	libsystemd-journal.la
++
+ libsystemd_journal_la_SOURCES = \
+ 	src/journal/sd-journal.c \
+ 	src/journal/journal-file.c \
+@@ -1356,7 +1363,8 @@ UNINSTALL_EXEC_HOOKS += \
+ 	libsystemd-journal-uninstall-hook
+ 
+ noinst_PROGRAMS += \
+-	test-journal
++	test-journal \
++        test-journal-send
+ 
+ pkginclude_HEADERS += \
+ 	src/systemd/sd-journal.h \
+diff --git a/src/journal/journal-send.c b/src/journal/journal-send.c
+index b5b4fbf..32e94af 100644
+--- a/src/journal/journal-send.c
++++ b/src/journal/journal-send.c
+@@ -26,6 +26,8 @@
+ #include <unistd.h>
+ #include <fcntl.h>
+ 
++#define SD_JOURNAL_SUPPRESS_LOCATION
++
+ #include "sd-journal.h"
+ #include "util.h"
+ #include "socket-util.h"
+@@ -94,12 +96,26 @@ _public_ int sd_journal_printv(int priority, const char *format, va_list ap) {
+         return sd_journal_sendv(iov, 2);
+ }
+ 
+-_public_ int sd_journal_send(const char *format, ...) {
+-        int r, n = 0, i = 0, j;
+-        va_list ap;
++static int fill_iovec_sprintf(const char *format, va_list ap, int extra, struct iovec **_iov) {
++        int r, n = 0, i, j;
+         struct iovec *iov = NULL;
++        int saved_errno;
++
++        assert(_iov);
++        saved_errno = errno;
++
++        if (extra > 0) {
++                n = MAX(extra * 2, extra + 4);
++                iov = malloc0(n * sizeof(struct iovec));
++                if (!iov) {
++                        r = -ENOMEM;
++                        goto fail;
++                }
++
++                i = extra;
++        } else
++                i = 0;
+ 
+-        va_start(ap, format);
+         while (format) {
+                 struct iovec *c;
+                 char *buffer;
+@@ -124,11 +140,39 @@ _public_ int sd_journal_send(const char *format, ...) {
+ 
+                 format = va_arg(ap, char *);
+         }
++
++        *_iov = iov;
++
++        errno = saved_errno;
++        return i;
++
++fail:
++        for (j = 0; j < i; j++)
++                free(iov[j].iov_base);
++
++        free(iov);
++
++        errno = saved_errno;
++        return r;
++}
++
++_public_ int sd_journal_send(const char *format, ...) {
++        int r, i, j;
++        va_list ap;
++        struct iovec *iov = NULL;
++
++        va_start(ap, format);
++        i = fill_iovec_sprintf(format, ap, 0, &iov);
+         va_end(ap);
+ 
++        if (_unlikely_(i < 0)) {
++                r = i;
++                goto finish;
++        }
++
+         r = sd_journal_sendv(iov, i);
+ 
+-fail:
++finish:
+         for (j = 0; j < i; j++)
+                 free(iov[j].iov_base);
+ 
+@@ -141,10 +185,11 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+         int fd, buffer_fd;
+         struct iovec *w;
+         uint64_t *l;
+-        int i, j = 0;
++        int r, i, j = 0;
+         struct msghdr mh;
+         struct sockaddr_un sa;
+         ssize_t k;
++        int saved_errno;
+         union {
+                 struct cmsghdr cmsghdr;
+                 uint8_t buf[CMSG_SPACE(sizeof(int))];
+@@ -155,27 +200,37 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+          * and where unprivileged users can create files. */
+         char path[] = "/dev/shm/journal.XXXXXX";
+ 
+-        if (!iov || n <= 0)
++        if (_unlikely_(!iov))
++                return -EINVAL;
++
++        if (_unlikely_(n <= 0))
+                 return -EINVAL;
+ 
++        saved_errno = errno;
++
+         w = alloca(sizeof(struct iovec) * n * 5);
+         l = alloca(sizeof(uint64_t) * n);
+ 
+         for (i = 0; i < n; i++) {
+                 char *c, *nl;
+ 
+-                if (!iov[i].iov_base ||
+-                    iov[i].iov_len <= 1)
+-                        return -EINVAL;
++                if (_unlikely_(!iov[i].iov_base || iov[i].iov_len <= 1)) {
++                        r = -EINVAL;
++                        goto finish;
++                }
+ 
+                 c = memchr(iov[i].iov_base, '=', iov[i].iov_len);
+-                if (!c || c == iov[i].iov_base)
+-                        return -EINVAL;
++                if (_unlikely_(!c || c == iov[i].iov_base)) {
++                        r = -EINVAL;
++                        goto finish;
++                }
+ 
+                 nl = memchr(iov[i].iov_base, '\n', iov[i].iov_len);
+                 if (nl) {
+-                        if (nl < c)
+-                                return -EINVAL;
++                        if (_unlikely_(nl < c)) {
++                                r = -EINVAL;
++                                goto finish;
++                        }
+ 
+                         /* Already includes a newline? Bummer, then
+                          * let's write the variable name, then a
+@@ -206,8 +261,10 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+         }
+ 
+         fd = journal_fd();
+-        if (fd < 0)
+-                return fd;
++        if (_unlikely_(fd < 0)) {
++                r = fd;
++                goto finish;
++        }
+ 
+         zero(sa);
+         sa.sun_family = AF_UNIX;
+@@ -220,29 +277,37 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+         mh.msg_iovlen = j;
+ 
+         k = sendmsg(fd, &mh, MSG_NOSIGNAL);
+-        if (k >= 0)
+-                return 0;
++        if (k >= 0) {
++                r = 0;
++                goto finish;
++        }
+ 
+-        if (errno != EMSGSIZE && errno != ENOBUFS)
+-                return -errno;
++        if (errno != EMSGSIZE && errno != ENOBUFS) {
++                r = -errno;
++                goto finish;
++        }
+ 
+         /* Message doesn't fit... Let's dump the data in a temporary
+          * file and just pass a file descriptor of it to the other
+          * side */
+ 
+         buffer_fd = mkostemp(path, O_CLOEXEC|O_RDWR);
+-        if (buffer_fd < 0)
+-                return -errno;
++        if (buffer_fd < 0) {
++                r = -errno;
++                goto finish;
++        }
+ 
+         if (unlink(path) < 0) {
+                 close_nointr_nofail(buffer_fd);
+-                return -errno;
++                r = -errno;
++                goto finish;
+         }
+ 
+         n = writev(buffer_fd, w, j);
+-        if (n < 0)  {
++        if (n < 0) {
+                 close_nointr_nofail(buffer_fd);
+-                return -errno;
++                r = -errno;
++                goto finish;
+         }
+ 
+         mh.msg_iov = NULL;
+@@ -263,10 +328,17 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+         k = sendmsg(fd, &mh, MSG_NOSIGNAL);
+         close_nointr_nofail(buffer_fd);
+ 
+-        if (k < 0)
+-                return -errno;
++        if (k < 0) {
++                r = -errno;
++                goto finish;
++        }
++
++        r = 0;
++
++finish:
++        errno = saved_errno;
+ 
+-        return 0;
++        return r;
+ }
+ 
+ _public_ int sd_journal_stream_fd(const char *identifier, int priority, int level_prefix) {
+@@ -332,3 +404,113 @@ _public_ int sd_journal_stream_fd(const char *identifier, int priority, int leve
+ 
+         return fd;
+ }
++
++_public_ int sd_journal_print_with_location(int priority, const char *file, const char *line, const char *func, const char *format, ...) {
++        int r;
++        va_list ap;
++
++        va_start(ap, format);
++        r = sd_journal_printv_with_location(priority, file, line, func, format, ap);
++        va_end(ap);
++
++        return r;
++}
++
++_public_ int sd_journal_printv_with_location(int priority, const char *file, const char *line, const char *func, const char *format, va_list ap) {
++        char buffer[8 + LINE_MAX], p[11];
++        struct iovec iov[5];
++        char *f;
++        size_t fl;
++
++        if (priority < 0 || priority > 7)
++                return -EINVAL;
++
++        if (_unlikely_(!format))
++                return -EINVAL;
++
++        snprintf(p, sizeof(p), "PRIORITY=%i", priority & LOG_PRIMASK);
++        char_array_0(p);
++
++        memcpy(buffer, "MESSAGE=", 8);
++        vsnprintf(buffer+8, sizeof(buffer) - 8, format, ap);
++        char_array_0(buffer);
++
++        /* func is initialized from __func__ which is not a macro, but
++         * a static const char[], hence cannot easily be prefixed with
++         * CODE_FUNC=, hence let's do it manually here. */
++        fl = strlen(func);
++        f = alloca(fl + 10);
++        memcpy(f, "CODE_FUNC=", 10);
++        memcpy(f + 10, func, fl + 1);
++
++        zero(iov);
++        IOVEC_SET_STRING(iov[0], buffer);
++        IOVEC_SET_STRING(iov[1], p);
++        IOVEC_SET_STRING(iov[2], file);
++        IOVEC_SET_STRING(iov[3], line);
++        IOVEC_SET_STRING(iov[4], f);
++
++        return sd_journal_sendv(iov, ELEMENTSOF(iov));
++}
++
++_public_ int sd_journal_send_with_location(const char *file, const char *line, const char *func, const char *format, ...) {
++        int r, i, j;
++        va_list ap;
++        struct iovec *iov = NULL;
++        char *f;
++        size_t fl;
++
++        va_start(ap, format);
++        i = fill_iovec_sprintf(format, ap, 3, &iov);
++        va_end(ap);
++
++        if (_unlikely_(i < 0)) {
++                r = i;
++                goto finish;
++        }
++
++        fl = strlen(func);
++        f = alloca(fl + 10);
++        memcpy(f, "CODE_FUNC=", 10);
++        memcpy(f + 10, func, fl + 1);
++
++        IOVEC_SET_STRING(iov[0], file);
++        IOVEC_SET_STRING(iov[1], line);
++        IOVEC_SET_STRING(iov[2], f);
++
++        r = sd_journal_sendv(iov, i);
++
++finish:
++        for (j = 3; j < i; j++)
++                free(iov[j].iov_base);
++
++        free(iov);
++
++        return r;
++}
++
++_public_ int sd_journal_sendv_with_location(const char *file, const char *line, const char *func, const struct iovec *iov, int n) {
++        struct iovec *niov;
++        char *f;
++        size_t fl;
++
++        if (_unlikely_(!iov))
++                return -EINVAL;
++
++        if (_unlikely_(n <= 0))
++                return -EINVAL;
++
++        niov = alloca(sizeof(struct iovec) * (n + 3));
++        memcpy(niov, iov, sizeof(struct iovec) * n);
++
++        fl = strlen(func);
++        f = alloca(fl + 10);
++        memcpy(f, "CODE_FUNC=", 10);
++        memcpy(f + 10, func, fl + 1);
++
++        IOVEC_SET_STRING(niov[n++], file);
++        IOVEC_SET_STRING(niov[n++], line);
++        IOVEC_SET_STRING(niov[n++], f);
++
++        return sd_journal_sendv(niov, n);
++}
+diff --git a/src/journal/libsystemd-journal.sym b/src/journal/libsystemd-journal.sym
+index 7653880..cd434ae 100644
+--- a/src/journal/libsystemd-journal.sym
++++ b/src/journal/libsystemd-journal.sym
+@@ -43,3 +43,11 @@ global:
+ local:
+         *;
+ };
++
++LIBSYSTEMD_JOURNAL_45 {
++global:
++        sd_journal_print_with_location;
++        sd_journal_printv_with_location;
++        sd_journal_send_with_location;
++        sd_journal_sendv_with_location;
++} LIBSYSTEMD_JOURNAL_38;
+diff --git a/src/journal/test-journal-send.c b/src/journal/test-journal-send.c
+new file mode 100644
+index 0000000..2f9987d
+--- /dev/null
++++ b/src/journal/test-journal-send.c
+@@ -0,0 +1,32 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2011 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <systemd/sd-journal.h>
++
++int main(int argc, char *argv[]) {
++        sd_journal_print(LOG_INFO, "piepapo");
++
++        sd_journal_send("MESSAGE=foobar",
++                        "VALUE=%i", 7,
++                        NULL);
++
++        return 0;
++}
+diff --git a/src/log.h b/src/log.h
+index cf9f7fa..5c6310e 100644
+--- a/src/log.h
++++ b/src/log.h
+@@ -93,7 +93,7 @@ int log_dump_internal(
+         const char *func,
+         char *buffer);
+ 
+-#define log_full(level, ...) log_meta(level, __FILE__, __LINE__, __func__, __VA_ARGS__)
++#define log_full(level, ...) log_meta(level,   __FILE__, __LINE__, __func__, __VA_ARGS__)
+ 
+ #define log_debug(...)   log_meta(LOG_DEBUG,   __FILE__, __LINE__, __func__, __VA_ARGS__)
+ #define log_info(...)    log_meta(LOG_INFO,    __FILE__, __LINE__, __func__, __VA_ARGS__)
+diff --git a/src/systemd/sd-journal.h b/src/systemd/sd-journal.h
+index 5a2dab1..f27e461 100644
+--- a/src/systemd/sd-journal.h
++++ b/src/systemd/sd-journal.h
+@@ -26,6 +26,7 @@
+ #include <sys/types.h>
+ #include <stdarg.h>
+ #include <sys/uio.h>
++#include <syslog.h>
+ 
+ #include <systemd/sd-id128.h>
+ 
+@@ -34,13 +35,30 @@ extern "C" {
+ #endif
+ 
+ /* Write to daemon */
+-
+ int sd_journal_print(int piority, const char *format, ...) __attribute__ ((format (printf, 2, 3)));
+ int sd_journal_printv(int priority, const char *format, va_list ap);
+-
+ int sd_journal_send(const char *format, ...) __attribute__((sentinel));
+ int sd_journal_sendv(const struct iovec *iov, int n);
+ 
++/* Used by the macros below */
++int sd_journal_print_with_location(int priority, const char *file, const char *line, const char *func, const char *format, ...) __attribute__ ((format (printf, 5, 6)));
++int sd_journal_printv_with_location(int priority, const char *file, const char *line, const char *func, const char *format, va_list ap);
++int sd_journal_send_with_location(const char *file, const char *line, const char *func, const char *format, ...) __attribute__((sentinel));
++int sd_journal_sendv_with_location(const char *file, const char *line, const char *func, const struct iovec *iov, int n);
++
++/* implicitly add code location to messages sent, if this is enabled */
++#ifndef SD_JOURNAL_SUPPRESS_LOCATION
++
++#define _sd_XSTRINGIFY(x) #x
++#define _sd_STRINGIFY(x) _sd_XSTRINGIFY(x)
++
++#define sd_journal_print(priority, ...) sd_journal_print_with_location(priority, "CODE_FILE=" __FILE__, "CODE_LINE=" _sd_STRINGIFY(__LINE__), __func__, __VA_ARGS__)
++#define sd_journal_printv(priority, format, ap) sd_journal_printv_with_location(priority, "CODE_FILE=" __FILE__, "CODE_LINE=" _sd_STRINGIFY(__LINE__), __func__, format, ap)
++#define sd_journal_send(...) sd_journal_send_with_location("CODE_FILE=" __FILE__, "CODE_LINE=" _sd_STRINGIFY(__LINE__), __func__, __VA_ARGS__)
++#define sd_journal_sendv(iovec, n) sd_journal_sendv_with_location("CODE_FILE=" __FILE__, "CODE_LINE=" _sd_STRINGIFY(__LINE__), __func__, iovec, n)
++
++#endif
++
+ int sd_journal_stream_fd(const char *identifier, int priority, int level_prefix);
+ 
+ /* Browse journal stream */

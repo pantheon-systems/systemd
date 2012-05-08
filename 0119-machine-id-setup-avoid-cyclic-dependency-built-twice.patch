@@ -1,0 +1,44 @@
+From 58c67049b711d4ebec2c426fc89c07a4ca53f948 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 17:53:19 +0200
+Subject: [PATCH] machine-id-setup: avoid cyclic dependency, built twice
+ instead (cherry picked from commit
+ 4fc5568804ef50d9cc857eee86012d388620edd3)
+
+---
+ Makefile.am |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 17069d2..60aad55 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -553,8 +553,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/spawn-ask-password-agent.h \
+ 	src/shared/mount-setup.c \
+ 	src/shared/mount-setup.h \
+-	src/shared/machine-id-setup.c \
+-	src/shared/machine-id-setup.h \
+ 	src/shared/loopback-setup.h \
+ 	src/shared/loopback-setup.c \
+ 	src/shared/specifier.c \
+@@ -748,6 +746,8 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/locale-setup.c \
+ 	src/core/hostname-setup.c \
+ 	src/core/hostname-setup.h \
++	src/shared/machine-id-setup.c \
++	src/shared/machine-id-setup.h \
+ 	src/core/fdset.c \
+ 	src/core/fdset.h \
+ 	src/core/condition.c \
+@@ -1019,7 +1019,9 @@ systemd_tmpfiles_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+-	src/machine-id-setup/machine-id-setup-main.c
++	src/machine-id-setup/machine-id-setup-main.c \
++	src/shared/machine-id-setup.c \
++	src/shared/machine-id-setup.h
+ 
+ systemd_machine_id_setup_LDADD = \
+ 	libsystemd-label.la \

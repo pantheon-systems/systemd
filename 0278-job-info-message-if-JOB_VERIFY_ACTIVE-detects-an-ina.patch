@@ -1,0 +1,30 @@
+From 752abe1e4046dc68ef7bae6b54ad876ee8f83ed1 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 13 May 2012 23:29:19 +0200
+Subject: [PATCH] job: info message if JOB_VERIFY_ACTIVE detects an inactive
+ unit (cherry picked from commit
+ 7cf82e0bb1ebafd054824d6fc7121050397824e9)
+
+---
+ src/core/job.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index ebebfc2..020fe4d 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -607,6 +607,14 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                 default:
+                         ;
+                 }
++
++        } else if (t == JOB_VERIFY_ACTIVE) {
++
++                /* When verify-active detects the unit is inactive, report it.
++                 * Most likely a DEPEND warning from a requisiting unit will
++                 * occur next and it's nice to see what was requisited. */
++                if (result == JOB_SKIPPED)
++                        unit_status_printf(u, ANSI_HIGHLIGHT_ON " INFO " ANSI_HIGHLIGHT_OFF, "%s is not active.", unit_description(u));
+         }
+ }
+ 

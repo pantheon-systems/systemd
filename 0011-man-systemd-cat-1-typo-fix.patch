@@ -1,0 +1,24 @@
+From d9e0101e7168205d7c89d3167768714d24e755be Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 22 Mar 2012 00:35:19 +0100
+Subject: [PATCH] man: systemd-cat(1) typo fix
+
+Noticed by Sergey Ptashnick
+(cherry picked from commit 9adf646d0ae85192027319e2f47f2d092a298d99)
+---
+ man/systemd-cat.xml |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/systemd-cat.xml b/man/systemd-cat.xml
+index 5e5431f..350a345 100644
+--- a/man/systemd-cat.xml
++++ b/man/systemd-cat.xml
+@@ -66,7 +66,7 @@
+                 generates to the journal.</para>
+ 
+                 <para>If no parameter is passed
+-                <command>systemd-command</command> will write
++                <command>systemd-cat</command> will write
+                 everything it reads from standard input (STDIN) to the journal.</para>
+ 
+                 <para>If parameters are passed they are executed as

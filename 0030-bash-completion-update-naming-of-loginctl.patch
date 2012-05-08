@@ -1,0 +1,31 @@
+From 4da0c44e60776ab8c1fa8695694ad49a6b0d83e3 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sun, 1 Apr 2012 19:04:23 -0400
+Subject: [PATCH] bash-completion: update naming of loginctl
+
+18b754d3 changed the name of systemd-loginctl to loginctl, but didn't
+update the bash-completion to match.
+(cherry picked from commit dcc219a2734a3ef7f203fb8e94014bcbc2e017aa)
+---
+ src/systemd-bash-completion.sh |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/systemd-bash-completion.sh b/src/systemd-bash-completion.sh
+index eab290e..62601de 100644
+--- a/src/systemd-bash-completion.sh
++++ b/src/systemd-bash-completion.sh
+@@ -201,7 +201,7 @@ __get_all_sessions () { systemd-loginctl list-sessions | { while read a b; do ec
+ __get_all_users    () { systemd-loginctl list-users    | { while read a b; do echo "$b"; done; } ; }
+ __get_all_seats    () { systemd-loginctl list-seats    | { while read a b; do echo "$a"; done; } ; }
+ 
+-_systemd_loginctl () {
++_loginctl () {
+         local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+         local verb comps
+ 
+@@ -278,4 +278,4 @@ _systemd_loginctl () {
+         COMPREPLY=( $(compgen -W "$comps" -- "$cur") )
+         return 0
+ }
+-complete -F _systemd_loginctl systemd-loginctl
++complete -F _loginctl loginctl

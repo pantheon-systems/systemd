@@ -1,0 +1,24 @@
+From 69139fefcdfe6ccc03b993344f3e27194589ec81 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 15 May 2012 08:12:49 +0200
+Subject: [PATCH] install: fix inverted meaning of '--force' in systemctl
+ enable (cherry picked from commit
+ ba49b4a1a2497b9d3372d45ee1e43aec0c0d66f1)
+
+---
+ src/shared/install.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 669abc0..0f30303 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -1162,7 +1162,7 @@ static int create_symlink(
+ 
+         free(dest);
+ 
+-        if (force)
++        if (!force)
+                 return -EEXIST;
+ 
+         unlink(new_path);

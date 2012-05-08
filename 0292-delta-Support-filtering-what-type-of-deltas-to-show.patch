@@ -1,0 +1,358 @@
+From 3e37501e12297f2ddd02d5cabb056166470c783a Mon Sep 17 00:00:00 2001
+From: Gergely Nagy <algernon@balabit.hu>
+Date: Wed, 16 May 2012 18:11:27 +0200
+Subject: [PATCH] delta: Support filtering what type of deltas to show
+
+Not everyone is interested in every kind of deltas (and some might
+even be interested knowing which files do not have overrides), so this
+here is an implementation of a --type=LIST... option for
+systemd-delta, that makes it possible to filter what subset of deltas
+we want.
+
+The available modifiers are masked, equivalent, redirected, overriden,
+and unchanged - they should be self explanatory, and the man page
+explains them in a little more detail anyway.
+
+As a side effect, in case of overriden files, the diff output was made
+optional.
+
+By default, everything is shown (with a diff, if appropriate) except
+for completely unchanged files.
+
+Signed-off-by: Gergely Nagy <algernon@balabit.hu>
+(cherry picked from commit 807f46452202891731b2317ef9bc9a6bc7115f23)
+---
+ man/systemd-delta.xml |   60 +++++++++++++++++++++
+ src/delta/delta.c     |  139 +++++++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 183 insertions(+), 16 deletions(-)
+
+diff --git a/man/systemd-delta.xml b/man/systemd-delta.xml
+index 0e06b48..03c7178 100644
+--- a/man/systemd-delta.xml
++++ b/man/systemd-delta.xml
+@@ -99,6 +99,66 @@
+ 				pager.</para></listitem>
+ 			</varlistentry>
+ 
++                        <varlistentry>
++                                <term><option>--type=</option></term>
++                                <term><option>-t</option></term>
++
++                                <listitem><para>When listing the
++                                differences, only list those that are
++                                asked for. The list itself is a
++                                comma-separated list of desired
++                                difference types.</para>
++
++                                <para>Recognised types are:
++
++                                        <variablelist>
++                                                <varlistentry>
++                                                        <term><varname>masked</varname></term>
++
++                                                        <listitem><para>Show masked files</para></listitem>
++                                                </varlistentry>
++
++                                                <varlistentry>
++                                                        <term><varname>equivalent</varname></term>
++
++                                                        <listitem><para>Show overriden
++                                                        files that while overriden, do
++                                                        not differ in content.</para></listitem>
++                                                </varlistentry>
++
++                                                <varlistentry>
++                                                        <term><varname>redirected</varname></term>
++
++                                                        <listitem><para>Show files that
++                                                        are redirected to another.</para></listitem>
++                                                </varlistentry>
++
++                                                <varlistentry>
++                                                        <term><varname>overriden</varname></term>
++
++                                                        <listitem><para>Show overriden,
++                                                        and changed files.</para></listitem>
++                                                </varlistentry>
++
++                                                <varlistentry>
++                                                        <term><varname>unchanged</varname></term>
++
++                                                        <listitem><para>Show unmodified
++                                                        files too.</para></listitem>
++                                                </varlistentry>
++                                        </variablelist>
++                                </para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><option>--diff=</option></term>
++
++                                <listitem><para>When showing modified
++                                files, when a file is overriden show a
++                                diff aswell. This option takes a
++                                boolean argument.</para></listitem>
++                        </varlistentry>
++
+                 </variablelist>
+ 
+         </refsect1>
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 2e33759..585bb0c 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -55,7 +55,57 @@ static int equivalent(const char *a, const char *b) {
+         return r;
+ }
+ 
+-static int found_override(const char *top, const char *bottom) {
++#define SHOW_MASKED		1 << 0
++#define SHOW_EQUIV		1 << 1
++#define SHOW_REDIR		1 << 2
++#define SHOW_OVERRIDEN		1 << 3
++#define SHOW_UNCHANGED		1 << 4
++#define SHOW_DIFF		1 << 5
++
++#define SHOW_DEFAULTS \
++        (SHOW_MASKED | SHOW_EQUIV | SHOW_REDIR | SHOW_OVERRIDEN | SHOW_DIFF)
++
++static int notify_override_masked(int flags, const char *top, const char *bottom) {
++        if (!(flags & SHOW_MASKED))
++                return 0;
++
++        printf(ANSI_HIGHLIGHT_RED_ON "[MASK]" ANSI_HIGHLIGHT_OFF "       %s → %s\n", top, bottom);
++        return 1;
++}
++
++static int notify_override_equiv(int flags, const char *top, const char *bottom) {
++        if (!(flags & SHOW_EQUIV))
++                return 0;
++
++        printf(ANSI_HIGHLIGHT_GREEN_ON "[EQUIVALENT]" ANSI_HIGHLIGHT_OFF " %s → %s\n", top, bottom);
++        return 1;
++}
++
++static int notify_override_redir(int flags, const char *top, const char *bottom) {
++        if (!(flags & SHOW_REDIR))
++                return 0;
++
++        printf(ANSI_HIGHLIGHT_ON "[REDIRECT]" ANSI_HIGHLIGHT_OFF "   %s → %s\n", top, bottom);
++        return 1;
++}
++
++static int notify_override_overriden(int flags, const char *top, const char *bottom) {
++        if (!(flags & SHOW_OVERRIDEN))
++                return 0;
++
++        printf(ANSI_HIGHLIGHT_ON "[OVERRIDE]" ANSI_HIGHLIGHT_OFF "   %s → %s\n", top, bottom);
++        return 1;
++}
++
++static int notify_override_unchanged(int flags, const char *top, const char *bottom) {
++        if (!(flags & SHOW_UNCHANGED))
++                return 0;
++
++        printf(ANSI_HIGHLIGHT_ON "[UNCHANGED]" ANSI_HIGHLIGHT_OFF "   %s → %s\n", top, bottom);
++        return 1;
++}
++
++static int found_override(int flags, const char *top, const char *bottom) {
+         char *dest;
+         int k;
+         pid_t pid;
+@@ -64,22 +114,24 @@ static int found_override(const char *top, const char *bottom) {
+         assert(bottom);
+ 
+         if (null_or_empty_path(top) > 0) {
+-                printf(ANSI_HIGHLIGHT_RED_ON "[MASK]" ANSI_HIGHLIGHT_OFF "       %s → %s\n", top, bottom);
++                notify_override_masked(flags, top, bottom);
+                 goto finish;
+         }
+ 
+         k = readlink_malloc(top, &dest);
+         if (k >= 0) {
+                 if (equivalent(dest, bottom) > 0)
+-                        printf(ANSI_HIGHLIGHT_GREEN_ON "[EQUIVALENT]" ANSI_HIGHLIGHT_OFF " %s → %s\n", top, bottom);
++                        notify_override_equiv(flags, top, bottom);
+                 else
+-                        printf(ANSI_HIGHLIGHT_ON "[REDIRECT]" ANSI_HIGHLIGHT_OFF "   %s → %s\n", top, bottom);
++                        notify_override_redir(flags, top, bottom);
+ 
+                 free(dest);
+                 goto finish;
+         }
+ 
+-        printf(ANSI_HIGHLIGHT_ON "[OVERRIDE]" ANSI_HIGHLIGHT_OFF "   %s → %s\n", top, bottom);
++        notify_override_overriden(flags, top, bottom);
++        if (!(flags & SHOW_DIFF))
++                goto finish;
+ 
+         putchar('\n');
+ 
+@@ -174,7 +226,7 @@ finish:
+         return r;
+ }
+ 
+-static int process_suffix(const char *prefixes, const char *suffix) {
++static int process_suffix(int flags, const char *prefixes, const char *suffix) {
+         const char *p;
+         char *f;
+         Hashmap *top, *bottom;
+@@ -220,10 +272,12 @@ static int process_suffix(const char *prefixes, const char *suffix) {
+                 o = hashmap_get(bottom, path_get_file_name(f));
+                 assert(o);
+ 
+-                if (path_equal(o, f))
++                if (path_equal(o, f)) {
++                        notify_override_unchanged(flags, f, o);
+                         continue;
++                }
+ 
+-                k = found_override(f, o);
++                k = found_override(flags, f, o);
+                 if (k < 0)
+                         r = k;
+ 
+@@ -239,21 +293,21 @@ finish:
+         return r < 0 ? r : n_found;
+ }
+ 
+-static int process_suffix_chop(const char *prefixes, const char *suffix) {
++static int process_suffix_chop(int flags, const char *prefixes, const char *suffix) {
+         const char *p;
+ 
+         assert(prefixes);
+         assert(suffix);
+ 
+         if (!path_is_absolute(suffix))
+-                return process_suffix(prefixes, suffix);
++                return process_suffix(flags, prefixes, suffix);
+ 
+         /* Strip prefix from the suffix */
+         NULSTR_FOREACH(p, prefixes) {
+                 if (startswith(suffix, p)) {
+                         suffix += strlen(p);;
+                         suffix += strspn(suffix, "/");
+-                        return process_suffix(prefixes, suffix);
++                        return process_suffix(flags, prefixes, suffix);
+                 }
+         }
+ 
+@@ -267,14 +321,42 @@ static void help(void) {
+                "Find overridden configuration files.\n\n"
+                "  -h --help           Show this help\n"
+                "     --version        Show package version\n"
+-               "     --no-pager       Do not pipe output into a pager\n",
++               "     --no-pager       Do not pipe output into a pager\n"
++               "     --diff[=1|0]     Show a diff when overriden files differ\n"
++               "  -t --type=LIST...   Only display a selected set of override types\n",
+                program_invocation_short_name);
+ }
+ 
+-static int parse_argv(int argc, char *argv[]) {
++static int parse_flags(int flags, const char *flag_str) {
++        char *w, *state;
++        size_t l;
++
++        FOREACH_WORD(w, l, flag_str, state) {
++                if (strncmp("masked", w, l) == 0) {
++                        flags |= SHOW_MASKED;
++                } else if (strncmp ("equivalent", w, l) == 0) {
++                        flags |= SHOW_EQUIV;
++                } else if (strncmp("redirected", w, l) == 0) {
++                        flags |= SHOW_REDIR;
++                } else if (strncmp("override", w, l) == 0) {
++                        flags |= SHOW_OVERRIDEN;
++                } else if (strncmp("unchanged", w, l) == 0) {
++                        flags |= SHOW_UNCHANGED;
++                } else if (strncmp("default", w, l) == 0) {
++                        flags |= SHOW_DEFAULTS;
++                } else {
++                        log_error("Unknown type filter: %s", w);
++                        return -1;
++                }
++        }
++        return flags;
++}
++
++static int parse_argv(int argc, char *argv[], int *flags) {
+ 
+         enum {
+                 ARG_NO_PAGER = 0x100,
++                ARG_DIFF,
+                 ARG_VERSION
+         };
+ 
+@@ -282,6 +364,8 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "help",      no_argument,       NULL, 'h'          },
+                 { "version",   no_argument,       NULL, ARG_VERSION  },
+                 { "no-pager",  no_argument,       NULL, ARG_NO_PAGER },
++                { "diff",      optional_argument, NULL, ARG_DIFF     },
++                { "type",      required_argument, NULL, 't'          },
+                 { NULL,        0,                 NULL, 0            }
+         };
+ 
+@@ -311,6 +395,23 @@ static int parse_argv(int argc, char *argv[]) {
+                 case '?':
+                         return -EINVAL;
+ 
++                case 't':
++                        *flags = parse_flags(*flags, optarg);
++                        if (*flags < 0)
++                                return -EINVAL;
++                        break;
++
++                case ARG_DIFF:
++                        if (!optarg) {
++                                *flags |= SHOW_DIFF;
++                        } else {
++                                if (parse_boolean(optarg))
++                                        *flags |= SHOW_DIFF;
++                                else
++                                        *flags &= ~SHOW_DIFF;
++                        }
++                        break;
++
+                 default:
+                         log_error("Unknown option code %c", c);
+                         return -EINVAL;
+@@ -348,14 +449,20 @@ int main(int argc, char *argv[]) {
+ 
+         int r = 0, k;
+         int n_found = 0;
++        int flags = 0;
+ 
+         log_parse_environment();
+         log_open();
+ 
+-        r = parse_argv(argc, argv);
++        r = parse_argv(argc, argv, &flags);
+         if (r <= 0)
+                 goto finish;
+ 
++        if (flags == 0)
++                flags = SHOW_DEFAULTS;
++        if (flags == SHOW_DIFF)
++                flags |= SHOW_OVERRIDEN;
++
+         if (!arg_no_pager)
+                 pager_open();
+ 
+@@ -363,7 +470,7 @@ int main(int argc, char *argv[]) {
+                 int i;
+ 
+                 for (i = optind; i < argc; i++) {
+-                        k = process_suffix_chop(prefixes, argv[i]);
++                        k = process_suffix_chop(flags, prefixes, argv[i]);
+                         if (k < 0)
+                                 r = k;
+                         else
+@@ -374,7 +481,7 @@ int main(int argc, char *argv[]) {
+                 const char *n;
+ 
+                 NULSTR_FOREACH(n, suffixes) {
+-                        k = process_suffix(prefixes, n);
++                        k = process_suffix(flags, prefixes, n);
+                         if (k < 0)
+                                 r = k;
+                         else

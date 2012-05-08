@@ -1,0 +1,63 @@
+From 787761acf870512bd67d8f48b3512426f99b1f0c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 4 May 2012 00:15:21 +0200
+Subject: [PATCH] units: use OOMScoreAdjust= in the unit files to set OOM
+ score adjust (cherry picked from commit
+ 4019a16d5b65633e5f6d671c16d3215d7f7f29fc)
+
+---
+ src/readahead/readahead-collect.c          |    2 --
+ src/readahead/readahead-replay.c           |    1 -
+ units/systemd-readahead-collect.service.in |    1 +
+ units/systemd-readahead-replay.service.in  |    1 +
+ 4 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
+index 9d9443e..f5c5c29 100644
+--- a/src/readahead/readahead-collect.c
++++ b/src/readahead/readahead-collect.c
+@@ -253,8 +253,6 @@ static int collect(const char *root) {
+                 block_get_readahead(root, &previous_block_readahead) >= 0 &&
+                 block_set_readahead(root, 8*1024) >= 0;
+ 
+-        write_one_line_file("/proc/self/oom_score_adj", "1000");
+-
+         if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_IDLE, 0)) < 0)
+                 log_warning("Failed to set IDLE IO priority class: %m");
+ 
+diff --git a/src/readahead/readahead-replay.c b/src/readahead/readahead-replay.c
+index f26f2f8..3c94dbb 100644
+--- a/src/readahead/readahead-replay.c
++++ b/src/readahead/readahead-replay.c
+@@ -132,7 +132,6 @@ static int replay(const char *root) {
+ 
+         assert(root);
+ 
+-        write_one_line_file("/proc/self/oom_score_adj", "1000");
+         block_bump_request_nr(root);
+ 
+         if (asprintf(&pack_fn, "%s/.readahead", root) < 0) {
+diff --git a/units/systemd-readahead-collect.service.in b/units/systemd-readahead-collect.service.in
+index 01831b7..ceef448 100644
+--- a/units/systemd-readahead-collect.service.in
++++ b/units/systemd-readahead-collect.service.in
+@@ -18,6 +18,7 @@ Type=notify
+ ExecStart=@rootlibexecdir@/systemd-readahead-collect
+ RemainAfterExit=yes
+ StandardOutput=null
++OOMScoreAdjust=1000
+ 
+ [Install]
+ WantedBy=default.target
+diff --git a/units/systemd-readahead-replay.service.in b/units/systemd-readahead-replay.service.in
+index a3b3b96..f1e034b 100644
+--- a/units/systemd-readahead-replay.service.in
++++ b/units/systemd-readahead-replay.service.in
+@@ -18,6 +18,7 @@ Type=notify
+ ExecStart=@rootlibexecdir@/systemd-readahead-replay
+ RemainAfterExit=yes
+ StandardOutput=null
++OOMScoreAdjust=1000
+ 
+ [Install]
+ WantedBy=default.target

@@ -1,0 +1,31 @@
+From c1fe56a9526f323a1d3af1e03fa14300829d53ef Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 01:01:54 +0200
+Subject: [PATCH] log: include syslog identifier in default log properties, to
+ avoid comm truncation (cherry picked from commit
+ d29b05a4619c000918cbb9f1b9661bc53659c0b2)
+
+---
+ src/shared/log.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/log.c b/src/shared/log.c
+index 3aec60a..b826880 100644
+--- a/src/shared/log.c
++++ b/src/shared/log.c
+@@ -466,12 +466,14 @@ static int write_to_journal(
+                  "CODE_FILE=%s\n"
+                  "CODE_LINE=%i\n"
+                  "CODE_FUNCTION=%s\n"
++                 "SYSLOG_IDENTIFIER=%s\n"
+                  "MESSAGE=",
+                  LOG_PRI(level),
+                  LOG_FAC(level),
+                  file,
+                  line,
+-                 func);
++                 func,
++                 program_invocation_short_name);
+ 
+         char_array_0(header);
+ 

@@ -1,0 +1,65 @@
+From f8dcfff49d51550eac348bfdf9cb9f697f051bdf Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 18 Apr 2012 01:39:20 +0200
+Subject: [PATCH] job: job_new() can find the manager from the unit (cherry
+ picked from commit
+ 668ad332a404736474749cbcc8404af3e4447170)
+
+---
+ src/core/job.c         |    7 +++----
+ src/core/job.h         |    2 +-
+ src/core/transaction.c |    2 +-
+ 3 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 17310ba..b1a6bf3 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -33,18 +33,17 @@
+ #include "log.h"
+ #include "dbus-job.h"
+ 
+-Job* job_new(Manager *m, JobType type, Unit *unit) {
++Job* job_new(Unit *unit, JobType type) {
+         Job *j;
+ 
+-        assert(m);
+         assert(type < _JOB_TYPE_MAX);
+         assert(unit);
+ 
+         if (!(j = new0(Job, 1)))
+                 return NULL;
+ 
+-        j->manager = m;
+-        j->id = m->current_job_id++;
++        j->manager = unit->manager;
++        j->id = j->manager->current_job_id++;
+         j->type = type;
+         j->unit = unit;
+ 
+diff --git a/src/core/job.h b/src/core/job.h
+index efb0af9..faa10e3 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -137,7 +137,7 @@ struct Job {
+         bool ignore_order:1;
+ };
+ 
+-Job* job_new(Manager *m, JobType type, Unit *unit);
++Job* job_new(Unit *unit, JobType type);
+ void job_uninstall(Job *j);
+ void job_free(Job *job);
+ void job_dump(Job *j, FILE*f, const char *prefix);
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 8fa89a7..1344e2f 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -763,7 +763,7 @@ static Job* transaction_add_one_job(Transaction *tr, JobType type, Unit *unit, b
+         if (unit->job && unit->job->type == type)
+                 j = unit->job;
+         else {
+-                j = job_new(unit->manager, type, unit);
++                j = job_new(unit, type);
+                 if (!j)
+                         return NULL;
+         }

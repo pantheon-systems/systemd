@@ -1,0 +1,81 @@
+From ba8298b2e272f665f992e74373ee307b8e4306b7 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 17 Apr 2012 00:26:02 +0200
+Subject: [PATCH] udev: replace util_create_path() with mkdir_parents()
+ (cherry picked from commit
+ 9e13dbae509605dba1bde7e7385086b59acb428e)
+
+Conflicts:
+
+	Makefile.am
+	TODO
+	src/libudev/libudev-device-private.c
+	src/libudev/libudev-private.h
+	src/libudev/libudev-util.c
+	src/test/test-udev.c
+	src/udev/udev-builtin-firmware.c
+	src/udev/udev-node.c
+	src/udev/udev-watch.c
+	src/udev/udevd.c
+---
+ src/login/logind-user-dbus.c |    2 +-
+ src/shared/mkdir.c           |   18 ++++++++++++++----
+ 2 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/src/login/logind-user-dbus.c b/src/login/logind-user-dbus.c
+index 296c455..b7031de 100644
+--- a/src/login/logind-user-dbus.c
++++ b/src/login/logind-user-dbus.c
+@@ -189,7 +189,7 @@ static int bus_user_append_idle_hint_since(DBusMessageIter *i, const char *prope
+         return 0;
+ }
+ 
+-static bus_user_append_default_cgroup(DBusMessageIter *i, const char *property, void *data) {
++static int bus_user_append_default_cgroup(DBusMessageIter *i, const char *property, void *data) {
+         User *u = data;
+         char *t;
+         int r;
+diff --git a/src/shared/mkdir.c b/src/shared/mkdir.c
+index e668cc2..d7635d4 100644
+--- a/src/shared/mkdir.c
++++ b/src/shared/mkdir.c
+@@ -53,13 +53,24 @@ int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid) {
+ }
+ 
+ int mkdir_parents(const char *path, mode_t mode) {
++        struct stat st;
+         const char *p, *e;
+ 
+         assert(path);
+ 
+-        /* Creates every parent directory in the path except the last
+-         * component. */
++        /* return immediately if directory exists */
++        e = strrchr(path, '/');
++        if (!e)
++                return -EINVAL;
++        p = strndupa(path, e - path);
++        if (stat(p, &st) >= 0) {
++                if ((st.st_mode & S_IFMT) == S_IFDIR)
++                        return 0;
++                else
++                        return -ENOTDIR;
++        }
+ 
++        /* create every parent directory in the path, except the last component */
+         p = path + strspn(path, "/");
+         for (;;) {
+                 int r;
+@@ -73,11 +84,10 @@ int mkdir_parents(const char *path, mode_t mode) {
+                 if (*p == 0)
+                         return 0;
+ 
+-                if (!(t = strndup(path, e - path)))
++                if (!(t = strndupa(path, e - path)))
+                         return -ENOMEM;
+ 
+                 r = label_mkdir(t, mode);
+-                free(t);
+ 
+                 if (r < 0 && errno != EEXIST)
+                         return -errno;

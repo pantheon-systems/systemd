@@ -1,0 +1,46 @@
+From f569eee778c6d6842719020d6f19fbcead714b01 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Apr 2012 19:24:12 +0200
+Subject: [PATCH] fix a couple of AF_UNIX connect() calls (cherry picked from
+ commit 3338b9595b69a4a6de43bbd0f49b941eba7f6b0e)
+
+---
+ src/bridge.c |    2 +-
+ src/log.c    |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/bridge.c b/src/bridge.c
+index 1f7cf3a..bfb38a8 100644
+--- a/src/bridge.c
++++ b/src/bridge.c
+@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
+         sa.un.sun_family = AF_UNIX;
+         strncpy(sa.un.sun_path, "/run/dbus/system_bus_socket", sizeof(sa.un.sun_path));
+ 
+-        if (connect(fd, &sa.sa, offsetof(struct sockaddr_un, sun_path) + 1 + strlen(sa.un.sun_path+1)) < 0) {
++        if (connect(fd, &sa.sa, offsetof(struct sockaddr_un, sun_path) + strlen(sa.un.sun_path)) < 0) {
+                 log_error("Failed to connect: %m");
+                 goto finish;
+         }
+diff --git a/src/log.c b/src/log.c
+index 9499367..5b17211 100644
+--- a/src/log.c
++++ b/src/log.c
+@@ -151,7 +151,7 @@ static int log_open_syslog(void) {
+                 goto fail;
+         }
+ 
+-        if (connect(syslog_fd, &sa.sa, sizeof(sa)) < 0) {
++        if (connect(syslog_fd, &sa.sa, offsetof(struct sockaddr_un, sun_path) + strlen(sa.un.sun_path)) < 0) {
+                 close_nointr_nofail(syslog_fd);
+ 
+                 /* Some legacy syslog systems still use stream
+@@ -163,7 +163,7 @@ static int log_open_syslog(void) {
+                         goto fail;
+                 }
+ 
+-                if (connect(syslog_fd, &sa.sa, sizeof(sa)) < 0) {
++                if (connect(syslog_fd, &sa.sa, offsetof(struct sockaddr_un, sun_path) + strlen(sa.un.sun_path)) < 0) {
+                         r = -errno;
+                         goto fail;
+                 }

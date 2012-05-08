@@ -1,0 +1,30 @@
+From 5713610098dffa32d1f2106761e17858c672b205 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 13:34:09 +0200
+Subject: [PATCH] build-sys: drop systemd- prefix from analyze dir (cherry
+ picked from commit
+ 64695e53a0f425b831ba90d467f0e7a668c1b33c)
+
+---
+ Makefile.am                                      |    2 +-
+ src/{systemd-analyze => analyze}/systemd-analyze |    0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename src/{systemd-analyze => analyze}/systemd-analyze (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index a678cc5..3f51ae6 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -192,7 +192,7 @@ bin_PROGRAMS = \
+ 	systemd-detect-virt
+ 
+ dist_bin_SCRIPTS = \
+-	src/systemd-analyze/systemd-analyze
++	src/analyze/systemd-analyze
+ 
+ if HAVE_GTK
+ bin_PROGRAMS += \
+diff --git a/src/systemd-analyze/systemd-analyze b/src/analyze/systemd-analyze
+similarity index 100%
+rename from src/systemd-analyze/systemd-analyze
+rename to src/analyze/systemd-analyze

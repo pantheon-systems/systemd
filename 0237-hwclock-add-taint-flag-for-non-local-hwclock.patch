@@ -1,0 +1,64 @@
+From f0902c5b48ff56b9024884a9f5054f4188ee3c5e Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 15:46:04 +0200
+Subject: [PATCH] hwclock: add taint flag for non-local hwclock (cherry picked
+ from commit e677bf7ef610acdc5068b9d5d4c79556a236e52f)
+
+---
+ src/core/dbus-manager.c |   14 ++++++++++----
+ src/shared/util.c       |    3 +--
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index b850020..2c9a4e4 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -296,17 +296,23 @@ static int bus_manager_append_tainted(DBusMessageIter *i, const char *property,
+         assert(m);
+ 
+         if (m->taint_usr)
+-                e = stpcpy(e, "usr-separate-fs ");
++                e = stpcpy(e, "split-usr:");
+ 
+         if (readlink_malloc("/etc/mtab", &p) < 0)
+-                e = stpcpy(e, "etc-mtab-not-symlink ");
++                e = stpcpy(e, "mtab-not-symlink:");
+         else
+                 free(p);
+ 
+         if (access("/proc/cgroups", F_OK) < 0)
+-                stpcpy(e, "cgroups-missing ");
++                stpcpy(e, "cgroups-missing:");
+ 
+-        t = strstrip(buf);
++        if (hwclock_is_localtime() > 0)
++                stpcpy(e, "local-hwclock:");
++
++        if (endswith(buf, ":"))
++                buf[strlen(buf)-1] = 0;
++
++        t = buf;
+ 
+         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &t))
+                 return -ENOMEM;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 7a5e57c..283d0c5 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5001,7 +5001,6 @@ int hwclock_is_localtime(void) {
+                 if (!b)
+                         return -EIO;
+ 
+-
+                 truncate_nl(line);
+                 local = streq(line, "LOCAL");
+ 
+@@ -5136,7 +5135,7 @@ int hwclock_get_time(struct tm *tm) {
+         if (ioctl(fd, RTC_RD_TIME, tm) < 0)
+                 err = -errno;
+ 
+-        /* We don't now daylight saving, so we reset this in order not
++        /* We don't know daylight saving, so we reset this in order not
+          * to confused mktime(). */
+         tm->tm_isdst = -1;
+ 

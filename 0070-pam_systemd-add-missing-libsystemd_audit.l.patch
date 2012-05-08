@@ -1,0 +1,65 @@
+From 1f5518dd93ed7988a3f5b9285f4202c662040a34 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 11 Apr 2012 03:15:34 +0200
+Subject: [PATCH] pam_systemd: add missing libsystemd_audit.l (cherry picked
+ from commit 69dd416595bb8c69d7d33779f6088f5a3f503113)
+
+---
+ Makefile.am |   21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index cd40d81..cbff9b0 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1929,17 +1929,23 @@ endif
+ if ENABLE_LOGIND
+ systemd_logind_SOURCES = \
+ 	src/login/logind.c \
++	src/login/logind.h \
+ 	src/login/logind-dbus.c \
+ 	src/login/logind-device.c \
++	src/login/logind-device.h \
+ 	src/login/logind-seat.c \
+-	src/login/logind-seat-dbus.c \
++	src/login/logind-seat.h \
+ 	src/login/logind-session.c \
+-	src/login/logind-session-dbus.c \
++	src/login/logind-session.h \
+ 	src/login/logind-user.c \
++	src/login/logind-user.h \
++	src/login/logind-session-dbus.c \
++	src/login/logind-seat-dbus.c \
+ 	src/login/logind-user-dbus.c \
+ 	src/dbus-common.c \
+ 	src/dbus-loop.c \
+-	src/polkit.c
++	src/polkit.c \
++	src/login/logind-acl.h
+ 
+ nodist_systemd_logind_SOURCES = \
+ 	src/login/logind-gperf.c
+@@ -2037,8 +2043,9 @@ pam_systemd_la_LDFLAGS = \
+ 	-export-symbols-regex '^pam_sm_.*'
+ 
+ pam_systemd_la_LIBADD = \
+-	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
++	libsystemd-audit.la \
++	libsystemd-shared-selinux.la \
+ 	$(PAM_LIBS) \
+ 	$(DBUS_LIBS)
+ 
+@@ -2208,12 +2215,6 @@ EXTRA_DIST += \
+ 	src/login/logind-gperf.gperf \
+ 	src/login/libsystemd-login.pc.in \
+ 	src/login/libsystemd-login.sym \
+-	src/login/logind.h \
+-	src/login/logind-device.h \
+-	src/login/logind-seat.h \
+-	src/login/logind-session.h \
+-	src/login/logind-user.h \
+-	src/login/logind-acl.h \
+ 	src/login/73-seat-late.rules.in \
+ 	units/systemd-logind.service.in \
+ 	units/systemd-user-sessions.service.in

@@ -1,0 +1,39 @@
+From 39f0d00fc6b80c5e5a65d2b6a6369f8a378e9f29 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 13:42:10 +0200
+Subject: [PATCH] build-sys: dbus-loop.h is not used by the core (cherry
+ picked from commit
+ 08e47388329f04231946164a7bcdeee8365415ba)
+
+---
+ Makefile.am                |    4 ++--
+ src/{core => }/dbus-loop.h |    0
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+ rename src/{core => }/dbus-loop.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index b7e904f..8ce80b4 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -767,8 +767,7 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/special.h \
+ 	src/core/bus-errors.h \
+ 	src/core/build.h \
+-	src/core/sysfs-show.h \
+-	src/core/dbus-loop.h
++	src/core/sysfs-show.h
+ 
+ nodist_libsystemd_core_la_SOURCES = \
+ 	src/load-fragment-gperf.c \
+@@ -1948,6 +1947,7 @@ systemd_logind_SOURCES = \
+ 	src/login/logind-seat-dbus.c \
+ 	src/login/logind-user-dbus.c \
+ 	src/dbus-loop.c \
++	src/dbus-loop.h \
+ 	src/polkit.c \
+ 	src/polkit.h \
+ 	src/login/logind-acl.h
+diff --git a/src/core/dbus-loop.h b/src/dbus-loop.h
+similarity index 100%
+rename from src/core/dbus-loop.h
+rename to src/dbus-loop.h

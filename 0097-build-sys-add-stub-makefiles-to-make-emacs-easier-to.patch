@@ -1,0 +1,30 @@
+From 99f2d1e9356a82547d70c211b9c66d49d7f9d0cd Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 13:07:17 +0200
+Subject: [PATCH] build-sys: add stub makefiles to make emacs easier to use
+ (cherry picked from commit
+ fff7b732b2f4f553e5b837f9607d0cb2face315f)
+
+---
+ src/core/Makefile   |    1 +
+ src/shared/Makefile |    1 +
+ 2 files changed, 2 insertions(+)
+ create mode 120000 src/core/Makefile
+ create mode 120000 src/shared/Makefile
+
+diff --git a/src/core/Makefile b/src/core/Makefile
+new file mode 120000
+index 0000000..d0b0e8e
+--- /dev/null
++++ b/src/core/Makefile
+@@ -0,0 +1 @@
++../Makefile
+\ No newline at end of file
+diff --git a/src/shared/Makefile b/src/shared/Makefile
+new file mode 120000
+index 0000000..d0b0e8e
+--- /dev/null
++++ b/src/shared/Makefile
+@@ -0,0 +1 @@
++../Makefile
+\ No newline at end of file

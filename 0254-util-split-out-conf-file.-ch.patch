@@ -1,0 +1,441 @@
+From f6edc778995a744285b3ff6c675ce4b619805eb4 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 7 May 2012 18:55:45 +0200
+Subject: [PATCH] util: split-out conf-file.[ch] (cherry picked from commit
+ 2c21044f05e32ec483b6ab13e175278779e9ebe3)
+
+Conflicts:
+
+	src/udev/udev-rules.c
+---
+ Makefile.am                     |    6 +-
+ src/binfmt/binfmt.c             |    1 +
+ src/modules-load/modules-load.c |    1 +
+ src/shared/conf-files.c         |  151 +++++++++++++++++++++++++++++++++++++++
+ src/shared/conf-files.h         |   31 ++++++++
+ src/shared/install.c            |    1 +
+ src/shared/util.c               |  114 -----------------------------
+ src/shared/util.h               |    3 -
+ src/sysctl/sysctl.c             |    1 +
+ src/tmpfiles/tmpfiles.c         |    1 +
+ 10 files changed, 189 insertions(+), 121 deletions(-)
+ create mode 100644 src/shared/conf-files.c
+ create mode 100644 src/shared/conf-files.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 3f33886..6baba53 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -533,6 +533,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/ioprio.h \
+ 	src/shared/socket-util.c \
+ 	src/shared/socket-util.h \
++	src/shared/conf-files.c \
++	src/shared/conf-files.h \
+ 	src/shared/cgroup-util.c \
+ 	src/shared/cgroup-util.h \
+ 	src/shared/cgroup-show.c \
+@@ -550,10 +552,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/spawn-polkit-agent.c \
+ 	src/shared/spawn-polkit-agent.h
+ 
+-libsystemd_shared_la_CFLAGS = \
+-	$(AM_CFLAGS) \
+-	$(DBUS_CFLAGS)
+-
+ #-------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
+ 	libsystemd-dbus.la
+diff --git a/src/binfmt/binfmt.c b/src/binfmt/binfmt.c
+index 3c8d815..ea8fe55 100644
+--- a/src/binfmt/binfmt.c
++++ b/src/binfmt/binfmt.c
+@@ -31,6 +31,7 @@
+ #include "hashmap.h"
+ #include "strv.h"
+ #include "util.h"
++#include "conf-files.h"
+ 
+ static int delete_rule(const char *rule) {
+         char *x, *fn = NULL, *e;
+diff --git a/src/modules-load/modules-load.c b/src/modules-load/modules-load.c
+index ff1f690..a6da47e 100644
+--- a/src/modules-load/modules-load.c
++++ b/src/modules-load/modules-load.c
+@@ -31,6 +31,7 @@
+ #include "log.h"
+ #include "util.h"
+ #include "strv.h"
++#include "conf-files.h"
+ 
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
+new file mode 100644
+index 0000000..019fadc
+--- /dev/null
++++ b/src/shared/conf-files.c
+@@ -0,0 +1,151 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <assert.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <sys/stat.h>
++#include <dirent.h>
++
++#include "macro.h"
++#include "util.h"
++#include "missing.h"
++#include "log.h"
++#include "strv.h"
++#include "hashmap.h"
++#include "conf-files.h"
++
++static int files_add(Hashmap *h, const char *path, const char *suffix) {
++        DIR *dir;
++        struct dirent buffer, *de;
++        int r = 0;
++
++        dir = opendir(path);
++        if (!dir) {
++                if (errno == ENOENT)
++                        return 0;
++                return -errno;
++        }
++
++        for (;;) {
++                int k;
++                char *p;
++
++                k = readdir_r(dir, &buffer, &de);
++                if (k != 0) {
++                        r = -k;
++                        goto finish;
++                }
++
++                if (!de)
++                        break;
++
++                if (!dirent_is_file_with_suffix(de, suffix))
++                        continue;
++
++                if (asprintf(&p, "%s/%s", path, de->d_name) < 0) {
++                        r = -ENOMEM;
++                        goto finish;
++                }
++
++                if (hashmap_put(h, file_name_from_path(p), p) <= 0) {
++                        log_debug("Skip overridden file: %s.", p);
++                        free(p);
++                }
++        }
++
++finish:
++        closedir(dir);
++        return r;
++}
++
++static int base_cmp(const void *a, const void *b) {
++        const char *s1, *s2;
++
++        s1 = *(char * const *)a;
++        s2 = *(char * const *)b;
++        return strcmp(file_name_from_path(s1), file_name_from_path(s2));
++}
++
++int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs) {
++        Hashmap *fh = NULL;
++        char **files = NULL;
++        const char **p;
++        int r = 0;
++
++        assert(dirs);
++
++        fh = hashmap_new(string_hash_func, string_compare_func);
++        if (!fh) {
++                r = -ENOMEM;
++                goto finish;
++        }
++
++        STRV_FOREACH(p, dirs) {
++                if (files_add(fh, *p, suffix) < 0) {
++                        log_error("Failed to search for files.");
++                        r = -EINVAL;
++                        goto finish;
++                }
++        }
++
++        files = hashmap_get_strv(fh);
++        if (files == NULL) {
++                log_error("Failed to compose list of files.");
++                r = -ENOMEM;
++                goto finish;
++        }
++        qsort(files, hashmap_size(fh), sizeof(char *), base_cmp);
++
++finish:
++        hashmap_free(fh);
++        *strv = files;
++        return r;
++}
++
++int conf_files_list(char ***strv, const char *suffix, const char *dir, ...) {
++        char **dirs = NULL;
++        va_list ap;
++        int r;
++
++        va_start(ap, dir);
++        dirs = strv_new_ap(dir, ap);
++        va_end(ap);
++        if (!dirs) {
++                r = -ENOMEM;
++                goto finish;
++        }
++
++        if (!strv_path_canonicalize(dirs)) {
++                r = -ENOMEM;
++                goto finish;
++        }
++        strv_uniq(dirs);
++
++        r = conf_files_list_strv(strv, suffix, (const char **)dirs);
++
++finish:
++        strv_free(dirs);
++        return r;
++}
+diff --git a/src/shared/conf-files.h b/src/shared/conf-files.h
+new file mode 100644
+index 0000000..f37ee1f
+--- /dev/null
++++ b/src/shared/conf-files.h
+@@ -0,0 +1,31 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef fooconffileshfoo
++#define fooconffileshfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010-2012 Lennart Poettering
++  Copyright 2010-2012 Kay Sievers
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "macro.h"
++
++int conf_files_list(char ***strv, const char *suffix, const char *dir, ...);
++int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs);
++
++#endif
+diff --git a/src/shared/install.c b/src/shared/install.c
+index edf49ae..491957d 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -34,6 +34,7 @@
+ #include "unit-name.h"
+ #include "install.h"
+ #include "conf-parser.h"
++#include "conf-files.h"
+ 
+ typedef struct {
+         char *name;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 01fba0e..0803a21 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4863,120 +4863,6 @@ int vt_disallocate(const char *name) {
+         return 0;
+ }
+ 
+-static int files_add(Hashmap *h, const char *path, const char *suffix) {
+-        DIR *dir;
+-        struct dirent buffer, *de;
+-        int r = 0;
+-
+-        dir = opendir(path);
+-        if (!dir) {
+-                if (errno == ENOENT)
+-                        return 0;
+-                return -errno;
+-        }
+-
+-        for (;;) {
+-                int k;
+-                char *p;
+-
+-                k = readdir_r(dir, &buffer, &de);
+-                if (k != 0) {
+-                        r = -k;
+-                        goto finish;
+-                }
+-
+-                if (!de)
+-                        break;
+-
+-                if (!dirent_is_file_with_suffix(de, suffix))
+-                        continue;
+-
+-                if (asprintf(&p, "%s/%s", path, de->d_name) < 0) {
+-                        r = -ENOMEM;
+-                        goto finish;
+-                }
+-
+-                if (hashmap_put(h, file_name_from_path(p), p) <= 0) {
+-                        log_debug("Skip overridden file: %s.", p);
+-                        free(p);
+-                }
+-        }
+-
+-finish:
+-        closedir(dir);
+-        return r;
+-}
+-
+-static int base_cmp(const void *a, const void *b) {
+-        const char *s1, *s2;
+-
+-        s1 = *(char * const *)a;
+-        s2 = *(char * const *)b;
+-        return strcmp(file_name_from_path(s1), file_name_from_path(s2));
+-}
+-
+-int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs) {
+-        Hashmap *fh = NULL;
+-        char **files = NULL;
+-        const char **p;
+-        int r = 0;
+-
+-        assert(dirs);
+-
+-        fh = hashmap_new(string_hash_func, string_compare_func);
+-        if (!fh) {
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-
+-        STRV_FOREACH(p, dirs) {
+-                if (files_add(fh, *p, suffix) < 0) {
+-                        log_error("Failed to search for files.");
+-                        r = -EINVAL;
+-                        goto finish;
+-                }
+-        }
+-
+-        files = hashmap_get_strv(fh);
+-        if (files == NULL) {
+-                log_error("Failed to compose list of files.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-        qsort(files, hashmap_size(fh), sizeof(char *), base_cmp);
+-
+-finish:
+-        hashmap_free(fh);
+-        *strv = files;
+-        return r;
+-}
+-
+-int conf_files_list(char ***strv, const char *suffix, const char *dir, ...) {
+-        char **dirs = NULL;
+-        va_list ap;
+-        int r;
+-
+-        va_start(ap, dir);
+-        dirs = strv_new_ap(dir, ap);
+-        va_end(ap);
+-        if (!dirs) {
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-
+-        if (!strv_path_canonicalize(dirs)) {
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-        strv_uniq(dirs);
+-
+-        r = conf_files_list_strv(strv, suffix, (const char **)dirs);
+-
+-finish:
+-        strv_free(dirs);
+-        return r;
+-}
+-
+ int hwclock_is_localtime(void) {
+         FILE *f;
+         bool local = false;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 4543d72..ac8997d 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -460,9 +460,6 @@ int symlink_or_copy_atomic(const char *from, const char *to);
+ 
+ int fchmod_umask(int fd, mode_t mode);
+ 
+-int conf_files_list(char ***strv, const char *suffix, const char *dir, ...);
+-int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs);
+-
+ int hwclock_is_localtime(void);
+ int hwclock_apply_localtime_delta(int *min);
+ int hwclock_reset_localtime_delta(void);
+diff --git a/src/sysctl/sysctl.c b/src/sysctl/sysctl.c
+index 17c6719..3d1249f 100644
+--- a/src/sysctl/sysctl.c
++++ b/src/sysctl/sysctl.c
+@@ -31,6 +31,7 @@
+ #include "strv.h"
+ #include "util.h"
+ #include "strv.h"
++#include "conf-files.h"
+ 
+ #define PROC_SYS_PREFIX "/proc/sys/"
+ 
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index ea8fee9..f6bc07d 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -45,6 +45,7 @@
+ #include "strv.h"
+ #include "label.h"
+ #include "set.h"
++#include "conf-files.h"
+ 
+ /* This reads all files listed in /etc/tmpfiles.d/?*.conf and creates
+  * them in the file system. This is intended to be used to create

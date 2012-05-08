@@ -1,0 +1,253 @@
+From 28b69bf61782ef07bfec5edc29789379e9543cdb Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 24 Apr 2012 11:21:03 +0200
+Subject: [PATCH] transaction: cancel jobs non-recursively on isolate
+
+Recursive cancellation of jobs would trigger OnFailure actions of
+dependent jobs. This is not desirable when isolating.
+
+Fixes https://bugzilla.redhat.com/show_bug.cgi?id=798328
+(cherry picked from commit 5273510e9f228a300ec6207d4502f1c6253aed5e)
+---
+ src/core/dbus-job.c    |    2 +-
+ src/core/job.c         |   41 ++++++++++++++++-------------------------
+ src/core/job.h         |    2 +-
+ src/core/manager.c     |    3 ++-
+ src/core/transaction.c |   10 ++++------
+ src/core/unit.c        |   12 ++++++------
+ 6 files changed, 30 insertions(+), 40 deletions(-)
+
+diff --git a/src/core/dbus-job.c b/src/core/dbus-job.c
+index 63e5846..8474138 100644
+--- a/src/core/dbus-job.c
++++ b/src/core/dbus-job.c
+@@ -100,7 +100,7 @@ static DBusHandlerResult bus_job_message_dispatch(Job *j, DBusConnection *connec
+                 if (!(reply = dbus_message_new_method_return(message)))
+                         goto oom;
+ 
+-                job_finish_and_invalidate(j, JOB_CANCELED);
++                job_finish_and_invalidate(j, JOB_CANCELED, true);
+ 
+         } else {
+                 const BusBoundProperties bps[] = {
+diff --git a/src/core/job.c b/src/core/job.c
+index a94976d..4ddbe8a 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -164,7 +164,7 @@ Job* job_install(Job *j) {
+ 
+         if (uj) {
+                 if (job_type_is_conflicting(uj->type, j->type))
+-                        job_finish_and_invalidate(uj, JOB_CANCELED);
++                        job_finish_and_invalidate(uj, JOB_CANCELED, true);
+                 else {
+                         /* not conflicting, i.e. mergeable */
+ 
+@@ -496,13 +496,13 @@ int job_run_and_invalidate(Job *j) {
+ 
+         if ((j = manager_get_job(m, id))) {
+                 if (r == -EALREADY)
+-                        r = job_finish_and_invalidate(j, JOB_DONE);
++                        r = job_finish_and_invalidate(j, JOB_DONE, true);
+                 else if (r == -ENOEXEC)
+-                        r = job_finish_and_invalidate(j, JOB_SKIPPED);
++                        r = job_finish_and_invalidate(j, JOB_SKIPPED, true);
+                 else if (r == -EAGAIN)
+                         j->state = JOB_WAITING;
+                 else if (r < 0)
+-                        r = job_finish_and_invalidate(j, JOB_FAILED);
++                        r = job_finish_and_invalidate(j, JOB_FAILED, true);
+         }
+ 
+         return r;
+@@ -556,12 +556,11 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+         }
+ }
+ 
+-int job_finish_and_invalidate(Job *j, JobResult result) {
++int job_finish_and_invalidate(Job *j, JobResult result, bool recursive) {
+         Unit *u;
+         Unit *other;
+         JobType t;
+         Iterator i;
+-        bool recursed = false;
+ 
+         assert(j);
+         assert(j->installed);
+@@ -595,7 +594,7 @@ int job_finish_and_invalidate(Job *j, JobResult result) {
+         job_print_status_message(u, t, result);
+ 
+         /* Fail depending jobs on failure */
+-        if (result != JOB_DONE) {
++        if (result != JOB_DONE && recursive) {
+ 
+                 if (t == JOB_START ||
+                     t == JOB_VERIFY_ACTIVE ||
+@@ -605,29 +604,23 @@ int job_finish_and_invalidate(Job *j, JobResult result) {
+                                 if (other->job &&
+                                     (other->job->type == JOB_START ||
+                                      other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START)) {
+-                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY);
+-                                        recursed = true;
+-                                }
++                                     other->job->type == JOB_RELOAD_OR_START))
++                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+ 
+                         SET_FOREACH(other, u->dependencies[UNIT_BOUND_BY], i)
+                                 if (other->job &&
+                                     (other->job->type == JOB_START ||
+                                      other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START)) {
+-                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY);
+-                                        recursed = true;
+-                                }
++                                     other->job->type == JOB_RELOAD_OR_START))
++                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+ 
+                         SET_FOREACH(other, u->dependencies[UNIT_REQUIRED_BY_OVERRIDABLE], i)
+                                 if (other->job &&
+                                     !other->job->override &&
+                                     (other->job->type == JOB_START ||
+                                      other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START)) {
+-                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY);
+-                                        recursed = true;
+-                                }
++                                     other->job->type == JOB_RELOAD_OR_START))
++                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+ 
+                 } else if (t == JOB_STOP) {
+ 
+@@ -635,10 +628,8 @@ int job_finish_and_invalidate(Job *j, JobResult result) {
+                                 if (other->job &&
+                                     (other->job->type == JOB_START ||
+                                      other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START)) {
+-                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY);
+-                                        recursed = true;
+-                                }
++                                     other->job->type == JOB_RELOAD_OR_START))
++                                        job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+                 }
+         }
+ 
+@@ -666,7 +657,7 @@ finish:
+ 
+         manager_check_finished(u->manager);
+ 
+-        return recursed;
++        return 0;
+ }
+ 
+ int job_start_timer(Job *j) {
+@@ -758,7 +749,7 @@ void job_timer_event(Job *j, uint64_t n_elapsed, Watch *w) {
+         assert(w == &j->timer_watch);
+ 
+         log_warning("Job %s/%s timed out.", j->unit->id, job_type_to_string(j->type));
+-        job_finish_and_invalidate(j, JOB_TIMEOUT);
++        job_finish_and_invalidate(j, JOB_TIMEOUT, true);
+ }
+ 
+ int job_serialize(Job *j, FILE *f, FDSet *fds) {
+diff --git a/src/core/job.h b/src/core/job.h
+index eea8242..5b326ef 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -196,7 +196,7 @@ int job_start_timer(Job *j);
+ void job_timer_event(Job *j, uint64_t n_elapsed, Watch *w);
+ 
+ int job_run_and_invalidate(Job *j);
+-int job_finish_and_invalidate(Job *j, JobResult result);
++int job_finish_and_invalidate(Job *j, JobResult result, bool recursive);
+ 
+ char *job_dbus_path(Job *j);
+ 
+diff --git a/src/core/manager.c b/src/core/manager.c
+index b3247bc..6939eea 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -871,7 +871,8 @@ void manager_clear_jobs(Manager *m) {
+         assert(m);
+ 
+         while ((j = hashmap_first(m->jobs)))
+-                job_finish_and_invalidate(j, JOB_CANCELED);
++                /* No need to recurse. We're cancelling all jobs. */
++                job_finish_and_invalidate(j, JOB_CANCELED, false);
+ }
+ 
+ unsigned manager_dispatch_run_queue(Manager *m) {
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 8b41168..aee155f 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -546,18 +546,16 @@ static int transaction_apply(Transaction *tr, Manager *m, JobMode mode) {
+ 
+                 /* When isolating first kill all installed jobs which
+                  * aren't part of the new transaction */
+-        rescan:
+                 HASHMAP_FOREACH(j, m->jobs, i) {
+                         assert(j->installed);
+ 
+                         if (hashmap_get(tr->jobs, j->unit))
+                                 continue;
+ 
+-                        /* 'j' itself is safe to remove, but if other jobs
+-                           are invalidated recursively, our iterator may become
+-                           invalid and we need to start over. */
+-                        if (job_finish_and_invalidate(j, JOB_CANCELED) > 0)
+-                                goto rescan;
++                        /* Not invalidating recursively. Avoids triggering
++                         * OnFailure= actions of dependent jobs. Also avoids
++                         * invalidating our iterator. */
++                        job_finish_and_invalidate(j, JOB_CANCELED, false);
+                 }
+         }
+ 
+diff --git a/src/core/unit.c b/src/core/unit.c
+index c203a31..ff8331c 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1226,12 +1226,12 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su
+                 case JOB_VERIFY_ACTIVE:
+ 
+                         if (UNIT_IS_ACTIVE_OR_RELOADING(ns))
+-                                job_finish_and_invalidate(u->job, JOB_DONE);
++                                job_finish_and_invalidate(u->job, JOB_DONE, true);
+                         else if (u->job->state == JOB_RUNNING && ns != UNIT_ACTIVATING) {
+                                 unexpected = true;
+ 
+                                 if (UNIT_IS_INACTIVE_OR_FAILED(ns))
+-                                        job_finish_and_invalidate(u->job, ns == UNIT_FAILED ? JOB_FAILED : JOB_DONE);
++                                        job_finish_and_invalidate(u->job, ns == UNIT_FAILED ? JOB_FAILED : JOB_DONE, true);
+                         }
+ 
+                         break;
+@@ -1241,12 +1241,12 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su
+ 
+                         if (u->job->state == JOB_RUNNING) {
+                                 if (ns == UNIT_ACTIVE)
+-                                        job_finish_and_invalidate(u->job, reload_success ? JOB_DONE : JOB_FAILED);
++                                        job_finish_and_invalidate(u->job, reload_success ? JOB_DONE : JOB_FAILED, true);
+                                 else if (ns != UNIT_ACTIVATING && ns != UNIT_RELOADING) {
+                                         unexpected = true;
+ 
+                                         if (UNIT_IS_INACTIVE_OR_FAILED(ns))
+-                                                job_finish_and_invalidate(u->job, ns == UNIT_FAILED ? JOB_FAILED : JOB_DONE);
++                                                job_finish_and_invalidate(u->job, ns == UNIT_FAILED ? JOB_FAILED : JOB_DONE, true);
+                                 }
+                         }
+ 
+@@ -1257,10 +1257,10 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su
+                 case JOB_TRY_RESTART:
+ 
+                         if (UNIT_IS_INACTIVE_OR_FAILED(ns))
+-                                job_finish_and_invalidate(u->job, JOB_DONE);
++                                job_finish_and_invalidate(u->job, JOB_DONE, true);
+                         else if (u->job->state == JOB_RUNNING && ns != UNIT_DEACTIVATING) {
+                                 unexpected = true;
+-                                job_finish_and_invalidate(u->job, JOB_FAILED);
++                                job_finish_and_invalidate(u->job, JOB_FAILED, true);
+                         }
+ 
+                         break;

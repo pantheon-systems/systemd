@@ -1,0 +1,30 @@
+From de4e71ebbd9e4ff5586936479c829673aec090de Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 18:26:30 +0200
+Subject: [PATCH] build-sys: create top-level directory for bash completion
+ (cherry picked from commit
+ 0f4e02c220d6633756caab2fd767eb1c2df6b645)
+
+---
+ Makefile.am                                         |    2 +-
+ {src => bash-completion}/systemd-bash-completion.sh |    0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename {src => bash-completion}/systemd-bash-completion.sh (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index a90532d..bce4db3 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -233,7 +233,7 @@ nodist_udevrules_DATA = \
+ 	src/99-systemd.rules
+ 
+ dist_bashcompletion_DATA = \
+-	src/systemd-bash-completion.sh
++	bash-completion/systemd-bash-completion.sh
+ 
+ dist_tmpfiles_DATA = \
+ 	tmpfiles.d/systemd.conf \
+diff --git a/src/systemd-bash-completion.sh b/bash-completion/systemd-bash-completion.sh
+similarity index 100%
+rename from src/systemd-bash-completion.sh
+rename to bash-completion/systemd-bash-completion.sh

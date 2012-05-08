@@ -1,0 +1,23 @@
+From 3d718ca25e1d57e2f645da0d19b234244ed46bed Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 13:39:18 +0200
+Subject: [PATCH] units: don't try to load kernel modules if CAP_SYS_MODULE is
+ missing (cherry picked from commit
+ 5cd6eef69b926175b889799d80bd9deb33a904d1)
+
+---
+ units/systemd-modules-load.service.in |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/systemd-modules-load.service.in b/units/systemd-modules-load.service.in
+index 5dc373d..2f2b47f 100644
+--- a/units/systemd-modules-load.service.in
++++ b/units/systemd-modules-load.service.in
+@@ -11,6 +11,7 @@ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+ Before=sysinit.target shutdown.target
++ConditionCapability=CAP_SYS_MODULE
+ ConditionDirectoryNotEmpty=|/lib/modules-load.d
+ ConditionDirectoryNotEmpty=|/usr/lib/modules-load.d
+ ConditionDirectoryNotEmpty=|/usr/local/lib/modules-load.d

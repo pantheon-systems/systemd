@@ -1,0 +1,104 @@
+From f04b8a51137e5e50aed91a0a37d4bc97edb04ae0 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 7 May 2012 13:20:29 +0200
+Subject: [PATCH] conf_files_list(): split out conf_files_list_strv() (cherry
+ picked from commit
+ 0a1a17aa2d9112470124ef5afb9314343777dc29)
+
+---
+ src/shared/util.c |   50 +++++++++++++++++++++++++++++---------------------
+ src/shared/util.h |    1 +
+ 2 files changed, 30 insertions(+), 21 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 07d8892..01fba0e 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4915,29 +4915,13 @@ static int base_cmp(const void *a, const void *b) {
+         return strcmp(file_name_from_path(s1), file_name_from_path(s2));
+ }
+ 
+-int conf_files_list(char ***strv, const char *suffix, const char *dir, ...) {
++int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs) {
+         Hashmap *fh = NULL;
+-        char **dirs = NULL;
+         char **files = NULL;
+-        char **p;
+-        va_list ap;
++        const char **p;
+         int r = 0;
+ 
+-        va_start(ap, dir);
+-        dirs = strv_new_ap(dir, ap);
+-        va_end(ap);
+-        if (!dirs) {
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-        if (!strv_path_canonicalize(dirs)) {
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-        if (!strv_uniq(dirs)) {
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++        assert(dirs);
+ 
+         fh = hashmap_new(string_hash_func, string_compare_func);
+         if (!fh) {
+@@ -4959,16 +4943,40 @@ int conf_files_list(char ***strv, const char *suffix, const char *dir, ...) {
+                 r = -ENOMEM;
+                 goto finish;
+         }
+-
+         qsort(files, hashmap_size(fh), sizeof(char *), base_cmp);
+ 
+ finish:
+-        strv_free(dirs);
+         hashmap_free(fh);
+         *strv = files;
+         return r;
+ }
+ 
++int conf_files_list(char ***strv, const char *suffix, const char *dir, ...) {
++        char **dirs = NULL;
++        va_list ap;
++        int r;
++
++        va_start(ap, dir);
++        dirs = strv_new_ap(dir, ap);
++        va_end(ap);
++        if (!dirs) {
++                r = -ENOMEM;
++                goto finish;
++        }
++
++        if (!strv_path_canonicalize(dirs)) {
++                r = -ENOMEM;
++                goto finish;
++        }
++        strv_uniq(dirs);
++
++        r = conf_files_list_strv(strv, suffix, (const char **)dirs);
++
++finish:
++        strv_free(dirs);
++        return r;
++}
++
+ int hwclock_is_localtime(void) {
+         FILE *f;
+         bool local = false;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 0d82b13..4543d72 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -461,6 +461,7 @@ int symlink_or_copy_atomic(const char *from, const char *to);
+ int fchmod_umask(int fd, mode_t mode);
+ 
+ int conf_files_list(char ***strv, const char *suffix, const char *dir, ...);
++int conf_files_list_strv(char ***strv, const char *suffix, const char **dirs);
+ 
+ int hwclock_is_localtime(void);
+ int hwclock_apply_localtime_delta(int *min);

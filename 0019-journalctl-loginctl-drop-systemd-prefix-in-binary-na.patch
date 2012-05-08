@@ -1,0 +1,376 @@
+From 249a12f4e0b0bf4a223a34fac9f6240966058e98 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Mar 2012 20:58:47 +0200
+Subject: [PATCH] journalctl,loginctl: drop systemd- prefix in binary names
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Let's make things a bit easier to type, drop the systemd- prefix for
+journalctl and loginctl, but provide the old names for compat.
+
+All systemd binaries are hence now prefixed with "systemd-" with the
+exception of the three primary user interface binaries:
+
+systemctl
+loginctl
+journalctl
+
+For those three we do provide systemd-xyz names as well, via symlinks:
+
+systemd-systemctl → systemctl
+systemd-loginctl → loginctl
+systemd-journalctl → journalctl
+
+We do this only for the *primary* user tools, in order to avoid
+unnecessary namespace problems. That means tools like systemd-notify
+stay the way they are.
+(cherry picked from commit 169c4f65131fbc7bcb51e7d5487a715cdcd0e0eb)
+---
+ Makefile.am                                    |   56 ++++++++++++++++++------
+ TODO                                           |    4 ++
+ man/{systemd-journalctl.xml => journalctl.xml} |   11 ++---
+ man/{systemd-loginctl.xml => loginctl.xml}     |   11 ++---
+ man/systemctl.xml                              |    7 +--
+ man/systemd-journald.conf.xml                  |    2 +-
+ man/systemd-logind.conf.xml                    |    2 +-
+ man/systemd.exec.xml                           |    3 +-
+ 8 files changed, 67 insertions(+), 29 deletions(-)
+ rename man/{systemd-journalctl.xml => journalctl.xml} (96%)
+ rename man/{systemd-loginctl.xml => loginctl.xml} (98%)
+
+diff --git a/Makefile.am b/Makefile.am
+index ab22a30..6825f8c 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -697,16 +697,22 @@ MANPAGES = \
+ 	man/systemd-cat.1 \
+         man/systemd-machine-id-setup.1 \
+         man/systemd-journald.conf.5 \
+-        man/systemd-journalctl.1
++        man/journalctl.1
+ 
+ MANPAGES_ALIAS = \
+ 	man/reboot.8 \
+ 	man/poweroff.8 \
+-	man/init.1
++	man/init.1 \
++        man/systemd-systemctl.1 \
++        man/systemd-loginctl.1 \
++        man/systemd-journalctl.1
+ 
+ man/reboot.8: man/halt.8
+ man/poweroff.8: man/halt.8
+ man/init.1: man/systemd.1
++man/systemd-systemctl.1: man/systemctl.1
++man/systemd-loginctl.1: man/loginctl.1
++man/systemd-journalctl.1: man/journalctl.1
+ 
+ XML_FILES = \
+ 	${patsubst %.1,%.xml,${patsubst %.3,%.xml,${patsubst %.5,%.xml,${patsubst %.7,%.xml,${patsubst %.8,%.xml,$(MANPAGES)}}}}}
+@@ -986,6 +992,14 @@ systemctl_LDADD = \
+ 	libsystemd-id128.la \
+ 	$(DBUS_LIBS)
+ 
++systemctl-install-hook:
++	cd $(DESTDIR)$(rootbindir) && \
++		rm -f systemd-systemctl && \
++		$(LN_S) systemctl systemd-systemctl
++
++INSTALL_EXEC_HOOKS += \
++        systemctl-install-hook
++
+ systemd_notify_SOURCES = \
+ 	src/notify.c \
+ 	src/readahead/sd-readahead.c
+@@ -1260,26 +1274,34 @@ systemd_cat_LDADD = \
+ 	libsystemd-basic.la \
+ 	libsystemd-journal.la
+ 
+-systemd_journalctl_SOURCES = \
++journalctl_SOURCES = \
+ 	src/journal/journalctl.c \
+ 	src/pager.c \
+ 	src/logs-show.c
+ 
+-systemd_journalctl_LDADD = \
++journalctl_LDADD = \
+ 	libsystemd-basic.la \
+ 	libsystemd-journal.la \
+ 	libsystemd-id128.la
+ 
+ if HAVE_XZ
+-systemd_journalctl_SOURCES += \
++journalctl_SOURCES += \
+ 	src/journal/compress.c
+-systemd_journalctl_CFLAGS = \
++journalctl_CFLAGS = \
+ 	$(AM_CFLAGS) \
+ 	$(XZ_CFLAGS)
+-systemd_journalctl_LDADD += \
++journalctl_LDADD += \
+ 	$(XZ_LIBS)
+ endif
+ 
++journalctl-install-hook:
++	cd $(DESTDIR)$(rootbindir) && \
++		rm -f systemd-journalctl && \
++		$(LN_S) journalctl systemd-journalctl
++
++INSTALL_EXEC_HOOKS += \
++        journalctl-install-hook
++
+ test_journal_SOURCES = \
+ 	src/journal/test-journal.c \
+ 	src/journal/sd-journal.c \
+@@ -1366,7 +1388,7 @@ rootlibexec_PROGRAMS += \
+ 	systemd-journald
+ 
+ rootbin_PROGRAMS += \
+-	systemd-journalctl
++	journalctl
+ 
+ bin_PROGRAMS += \
+ 	systemd-cat
+@@ -1866,7 +1888,7 @@ rootlibexec_PROGRAMS += \
+ 	systemd-logind \
+ 	systemd-user-sessions
+ 
+-systemd_loginctl_SOURCES = \
++loginctl_SOURCES = \
+ 	src/login/loginctl.c \
+ 	src/login/sysfs-show.c \
+ 	src/dbus-common.c \
+@@ -1874,18 +1896,26 @@ systemd_loginctl_SOURCES = \
+ 	src/cgroup-util.c \
+ 	src/pager.c
+ 
+-systemd_loginctl_CFLAGS = \
++loginctl_CFLAGS = \
+ 	$(AM_CFLAGS) \
+ 	$(DBUS_CFLAGS) \
+ 	$(UDEV_CFLAGS)
+ 
+-systemd_loginctl_LDADD = \
++loginctl_LDADD = \
+ 	libsystemd-basic.la \
+ 	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS)
+ 
+ rootbin_PROGRAMS += \
+-	systemd-loginctl
++	loginctl
++
++loginctl-install-hook:
++	cd $(DESTDIR)$(rootbindir) && \
++		rm -f systemd-loginctl && \
++		$(LN_S) loginctl systemd-loginctl
++
++INSTALL_EXEC_HOOKS += \
++        loginctl-install-hook
+ 
+ test_login_SOURCES = \
+ 	src/login/test-login.c
+@@ -2050,7 +2080,7 @@ nodist_udevrules_DATA += \
+ MANPAGES += \
+ 	man/systemd-logind.conf.5 \
+ 	man/sd-login.7 \
+-	man/systemd-loginctl.1 \
++	man/loginctl.1 \
+ 	man/sd_login_monitor_new.3 \
+ 	man/sd_pid_get_session.3 \
+ 	man/sd_uid_get_state.3 \
+diff --git a/TODO b/TODO
+index 176c2a7..7f19c3a 100644
+--- a/TODO
++++ b/TODO
+@@ -18,6 +18,10 @@ Bugfixes:
+ 
+ Features:
+ 
++* ensure that logind sets the syslog facility to AUTH when logging
++
++* when a service has the same env var set twice we actually store it twice and return that in systemctl show -p... We should only show the last setting
++
+ * add man page documenting all kernel cmdline options, including stuff like fsck.mode=
+ 
+ * show getty in container mode, not sulogin
+diff --git a/man/systemd-journalctl.xml b/man/journalctl.xml
+similarity index 96%
+rename from man/systemd-journalctl.xml
+rename to man/journalctl.xml
+index 1441eca..c4d2a7e 100644
+--- a/man/systemd-journalctl.xml
++++ b/man/journalctl.xml
+@@ -21,10 +21,10 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ -->
+ 
+-<refentry id="systemd-journalctl">
++<refentry id="journalctl">
+ 
+         <refentryinfo>
+-                <title>systemd-journalctl</title>
++                <title>journalctl</title>
+                 <productname>systemd</productname>
+ 
+                 <authorgroup>
+@@ -38,25 +38,26 @@
+         </refentryinfo>
+ 
+         <refmeta>
+-                <refentrytitle>systemd-journalctl</refentrytitle>
++                <refentrytitle>journalctl</refentrytitle>
+                 <manvolnum>1</manvolnum>
+         </refmeta>
+ 
+         <refnamediv>
++                <refname>journalctl</refname>
+                 <refname>systemd-journalctl</refname>
+                 <refpurpose>Query the systemd journal</refpurpose>
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+                 <cmdsynopsis>
+-                        <command>systemd-journalctl <arg choice="opt" rep="repeat">OPTIONS</arg> <arg choice="opt">MATCH</arg></command>
++                        <command>journalctl <arg choice="opt" rep="repeat">OPTIONS</arg> <arg choice="opt">MATCH</arg></command>
+                 </cmdsynopsis>
+         </refsynopsisdiv>
+ 
+         <refsect1>
+                 <title>Description</title>
+ 
+-                <para><command>systemd-journalctl</command> may be
++                <para><command>journalctl</command> may be
+                 used to query the contents of the
+                 <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                 journal.</para>
+diff --git a/man/systemd-loginctl.xml b/man/loginctl.xml
+similarity index 98%
+rename from man/systemd-loginctl.xml
+rename to man/loginctl.xml
+index 6a28276..be72cc3 100644
+--- a/man/systemd-loginctl.xml
++++ b/man/loginctl.xml
+@@ -21,10 +21,10 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ -->
+ 
+-<refentry id="systemd-loginctl">
++<refentry id="loginctl">
+ 
+         <refentryinfo>
+-                <title>systemd-loginctl</title>
++                <title>loginctl</title>
+                 <productname>systemd</productname>
+ 
+                 <authorgroup>
+@@ -38,25 +38,26 @@
+         </refentryinfo>
+ 
+         <refmeta>
+-                <refentrytitle>systemd-loginctl</refentrytitle>
++                <refentrytitle>loginctl</refentrytitle>
+                 <manvolnum>1</manvolnum>
+         </refmeta>
+ 
+         <refnamediv>
++                <refname>loginctl</refname>
+                 <refname>systemd-loginctl</refname>
+                 <refpurpose>Control the systemd login manager</refpurpose>
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+                 <cmdsynopsis>
+-                        <command>systemd-loginctl <arg choice="opt" rep="repeat">OPTIONS</arg> <arg choice="req">COMMAND</arg> <arg choice="opt" rep="repeat">NAME</arg></command>
++                        <command>loginctl <arg choice="opt" rep="repeat">OPTIONS</arg> <arg choice="req">COMMAND</arg> <arg choice="opt" rep="repeat">NAME</arg></command>
+                 </cmdsynopsis>
+         </refsynopsisdiv>
+ 
+         <refsect1>
+                 <title>Description</title>
+ 
+-                <para><command>systemd-loginctl</command> may be used to
++                <para><command>loginctl</command> may be used to
+                 introspect and control the state of the
+                 <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                 login manager.</para>
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index c467ed8..ffe0164 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -44,6 +44,7 @@
+ 
+         <refnamediv>
+                 <refname>systemctl</refname>
++                <refname>systemd-systemctl</refname>
+                 <refpurpose>Control the systemd system and service manager</refpurpose>
+         </refnamediv>
+ 
+@@ -448,7 +449,7 @@
+                                 formatting of the journal entries that
+                                 are shown. For the available choices
+                                 see
+-                                <citerefentry><refentrytitle>systemd-journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>. Defaults
++                                <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>. Defaults
+                                 to
+                                 <literal>short</literal>.</para></listitem>
+                         </varlistentry>
+@@ -1179,8 +1180,8 @@
+                 <para>
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemadm</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+-                        <citerefentry><refentrytitle>systemd-journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+-                        <citerefentry><refentrytitle>systemd-loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd.unit</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd.special</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>wall</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+diff --git a/man/systemd-journald.conf.xml b/man/systemd-journald.conf.xml
+index f3cd4db..37dae68 100644
+--- a/man/systemd-journald.conf.xml
++++ b/man/systemd-journald.conf.xml
+@@ -246,7 +246,7 @@
+                   <title>See Also</title>
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+-                          <citerefentry><refentrytitle>systemd-journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                   </para>
+         </refsect1>
+diff --git a/man/systemd-logind.conf.xml b/man/systemd-logind.conf.xml
+index 4b02815..27c11c2 100644
+--- a/man/systemd-logind.conf.xml
++++ b/man/systemd-logind.conf.xml
+@@ -167,7 +167,7 @@
+                   <title>See Also</title>
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+-                          <citerefentry><refentrytitle>systemd-loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                   </para>
+         </refsect1>
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index ac0f89f..e6f49c9 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -397,7 +397,7 @@
+                                 <citerefentry><refentrytitle>dmesg</refentrytitle><manvolnum>1</manvolnum></citerefentry>. <option>journal</option>
+                                 connects it with the journal which is
+                                 accessible via
+-                                <citerefentry><refentrytitle>systemd-journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
++                                <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                                 (Note that everything that is written
+                                 to syslog or kmsg is implicitly stored
+                                 in the journal as well, those options
+@@ -1094,6 +1094,7 @@
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.unit</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.service</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.socket</refentrytitle><manvolnum>5</manvolnum></citerefentry>,

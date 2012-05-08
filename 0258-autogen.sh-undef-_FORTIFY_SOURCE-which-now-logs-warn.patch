@@ -1,0 +1,26 @@
+From 4deb95d3cfc2b3b4f7505b3e13e13d972009b8fd Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 8 May 2012 02:51:26 +0200
+Subject: [PATCH] autogen.sh: undef _FORTIFY_SOURCE, which now logs warnings
+ when used with -O0 (cherry picked from commit
+ 66be6554807773028a0111addb8e75c3cab11117)
+
+[ F17: no autogen.sh. Just took the configure.ac hunk for the CFLAGS
+display ]
+---
+ configure.ac |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index bee45da..8aa6e93 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -681,4 +681,8 @@ AC_MSG_RESULT([
+         D-Bus interfaces dir:    ${with_dbusinterfacedir}
+         Split /usr:              ${enable_split_usr}
+         man pages:               ${have_manpages}
++
++        CFLAGS:                  ${CFLAGS}
++        CPPLAGS:                 ${CPPFLAGS}
++        LDFLAGS:                 ${LDFLAGS}
+ ])

@@ -1,0 +1,28 @@
+From 7a6d45976fda4533347dc8e7250e4cfe1ff99f03 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 19:04:38 +0200
+Subject: [PATCH] unit: signal explicitly if a condition failed in
+ unit_start()
+
+We shouldn't print a status message on the console if we skipped a unit
+due to a condition. Hence make unit_start() return -ENOEXEC in such a
+case which is mapped to JOB_SKIPPED which results in no console message.
+(cherry picked from commit 691206668a0bf78895d4a5fe3772f4a10c790a90)
+---
+ src/core/job.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index bae6ab9..488e521 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -417,7 +417,8 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                 switch (result) {
+ 
+                 case JOB_DONE:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Started %s", unit_description(u));
++                        if (u->condition_result)
++                                unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Started %s", unit_description(u));
+                         break;
+ 
+                 case JOB_FAILED:

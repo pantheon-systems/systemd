@@ -1,0 +1,192 @@
+From 2b3885bbd2856f7184fc21d97c3a1473fa1de1da Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 21:54:44 +0200
+Subject: [PATCH] service: explicitly remove control/ subcgroup after each
+ control command
+
+The kernel will only notify us of cgroups running empty if no subcgroups
+exist anymore. Hence make sure we don't leave our own control/ subcgroup
+around longer than necessary.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=818381
+(cherry picked from commit 88f3e0c91f08c65a479e1aa09f171550b744d829)
+---
+ src/core/cgroup.c  |    8 ++++----
+ src/core/cgroup.h  |    4 ++--
+ src/core/mount.c   |    4 ++--
+ src/core/service.c |   13 +++++++++----
+ src/core/socket.c  |    4 ++--
+ src/core/swap.c    |    4 ++--
+ 6 files changed, 21 insertions(+), 16 deletions(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 82b0410..f730451 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -194,7 +194,7 @@ int cgroup_bonding_set_task_access_list(CGroupBonding *first, mode_t mode, uid_t
+         return 0;
+ }
+ 
+-int cgroup_bonding_kill(CGroupBonding *b, int sig, bool sigcont, Set *s, const char *cgroup_suffix) {
++int cgroup_bonding_kill(CGroupBonding *b, int sig, bool sigcont, bool rem, Set *s, const char *cgroup_suffix) {
+         char *p = NULL;
+         const char *path;
+         int r;
+@@ -215,13 +215,13 @@ int cgroup_bonding_kill(CGroupBonding *b, int sig, bool sigcont, Set *s, const c
+         } else
+                 path = b->path;
+ 
+-        r = cg_kill_recursive(b->controller, path, sig, sigcont, true, false, s);
++        r = cg_kill_recursive(b->controller, path, sig, sigcont, true, rem, s);
+         free(p);
+ 
+         return r;
+ }
+ 
+-int cgroup_bonding_kill_list(CGroupBonding *first, int sig, bool sigcont, Set *s, const char *cgroup_suffix) {
++int cgroup_bonding_kill_list(CGroupBonding *first, int sig, bool sigcont, bool rem, Set *s, const char *cgroup_suffix) {
+         CGroupBonding *b;
+         Set *allocated_set = NULL;
+         int ret = -EAGAIN, r;
+@@ -234,7 +234,7 @@ int cgroup_bonding_kill_list(CGroupBonding *first, int sig, bool sigcont, Set *s
+                         return -ENOMEM;
+ 
+         LIST_FOREACH(by_unit, b, first) {
+-                r = cgroup_bonding_kill(b, sig, sigcont, s, cgroup_suffix);
++                r = cgroup_bonding_kill(b, sig, sigcont, rem, s, cgroup_suffix);
+                 if (r < 0) {
+                         if (r == -EAGAIN || r == -ESRCH)
+                                 continue;
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 35ae52b..8fcdafe 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -65,8 +65,8 @@ int cgroup_bonding_set_group_access_list(CGroupBonding *b, mode_t mode, uid_t ui
+ int cgroup_bonding_set_task_access(CGroupBonding *b, mode_t mode, uid_t uid, gid_t gid, int sticky);
+ int cgroup_bonding_set_task_access_list(CGroupBonding *b, mode_t mode, uid_t uid, gid_t gid, int sticky);
+ 
+-int cgroup_bonding_kill(CGroupBonding *b, int sig, bool sigcont, Set *s, const char *suffix);
+-int cgroup_bonding_kill_list(CGroupBonding *first, int sig, bool sigcont, Set *s, const char *suffix);
++int cgroup_bonding_kill(CGroupBonding *b, int sig, bool sigcont, bool rem, Set *s, const char *suffix);
++int cgroup_bonding_kill_list(CGroupBonding *first, int sig, bool sigcont, bool rem, Set *s, const char *suffix);
+ 
+ void cgroup_bonding_trim(CGroupBonding *first, bool delete_root);
+ void cgroup_bonding_trim_list(CGroupBonding *first, bool delete_root);
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 934b9ad..8807908 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -896,7 +896,7 @@ static void mount_enter_signal(Mount *m, MountState state, MountResult f) {
+                                 if ((r = set_put(pid_set, LONG_TO_PTR(m->control_pid))) < 0)
+                                         goto fail;
+ 
+-                        r = cgroup_bonding_kill_list(UNIT(m)->cgroup_bondings, sig, true, pid_set, NULL);
++                        r = cgroup_bonding_kill_list(UNIT(m)->cgroup_bondings, sig, true, false, pid_set, NULL);
+                         if (r < 0) {
+                                 if (r != -EAGAIN && r != -ESRCH && r != -ENOENT)
+                                         log_warning("Failed to kill control group: %s", strerror(-r));
+@@ -1856,7 +1856,7 @@ static int mount_kill(Unit *u, KillWho who, KillMode mode, int signo, DBusError
+                                 goto finish;
+                         }
+ 
+-                q = cgroup_bonding_kill_list(UNIT(m)->cgroup_bondings, signo, false, pid_set, NULL);
++                q = cgroup_bonding_kill_list(UNIT(m)->cgroup_bondings, signo, false, false, pid_set, NULL);
+                 if (q < 0)
+                         if (q != -EAGAIN && q != -ESRCH && q != -ENOENT)
+                                 r = q;
+diff --git a/src/core/service.c b/src/core/service.c
+index e8e190f..0909bab 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1964,7 +1964,7 @@ static void service_enter_signal(Service *s, ServiceState state, ServiceResult f
+                                 if ((r = set_put(pid_set, LONG_TO_PTR(s->control_pid))) < 0)
+                                         goto fail;
+ 
+-                        r = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, sig, true, pid_set, NULL);
++                        r = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, sig, true, false, pid_set, NULL);
+                         if (r < 0) {
+                                 if (r != -EAGAIN && r != -ESRCH && r != -ENOENT)
+                                         log_warning("Failed to kill control group: %s", strerror(-r));
+@@ -2111,7 +2111,7 @@ static void service_enter_start(Service *s) {
+         /* We want to ensure that nobody leaks processes from
+          * START_PRE here, so let's go on a killing spree, People
+          * should not spawn long running processes from START_PRE. */
+-        cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, SIGKILL, true, NULL, "control");
++        cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, SIGKILL, true, true, NULL, "control");
+ 
+         if (s->type == SERVICE_FORKING) {
+                 s->control_command_id = SERVICE_EXEC_START;
+@@ -2187,7 +2187,7 @@ static void service_enter_start_pre(Service *s) {
+ 
+                 /* Before we start anything, let's clear up what might
+                  * be left from previous runs. */
+-                cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, SIGKILL, true, NULL, "control");
++                cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, SIGKILL, true, true, NULL, "control");
+ 
+                 s->control_command_id = SERVICE_EXEC_START_PRE;
+ 
+@@ -2921,6 +2921,11 @@ static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
+                 if (f != SERVICE_SUCCESS)
+                         s->result = f;
+ 
++                /* Immediately get rid of the cgroup, so that the
++                 * kernel doesn't delay the cgroup empty messages for
++                 * the service cgroup any longer than necessary */
++                cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, SIGKILL, true, true, NULL, "control");
++
+                 if (s->control_command &&
+                     s->control_command->command_next &&
+                     f == SERVICE_SUCCESS) {
+@@ -3671,7 +3676,7 @@ static int service_kill(Unit *u, KillWho who, KillMode mode, int signo, DBusErro
+                                 r = q;
+                                 goto finish;
+                         }
+-                q = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, signo, false, pid_set, NULL);
++                q = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, signo, false, false, pid_set, NULL);
+                 if (q < 0)
+                         if (q != -EAGAIN && q != -ESRCH && q != -ENOENT)
+                                 r = q;
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 24cac74..1282e81 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -1243,7 +1243,7 @@ static void socket_enter_signal(Socket *s, SocketState state, SocketResult f) {
+                                 if ((r = set_put(pid_set, LONG_TO_PTR(s->control_pid))) < 0)
+                                         goto fail;
+ 
+-                        r = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, sig, true, pid_set, NULL);
++                        r = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, sig, true, false, pid_set, NULL);
+                         if (r < 0) {
+                                 if (r != -EAGAIN && r != -ESRCH && r != -ENOENT)
+                                         log_warning("Failed to kill control group: %s", strerror(-r));
+@@ -2131,7 +2131,7 @@ static int socket_kill(Unit *u, KillWho who, KillMode mode, int signo, DBusError
+                                 goto finish;
+                         }
+ 
+-                q = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, signo, false, pid_set, NULL);
++                q = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, signo, false, false, pid_set, NULL);
+                 if (q < 0)
+                         if (q != -EAGAIN && q != -ESRCH && q != -ENOENT)
+                                 r = q;
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 18b1ae2..78a2647 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -692,7 +692,7 @@ static void swap_enter_signal(Swap *s, SwapState state, SwapResult f) {
+                                 if ((r = set_put(pid_set, LONG_TO_PTR(s->control_pid))) < 0)
+                                         goto fail;
+ 
+-                        r = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, sig, true, pid_set, NULL);
++                        r = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, sig, true, false, pid_set, NULL);
+                         if (r < 0) {
+                                 if (r != -EAGAIN && r != -ESRCH && r != -ENOENT)
+                                         log_warning("Failed to kill control group: %s", strerror(-r));
+@@ -1324,7 +1324,7 @@ static int swap_kill(Unit *u, KillWho who, KillMode mode, int signo, DBusError *
+                                 goto finish;
+                         }
+ 
+-                q = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, signo, false, pid_set, NULL);
++                q = cgroup_bonding_kill_list(UNIT(s)->cgroup_bondings, signo, false, false, pid_set, NULL);
+                 if (q < 0)
+                         if (q != -EAGAIN && q != -ESRCH && q != -ENOENT)
+                                 r = q;

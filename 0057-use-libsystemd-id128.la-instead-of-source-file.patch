@@ -1,0 +1,98 @@
+From edc786cdfab01aa0045fd69e706893ba115d63fc Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 19:14:42 +0200
+Subject: [PATCH] use libsystemd-id128.la instead of source file (cherry
+ picked from commit
+ 0d0a5ab46a3dd2eb22fba59fbed95224acd42b80)
+
+---
+ Makefile.am |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index c697ecc..bc6c907 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -725,7 +725,6 @@ libsystemd_core_la_SOURCES = \
+ 	src/watchdog.c \
+ 	src/watchdog.h \
+ 	src/sd-daemon.c \
+-	src/sd-id128.c \
+ 	src/macro.h \
+ 	src/def.h \
+ 	src/ioprio.h \
+@@ -787,7 +786,8 @@ systemd_CFLAGS = \
+ 	$(UDEV_CFLAGS)
+ 
+ systemd_LDADD = \
+-	libsystemd-core.la
++	libsystemd-core.la \
++	libsystemd-id128.la
+ 
+ # ------------------------------------------------------------------------------
+ test_engine_SOURCES = \
+@@ -953,11 +953,11 @@ systemd_tmpfiles_LDADD = \
+ # ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+ 	src/machine-id-setup.c \
+-	src/machine-id-main.c \
+-	src/sd-id128.c
++	src/machine-id-main.c
+ 
+ systemd_machine_id_setup_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-basic.la \
++	libsystemd-id128.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_sysctl_SOURCES = \
+@@ -1262,11 +1262,11 @@ libsystemd_id128_la_LIBADD = \
+ 	libsystemd-basic.la
+ 
+ test_id128_SOURCES = \
+-	src/test-id128.c \
+-	src/sd-id128.c
++	src/test-id128.c
+ 
+ test_id128_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-basic.la \
++	libsystemd-id128.la
+ 
+ noinst_PROGRAMS += \
+ 	test-id128
+@@ -1310,8 +1310,7 @@ systemd_journald_SOURCES = \
+ 	src/journal/journal-file.c \
+ 	src/journal/lookup3.c \
+ 	src/journal/journal-rate-limit.c \
+-	src/journal/sparse-endian.h \
+-	src/sd-id128.c
++	src/journal/sparse-endian.h
+ 
+ nodist_systemd_journald_SOURCES = \
+ 	src/journal/journald-gperf.c
+@@ -1322,7 +1321,8 @@ systemd_journald_LDADD = \
+ 	libsystemd-basic.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-login.la
++	libsystemd-login.la \
++	libsystemd-id128.la
+ 
+ if HAVE_ACL
+ systemd_journald_LDADD += \
+@@ -1373,11 +1373,11 @@ test_journal_SOURCES = \
+ 	src/journal/sd-journal.c \
+ 	src/journal/journal-file.c \
+ 	src/journal/lookup3.c \
+-	src/journal/journal-send.c \
+-	src/sd-id128.c
++	src/journal/journal-send.c
+ 
+ test_journal_LDADD = \
+-	libsystemd-basic.la
++	libsystemd-basic.la \
++	libsystemd-id128.la
+ 
+ if HAVE_XZ
+ test_journal_SOURCES += \

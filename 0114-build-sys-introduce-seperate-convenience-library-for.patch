@@ -1,0 +1,175 @@
+From 75cb1749f7bff09a3f91444b7315959804a95139 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 17:24:58 +0200
+Subject: [PATCH] build-sys: introduce seperate convenience library for dbus
+ stuff (cherry picked from commit
+ bd5b0d57ef3fceef3ed61d0e06a8e1f3d8417048)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am |   46 ++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 36 insertions(+), 10 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 6dcef81..32a2edf 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -541,10 +541,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/socket-util.h \
+ 	src/shared/cgroup-util.c \
+ 	src/shared/cgroup-util.h \
+-	src/shared/dbus-common.c \
+-	src/shared/dbus-common.h \
+-	src/shared/dbus-loop.c \
+-	src/shared/dbus-loop.h \
+ 	src/shared/logs-show.c \
+ 	src/shared/logs-show.h \
+ 	src/shared/cgroup-show.c \
+@@ -566,14 +562,31 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/specifier.c \
+ 	src/shared/specifier.h \
+ 	src/shared/spawn-polkit-agent.c \
+-	src/shared/spawn-polkit-agent.h \
++	src/shared/spawn-polkit-agent.h
++
++libsystemd_shared_la_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(DBUS_CFLAGS)
++
++#-------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-dbus.la
++
++libsystemd_dbus_la_SOURCES = \
++	src/shared/dbus-common.c \
++	src/shared/dbus-common.h \
++	src/shared/dbus-loop.c \
++	src/shared/dbus-loop.h \
+ 	src/shared/polkit.c \
+ 	src/shared/polkit.h
+ 
+-libsystemd_shared_la_CFLAGS = \
++libsystemd_dbus_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+ 	$(DBUS_CFLAGS)
+ 
++libsystemd_dbus_la_LIBADD = \
++	$(DBUS_LIBS)
++
+ # ------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
+ 	libsystemd-label.la
+@@ -756,6 +769,7 @@ libsystemd_core_la_LIBADD = \
+ 	libsystemd-capability.la \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS) \
+ 	$(LIBWRAP_LIBS) \
+@@ -788,7 +802,8 @@ systemd_CFLAGS = \
+ systemd_LDADD = \
+ 	libsystemd-core.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-id128.la
++	libsystemd-id128.la \
++	libsystemd-dbus.la
+ 
+ dist_pkgsysconf_DATA += \
+ 	src/core/system.conf \
+@@ -839,7 +854,8 @@ test_engine_CFLAGS = \
+ 
+ test_engine_LDADD = \
+ 	libsystemd-core.la \
+-	libsystemd-daemon.la
++	libsystemd-daemon.la \
++	libsystemd-dbus.la
+ 
+ test_job_type_SOURCES = \
+ 	src/test/test-job-type.c
+@@ -923,6 +939,7 @@ systemd_initctl_CFLAGS = \
+ systemd_initctl_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -936,6 +953,7 @@ systemd_update_utmp_CFLAGS = \
+ 
+ systemd_update_utmp_LDADD = \
+ 	libsystemd-shared.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS) \
+ 	$(AUDIT_LIBS)
+ 
+@@ -1014,6 +1032,7 @@ systemd_fsck_CFLAGS = \
+ systemd_fsck_LDADD = \
+ 	libsystemd-shared.la \
+ 	$(UDEV_LIBS) \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1075,6 +1094,7 @@ systemd_cgroups_agent_CFLAGS = \
+ 
+ systemd_cgroups_agent_LDADD = \
+ 	libsystemd-shared.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1091,6 +1111,7 @@ systemctl_LDADD = \
+ 	libsystemd-daemon.la \
+ 	libsystemd-journal.la \
+ 	libsystemd-id128.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1792,6 +1813,7 @@ systemd_hostnamed_CFLAGS = \
+ systemd_hostnamed_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ rootlibexec_PROGRAMS += \
+@@ -1842,6 +1864,7 @@ systemd_localed_LDADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ nodist_systemunit_DATA += \
+@@ -1901,6 +1924,7 @@ systemd_timedated_CFLAGS = \
+ systemd_timedated_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
++	libsystemd-dbus.la \
+ 	$(DBUS_LIBS)
+ 
+ rootlibexec_PROGRAMS += \
+@@ -1970,6 +1994,7 @@ systemd_logind_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
++	libsystemd-dbus.la \
+ 	$(UDEV_LIBS) \
+ 	$(DBUS_LIBS)
+ 
+@@ -2002,8 +2027,9 @@ loginctl_CFLAGS = \
+ 
+ loginctl_LDADD = \
+ 	libsystemd-shared.la \
+-	$(DBUS_LIBS) \
+-	$(UDEV_LIBS)
++	libsystemd-dbus.la \
++	$(UDEV_LIBS) \
++	$(DBUS_LIBS)
+ 
+ rootbin_PROGRAMS += \
+ 	loginctl

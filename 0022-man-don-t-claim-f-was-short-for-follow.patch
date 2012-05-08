@@ -1,0 +1,22 @@
+From dca8f897441d8dea1230a9063eca7508adc54fa7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Mar 2012 23:51:56 +0200
+Subject: [PATCH] man: don't claim -f was short for --follow (cherry picked
+ from commit 0aed10889b42ac3adc1954eb07c8653784f46e58)
+
+---
+ man/systemctl.xml |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index ffe0164..25b9266 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -431,7 +431,6 @@
+ 
+                         <varlistentry>
+                                 <term><option>--follow</option></term>
+-                                <term><option>-f</option></term>
+ 
+                                 <listitem><para>When used with
+                                 <command>status</command> continously

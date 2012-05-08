@@ -1,0 +1,58 @@
+From a263fabd5cf77aa3f03c5cf1fed72a32d4a49c73 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 14:48:35 +0200
+Subject: [PATCH] units: explicit Type=dbus is now redundant (cherry picked
+ from commit c3743399163c2bd615800c118e97bd8dedbb9c98)
+
+---
+ units/systemd-hostnamed.service.in |    1 -
+ units/systemd-localed.service.in   |    1 -
+ units/systemd-logind.service.in    |    1 -
+ units/systemd-timedated.service.in |    1 -
+ 4 files changed, 4 deletions(-)
+
+diff --git a/units/systemd-hostnamed.service.in b/units/systemd-hostnamed.service.in
+index 6efab1e..548e861 100644
+--- a/units/systemd-hostnamed.service.in
++++ b/units/systemd-hostnamed.service.in
+@@ -12,6 +12,5 @@ Description=Hostname Service
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-hostnamed
+-Type=dbus
+ BusName=org.freedesktop.hostname1
+ CapabilityBoundingSet=CAP_SYS_ADMIN
+diff --git a/units/systemd-localed.service.in b/units/systemd-localed.service.in
+index 4be65df..4f12519 100644
+--- a/units/systemd-localed.service.in
++++ b/units/systemd-localed.service.in
+@@ -12,6 +12,5 @@ Description=Locale Service
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-localed
+-Type=dbus
+ BusName=org.freedesktop.locale1
+ CapabilityBoundingSet=
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index 48c1f2c..eb82e4c 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -13,7 +13,6 @@ After=nss-user-lookup.target
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-logind
+-Type=dbus
+ BusName=org.freedesktop.login1
+ CapabilityBoundingSet=CAP_AUDIT_CONTROL CAP_CHOWN CAP_KILL CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_FOWNER CAP_SYS_TTY_CONFIG
+ 
+diff --git a/units/systemd-timedated.service.in b/units/systemd-timedated.service.in
+index 90ff443..3ec3080 100644
+--- a/units/systemd-timedated.service.in
++++ b/units/systemd-timedated.service.in
+@@ -12,6 +12,5 @@ Description=Time & Date Service
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-timedated
+-Type=dbus
+ BusName=org.freedesktop.timedate1
+ CapabilityBoundingSet=CAP_SYS_TIME

@@ -12,7 +12,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=803358
 (cherry picked from commit 5ebff5337594d690b322078c512eb222d34aaa82)
 ---
  src/util.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/util.c b/src/util.c
 index 20cbc2b..dfc1dc6 100644

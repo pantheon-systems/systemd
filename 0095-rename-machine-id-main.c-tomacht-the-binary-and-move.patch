@@ -1,0 +1,121 @@
+From 6a2c2ac3d7baba65e4fdcafe2a95366e779c1856 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 12:58:55 +0200
+Subject: [PATCH] rename machine-id-main.c tomacht the binary and move main.c
+ to core/ (cherry picked from commit
+ 78a825f216d39ee0295b00647b059d45467e1d02)
+
+Conflicts:
+
+	configure.ac
+---
+ Makefile.am                                          |    8 ++++----
+ configure.ac                                         |    2 +-
+ src/{ => core}/main.c                                |    2 +-
+ src/{machine-id-main.c => machine-id-setup.c}        |    2 +-
+ src/shared/{machine-id-setup.c => machine-id-util.c} |    2 +-
+ src/shared/{machine-id-setup.h => machine-id-util.h} |    0
+ 6 files changed, 8 insertions(+), 8 deletions(-)
+ rename src/{ => core}/main.c (99%)
+ rename src/{machine-id-main.c => machine-id-setup.c} (97%)
+ rename src/shared/{machine-id-setup.c => machine-id-util.c} (99%)
+ rename src/shared/{machine-id-setup.h => machine-id-util.h} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 32db59c..78a2ea5 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -590,8 +590,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/spawn-ask-password-agent.h \
+ 	src/shared/mount-setup.c \
+ 	src/shared/mount-setup.h \
+-	src/shared/machine-id-setup.c \
+-	src/shared/machine-id-setup.h \
++	src/shared/machine-id-util.c \
++	src/shared/machine-id-util.h \
+ 	src/shared/loopback-setup.h \
+ 	src/shared/loopback-setup.c \
+ 	src/shared/specifier.c \
+@@ -803,7 +803,7 @@ libsystemd_core_la_LIBADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_SOURCES = \
+-	src/main.c
++	src/core/main.c
+ 
+ systemd_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -972,7 +972,7 @@ systemd_tmpfiles_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+-	src/machine-id-main.c
++	src/machine-id-setup.c
+ 
+ systemd_machine_id_setup_LDADD = \
+ 	libsystemd-label.la \
+diff --git a/configure.ac b/configure.ac
+index 0c70bae..5f66b6c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -18,7 +18,7 @@
+ AC_PREREQ(2.63)
+ 
+ AC_INIT([systemd],[44],[systemd-devel@lists.freedesktop.org])
+-AC_CONFIG_SRCDIR([src/main.c])
++AC_CONFIG_SRCDIR([src/core/main.c])
+ AC_CONFIG_MACRO_DIR([m4])
+ AC_CONFIG_HEADERS([config.h])
+ AC_USE_SYSTEM_EXTENSIONS
+diff --git a/src/main.c b/src/core/main.c
+similarity index 99%
+rename from src/main.c
+rename to src/core/main.c
+index 1374316..450b37f 100644
+--- a/src/main.c
++++ b/src/core/main.c
+@@ -42,7 +42,7 @@
+ #include "locale-setup.h"
+ #include "selinux-setup.h"
+ #include "ima-setup.h"
+-#include "machine-id-setup.h"
++#include "machine-id-util.h"
+ #include "load-fragment.h"
+ #include "fdset.h"
+ #include "special.h"
+diff --git a/src/machine-id-main.c b/src/machine-id-setup.c
+similarity index 97%
+rename from src/machine-id-main.c
+rename to src/machine-id-setup.c
+index 03970a2..5f3640b 100644
+--- a/src/machine-id-main.c
++++ b/src/machine-id-setup.c
+@@ -22,7 +22,7 @@
+ #include <unistd.h>
+ #include <stdlib.h>
+ 
+-#include "machine-id-setup.h"
++#include "machine-id-util.h"
+ #include "log.h"
+ 
+ int main(int argc, char *argv[]) {
+diff --git a/src/shared/machine-id-setup.c b/src/shared/machine-id-util.c
+similarity index 99%
+rename from src/shared/machine-id-setup.c
+rename to src/shared/machine-id-util.c
+index 94198cb..a5435a2 100644
+--- a/src/shared/machine-id-setup.c
++++ b/src/shared/machine-id-util.c
+@@ -29,7 +29,7 @@
+ 
+ #include <systemd/sd-id128.h>
+ 
+-#include "machine-id-setup.h"
++#include "machine-id-util.h"
+ #include "macro.h"
+ #include "util.h"
+ #include "mkdir.h"
+diff --git a/src/shared/machine-id-setup.h b/src/shared/machine-id-util.h
+similarity index 100%
+rename from src/shared/machine-id-setup.h
+rename to src/shared/machine-id-util.h

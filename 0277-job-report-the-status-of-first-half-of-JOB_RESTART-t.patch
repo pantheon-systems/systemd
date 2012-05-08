@@ -1,0 +1,24 @@
+From 62500d8e98b6fef3f38b8aec8a03a4df51315b1a Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 13 May 2012 23:28:46 +0200
+Subject: [PATCH] job: report the status of first half of JOB_RESTART the same
+ as JOB_STOP (cherry picked from commit
+ 1f136e7acffe0354c0a0639a6280c6e75a6d7739)
+
+---
+ src/core/job.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 8348617..ebebfc2 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -587,7 +587,7 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                         ;
+                 }
+ 
+-        } else if (t == JOB_STOP) {
++        } else if (t == JOB_STOP || t == JOB_RESTART) {
+ 
+                 format = format_table->finished_stop_job[result];
+                 if (!format)

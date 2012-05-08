@@ -1,0 +1,778 @@
+From c09b2765bdd4c0f9afc6edf7d8b9e0ecd68c504c Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 6 May 2012 21:10:38 +0200
+Subject: [PATCH] systemd: add hardware watchdog support
+
+This adds minimal hardware watchdog support to PID 1. The idea is that
+PID 1 supervises and watchdogs system services, while the hardware
+watchdog is used to supervise PID 1.
+
+This adds two hardware watchdog configuration options, for the runtime
+watchdog and for a shutdown watchdog. The former is active during normal
+operation, the latter only at reboots to ensure that if a clean reboot
+times out we reboot nonetheless.
+
+If the runtime watchdog is enabled PID 1 will automatically wake up at
+half the configured interval and write to the watchdog daemon.
+
+By default we enable the shutdown watchdog, but leave the runtime
+watchdog disabled in order not to break independent hardware watchdog
+daemons people might be using.
+
+This is only the most basic hookup. If necessary we can later on hook
+up the watchdog ping more closely with services deemed crucial.
+(cherry picked from commit e96d6be763014be75d480fde503d0b77f41194a0)
+---
+ Makefile.am          |   17 +++++-
+ TODO                 |    2 -
+ man/systemd.conf.xml |   45 ++++++++++++++
+ src/dbus-manager.c   |   19 ++++--
+ src/main.c           |   52 +++++++++++++---
+ src/manager.c        |   25 ++++++--
+ src/manager.h        |    3 +
+ src/shutdown.c       |    8 ++-
+ src/system.conf      |    2 +
+ src/test-watchdog.c  |   51 ++++++++++++++++
+ src/watchdog.c       |  166 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/watchdog.h       |   31 ++++++++++
+ 12 files changed, 399 insertions(+), 22 deletions(-)
+ create mode 100644 src/test-watchdog.c
+ create mode 100644 src/watchdog.c
+ create mode 100644 src/watchdog.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 2079298..994e507 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -215,7 +215,8 @@ noinst_PROGRAMS = \
+ 	test-cgroup \
+ 	test-env-replace \
+ 	test-strv \
+-	test-install
++	test-install \
++        test-watchdog
+ 
+ dist_pkgsysconf_DATA = \
+ 	src/system.conf \
+@@ -594,6 +595,8 @@ libsystemd_core_la_SOURCES = \
+ 	src/tcpwrap.h \
+ 	src/cgroup-attr.c \
+ 	src/cgroup-attr.h \
++        src/watchdog.c \
++        src/watchdog.h \
+ 	src/sd-daemon.c \
+ 	src/sd-id128.c \
+ 	src/macro.h \
+@@ -808,6 +811,14 @@ test_install_CFLAGS = \
+ test_install_LDADD = \
+ 	libsystemd-basic.la
+ 
++test_watchdog_SOURCES = \
++        src/test-watchdog.c \
++	src/watchdog.c \
++        src/watchdog.h
++
++test_watchdog_LDADD = \
++	libsystemd-basic.la
++
+ systemd_initctl_SOURCES = \
+ 	src/initctl.c \
+ 	src/dbus-common.c
+@@ -850,7 +861,9 @@ systemd_shutdownd_LDADD = \
+ systemd_shutdown_SOURCES = \
+ 	src/mount-setup.c \
+ 	src/umount.c \
+-	src/shutdown.c
++	src/shutdown.c \
++        src/watchdog.c \
++        src/watchdog.h
+ 
+ systemd_shutdown_CFLAGS = \
+ 	$(AM_CFLAGS) \
+diff --git a/TODO b/TODO
+index 6796289..56a838f 100644
+--- a/TODO
++++ b/TODO
+@@ -58,8 +58,6 @@ Features:
+ 
+ * There's currently no way to cancel fsck (used to be possible via C-c or c on the console)
+ 
+-* hook up /dev/watchdog with main event loop for embedded, server uses
+-
+ * when dumping cgroup contents, include main/control PID of a service, explicitly
+ 
+ * keep an eye on https://bugzilla.gnome.org/show_bug.cgi?id=670100
+diff --git a/man/systemd.conf.xml b/man/systemd.conf.xml
+index ba144da..c789028 100644
+--- a/man/systemd.conf.xml
++++ b/man/systemd.conf.xml
+@@ -149,6 +149,51 @@
+                                 controllers in separate
+                                 hierarchies.</para></listitem>
+                         </varlistentry>
++
++                        <varlistentry>
++                                <term><varname>RuntimeWatchdogSec=</varname></term>
++                                <term><varname>ShutdownWatchdogSec=</varname></term>
++
++                                <listitem><para>Configure the hardware
++                                watchdog at runtime and at
++                                reboot. Takes a timeout value in
++                                seconds (or in other time units if
++                                suffixed with <literal>ms</literal>,
++                                <literal>min</literal>,
++                                <literal>h</literal>,
++                                <literal>d</literal>,
++                                <literal>w</literal>). If
++                                <varname>RuntimeWatchdogSec=</varname>
++                                is set to a non-zero value the
++                                watchdog hardware
++                                (<filename>/dev/watchdog</filename>)
++                                will be programmed to automatically
++                                reboot the system if it is not
++                                contacted within the specified timeout
++                                interval. The system manager will
++                                ensure to contact it at least once in
++                                half the specified timeout
++                                interval. This feature requires a
++                                hardware watchdog device to be
++                                present, as it is commonly the case in
++                                embedded and server systems. Not all
++                                hardware watchdogs allow configuration
++                                of the reboot timeout, in which case
++                                the closest available timeout is
++                                picked. <varname>ShutdownWatchdogSec=</varname>
++                                may be used to configure the hardware
++                                watchdog when the system is asked to
++                                reboot. It works as a safety net to
++                                ensure that the reboot takes place
++                                even if a clean reboot attempt times
++                                out. By default
++                                <varname>RuntimeWatchdogSec=</varname>
++                                defaults to 0 (off), and
++                                <varname>ShutdownWatchdogSec=</varname>
++                                to 10min. These settings have no
++                                effect if a hardware watchdog is not
++                                available.</para></listitem>
++                        </varlistentry>
+                 </variablelist>
+         </refsect1>
+ 
+diff --git a/src/dbus-manager.c b/src/dbus-manager.c
+index 6d272cb..0a6e55d 100644
+--- a/src/dbus-manager.c
++++ b/src/dbus-manager.c
+@@ -240,7 +240,9 @@
+         "  <property name=\"SwapAuto\" type=\"b\" access=\"read\"/>\n"  \
+         "  <property name=\"DefaultControllers\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"DefaultStandardOutput\" type=\"s\" access=\"read\"/>\n" \
+-        "  <property name=\"DefaultStandardError\" type=\"s\" access=\"read\"/>\n"
++        "  <property name=\"DefaultStandardError\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"RuntimeWatchdogUSec\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"ShutdownWatchdogUSec\" type=\"s\" access=\"read\"/>\n"
+ 
+ #ifdef HAVE_SYSV_COMPAT
+ #define BUS_MANAGER_INTERFACE_PROPERTIES_SYSV                           \
+@@ -491,7 +493,10 @@ static int bus_manager_send_unit_files_changed(Manager *m) {
+         return r;
+ }
+ 
+-static const char systemd_property_string[] = PACKAGE_STRING "\0" DISTRIBUTION "\0" SYSTEMD_FEATURES;
++static const char systemd_property_string[] =
++        PACKAGE_STRING "\0"
++        DISTRIBUTION "\0"
++        SYSTEMD_FEATURES;
+ 
+ static const BusProperty bus_systemd_properties[] = {
+         { "Version",       bus_property_append_string,    "s",  0                                             },
+@@ -502,7 +507,7 @@ static const BusProperty bus_systemd_properties[] = {
+ 
+ static const BusProperty bus_manager_properties[] = {
+         { "RunningAs",     bus_manager_append_running_as,          "s", offsetof(Manager, running_as)                  },
+-        { "Tainted",       bus_manager_append_tainted,             "s", 0 },
++        { "Tainted",       bus_manager_append_tainted,             "s", 0                                              },
+         { "InitRDTimestamp", bus_property_append_uint64,           "t", offsetof(Manager, initrd_timestamp.realtime)   },
+         { "InitRDTimestampMonotonic", bus_property_append_uint64,  "t", offsetof(Manager, initrd_timestamp.monotonic)  },
+         { "StartupTimestamp", bus_property_append_uint64,          "t", offsetof(Manager, startup_timestamp.realtime)  },
+@@ -511,11 +516,11 @@ static const BusProperty bus_manager_properties[] = {
+         { "FinishTimestampMonotonic", bus_property_append_uint64,  "t", offsetof(Manager, finish_timestamp.monotonic)  },
+         { "LogLevel",      bus_manager_append_log_level,           "s", 0,                                             0, bus_manager_set_log_level },
+         { "LogTarget",     bus_manager_append_log_target,          "s", 0,                                             0, bus_manager_set_log_target },
+-        { "NNames",        bus_manager_append_n_names,             "u", 0 },
+-        { "NJobs",         bus_manager_append_n_jobs,              "u", 0 },
++        { "NNames",        bus_manager_append_n_names,             "u", 0                                              },
++        { "NJobs",         bus_manager_append_n_jobs,              "u", 0                                              },
+         { "NInstalledJobs",bus_property_append_uint32,             "u", offsetof(Manager, n_installed_jobs)            },
+         { "NFailedJobs",   bus_property_append_uint32,             "u", offsetof(Manager, n_failed_jobs)               },
+-        { "Progress",      bus_manager_append_progress,            "d", 0 },
++        { "Progress",      bus_manager_append_progress,            "d", 0                                              },
+         { "Environment",   bus_property_append_strv,              "as", offsetof(Manager, environment),                true },
+         { "ConfirmSpawn",  bus_property_append_bool,               "b", offsetof(Manager, confirm_spawn)               },
+         { "ShowStatus",    bus_property_append_bool,               "b", offsetof(Manager, show_status)                 },
+@@ -527,6 +532,8 @@ static const BusProperty bus_manager_properties[] = {
+         { "DefaultControllers", bus_property_append_strv,         "as", offsetof(Manager, default_controllers),        true },
+         { "DefaultStandardOutput", bus_manager_append_exec_output, "s", offsetof(Manager, default_std_output)          },
+         { "DefaultStandardError",  bus_manager_append_exec_output, "s", offsetof(Manager, default_std_error)           },
++        { "RuntimeWatchdogUSec", bus_property_append_usec,         "t", offsetof(Manager, runtime_watchdog),           },
++        { "ShutdownWatchdogUSec", bus_property_append_usec,        "t", offsetof(Manager, shutdown_watchdog),          },
+ #ifdef HAVE_SYSV_COMPAT
+         { "SysVConsole",   bus_property_append_bool,               "b", offsetof(Manager, sysv_console)                },
+         { "SysVInitPath",  bus_property_append_strv,              "as", offsetof(Manager, lookup_paths.sysvinit_path), true },
+diff --git a/src/main.c b/src/main.c
+index 7ae8841..40be2b2 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -54,6 +54,7 @@
+ #include "strv.h"
+ #include "def.h"
+ #include "virt.h"
++#include "watchdog.h"
+ 
+ static enum {
+         ACTION_RUN,
+@@ -80,6 +81,8 @@ static char **arg_default_controllers = NULL;
+ static char ***arg_join_controllers = NULL;
+ static ExecOutput arg_default_std_output = EXEC_OUTPUT_JOURNAL;
+ static ExecOutput arg_default_std_error = EXEC_OUTPUT_INHERIT;
++static usec_t arg_runtime_watchdog = 0;
++static usec_t arg_shutdown_watchdog = 10 * USEC_PER_MINUTE;
+ 
+ static FILE* serialization = NULL;
+ 
+@@ -660,6 +663,8 @@ static int parse_config_file(void) {
+                 { "Manager", "DefaultStandardOutput", config_parse_output,       0, &arg_default_std_output  },
+                 { "Manager", "DefaultStandardError",  config_parse_output,       0, &arg_default_std_error   },
+                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
++                { "Manager", "RuntimeWatchdogSec",    config_parse_usec,         0, &arg_runtime_watchdog    },
++                { "Manager", "ShutdownWatchdogSec",   config_parse_usec,         0, &arg_shutdown_watchdog   },
+                 { NULL, NULL, NULL, 0, NULL }
+         };
+ 
+@@ -1163,6 +1168,7 @@ int main(int argc, char *argv[]) {
+         bool is_reexec = false;
+         int j;
+         bool loaded_policy = false;
++        bool arm_reboot_watchdog = false;
+ 
+ #ifdef HAVE_SYSV_COMPAT
+         if (getpid() != 1 && strstr(program_invocation_short_name, "init")) {
+@@ -1391,7 +1397,11 @@ int main(int argc, char *argv[]) {
+                 test_cgroups();
+         }
+ 
+-        if ((r = manager_new(arg_running_as, &m)) < 0) {
++        if (arg_running_as == MANAGER_SYSTEM && arg_runtime_watchdog > 0)
++                watchdog_set_timeout(&arg_runtime_watchdog);
++
++        r = manager_new(arg_running_as, &m);
++        if (r < 0) {
+                 log_error("Failed to allocate manager object: %s", strerror(-r));
+                 goto finish;
+         }
+@@ -1404,6 +1414,8 @@ int main(int argc, char *argv[]) {
+         m->swap_auto = arg_swap_auto;
+         m->default_std_output = arg_default_std_output;
+         m->default_std_error = arg_default_std_error;
++        m->runtime_watchdog = arg_runtime_watchdog;
++        m->shutdown_watchdog = arg_shutdown_watchdog;
+ 
+         if (dual_timestamp_is_set(&initrd_timestamp))
+                 m->initrd_timestamp = initrd_timestamp;
+@@ -1415,7 +1427,8 @@ int main(int argc, char *argv[]) {
+ 
+         before_startup = now(CLOCK_MONOTONIC);
+ 
+-        if ((r = manager_startup(m, serialization, fds)) < 0)
++        r = manager_startup(m, serialization, fds);
++        if (r < 0)
+                 log_error("Failed to fully start up daemon: %s", strerror(-r));
+ 
+         if (fds) {
+@@ -1438,7 +1451,8 @@ int main(int argc, char *argv[]) {
+ 
+                 log_debug("Activating default unit: %s", arg_default_unit);
+ 
+-                if ((r = manager_load_unit(m, arg_default_unit, NULL, &error, &target)) < 0) {
++                r = manager_load_unit(m, arg_default_unit, NULL, &error, &target);
++                if (r < 0) {
+                         log_error("Failed to load default target: %s", bus_error(&error, r));
+                         dbus_error_free(&error);
+                 } else if (target->load_state == UNIT_ERROR)
+@@ -1449,7 +1463,8 @@ int main(int argc, char *argv[]) {
+                 if (!target || target->load_state != UNIT_LOADED) {
+                         log_info("Trying to load rescue target...");
+ 
+-                        if ((r = manager_load_unit(m, SPECIAL_RESCUE_TARGET, NULL, &error, &target)) < 0) {
++                        r = manager_load_unit(m, SPECIAL_RESCUE_TARGET, NULL, &error, &target);
++                        if (r < 0) {
+                                 log_error("Failed to load rescue target: %s", bus_error(&error, r));
+                                 dbus_error_free(&error);
+                                 goto finish;
+@@ -1491,7 +1506,8 @@ int main(int argc, char *argv[]) {
+         }
+ 
+         for (;;) {
+-                if ((r = manager_loop(m)) < 0) {
++                r = manager_loop(m);
++                if (r < 0) {
+                         log_error("Failed to run mainloop: %s", strerror(-r));
+                         goto finish;
+                 }
+@@ -1505,7 +1521,8 @@ int main(int argc, char *argv[]) {
+ 
+                 case MANAGER_RELOAD:
+                         log_info("Reloading.");
+-                        if ((r = manager_reload(m)) < 0)
++                        r = manager_reload(m);
++                        if (r < 0)
+                                 log_error("Failed to reload: %s", strerror(-r));
+                         break;
+ 
+@@ -1529,6 +1546,7 @@ int main(int argc, char *argv[]) {
+                         };
+ 
+                         assert_se(shutdown_verb = table[m->exit_code]);
++                        arm_reboot_watchdog = m->exit_code == MANAGER_REBOOT;
+ 
+                         log_notice("Shutting down.");
+                         goto finish;
+@@ -1615,13 +1633,33 @@ finish:
+                 fdset_free(fds);
+ 
+         if (shutdown_verb) {
++                char e[32];
++
+                 const char * command_line[] = {
+                         SYSTEMD_SHUTDOWN_BINARY_PATH,
+                         shutdown_verb,
+                         NULL
+                 };
++                const char * env_block[] = {
++                        NULL,
++                        NULL
++                };
+ 
+-                execv(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line);
++                if (arm_reboot_watchdog && arg_shutdown_watchdog > 0) {
++                        /* If we reboot let's set the shutdown
++                         * watchdog and tell the shutdown binary to
++                         * repeatedly ping it */
++                        watchdog_set_timeout(&arg_shutdown_watchdog);
++                        watchdog_close(false);
++
++                        /* Tell the binary how often to ping */
++                        snprintf(e, sizeof(e), "WATCHDOG_USEC=%llu", (unsigned long long) arg_shutdown_watchdog);
++                        char_array_0(e);
++                        env_block[0] = e;
++                } else
++                        watchdog_close(true);
++
++                execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, (char**) env_block);
+                 log_error("Failed to execute shutdown binary, freezing: %m");
+         }
+ 
+diff --git a/src/manager.c b/src/manager.c
+index 74bd740..be47766 100644
+--- a/src/manager.c
++++ b/src/manager.c
+@@ -61,6 +61,7 @@
+ #include "bus-errors.h"
+ #include "exit-status.h"
+ #include "virt.h"
++#include "watchdog.h"
+ 
+ /* As soon as 16 units are in our GC queue, make sure to run a gc sweep */
+ #define GC_QUEUE_ENTRIES_MAX 16
+@@ -2433,6 +2434,7 @@ static int process_event(Manager *m, struct epoll_event *ev) {
+ 
+ int manager_loop(Manager *m) {
+         int r;
++        int wait_msec = -1;
+ 
+         RATELIMIT_DEFINE(rl, 1*USEC_PER_SEC, 50000);
+ 
+@@ -2447,17 +2449,29 @@ int manager_loop(Manager *m) {
+ 
+         /* There might still be some zombies hanging around from
+          * before we were exec()'ed. Leat's reap them */
+-        if ((r = manager_dispatch_sigchld(m)) < 0)
++        r = manager_dispatch_sigchld(m);
++        if (r < 0)
+                 return r;
+ 
++        /* Sleep for half the watchdog time */
++        if (m->runtime_watchdog > 0 && m->running_as == MANAGER_SYSTEM)  {
++                wait_msec = (int) (m->runtime_watchdog / 2 / USEC_PER_MSEC);
++                if (wait_msec <= 0)
++                        wait_msec = 1;
++        }
++
+         while (m->exit_code == MANAGER_RUNNING) {
+                 struct epoll_event event;
+                 int n;
+ 
++                if (wait_msec >= 0)
++                        watchdog_ping();
++
+                 if (!ratelimit_test(&rl)) {
+                         /* Yay, something is going seriously wrong, pause a little */
+                         log_warning("Looping too fast. Throttling execution a little.");
+                         sleep(1);
++                        continue;
+                 }
+ 
+                 if (manager_dispatch_load_queue(m) > 0)
+@@ -2481,17 +2495,20 @@ int manager_loop(Manager *m) {
+                 if (swap_dispatch_reload(m) > 0)
+                         continue;
+ 
+-                if ((n = epoll_wait(m->epoll_fd, &event, 1, -1)) < 0) {
++                n = epoll_wait(m->epoll_fd, &event, 1, wait_msec);
++                if (n < 0) {
+ 
+                         if (errno == EINTR)
+                                 continue;
+ 
+                         return -errno;
+-                }
++                } else if (n == 0)
++                        continue;
+ 
+                 assert(n == 1);
+ 
+-                if ((r = process_event(m, &event)) < 0)
++                r = process_event(m, &event);
++                if (r < 0)
+                         return r;
+         }
+ 
+diff --git a/src/manager.h b/src/manager.h
+index a9d08f0..9ecc926 100644
+--- a/src/manager.h
++++ b/src/manager.h
+@@ -144,6 +144,9 @@ struct Manager {
+         char **environment;
+         char **default_controllers;
+ 
++        usec_t runtime_watchdog;
++        usec_t shutdown_watchdog;
++
+         dual_timestamp initrd_timestamp;
+         dual_timestamp startup_timestamp;
+         dual_timestamp finish_timestamp;
+diff --git a/src/shutdown.c b/src/shutdown.c
+index d157e0f..9f65b1d 100644
+--- a/src/shutdown.c
++++ b/src/shutdown.c
+@@ -42,6 +42,7 @@
+ #include "umount.h"
+ #include "util.h"
+ #include "virt.h"
++#include "watchdog.h"
+ 
+ #define TIMEOUT_USEC (5 * USEC_PER_SEC)
+ #define FINALIZE_ATTEMPTS 50
+@@ -306,7 +307,7 @@ int main(int argc, char *argv[]) {
+         int cmd, r;
+         unsigned retries;
+         bool need_umount = true, need_swapoff = true, need_loop_detach = true, need_dm_detach = true;
+-        bool killed_everbody = false, in_container;
++        bool killed_everbody = false, in_container, use_watchdog = false;
+ 
+         log_parse_environment();
+         log_set_target(LOG_TARGET_CONSOLE); /* syslog will die if not gone yet */
+@@ -342,6 +343,8 @@ int main(int argc, char *argv[]) {
+                 goto error;
+         }
+ 
++        use_watchdog = !!getenv("WATCHDOG_USEC");
++
+         /* lock us into memory */
+         if (mlockall(MCL_CURRENT|MCL_FUTURE) != 0)
+                 log_warning("Cannot lock process memory: %m");
+@@ -359,6 +362,9 @@ int main(int argc, char *argv[]) {
+         for (retries = 0; retries < FINALIZE_ATTEMPTS; retries++) {
+                 bool changed = false;
+ 
++                if (use_watchdog)
++                        watchdog_ping();
++
+                 if (need_umount) {
+                         log_info("Unmounting file systems.");
+                         r = umount_all(&changed);
+diff --git a/src/system.conf b/src/system.conf
+index 33d09bc..36eac07 100644
+--- a/src/system.conf
++++ b/src/system.conf
+@@ -24,3 +24,5 @@
+ #DefaultStandardOutput=journal
+ #DefaultStandardError=inherit
+ #JoinControllers=cpu,cpuacct
++#RuntimeWatchdog=0
++#ShutdownWatchdog=10min
+diff --git a/src/test-watchdog.c b/src/test-watchdog.c
+new file mode 100644
+index 0000000..d53fddb
+--- /dev/null
++++ b/src/test-watchdog.c
+@@ -0,0 +1,51 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <unistd.h>
++#include <string.h>
++
++#include "watchdog.h"
++#include "log.h"
++
++int main(int argc, char *argv[]) {
++        usec_t t = 10 * USEC_PER_SEC;
++        unsigned i;
++        int r;
++
++        log_set_max_level(LOG_DEBUG);
++        log_parse_environment();
++
++        r = watchdog_set_timeout(&t);
++        if (r < 0)
++                log_warning("Failed to open watchdog: %s", strerror(-r));
++
++        for (i = 0; i < 5; i++) {
++                log_info("Pinging...");
++                r = watchdog_ping();
++                if (r < 0)
++                        log_warning("Failed to ping watchdog: %s", strerror(-r));
++
++                usleep(t/2);
++        }
++
++        watchdog_close(true);
++        return 0;
++}
+diff --git a/src/watchdog.c b/src/watchdog.c
+new file mode 100644
+index 0000000..9625e15
+--- /dev/null
++++ b/src/watchdog.c
+@@ -0,0 +1,166 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <sys/ioctl.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <linux/watchdog.h>
++
++#include "watchdog.h"
++#include "log.h"
++
++static int watchdog_fd = -1;
++static usec_t watchdog_timeout = (usec_t) -1;
++
++static int update_timeout(void) {
++        int r;
++
++        if (watchdog_fd < 0)
++                return 0;
++
++        if (watchdog_timeout == (usec_t) -1)
++                return 0;
++        else if (watchdog_timeout == 0) {
++                int flags;
++
++                flags = WDIOS_DISABLECARD;
++                r = ioctl(watchdog_fd, WDIOC_SETOPTIONS, &flags);
++                if (r < 0) {
++                        log_warning("Failed to disable hardware watchdog: %m");
++                        return -errno;
++                }
++        } else {
++                int sec, flags;
++                char buf[FORMAT_TIMESPAN_MAX];
++
++                sec = (int) ((watchdog_timeout + USEC_PER_SEC - 1) / USEC_PER_SEC);
++                r = ioctl(watchdog_fd, WDIOC_SETTIMEOUT, &sec);
++                if (r < 0) {
++                        log_warning("Failed to set timeout to %is: %m", sec);
++                        return -errno;
++                }
++
++                watchdog_timeout = (usec_t) sec * USEC_PER_SEC;
++                log_info("Set hardware watchdog to %s.", format_timespan(buf, sizeof(buf), watchdog_timeout));
++
++                flags = WDIOS_ENABLECARD;
++                r = ioctl(watchdog_fd, WDIOC_SETOPTIONS, &flags);
++                if (r < 0) {
++                        log_warning("Failed to enable hardware watchdog: %m");
++                        return -errno;
++                }
++
++                r = ioctl(watchdog_fd, WDIOC_KEEPALIVE, 0);
++                if (r < 0) {
++                        log_warning("Failed to ping hardware watchdog: %m");
++                        return -errno;
++                }
++        }
++
++        return 0;
++}
++
++static int open_watchdog(void) {
++        struct watchdog_info ident;
++
++        if (watchdog_fd >= 0)
++                return 0;
++
++        watchdog_fd = open("/dev/watchdog", O_WRONLY|O_CLOEXEC);
++        if (watchdog_fd < 0)
++                return -errno;
++
++        if (ioctl(watchdog_fd, WDIOC_GETSUPPORT, &ident) >= 0)
++                log_info("Hardware watchdog '%s', version %x",
++                         ident.identity,
++                         ident.firmware_version);
++
++        return update_timeout();
++}
++
++int watchdog_set_timeout(usec_t *usec) {
++
++        watchdog_timeout = *usec;
++
++        /* If we didn't open the watchdog yet and didn't get any
++         * explicit timeout value set, don't do anything */
++        if (watchdog_fd < 0 && watchdog_timeout == (usec_t) -1)
++                return 0;
++
++        if (watchdog_fd < 0)
++                return open_watchdog();
++        else
++                return update_timeout();
++
++        *usec = watchdog_timeout;
++}
++
++int watchdog_ping(void) {
++        int r;
++
++        if (watchdog_fd < 0) {
++                r = open_watchdog();
++                if (r < 0)
++                        return r;
++        }
++
++        r = ioctl(watchdog_fd, WDIOC_KEEPALIVE, 0);
++        if (r < 0) {
++                log_warning("Failed to ping hardware watchdog: %m");
++                return -errno;
++        }
++
++        return 0;
++}
++
++void watchdog_close(bool disarm) {
++        int r;
++
++        if (watchdog_fd < 0)
++                return;
++
++        if (disarm) {
++                int flags;
++
++                /* Explicitly disarm it */
++                flags = WDIOS_DISABLECARD;
++                r = ioctl(watchdog_fd, WDIOC_SETOPTIONS, &flags);
++                if (r < 0)
++                        log_warning("Failed to disable hardware watchdog: %m");
++
++                /* To be sure, use magic close logic, too */
++                for (;;) {
++                        static const char v = 'V';
++
++                        if (write(watchdog_fd, &v, 1) > 0)
++                                break;
++
++                        if (errno != EINTR) {
++                                log_error("Failed to disarm watchdog timer: %m");
++                                break;
++                        }
++                }
++        }
++
++        close_nointr_nofail(watchdog_fd);
++        watchdog_fd = -1;
++}
+diff --git a/src/watchdog.h b/src/watchdog.h
+new file mode 100644
+index 0000000..5ba7079
+--- /dev/null
++++ b/src/watchdog.h
+@@ -0,0 +1,31 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foowatchdoghfoo
++#define foowatchdoghfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "util.h"
++
++int watchdog_set_timeout(usec_t *usec);
++int watchdog_ping(void);
++void watchdog_close(bool disarm);
++
++#endif

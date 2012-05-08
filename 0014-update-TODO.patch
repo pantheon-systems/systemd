@@ -1,0 +1,23 @@
+From 45f7f5413c6767689492b6a981942e168cffbbff Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 22 Mar 2012 01:42:34 +0100
+Subject: [PATCH] update TODO (cherry picked from commit
+ 6ba383fa49e01302dfeae1f5083bb942b055628b)
+
+---
+ TODO |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/TODO b/TODO
+index 3e11f70..176c2a7 100644
+--- a/TODO
++++ b/TODO
+@@ -18,6 +18,8 @@ Bugfixes:
+ 
+ Features:
+ 
++* add man page documenting all kernel cmdline options, including stuff like fsck.mode=
++
+ * show getty in container mode, not sulogin
+ 
+ * support container_ttys=

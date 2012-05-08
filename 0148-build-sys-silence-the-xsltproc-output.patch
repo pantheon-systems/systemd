@@ -1,0 +1,22 @@
+From 4e1578860abf5ac946f8135b74d70d20f01498dd Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Sat, 14 Apr 2012 18:05:06 +0200
+Subject: [PATCH] build-sys: silence the xsltproc output (cherry picked from
+ commit 7c1d34c5d460a6c1acb39a0ab96338fcb1386ed4)
+
+---
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index d5c5c35..d83473f 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2365,6 +2365,7 @@ endif
+ if HAVE_XSLTPROC
+ XSLTPROC_FLAGS = \
+ 	--nonet \
++	--stringparam man.output.quietly 1 \
+ 	--stringparam funcsynopsis.style ansi
+ 
+ XSLTPROC_PROCESS_MAN = \

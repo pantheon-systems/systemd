@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -33,6 +33,7 @@ BuildRequires:  kmod-devel >= 5
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
+BuildRequires:  git
 
 Requires(post): authconfig
 Requires(post): coreutils
@@ -58,11 +59,301 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+
 Patch0001:      0001-util-never-follow-symlinks-in-rm_rf_children.patch
-Patch0002:      0002-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch
-Patch0003:      0003-transaction-cancel-jobs-non-recursively-on-isolate.patch
-Patch0004:      0004-timedated-introduce-systemd-timedated-ntp.target-whi.patch
-Patch0005:      0005-F17-disable-killing-on-entering-START_PRE-START.patch
+Patch0002:      0002-man-fix-parameter-name-for-sd_uid_xxx.patch
+Patch0003:      0003-bmfmt-allow-passing-more-than-one-config-file-name.patch
+Patch0004:      0004-modules-load-drop-lib-from-search-path-if-we-don-t-h.patch
+Patch0005:      0005-sysctl-accept-multiple-passed-configuration-files.patch
+Patch0006:      0006-man-updates-to-sysctl.d-5.patch
+Patch0007:      0007-journal-react-with-immediate-rotation-to-a-couple-of.patch
+Patch0008:      0008-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch
+Patch0009:      0009-systemd-mount-the-securityfs-filesystem-at-early-sta.patch
+Patch0010:      0010-main-added-support-for-loading-IMA-custom-policies.patch
+Patch0011:      0011-man-systemd-cat-1-typo-fix.patch
+Patch0012:      0012-binfmt-fix-apply-loop.patch
+Patch0013:      0013-add-sparse-support-to-detect-endianness-bug.patch
+Patch0014:      0014-update-TODO.patch
+Patch0015:      0015-logind-extend-comment-about-X11-socket-symlink.patch
+Patch0016:      0016-logind-close-FIFO-before-ending-sessions-cleanly.patch
+Patch0017:      0017-man-minor-typo-in-reference-to-manual-page.patch
+Patch0018:      0018-build-sys-fix-make-dist-check.patch
+Patch0019:      0019-journalctl-loginctl-drop-systemd-prefix-in-binary-na.patch
+Patch0020:      0020-build-sys-do-not-set-CFLAGS-directly.patch
+Patch0021:      0021-build-sys-separate-ldflags-from-cflags.patch
+Patch0022:      0022-man-don-t-claim-f-was-short-for-follow.patch
+Patch0023:      0023-journalctl-add-local-switch.patch
+Patch0024:      0024-cat-fix-priority-type.patch
+Patch0025:      0025-units-get-rid-of-var-run.mount-and-var-lock.mount.patch
+Patch0026:      0026-journal-properly-handle-if-we-interleave-files-with-.patch
+Patch0027:      0027-job-fix-loss-of-ordering-with-restart-jobs.patch
+Patch0028:      0028-job-add-debug-prints-where-job-type-gets-changed.patch
+Patch0029:      0029-rename-etc-systemd-systemd-login-journal-d.conf-to-l.patch
+Patch0030:      0030-bash-completion-update-naming-of-loginctl.patch
+Patch0031:      0031-journal-decrease-default-mmap-window-size-to-allow-a.patch
+Patch0032:      0032-journal-implicitly-add-code-location-to-all-messages.patch
+Patch0033:      0033-install-check-for-proper-return-from-dirent_ensure_t.patch
+Patch0034:      0034-Revert-socket-if-we-fail-to-create-an-instantiated-s.patch
+Patch0035:      0035-analyze-Cosmetic-exit-when-the-bootup-is-not-yet-com.patch
+Patch0036:      0036-systemctl-make-f-short-for-both-follow-and-force.patch
+Patch0037:      0037-journal-in-json-and-export-mode-use-double-underscor.patch
+Patch0038:      0038-fix-a-couple-of-AF_UNIX-connect-calls.patch
+Patch0039:      0039-logind-log-with-AUTH-facility.patch
+Patch0040:      0040-man-document-special-journal-fields.patch
+Patch0041:      0041-man-update-documentation-of-special-units.patch
+Patch0042:      0042-man-clarify-the-formatting-of-timestamps.patch
+Patch0043:      0043-man-document-the-_TRANSPORT-journal-field.patch
+Patch0044:      0044-journal-don-t-export-the-boot-id-twice-per-entry.patch
+Patch0045:      0045-units-use-SYSTEMCTL-instead-of-hardcoded-paths.patch
+Patch0046:      0046-build-sys-remove-vala-hack-which-did-not-allow-to-li.patch
+Patch0047:      0047-units-direct-users-to-the-journal-for-logs-when-ente.patch
+Patch0048:      0048-build-sys-add-a-few-missing-headers.patch
+Patch0049:      0049-job-use-a-lookup-table-for-merging-of-job-types.patch
+Patch0050:      0050-systemd-add-hardware-watchdog-support.patch
+Patch0051:      0051-util-move-all-to-shared-and-split-external-dependenc.patch
+Patch0052:      0052-util-move-ACL-code-into-internal-library.patch
+Patch0053:      0053-build-sys-add-AM_CFLAGS-where-needed.patch
+Patch0054:      0054-udev-fix-gcc-warnings-showing-up-after-adding-AM_CFL.patch
+Patch0055:      0055-move-cgroup-util.-ch-to-shared.patch
+Patch0056:      0056-move-libsystemd-capability.la-dep-from-basic-to-core.patch
+Patch0057:      0057-use-libsystemd-id128.la-instead-of-source-file.patch
+Patch0058:      0058-use-libsystemd-daemon.la-instead-of-source-file.patch
+Patch0059:      0059-move-pager.-ch-to-shared.patch
+Patch0060:      0060-move-list.h-macro.h-ioprio.h-to-shared.patch
+Patch0061:      0061-watchdog-really-return-the-actual-watchdog-timeout.patch
+Patch0062:      0062-dbus-add-data-argument-to-BusPropertySetCallback.patch
+Patch0063:      0063-dbus-add-generic-DEFINE_BUS_PROPERTY_SET_ENUM-macro-.patch
+Patch0064:      0064-dbus-make-the-service-property-StartLimitAction-writ.patch
+Patch0065:      0065-fixup-for-missing-udev-convert-uaccess-to-a-builtin.patch
+Patch0066:      0066-units-introduce-nss-user-lookup.target.patch
+Patch0067:      0067-logs-show-fix-output-of-log-lines-lacking-comm.patch
+Patch0068:      0068-systemctl-don-t-forward-poweroff-reboot-requests-to-.patch
+Patch0069:      0069-shutdownd-rework-interface-allow-subscribing-to-sche.patch
+Patch0070:      0070-pam_systemd-add-missing-libsystemd_audit.l.patch
+Patch0071:      0071-build-sys-add-AM_LDFLAGS-where-needed.patch
+Patch0072:      0072-build-sys-move-remaining-headers-out-EXTRA_DIST-inst.patch
+Patch0073:      0073-split-selinux-label-operations-out-of-cgroup-util-so.patch
+Patch0074:      0074-main-add-URL-to-cgroups-check-message.patch
+Patch0075:      0075-machine-id-don-t-delete-runtime-machine-id-and-place.patch
+Patch0076:      0076-main-drop-container-initrd-env-vars-from-inherited-s.patch
+Patch0077:      0077-main-unset-some-bash-specific-environment-variables-.patch
+Patch0078:      0078-move-libsystemd_core.la-sources-into-core.patch
+Patch0079:      0079-put-acl.la-in-if-HAVE_ACL-and-rename-acl.-ch-to-acl-.patch
+Patch0080:      0080-main-disarm-watchdog-when-preparing-for-reexecution.patch
+Patch0081:      0081-polkit-temporarily-spawn-of-a-polkit-agent-in-termin.patch
+Patch0082:      0082-tmpfiles-open-directories-with-O_NOATIME-to-preserve.patch
+Patch0083:      0083-enable-proper-access-timestamps-on-all-tmpfs-mounts.patch
+Patch0084:      0084-units-exclude-gettys-from-isolate-requests.patch
+Patch0085:      0085-polkit-when-spawning-off-agent-wait-until-the-agent-.patch
+Patch0086:      0086-One-can-specify-in-which-cgroup-hierarchies-a-system.patch
+Patch0087:      0087-move-more-common-files-to-shared-and-add-them-to-sha.patch
+Patch0088:      0088-unit-introduce-ConditionPathIsReadWrite.patch
+Patch0089:      0089-units-run-sysctl-stuff-only-when-proc-sys-is-actuall.patch
+Patch0090:      0090-units-start-vconsole-setup-only-if-there-s-actually-.patch
+Patch0091:      0091-main-pass-original-environment-block-to-shutdown-bin.patch
+Patch0092:      0092-execute-when-we-can-t-get-the-requested-rlimit-get-t.patch
+Patch0093:      0093-journald-add-missing-flag-to-open.patch
+Patch0094:      0094-nspawn-bind-mount-dev-nul-to-proc-kmsg-so-that-the-c.patch
+Patch0095:      0095-rename-machine-id-main.c-tomacht-the-binary-and-move.patch
+Patch0096:      0096-move-a-couple-of-test-.c-to-test.patch
+Patch0097:      0097-build-sys-add-stub-makefiles-to-make-emacs-easier-to.patch
+Patch0098:      0098-build-sys-move-a-few-things-into-more-appropriate-pl.patch
+Patch0099:      0099-umount-don-t-try-to-umount-dev-console-since-we-are-.patch
+Patch0100:      0100-build-sys-dbus-loop.h-is-not-used-by-the-core.patch
+Patch0101:      0101-test-test-tools-should-still-be-in-the-src-directory.patch
+Patch0102:      0102-umount-fix-build.patch
+Patch0103:      0103-shutdown-move-shutdown-to-core-since-it-replaces-PID.patch
+Patch0104:      0104-hostname-setup-move-to-core.patch
+Patch0105:      0105-move-more-main-systemd-parts-to-core.patch
+Patch0106:      0106-main-we-want-all-setup-functions-to-be-in-files-call.patch
+Patch0107:      0107-rename-bridge.c-to-stdio-bridge.c-and-move-to-subdir.patch
+Patch0108:      0108-detect-virt-beef-up-tool-considerably.patch
+Patch0109:      0109-detect-virt-make-detect-virt-an-official-command.patch
+Patch0110:      0110-machine-id-setup-add-the-usual-command-line-paramete.patch
+Patch0111:      0111-detect-virt-print-none-if-no-virtualization-is-detec.patch
+Patch0112:      0112-move-remainig-shared-stuff-to-shared.patch
+Patch0113:      0113-move-libsystemd-id128-libsystemd-daemon-to-subdir.patch
+Patch0114:      0114-build-sys-introduce-seperate-convenience-library-for.patch
+Patch0115:      0115-getty-VC-devices-are-always-available-we-don-t-need-.patch
+Patch0116:      0116-getty-skip-VC-gettys-if-the-VC-subsystem-is-not-avai.patch
+Patch0117:      0117-build-sys-split-off-logs-show-into-its-own-convenien.patch
+Patch0118:      0118-journal-fix-missing-variable-initialization.patch
+Patch0119:      0119-machine-id-setup-avoid-cyclic-dependency-built-twice.patch
+Patch0120:      0120-move-all-tools-to-subdirs.patch
+Patch0121:      0121-build-sys-move-setup-out-of-shared-to-avoid-selinux-.patch
+Patch0122:      0122-build-sys-create-top-level-directory-for-bash-comple.patch
+Patch0123:      0123-build-sys-move-src-linux-to-src-shared-linux.patch
+Patch0124:      0124-pam_systemd-add-dbus.la.patch
+Patch0125:      0125-build-sys-remove-DBUS_LIBS-libsystemd-dbus.la-pulls-.patch
+Patch0126:      0126-build-sys-use-check_PROGRAMS-for-test-.c.patch
+Patch0127:      0127-udev-properly-hook-up-all-tests-to-make-check.patch
+Patch0128:      0128-build-sys-move-systemd-analyze-into-its-own-subdir.patch
+Patch0129:      0129-build-sys-execute-test-programs-with-make-check.patch
+Patch0130:      0130-build-sys-drop-systemd-prefix-from-analyze-dir.patch
+Patch0131:      0131-fix-a-couple-of-things-found-with-the-llvm-static-an.patch
+Patch0132:      0132-udev-unpack-sysfs-test-tree-only-on-make-check-fix-t.patch
+Patch0133:      0133-nspawn-fake-dev-kmsg-and-proc-kmsg-as-fifo.patch
+Patch0134:      0134-manager-support-systems-lacking-dev-tty0.patch
+Patch0135:      0135-loopback-handle-EPERM-more-gracefully.patch
+Patch0136:      0136-audit-ignore-if-we-get-EPERM.patch
+Patch0137:      0137-main-unset-some-more-env-vars.patch
+Patch0138:      0138-units-do-binfmt-magic-only-when-proc-sys-is-writable.patch
+Patch0139:      0139-logind-explicitly-check-for-dev-tty0.patch
+Patch0140:      0140-unit-signal-explicitly-if-a-condition-failed-in-unit.patch
+Patch0141:      0141-units-drop-audit-reference-from-description-of-utmp-.patch
+Patch0142:      0142-dbus-expose-whether-we-have-a-hardware-watchdog-on-t.patch
+Patch0143:      0143-dbus-automatically-send-out-changed-events-for-prope.patch
+Patch0144:      0144-watchdog-make-watchdog-dbus-properties-writable.patch
+Patch0145:      0145-nspawn-add-missing-include-lines.patch
+Patch0146:      0146-polkit-spawn-agent-in-fallback-mode.patch
+Patch0147:      0147-service-place-control-command-in-subcgroup-control.patch
+Patch0148:      0148-build-sys-silence-the-xsltproc-output.patch
+Patch0149:      0149-cgroup-if-a-controller-is-not-available-don-t-try-to.patch
+Patch0150:      0150-manager-remove-unavailable-redundant-entries-from-de.patch
+Patch0151:      0151-logind-add-shutdown-suspend-idle-inhibition-framewor.patch
+Patch0152:      0152-logind-hook-up-inhibit-logic-with-idle-hint-logic.patch
+Patch0153:      0153-cgls-don-t-show-empty-cgroups-by-default.patch
+Patch0154:      0154-util-introduce-memdup.patch
+Patch0155:      0155-systemctl-show-main-and-control-PID-explicitly-in-cg.patch
+Patch0156:      0156-logind-remove-redundant-entries-from-logind-s-defaul.patch
+Patch0157:      0157-man-Fix-a-few-typos.patch
+Patch0158:      0158-configure.ac-Use-the-new-autoconf-field-to-set-the-p.patch
+Patch0159:      0159-configure.ac-Use-a-auxiliar-directory-to-store-autog.patch
+Patch0160:      0160-udev-replace-util_create_path-with-mkdir_parents.patch
+Patch0161:      0161-mkdir-do-not-use-alloca-in-a-loop.patch
+Patch0162:      0162-selinux-unify-systemd-and-udev-code.patch
+Patch0163:      0163-silence-a-bunch-of-gcc-warnings.patch
+Patch0164:      0164-udev-unify-dev-static-symlink-setup.patch
+Patch0165:      0165-remove-MS_-which-can-not-be-combined-with-current-ke.patch
+Patch0166:      0166-build-sys-move-dev-setup-to-label.la.patch
+Patch0167:      0167-fix-typo-in-src-shared-install.c.patch
+Patch0168:      0168-main-log-to-the-journal-in-container-mode-by-default.patch
+Patch0169:      0169-mount-setup-don-t-log-with-LOG_ERROR-if-a-mount-that.patch
+Patch0170:      0170-log-fix-LOG_TARGET_JOURNAL_OR_KMSG.patch
+Patch0171:      0171-tmpfiles-fix-error-message.patch
+Patch0172:      0172-manager-fix-comment.patch
+Patch0173:      0173-job-allow-job_free-only-on-already-unlinked-jobs.patch
+Patch0174:      0174-manager-simplify-transaction_abort.patch
+Patch0175:      0175-job-job_uninstall.patch
+Patch0176:      0176-manager-Transaction-as-an-object.patch
+Patch0177:      0177-manager-split-transaction.-ch.patch
+Patch0178:      0178-job-job_new-can-find-the-manager-from-the-unit.patch
+Patch0179:      0179-job-jobs-shouldn-t-need-to-know-about-transaction-an.patch
+Patch0180:      0180-transaction-do-not-add-installed-jobs-to-the-transac.patch
+Patch0181:      0181-transaction-maintain-anchor_job.patch
+Patch0182:      0182-transaction-change-the-linking-of-isolate-jobs-to-th.patch
+Patch0183:      0183-transaction-simplify-transaction_find_jobs_that_matt.patch
+Patch0184:      0184-transaction-avoid-garbage-collecting-the-anchor-job.patch
+Patch0185:      0185-transaction-remove-the-anchor-link.patch
+Patch0186:      0186-transaction-remove-a-couple-of-asserts.patch
+Patch0187:      0187-job-separate-job_install.patch
+Patch0188:      0188-transaction-rework-merging-with-installed-jobs.patch
+Patch0189:      0189-transaction-remove-checks-for-installed.patch
+Patch0190:      0190-dbus-job-allow-multiple-bus-clients.patch
+Patch0191:      0191-transaction-add-starting-requirements-for-JOB_RESTAR.patch
+Patch0192:      0192-watchdog-fix-default-configuration-fragment-for-watc.patch
+Patch0193:      0193-nspawn-make-dev-kmsg-unavailable-in-the-container-bu.patch
+Patch0194:      0194-mount-setup-ignore-common-container-bind-mounts.patch
+Patch0195:      0195-nspawn-be-more-careful-when-initializing-the-hostnam.patch
+Patch0196:      0196-log-include-syslog-identifier-in-default-log-propert.patch
+Patch0197:      0197-util-fix-tty_is_vc_resolve-in-a-container-where-sys-.patch
+Patch0198:      0198-loginctl-avoid-segfault-for-kill-session-and-kill-us.patch
+Patch0199:      0199-container-spawn-a-getty-instead-of-a-sulogin-in-a-co.patch
+Patch0200:      0200-login-assing-dev-console-logins-to-seat0.patch
+Patch0201:      0201-default-to-v102-everywhere-instead-of-vt100-to-synch.patch
+Patch0202:      0202-nspawn-add-b-switch-to-automatically-look-for-an-ini.patch
+Patch0203:      0203-units-skip-root-fsck-if-the-root-directory-is-writab.patch
+Patch0204:      0204-units-don-t-try-to-load-kernel-modules-if-CAP_SYS_MO.patch
+Patch0205:      0205-nspawn-add-uuid-switch-to-allow-setting-the-machine-.patch
+Patch0206:      0206-util-unify-getenv-logic-for-other-PID.patch
+Patch0207:      0207-machine-id-fix-spelling.patch
+Patch0208:      0208-transaction-add-missing-emacs-and-license-headers.patch
+Patch0209:      0209-transaction-downgrade-warnings-about-masked-units.patch
+Patch0210:      0210-mount-don-t-fail-if-fstab-doesn-t-exist.patch
+Patch0211:      0211-units-remount-file-systems-only-if-etc-fstab-actuall.patch
+Patch0212:      0212-job-the-status-messages-are-proper-sentences-hence-e.patch
+Patch0213:      0213-hostname-if-there-s-already-a-hostname-set-when-PID-.patch
+Patch0214:      0214-shutdown-don-t-try-to-shut-down-DM-devices-in-a-cont.patch
+Patch0215:      0215-transaction-improve-readability.patch
+Patch0216:      0216-transaction-fix-detection-of-cycles-involving-instal.patch
+Patch0217:      0217-transaction-abort-does-not-need-to-use-recursive-del.patch
+Patch0218:      0218-job-serialize-jobs-properly.patch
+Patch0219:      0219-transaction-cancel-jobs-non-recursively-on-isolate.patch
+Patch0220:      0220-readahead-rather-than-checking-for-virtualization-in.patch
+Patch0221:      0221-man-rework-nspawn-man-page-to-suggest-yum-installroo.patch
+Patch0222:      0222-service-introduce-Type-idle-and-use-it-for-gettys.patch
+Patch0223:      0223-remount-consolidate-remount-api-vfs-and-remount-root.patch
+Patch0224:      0224-shutdown-don-t-complain-if-we-cannot-lock-memory-to-.patch
+Patch0225:      0225-nspawn-bind-mount-etc-resolv.conf-from-the-host-by-d.patch
+Patch0226:      0226-nspawn-add-read-only-switch.patch
+Patch0227:      0227-timedated-introduce-systemd-timedated-ntp.target-whi.patch
+Patch0228:      0228-core-add-NOP-jobs-job-type-collapsing.patch
+Patch0229:      0229-util-introduce-container_of-macro.patch
+Patch0230:      0230-unit-add-new-dependency-type-RequiresMountsFor.patch
+Patch0231:      0231-units-make-sure-var-is-writable-before-initializing-.patch
+Patch0232:      0232-vconsole-fix-error-messages.patch
+Patch0233:      0233-service-warn-if-a-dbus-name-is-specified-but-the-ser.patch
+Patch0234:      0234-service-default-to-Type-dbus-if-BusName-is-specified.patch
+Patch0235:      0235-units-explicit-Type-dbus-is-now-redundant.patch
+Patch0236:      0236-vconsole-fix-some-error-messages.patch
+Patch0237:      0237-hwclock-add-taint-flag-for-non-local-hwclock.patch
+Patch0238:      0238-rc-local-generator-hook-halt-local-in-based-on-gener.patch
+Patch0239:      0239-systemctl-get-rid-of-arg_immediate-and-fold-it-into-.patch
+Patch0240:      0240-systemctl-print-a-nice-error-message-if-an-unprivile.patch
+Patch0241:      0241-systemctl-allow-systemctl-reboot-ff-to-succeed-even-.patch
+Patch0242:      0242-service-explicitly-remove-control-subcgroup-after-ea.patch
+Patch0243:      0243-dbus-handle-invalid-enum-values-better.patch
+Patch0244:      0244-cgroup-fix-alloca-misuse-in-cg_shorten_controllers.patch
+Patch0245:      0245-readhead-temporarily-lower-the-kernel-s-read_ahead_k.patch
+Patch0246:      0246-units-use-OOMScoreAdjust-in-the-unit-files-to-set-OO.patch
+Patch0247:      0247-readahead-store-inode-numbers-in-pack-file.patch
+Patch0248:      0248-man-clarify-_TRANSPORT.patch
+Patch0249:      0249-systemd-analyze-add-a-user-option-to-support-user-in.patch
+Patch0250:      0250-systemctl-fix-typo.patch
+Patch0251:      0251-logind-implement-delay-inhibitor-locks-in-addition-t.patch
+Patch0252:      0252-conf_files_list-files-add-do-not-canonicalize-file-n.patch
+Patch0253:      0253-conf_files_list-split-out-conf_files_list_strv.patch
+Patch0254:      0254-util-split-out-conf-file.-ch.patch
+Patch0255:      0255-logind-fix-memory-leak.patch
+Patch0256:      0256-util-split-out-hwclock.-ch.patch
+Patch0257:      0257-util-split-out-path-util.-ch.patch
+Patch0258:      0258-autogen.sh-undef-_FORTIFY_SOURCE-which-now-logs-warn.patch
+Patch0259:      0259-logind-fix-test-inhibit.patch
+Patch0260:      0260-logind-use-sleep-as-generic-term-for-suspend-hiberna.patch
+Patch0261:      0261-sleep-implement-suspend-hibernate-as-first-class-tar.patch
+Patch0262:      0262-logind-implement-suspend-hibernate-calls-with-inhibi.patch
+Patch0263:      0263-main-simplify-unify-logic-for-parsing-runtime-boolea.patch
+Patch0264:      0264-path-util-there-is-no-function-path_parent.patch
+Patch0265:      0265-manager-introduce-SwitchRoot-bus-call-for-initrd-mai.patch
+Patch0266:      0266-util-a-few-updates-for-rm_rf.patch
+Patch0267:      0267-bash-completion-avoid-losing-backslashes-in-unit-nam.patch
+Patch0268:      0268-bash-completion-use-printf-instead-of-echo.patch
+Patch0269:      0269-main-fix-assertion-failure-due-to-use-of-ELEMENTSOF-.patch
+Patch0270:      0270-main-fix-uninitialized-variable.patch
+Patch0271:      0271-dbus-manager-fix-tainted-string.patch
+Patch0272:      0272-units-do-not-quit-plymouth-too-early.patch
+Patch0273:      0273-job-only-jobs-on-the-runqueue-can-be-run.patch
+Patch0274:      0274-job-change-red-ABORT-status-to-yellow-DEPEND.patch
+Patch0275:      0275-unit-print-the-color-status-marks-on-the-left.patch
+Patch0276:      0276-unit-unit-type-dependent-status-messages.patch
+Patch0277:      0277-job-report-the-status-of-first-half-of-JOB_RESTART-t.patch
+Patch0278:      0278-job-info-message-if-JOB_VERIFY_ACTIVE-detects-an-ina.patch
+Patch0279:      0279-core-add-extra-safety-check-before-switching-root.patch
+Patch0280:      0280-systemctl-add-switch-root-verb.patch
+Patch0281:      0281-namespace-make-PrivateTmp-apply-to-both-tmp-and-var-.patch
+Patch0282:      0282-sd-login-update-header-docs-a-bit.patch
+Patch0283:      0283-missing-Fix-broken-syscall-__NR_fanotify_mark.-on-pp.patch
+Patch0284:      0284-install-fix-inverted-meaning-of-force-in-systemctl-e.patch
+Patch0285:      0285-man-overwrite-vs.-override.patch
+Patch0286:      0286-tmpfiles-if-we-are-supposed-to-write-a-string-to-a-f.patch
+Patch0287:      0287-build-sys-fix-distcheck.patch
+Patch0288:      0288-delta-add-systemd-delta-tool-to-find-overriden-confi.patch
+Patch0289:      0289-switch-root-check-for-absolute-paths.patch
+Patch0290:      0290-delta-add-missing-files.patch
+Patch0291:      0291-delta-add-preset-dirs.patch
+Patch0292:      0292-delta-Support-filtering-what-type-of-deltas-to-show.patch
+Patch0293:      0293-delta-enums-are-much-cooler-than-defines.patch
+Patch0294:      0294-F17-units-do-not-use-Type-idle-yet.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -81,6 +372,8 @@ Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
 # for the systemd-analyze split:
 Obsoletes:      systemd < 38-5
+# old nfs-server.service forked daemons from ExecStartPre/Post:
+Conflicts:      nfs-utils < 1:1.2.6
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -134,12 +427,12 @@ at boot.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-set +x
-for p in %{patches}; do
-        echo "Applying $p"
-        patch -p1 < $p
-done
-set -x
+git init
+git config user.email "systemd-owner@fedoraproject.org"
+git config user.name "systemd cabal"
+git add .
+git commit -m "base release %{version}"
+git am %{patches}
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -217,9 +510,9 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 # Let rsyslog read from /proc/kmsg for now
 sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/systemd-journald.conf
 
-# Add forward-compatible command names
-ln -s systemd-loginctl %{buildroot}%{_bindir}/loginctl
-ln -s systemd-journalctl %{buildroot}%{_bindir}/journalctl
+# Add backward-compatible command names
+ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
+ln -s journalctl %{buildroot}%{_bindir}/systemd-journalctl
 ln -s systemctl %{buildroot}%{_bindir}/systemd-systemctl
 
 %post
@@ -354,6 +647,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-cat
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
+%{_bindir}/systemd-delta
+%{_bindir}/systemd-detect-virt
+%{_bindir}/systemd-inhibit
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
 %{_prefix}/lib/systemd/systemd-*
@@ -419,6 +715,8 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_includedir}/systemd/sd-journal.h
 %{_includedir}/systemd/sd-id128.h
 %{_includedir}/systemd/sd-messages.h
+%{_includedir}/systemd/sd-readahead.h
+%{_includedir}/systemd/sd-shutdown.h
 %{_libdir}/pkgconfig/libsystemd-daemon.pc
 %{_libdir}/pkgconfig/libsystemd-login.pc
 %{_libdir}/pkgconfig/libsystemd-journal.pc
@@ -432,6 +730,30 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Fri May 18 2012 Michal Schmidt <mschmidt@redhat.com> - 44-9
+- Applied most of the patches from current upstream, while avoiding
+  incompatible changes.
+- NOT included:
+  - systemadm removal
+  - /media, /tmp tmpfs changes
+  - systemd-*.conf config files rename
+  - "service: schedule JOB_RESTART from SERVICE_AUTO_RESTART state"
+    possible regression, https://bugs.freedesktop.org/show_bug.cgi?id=45511
+  - udev merge
+  - big LGPL relicensing patch
+  - MountAuto=, SwapAuto= options removal
+  - use of Type=idle for gettys by default
+  - JobNew/JobRemoved dbus API change
+- Fixes for reported BZs:
+  - try-restart handling of units with scheduled jobs (#753586)
+  - start requirement dependencies on "restart" (#802770)
+  - systemd-tmpfiles did not preserve atime of subdirectories (#810257)
+  - segfault in systemd-loginctl kill-session (#819142)
+  - added shutdown inhibition support (#570594)
+  - assertion failure in systemd-analyze (#701669)
+  - bash-completion "Failed to issue method call" (#814966)
+- Switched to using git for prep. Allows the use of renaming patches.
+
 * Wed May 02 2012 Michal Schmidt <mschmidt@redhat.com> - 44-8
 - Remove the "control" sub-cgroup patch. (#816842)
 - Avoid #805942 by disabling the killing on START_PRE, START.

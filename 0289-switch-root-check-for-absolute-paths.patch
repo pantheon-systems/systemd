@@ -1,0 +1,27 @@
+From c966157e3e6b782e8d3d48ad286bb8d22888aa47 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 16 May 2012 03:23:54 +0200
+Subject: [PATCH] switch-root: check for absolute paths (cherry picked from
+ commit ee83acc49b7231b493fd08ac619d09e4a5461f83)
+
+---
+ src/core/dbus-manager.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 802389c..aaaeec4 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -1198,10 +1198,10 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                                     DBUS_TYPE_INVALID))
+                         return bus_send_error_reply(connection, message, &error, -EINVAL);
+ 
+-                if (path_equal(switch_root, "/") || !is_path(switch_root))
++                if (path_equal(switch_root, "/") || !path_is_absolute(switch_root))
+                         return bus_send_error_reply(connection, message, NULL, -EINVAL);
+ 
+-                if (!isempty(switch_root_init) && !is_path(switch_root_init))
++                if (!isempty(switch_root_init) && !path_is_absolute(switch_root_init))
+                         return bus_send_error_reply(connection, message, NULL, -EINVAL);
+ 
+                 if (m->running_as != MANAGER_SYSTEM) {

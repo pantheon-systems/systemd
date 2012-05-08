@@ -1,0 +1,36 @@
+From b3dfd2aca0730c466fc64d07b8aa01ef3d44dbc8 Mon Sep 17 00:00:00 2001
+From: Lucas De Marchi <lucas.demarchi@profusion.mobi>
+Date: Thu, 26 Apr 2012 13:36:01 -0300
+Subject: [PATCH] util: introduce container_of() macro
+
+This macro comes from kernel and it's useful for unwrapping structs
+inside another one. The generated code is actually the same to the one
+where this logic is used in udev, but using this macro is much cleaner
+and less error prone.
+(cherry picked from commit c4326aa4af424ada8ab9e6fe77035db1cf222ffa)
+---
+ src/shared/util.h |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/shared/util.h b/src/shared/util.h
+index a69807d..0d82b13 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -59,6 +59,17 @@ typedef struct dual_timestamp {
+ #define USEC_PER_MONTH (2629800ULL*USEC_PER_SEC)
+ #define USEC_PER_YEAR (31557600ULL*USEC_PER_SEC)
+ 
++/*
++ * container_of - cast a member of a structure out to the containing structure
++ * @ptr: the pointer to the member.
++ * @type: the type of the container struct this is embedded in.
++ * @member: the name of the member within the struct.
++ *
++ */
++#define container_of(ptr, type, member) ({ \
++        const typeof( ((type *)0)->member ) *__mptr = (ptr); \
++        (type *)( (char *)__mptr - offsetof(type,member) );})
++
+ /* What is interpreted as whitespace? */
+ #define WHITESPACE " \t\n\r"
+ #define NEWLINE "\n\r"

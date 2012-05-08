@@ -1,0 +1,34 @@
+From f460f71ff6946de94568ec5d60a6a58d21e9e6b1 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 16:29:15 +0200
+Subject: [PATCH] systemctl: allow 'systemctl reboot -ff' to succeed even
+ without D-Bus (cherry picked from commit
+ 3beddc7861783347eb0aaf5fa492e8b2aef9e691)
+
+---
+ src/systemctl/systemctl.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index e59442f..b1a56c3 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -1783,7 +1783,6 @@ static int start_special(DBusConnection *bus, char **args) {
+         enum action a;
+         int r;
+ 
+-        assert(bus);
+         assert(args);
+ 
+         a = verb_to_action(args[0]);
+@@ -5204,7 +5203,9 @@ static int systemctl_main(DBusConnection *bus, int argc, char *argv[], DBusError
+                         return 0;
+                 }
+ 
+-                if (!bus) {
++                if (((!streq(verbs[i].verb, "reboot") &&
++                     !streq(verbs[i].verb, "halt") &&
++                     !streq(verbs[i].verb, "reboot")) || arg_force <= 0) && !bus) {
+                         log_error("Failed to get D-Bus connection: %s",
+                                   dbus_error_is_set(error) ? error->message : "No connection to service manager.");
+                         return -EIO;

@@ -1,0 +1,52 @@
+From e93cd48f16b52c91176dc35ba00bb5cf380ecd5b Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 11 Apr 2012 22:18:55 +0200
+Subject: [PATCH] enable proper access timestamps on all tmpfs mounts (cherry
+ picked from commit
+ 635f7d8ca723615b4cf968670d58c109b806bb20)
+
+Conflicts:
+
+	units/media.mount
+---
+ src/mount-setup.c |    8 ++++----
+ src/nspawn.c      |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/mount-setup.c b/src/mount-setup.c
+index 7d6cdf6..dd7938e 100644
+--- a/src/mount-setup.c
++++ b/src/mount-setup.c
+@@ -59,12 +59,12 @@ typedef struct MountPoint {
+ static const MountPoint mount_table[] = {
+         { "proc",     "/proc",                  "proc",     NULL,                MS_NOSUID|MS_NOEXEC|MS_NODEV, true },
+         { "sysfs",    "/sys",                   "sysfs",    NULL,                MS_NOSUID|MS_NOEXEC|MS_NODEV, true },
+-        { "devtmpfs", "/dev",                   "devtmpfs", "mode=755",          MS_NOSUID,                    true },
++        { "devtmpfs", "/dev",                   "devtmpfs", "mode=755",          MS_NOSUID|MS_STRICTATIME,     true },
+         { "securityfs", "/sys/kernel/security", "securityfs", NULL,              MS_NOSUID|MS_NOEXEC|MS_NODEV, false },
+-        { "tmpfs",    "/dev/shm",               "tmpfs",    "mode=1777",         MS_NOSUID|MS_NODEV,           true },
++        { "tmpfs",    "/dev/shm",               "tmpfs",    "mode=1777",         MS_NOSUID|MS_NODEV|MS_STRICTATIME, true },
+         { "devpts",   "/dev/pts",               "devpts",   "mode=620,gid=" STRINGIFY(TTY_GID), MS_NOSUID|MS_NOEXEC, false },
+-        { "tmpfs",    "/run",                   "tmpfs",    "mode=755",          MS_NOSUID|MS_NODEV, true },
+-        { "tmpfs",    "/sys/fs/cgroup",         "tmpfs",    "mode=755",          MS_NOSUID|MS_NOEXEC|MS_NODEV, false },
++        { "tmpfs",    "/run",                   "tmpfs",    "mode=755",          MS_NOSUID|MS_NODEV|MS_STRICTATIME, true },
++        { "tmpfs",    "/sys/fs/cgroup",         "tmpfs",    "mode=755",          MS_NOSUID|MS_NOEXEC|MS_NODEV|MS_STRICTATIME, false },
+         { "cgroup",   "/sys/fs/cgroup/systemd", "cgroup",   "none,name=systemd", MS_NOSUID|MS_NOEXEC|MS_NODEV, false },
+ };
+ 
+diff --git a/src/nspawn.c b/src/nspawn.c
+index 9e21c5e..8c4f49a 100644
+--- a/src/nspawn.c
++++ b/src/nspawn.c
+@@ -145,9 +145,9 @@ static int mount_all(const char *dest) {
+                 { "/proc/sys", "/proc/sys", "bind",  NULL,       MS_BIND|MS_RDONLY|MS_REMOUNT, true  },   /* Then, make it r/o */
+                 { "/sys",      "/sys",      "bind",  NULL,       MS_BIND,                      true  },   /* Bind mount first */
+                 { "/sys",      "/sys",      "bind",  NULL,       MS_BIND|MS_RDONLY|MS_REMOUNT, true  },   /* Then, make it r/o */
+-                { "tmpfs",     "/dev",      "tmpfs", "mode=755", MS_NOSUID,                    true  },
++                { "tmpfs",     "/dev",      "tmpfs", "mode=755", MS_NOSUID|MS_STRICTATIME,     true  },
+                 { "/dev/pts",  "/dev/pts",  "bind",  NULL,       MS_BIND,                      true  },
+-                { "tmpfs",     "/run",      "tmpfs", "mode=755", MS_NOSUID|MS_NODEV,           true  },
++                { "tmpfs",     "/run",      "tmpfs", "mode=755", MS_NOSUID|MS_NODEV|MS_STRICTATIME, true  },
+ #ifdef HAVE_SELINUX
+                 { "/sys/fs/selinux", "/sys/fs/selinux", "bind", NULL, MS_BIND,                      false },  /* Bind mount first */
+                 { "/sys/fs/selinux", "/sys/fs/selinux", "bind", NULL, MS_BIND|MS_RDONLY|MS_REMOUNT, false },  /* Then, make it r/o */

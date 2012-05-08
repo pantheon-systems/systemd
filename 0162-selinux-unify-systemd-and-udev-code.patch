@@ -1,0 +1,262 @@
+From 82b9638be653c3f0a3710e67436a0c167469e0c7 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 17 Apr 2012 16:05:03 +0200
+Subject: [PATCH] selinux: unify systemd and udev code (cherry picked from
+ commit e9a5ef7cddcfcdb29b5aef3896931132b6fd5165)
+
+Conflicts:
+
+	Makefile.am
+	src/libudev/libudev-private.h
+	src/test/test-udev.c
+	src/udev/udev-node.c
+	src/udev/udev.h
+	src/udev/udevadm.c
+	src/udev/udevd.c
+---
+ src/core/main.c         |    2 +-
+ src/core/mount-setup.c  |    5 +++--
+ src/core/socket.c       |    7 ++++---
+ src/shared/label.c      |   47 +++++++++++++----------------------------------
+ src/shared/label.h      |    7 +++----
+ src/tmpfiles/tmpfiles.c |   17 +++++++++++++++--
+ 6 files changed, 39 insertions(+), 46 deletions(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 80ef8b1..e6b3353 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1222,7 +1222,7 @@ int main(int argc, char *argv[]) {
+ 
+                 log_open();
+ 
+-                if (label_init() < 0)
++                if (label_init(NULL) < 0)
+                         goto finish;
+ 
+                 if (!is_reexec)
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index dd7938e..eeec251 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -329,13 +329,14 @@ static int symlink_and_label(const char *old_path, const char *new_path) {
+         assert(old_path);
+         assert(new_path);
+ 
+-        if ((r = label_symlinkfile_set(new_path)) < 0)
++        r = label_context_set(new_path, S_IFLNK);
++        if (r < 0)
+                 return r;
+ 
+         if (symlink(old_path, new_path) < 0)
+                 r = -errno;
+ 
+-        label_file_clear();
++        label_context_clear();
+ 
+         return r;
+ }
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 87d6d86..d03b35c 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -762,7 +762,8 @@ static int fifo_address_create(
+ 
+         mkdir_parents(path, directory_mode);
+ 
+-        if ((r = label_fifofile_set(path)) < 0)
++        r = label_context_set(path, S_IFIFO);
++        if (r < 0)
+                 goto fail;
+ 
+         /* Enforce the right access mode for the fifo */
+@@ -784,7 +785,7 @@ static int fifo_address_create(
+                 goto fail;
+         }
+ 
+-        label_file_clear();
++        label_context_clear();
+ 
+         if (fstat(fd, &st) < 0) {
+                 r = -errno;
+@@ -804,7 +805,7 @@ static int fifo_address_create(
+         return 0;
+ 
+ fail:
+-        label_file_clear();
++        label_context_clear();
+ 
+         if (fd >= 0)
+                 close_nointr_nofail(fd);
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 2c887a0..433b768 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -51,7 +51,7 @@ void label_retest_selinux(void) {
+ 
+ #endif
+ 
+-int label_init(void) {
++int label_init(const char *prefix) {
+         int r = 0;
+ 
+ #ifdef HAVE_SELINUX
+@@ -67,7 +67,15 @@ int label_init(void) {
+         before_mallinfo = mallinfo();
+         before_timestamp = now(CLOCK_MONOTONIC);
+ 
+-        label_hnd = selabel_open(SELABEL_CTX_FILE, NULL, 0);
++        if (prefix) {
++                struct selinux_opt options[] = {
++                        { .type = SELABEL_OPT_SUBSET, .value = prefix },
++                };
++
++                label_hnd = selabel_open(SELABEL_CTX_FILE, options, ELEMENTSOF(options));
++        } else
++                label_hnd = selabel_open(SELABEL_CTX_FILE, NULL, 0);
++
+         if (!label_hnd) {
+                 log_full(security_getenforce() == 1 ? LOG_ERR : LOG_DEBUG,
+                          "Failed to initialize SELinux context: %m");
+@@ -177,36 +185,7 @@ fail:
+         return r;
+ }
+ 
+-int label_fifofile_set(const char *path) {
+-        int r = 0;
+-
+-#ifdef HAVE_SELINUX
+-        security_context_t filecon = NULL;
+-
+-        if (!use_selinux() || !label_hnd)
+-                return 0;
+-
+-        r = selabel_lookup_raw(label_hnd, &filecon, path, S_IFIFO);
+-        if (r < 0)
+-                r = -errno;
+-        else if (r == 0) {
+-                r = setfscreatecon(filecon);
+-                if (r < 0) {
+-                        log_error("Failed to set SELinux file context on %s: %m", path);
+-                        r = -errno;
+-                }
+-
+-                freecon(filecon);
+-        }
+-
+-        if (r < 0 && security_getenforce() == 0)
+-                r = 0;
+-#endif
+-
+-        return r;
+-}
+-
+-int label_symlinkfile_set(const char *path) {
++int label_context_set(const char *path, mode_t mode) {
+         int r = 0;
+ 
+ #ifdef HAVE_SELINUX
+@@ -215,7 +194,7 @@ int label_symlinkfile_set(const char *path) {
+         if (!use_selinux() || !label_hnd)
+                 return 0;
+ 
+-        r = selabel_lookup_raw(label_hnd, &filecon, path, S_IFLNK);
++        r = selabel_lookup_raw(label_hnd, &filecon, path, mode);
+         if (r < 0)
+                 r = -errno;
+         else if (r == 0) {
+@@ -253,7 +232,7 @@ int label_socket_set(const char *label) {
+         return 0;
+ }
+ 
+-void label_file_clear(void) {
++void label_context_clear(void) {
+ 
+ #ifdef HAVE_SELINUX
+         if (!use_selinux())
+diff --git a/src/shared/label.h b/src/shared/label.h
+index ead4483..6166bc3 100644
+--- a/src/shared/label.h
++++ b/src/shared/label.h
+@@ -26,7 +26,7 @@
+ #include <stdbool.h>
+ #include <sys/socket.h>
+ 
+-int label_init(void);
++int label_init(const char *prefix);
+ void label_finish(void);
+ 
+ int label_fix(const char *path, bool ignore_enoent);
+@@ -34,9 +34,8 @@ int label_fix(const char *path, bool ignore_enoent);
+ int label_socket_set(const char *label);
+ void label_socket_clear(void);
+ 
+-int label_fifofile_set(const char *path);
+-int label_symlinkfile_set(const char *path);
+-void label_file_clear(void);
++int label_context_set(const char *path, mode_t mode);
++void label_context_clear(void);
+ 
+ void label_free(const char *label);
+ 
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index c5f6fc0..d3ea592 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -562,7 +562,7 @@ static int glob_item(Item *i, int (*action)(Item *, const char *)) {
+ }
+ 
+ static int create_item(Item *i) {
+-        int r;
++        int r, e;
+         mode_t u;
+         struct stat st;
+ 
+@@ -584,8 +584,12 @@ static int create_item(Item *i) {
+                         i->type == TRUNCATE_FILE ? O_CREAT|O_TRUNC : 0;
+ 
+                 u = umask(0);
++                label_context_set(i->path, S_IFREG);
+                 fd = open(i->path, flags|O_NDELAY|O_CLOEXEC|O_WRONLY|O_NOCTTY|O_NOFOLLOW, i->mode);
++                e = errno;
++                label_context_clear();
+                 umask(u);
++                errno = e;
+ 
+                 if (fd < 0) {
+                         if (i->type == WRITE_FILE && errno == ENOENT)
+@@ -696,7 +700,12 @@ static int create_item(Item *i) {
+         case CREATE_SYMLINK: {
+                 char *x;
+ 
++                label_context_set(i->path, S_IFLNK);
+                 r = symlink(i->argument, i->path);
++                e = errno;
++                label_context_clear();
++                errno = e;
++
+                 if (r < 0 && errno != EEXIST) {
+                         log_error("symlink(%s, %s) failed: %m", i->argument, i->path);
+                         return -errno;
+@@ -722,8 +731,12 @@ static int create_item(Item *i) {
+         case CREATE_CHAR_DEVICE: {
+ 
+                 u = umask(0);
++                label_context_set(i->path, CREATE_BLOCK_DEVICE ? S_IFBLK : S_IFCHR);
+                 r = mknod(i->path, i->mode | (i->type == CREATE_BLOCK_DEVICE ? S_IFBLK : S_IFCHR), i->major_minor);
++                e = errno;
++                label_context_clear();
+                 umask(u);
++                errno = e;
+ 
+                 if (r < 0 && errno != EEXIST) {
+                         log_error("Failed to create device node %s: %m", i->path);
+@@ -1248,7 +1261,7 @@ int main(int argc, char *argv[]) {
+ 
+         umask(0022);
+ 
+-        label_init();
++        label_init(NULL);
+ 
+         items = hashmap_new(string_hash_func, string_compare_func);
+         globs = hashmap_new(string_hash_func, string_compare_func);

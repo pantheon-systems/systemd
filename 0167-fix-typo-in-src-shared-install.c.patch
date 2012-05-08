@@ -1,0 +1,23 @@
+From 9f267aa9943f9fa43209178d2c85a6f1c6c8070f Mon Sep 17 00:00:00 2001
+From: Sven Anders <anders@anduras.de>
+Date: Thu, 19 Apr 2012 12:03:28 +0200
+Subject: [PATCH] fix typo in src/shared/install.c (cherry picked from commit
+ 771faa9ae64dbc373a36db9108c20dea325bd5d8)
+
+---
+ src/shared/install.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 4501804..edf49ae 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -1935,7 +1935,7 @@ finish:
+ 
+ static const char* const unit_file_state_table[_UNIT_FILE_STATE_MAX] = {
+         [UNIT_FILE_ENABLED] = "enabled",
+-        [UNIT_FILE_ENABLED_RUNTIME] = "enabled-runtie",
++        [UNIT_FILE_ENABLED_RUNTIME] = "enabled-runtime",
+         [UNIT_FILE_LINKED] = "linked",
+         [UNIT_FILE_LINKED_RUNTIME] = "linked-runtime",
+         [UNIT_FILE_MASKED] = "masked",

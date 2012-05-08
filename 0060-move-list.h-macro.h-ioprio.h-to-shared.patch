@@ -1,0 +1,56 @@
+From bfd9453abe47aabe0274b2fa2969a17a1471a880 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 19:42:07 +0200
+Subject: [PATCH] move list.h, macro.h, ioprio.h to shared/ (cherry picked
+ from commit 771f19c06a9dbe19e4c3e532d901734f4b3b3a2b)
+
+---
+ Makefile.am               |    8 ++++----
+ src/{ => shared}/ioprio.h |    0
+ src/{ => shared}/list.h   |    0
+ src/{ => shared}/macro.h  |    0
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+ rename src/{ => shared}/ioprio.h (100%)
+ rename src/{ => shared}/list.h (100%)
+ rename src/{ => shared}/macro.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 0b6728f..041ffa1 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -567,7 +567,10 @@ libsystemd_basic_la_SOURCES = \
+ 	src/shared/cgroup-util.c \
+ 	src/shared/cgroup-util.h \
+ 	src/shared/pager.c \
+-	src/shared/pager.h
++	src/shared/pager.h \
++	src/shared/ioprio.h \
++	src/shared/list.h \
++	src/shared/macro.h
+ 
+ libsystemd_basic_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -726,11 +729,8 @@ libsystemd_core_la_SOURCES = \
+ 	src/cgroup-attr.h \
+ 	src/watchdog.c \
+ 	src/watchdog.h \
+-	src/macro.h \
+ 	src/def.h \
+-	src/ioprio.h \
+ 	src/missing.h \
+-	src/list.h \
+ 	src/securebits.h \
+ 	src/linux/auto_dev-ioctl.h \
+ 	src/linux/fanotify.h \
+diff --git a/src/ioprio.h b/src/shared/ioprio.h
+similarity index 100%
+rename from src/ioprio.h
+rename to src/shared/ioprio.h
+diff --git a/src/list.h b/src/shared/list.h
+similarity index 100%
+rename from src/list.h
+rename to src/shared/list.h
+diff --git a/src/macro.h b/src/shared/macro.h
+similarity index 100%
+rename from src/macro.h
+rename to src/shared/macro.h

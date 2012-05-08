@@ -1,0 +1,151 @@
+From eee9b1c030df8df86c37c57cca0118bd6bbe7a54 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 13:33:02 +0200
+Subject: [PATCH] build-sys: move a few things into more appropriate places
+ (cherry picked from commit
+ 643a14a5271ed19ec30a9882d4b9e9ae1c357fb1)
+
+---
+ Makefile.am                             |   29 ++++++++++++++++-------------
+ src/{core => }/polkit.h                 |    0
+ src/{core => shared}/ask-password-api.h |    0
+ src/{shared => }/umount.c               |    0
+ src/{shared => }/umount.h               |    0
+ 5 files changed, 16 insertions(+), 13 deletions(-)
+ rename src/{core => }/polkit.h (100%)
+ rename src/{core => shared}/ask-password-api.h (100%)
+ rename src/{shared => }/umount.c (100%)
+ rename src/{shared => }/umount.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 04dd0e8..b7e904f 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,3 +1,5 @@
++#  -*- Mode: makefile; indent-tabs-mode: t -*- */
++#
+ #  This file is part of systemd.
+ #
+ #  Copyright 2011 Lennart Poettering
+@@ -104,9 +106,7 @@ AM_CPPFLAGS = \
+ 	-DPOLKIT_AGENT_BINARY_PATH=\"$(bindir)/pkttyagent\" \
+ 	-I $(top_srcdir)/src \
+ 	-I $(top_srcdir)/src/shared \
+-	-I $(top_srcdir)/src/readahead \
+ 	-I $(top_srcdir)/src/login \
+-	-I $(top_srcdir)/src/journal \
+ 	-I $(top_srcdir)/src/systemd \
+ 	-I $(top_srcdir)/src/core
+ 
+@@ -543,6 +543,9 @@ noinst_LTLIBRARIES += \
+ 	libsystemd-shared.la
+ 
+ libsystemd_shared_la_SOURCES = \
++	src/missing.h \
++	src/linux/auto_dev-ioctl.h \
++	src/linux/fanotify.h \
+ 	src/shared/util.c \
+ 	src/shared/util.h \
+ 	src/shared/virt.c \
+@@ -584,8 +587,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/utmp-wtmp.h \
+ 	src/shared/watchdog.c \
+ 	src/shared/watchdog.h \
+-	src/shared/umount.c \
+-	src/shared/umount.h \
+ 	src/shared/spawn-ask-password-agent.c \
+ 	src/shared/spawn-ask-password-agent.h \
+ 	src/shared/mount-setup.c \
+@@ -599,7 +600,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/spawn-polkit-agent.c \
+ 	src/shared/spawn-polkit-agent.h \
+ 	src/shared/list.h \
+-	src/shared/macro.h
++	src/shared/macro.h \
++	src/shared/ask-password-api.h
+ 
+ libsystemd_shared_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -678,9 +680,6 @@ noinst_LTLIBRARIES += \
+ 
+ libsystemd_core_la_SOURCES = \
+ 	src/def.h \
+-	src/missing.h \
+-	src/linux/auto_dev-ioctl.h \
+-	src/linux/fanotify.h \
+ 	src/core/unit.c \
+ 	src/core/unit.h \
+ 	src/core/job.c \
+@@ -768,9 +767,7 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/special.h \
+ 	src/core/bus-errors.h \
+ 	src/core/build.h \
+-	src/core/ask-password-api.h \
+ 	src/core/sysfs-show.h \
+-	src/core/polkit.h \
+ 	src/core/dbus-loop.h
+ 
+ nodist_libsystemd_core_la_SOURCES = \
+@@ -939,6 +936,8 @@ pkginclude_HEADERS += \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_shutdown_SOURCES = \
++	src/umount.c \
++	src/umount.h \
+ 	src/shutdown.c
+ 
+ systemd_shutdown_CFLAGS = \
+@@ -1771,7 +1770,8 @@ endif
+ if ENABLE_HOSTNAMED
+ systemd_hostnamed_SOURCES = \
+ 	src/hostname/hostnamed.c \
+-	src/polkit.c
++	src/polkit.c \
++	src/polkit.h
+ 
+ systemd_hostnamed_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1821,7 +1821,8 @@ endif
+ if ENABLE_LOCALED
+ systemd_localed_SOURCES = \
+ 	src/locale/localed.c \
+-	src/polkit.c
++	src/polkit.c \
++	src/polkit.h
+ 
+ systemd_localed_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1882,7 +1883,8 @@ endif
+ if ENABLE_TIMEDATED
+ systemd_timedated_SOURCES = \
+ 	src/timedate/timedated.c \
+-	src/polkit.c
++	src/polkit.c \
++	src/polkit.h
+ 
+ systemd_timedated_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1947,6 +1949,7 @@ systemd_logind_SOURCES = \
+ 	src/login/logind-user-dbus.c \
+ 	src/dbus-loop.c \
+ 	src/polkit.c \
++	src/polkit.h \
+ 	src/login/logind-acl.h
+ 
+ nodist_systemd_logind_SOURCES = \
+diff --git a/src/core/polkit.h b/src/polkit.h
+similarity index 100%
+rename from src/core/polkit.h
+rename to src/polkit.h
+diff --git a/src/core/ask-password-api.h b/src/shared/ask-password-api.h
+similarity index 100%
+rename from src/core/ask-password-api.h
+rename to src/shared/ask-password-api.h
+diff --git a/src/shared/umount.c b/src/umount.c
+similarity index 100%
+rename from src/shared/umount.c
+rename to src/umount.c
+diff --git a/src/shared/umount.h b/src/umount.h
+similarity index 100%
+rename from src/shared/umount.h
+rename to src/umount.h

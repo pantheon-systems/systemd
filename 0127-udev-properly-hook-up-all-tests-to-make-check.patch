@@ -1,0 +1,26 @@
+From 42b0c71740eb496e87868f8822e63180c49f76b0 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 19:25:41 +0200
+Subject: [PATCH] udev: properly hook up all tests to 'make check' (cherry
+ picked from commit
+ 6b8b149a215ba49f96907aedd01a42f3fcdb95ba)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index 753213b..9f37802 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -82,6 +82,7 @@ dist_dbuspolicy_DATA =
+ dbusinterface_DATA =
+ dist_dbussystemservice_DATA =
+ check_PROGRAMS =
++TESTS =
+ 
+ AM_CPPFLAGS = \
+ 	-include $(top_builddir)/config.h \

@@ -1,0 +1,84 @@
+From 7f676da277b85ccba1778ba760646687fa660c9b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 11 May 2012 17:56:09 +0200
+Subject: [PATCH] namespace: make PrivateTmp= apply to both /tmp and /var/tmp
+ (cherry picked from commit
+ c1d70f7ca5eeeb3850161444028ba227f79df83e)
+
+Conflicts:
+	TODO
+---
+ src/core/namespace.c |   23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index a6208e1..d27ffb1 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -131,7 +131,8 @@ static int apply_mount(Path *p, const char *root_dir, const char *inaccessible_d
+         assert(inaccessible_dir);
+         assert(private_dir);
+ 
+-        if (!(where = strappend(root_dir, p->path)))
++        where = strappend(root_dir, p->path);
++        if (!where)
+                 return -ENOMEM;
+ 
+         switch (p->mode) {
+@@ -157,7 +158,8 @@ static int apply_mount(Path *p, const char *root_dir, const char *inaccessible_d
+                 assert_not_reached("Unknown mode");
+         }
+ 
+-        if ((r = mount(what, where, NULL, MS_BIND|MS_REC, NULL)) >= 0) {
++        r = mount(what, where, NULL, MS_BIND|MS_REC, NULL);
++        if (r >= 0) {
+                 log_debug("Successfully mounted %s to %s", what, where);
+ 
+                 /* The bind mount will always inherit the original
+@@ -205,9 +207,10 @@ int setup_namespace(
+                 strv_length(writable) +
+                 strv_length(readable) +
+                 strv_length(inaccessible) +
+-                (private_tmp ? 2 : 1);
++                (private_tmp ? 3 : 1);
+ 
+-        if (!(paths = new(Path, n)))
++        paths = new(Path, n);
++        if (!paths)
+                 return -ENOMEM;
+ 
+         p = paths;
+@@ -220,6 +223,10 @@ int setup_namespace(
+                 p->path = "/tmp";
+                 p->mode = PRIVATE;
+                 p++;
++
++                p->path = "/var/tmp";
++                p->mode = PRIVATE;
++                p++;
+         }
+ 
+         p->path = "/";
+@@ -282,9 +289,11 @@ int setup_namespace(
+                 goto fail;
+         }
+ 
+-        for (p = paths; p < paths + n; p++)
+-                if ((r = apply_mount(p, root_dir, inaccessible_dir, private_dir, flags)) < 0)
++        for (p = paths; p < paths + n; p++) {
++                r = apply_mount(p, root_dir, inaccessible_dir, private_dir, flags);
++                if (r < 0)
+                         goto undo_mounts;
++        }
+ 
+         memcpy(old_root_dir, tmp_dir, sizeof(tmp_dir)-1);
+         if (!mkdtemp(old_root_dir)) {
+@@ -341,7 +350,7 @@ fail:
+         if (remove_tmp)
+                 rmdir(tmp_dir);
+ 
+-             free(paths);
++        free(paths);
+ 
+         return r;
+ }

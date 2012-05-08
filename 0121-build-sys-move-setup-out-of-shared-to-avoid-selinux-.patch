@@ -1,0 +1,133 @@
+From 8e7857d0f37b01721fe8c39cd12b3fc6062ec544 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 18:16:14 +0200
+Subject: [PATCH] build-sys: move *-setup out of shared to avoid selinux being
+ pulled in (cherry picked from commit
+ 08e1fb68d78b4adf26cce8387fc428b9e370bcf4)
+
+---
+ Makefile.am                             |   33 ++++++++++++++++++++-----------
+ src/{shared => core}/loopback-setup.c   |    0
+ src/{shared => core}/loopback-setup.h   |    0
+ src/{shared => core}/machine-id-setup.c |    0
+ src/{shared => core}/machine-id-setup.h |    0
+ src/{shared => core}/mount-setup.c      |    0
+ src/{shared => core}/mount-setup.h      |    0
+ 7 files changed, 21 insertions(+), 12 deletions(-)
+ rename src/{shared => core}/loopback-setup.c (100%)
+ rename src/{shared => core}/loopback-setup.h (100%)
+ rename src/{shared => core}/machine-id-setup.c (100%)
+ rename src/{shared => core}/machine-id-setup.h (100%)
+ rename src/{shared => core}/mount-setup.c (100%)
+ rename src/{shared => core}/mount-setup.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 04b7cb7..a90532d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -551,10 +551,6 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/watchdog.h \
+ 	src/shared/spawn-ask-password-agent.c \
+ 	src/shared/spawn-ask-password-agent.h \
+-	src/shared/mount-setup.c \
+-	src/shared/mount-setup.h \
+-	src/shared/loopback-setup.h \
+-	src/shared/loopback-setup.c \
+ 	src/shared/specifier.c \
+ 	src/shared/specifier.h \
+ 	src/shared/spawn-polkit-agent.c \
+@@ -746,8 +742,12 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/locale-setup.c \
+ 	src/core/hostname-setup.c \
+ 	src/core/hostname-setup.h \
+-	src/shared/machine-id-setup.c \
+-	src/shared/machine-id-setup.h \
++	src/core/machine-id-setup.c \
++	src/core/machine-id-setup.h \
++	src/core/mount-setup.c \
++	src/core/mount-setup.h \
++	src/core/loopback-setup.h \
++	src/core/loopback-setup.c \
+ 	src/core/fdset.c \
+ 	src/core/fdset.h \
+ 	src/core/condition.c \
+@@ -890,7 +890,8 @@ test_loopback_SOURCES = \
+ 	src/test/test-loopback.c
+ 
+ test_loopback_LDADD = \
+-	libsystemd-shared.la
++	libsystemd-shared.la \
++	libsystemd-core.la
+ 
+ test_hostname_SOURCES = \
+ 	src/test/test-hostname.c
+@@ -986,7 +987,9 @@ pkginclude_HEADERS += \
+ systemd_shutdown_SOURCES = \
+ 	src/core/umount.c \
+ 	src/core/umount.h \
+-	src/core/shutdown.c
++	src/core/shutdown.c \
++	src/core/mount-setup.c \
++	src/core/mount-setup.h
+ 
+ systemd_shutdown_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1020,8 +1023,8 @@ systemd_tmpfiles_LDADD = \
+ # ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+ 	src/machine-id-setup/machine-id-setup-main.c \
+-	src/shared/machine-id-setup.c \
+-	src/shared/machine-id-setup.h
++	src/core/machine-id-setup.c \
++	src/core/machine-id-setup.h
+ 
+ systemd_machine_id_setup_LDADD = \
+ 	libsystemd-label.la \
+@@ -1094,7 +1097,9 @@ systemd_rc_local_generator_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_remount_api_vfs_SOURCES = \
+-	src/remount-api-vfs/remount-api-vfs.c
++	src/remount-api-vfs/remount-api-vfs.c \
++	src/core/mount-setup.c \
++	src/core/mount-setup.h
+ 
+ systemd_remount_api_vfs_LDADD = \
+ 	libsystemd-shared.la
+@@ -1170,7 +1175,11 @@ systemd_cgtop_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_nspawn_SOURCES = \
+-	src/nspawn/nspawn.c
++	src/nspawn/nspawn.c \
++	src/core/mount-setup.c \
++	src/core/mount-setup.h \
++	src/core/loopback-setup.c \
++	src/core/loopback-setup.h
+ 
+ systemd_nspawn_LDADD = \
+ 	libsystemd-label.la \
+diff --git a/src/shared/loopback-setup.c b/src/core/loopback-setup.c
+similarity index 100%
+rename from src/shared/loopback-setup.c
+rename to src/core/loopback-setup.c
+diff --git a/src/shared/loopback-setup.h b/src/core/loopback-setup.h
+similarity index 100%
+rename from src/shared/loopback-setup.h
+rename to src/core/loopback-setup.h
+diff --git a/src/shared/machine-id-setup.c b/src/core/machine-id-setup.c
+similarity index 100%
+rename from src/shared/machine-id-setup.c
+rename to src/core/machine-id-setup.c
+diff --git a/src/shared/machine-id-setup.h b/src/core/machine-id-setup.h
+similarity index 100%
+rename from src/shared/machine-id-setup.h
+rename to src/core/machine-id-setup.h
+diff --git a/src/shared/mount-setup.c b/src/core/mount-setup.c
+similarity index 100%
+rename from src/shared/mount-setup.c
+rename to src/core/mount-setup.c
+diff --git a/src/shared/mount-setup.h b/src/core/mount-setup.h
+similarity index 100%
+rename from src/shared/mount-setup.h
+rename to src/core/mount-setup.h

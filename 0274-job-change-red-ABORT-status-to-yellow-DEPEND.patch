@@ -1,0 +1,40 @@
+From fa0fdfadd90dcc45b3d97728c3983cdc79c32678 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 14 May 2012 12:23:23 +0200
+Subject: [PATCH] job: change red [ABORT] status to yellow [DEPEND]
+
+The red "[ABORT]" for a dependency failure is too scary.
+It suggests a crash. And it suggests a problem with the unit itself.
+Change it to a yellow "[DEPEND]" message. The color communicates the
+level of seriousness better.
+(cherry picked from commit 5f23d5b149513d98bb90df8cb912b6f567bed89f)
+---
+ src/core/job.c    |    2 +-
+ src/shared/util.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index b51be69..4ad60e1 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -567,7 +567,7 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                         break;
+ 
+                 case JOB_DEPENDENCY:
+-                        unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON " ABORT" ANSI_HIGHLIGHT_OFF, "Dependency failed. Aborted start of %s.", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_YELLOW_ON "DEPEND" ANSI_HIGHLIGHT_OFF, "Dependency failed. Aborted start of %s.", unit_description(u));
+                         break;
+ 
+                 case JOB_TIMEOUT:
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 9dbf1fd..5ef8c52 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -73,6 +73,7 @@ typedef struct dual_timestamp {
+ #define ANSI_HIGHLIGHT_ON "\x1B[1;39m"
+ #define ANSI_HIGHLIGHT_RED_ON "\x1B[1;31m"
+ #define ANSI_HIGHLIGHT_GREEN_ON "\x1B[1;32m"
++#define ANSI_HIGHLIGHT_YELLOW_ON "\x1B[1;33m"
+ #define ANSI_HIGHLIGHT_OFF "\x1B[0m"
+ 
+ usec_t now(clockid_t clock);

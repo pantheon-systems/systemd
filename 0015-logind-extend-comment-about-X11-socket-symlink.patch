@@ -1,0 +1,26 @@
+From 37b4f8f1e56788e55e18cd855c8c96b15f894015 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 22 Mar 2012 01:43:36 +0100
+Subject: [PATCH] logind: extend comment about X11 socket symlink (cherry
+ picked from commit
+ c9d8629baa09f853fbcc44972c9748e70562270c)
+
+---
+ src/login/logind-session.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index af9c12d..4e0af86 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -391,6 +391,10 @@ static int session_link_x11_socket(Session *s) {
+                 return -ENOENT;
+         }
+ 
++        /* Note that this cannot be in a subdir to avoid
++         * vulnerabilities since we are privileged but the runtime
++         * path is owned by the user */
++
+         t = strappend(s->user->runtime_path, "/X11-display");
+         if (!t) {
+                 log_error("Out of memory");

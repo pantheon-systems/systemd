@@ -1,0 +1,24 @@
+From 1378ebd249c7d9d5715013121dbe9e0960232e67 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 02:41:02 +0200
+Subject: [PATCH] units: run sysctl stuff only when /proc/sys is actually
+ writable, to quieten container boots a little (cherry
+ picked from commit
+ f2a46f8da51aeab1a34dd250e8ac48f2465bf095)
+
+---
+ units/systemd-sysctl.service.in |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/systemd-sysctl.service.in b/units/systemd-sysctl.service.in
+index 6d53422..ead5f6e 100644
+--- a/units/systemd-sysctl.service.in
++++ b/units/systemd-sysctl.service.in
+@@ -11,6 +11,7 @@ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+ Before=sysinit.target shutdown.target
++ConditionPathIsReadWrite=/proc/sys/
+ ConditionPathExists=|/etc/sysctl.conf
+ ConditionDirectoryNotEmpty=|/lib/sysctl.d
+ ConditionDirectoryNotEmpty=|/usr/lib/sysctl.d

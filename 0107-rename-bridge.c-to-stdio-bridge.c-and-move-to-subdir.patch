@@ -1,0 +1,30 @@
+From 01440475f19bad456805302163dba7870871cec9 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 14:30:09 +0200
+Subject: [PATCH] rename bridge.c to stdio-bridge.c and move to subdir (cherry
+ picked from commit
+ ec1a9f88f2a91d9358c254ea8098b4e9190fb146)
+
+---
+ Makefile.am                                   |    2 +-
+ src/{bridge.c => stdio-bridge/stdio-bridge.c} |    0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename src/{bridge.c => stdio-bridge/stdio-bridge.c} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index bc4e367..eac8135 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1137,7 +1137,7 @@ systemd_nspawn_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_stdio_bridge_SOURCES = \
+-	src/bridge.c
++	src/stdio-bridge/stdio-bridge.c
+ 
+ systemd_stdio_bridge_LDADD = \
+ 	libsystemd-shared.la
+diff --git a/src/bridge.c b/src/stdio-bridge/stdio-bridge.c
+similarity index 100%
+rename from src/bridge.c
+rename to src/stdio-bridge/stdio-bridge.c

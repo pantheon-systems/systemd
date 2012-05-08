@@ -1,0 +1,57 @@
+From b96c19c6b687ee914fb64baa92714aa7dc402121 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 11 Apr 2012 03:29:31 +0200
+Subject: [PATCH] build-sys: add $(AM_LDFLAGS) where needed (cherry picked
+ from commit f7b6a32e78070e6e6f528bdb43ba5f5f0fb1ae6d)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index cbff9b0..f86bd9b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1202,6 +1202,7 @@ libsystemd_daemon_la_CFLAGS = \
+ 	-DSD_EXPORT_SYMBOLS
+ 
+ libsystemd_daemon_la_LDFLAGS = \
++	$(AM_LDFLAGS) \
+ 	-shared \
+ 	-version-info $(LIBSYSTEMD_DAEMON_CURRENT):$(LIBSYSTEMD_DAEMON_REVISION):$(LIBSYSTEMD_DAEMON_AGE) \
+ 	-Wl,--version-script=$(top_srcdir)/src/libsystemd-daemon.sym
+@@ -1267,6 +1268,7 @@ libsystemd_id128_la_CFLAGS = \
+ 	-fvisibility=hidden
+ 
+ libsystemd_id128_la_LDFLAGS = \
++	$(AM_LDFLAGS) \
+ 	-shared \
+ 	-version-info $(LIBSYSTEMD_ID128_CURRENT):$(LIBSYSTEMD_ID128_REVISION):$(LIBSYSTEMD_ID128_AGE) \
+ 	-Wl,--version-script=$(top_srcdir)/src/libsystemd-id128.sym
+@@ -1421,6 +1423,7 @@ libsystemd_journal_la_CFLAGS = \
+ 	-fvisibility=hidden
+ 
+ libsystemd_journal_la_LDFLAGS = \
++	$(AM_LDFLAGS) \
+ 	-shared \
+ 	-version-info $(LIBSYSTEMD_JOURNAL_CURRENT):$(LIBSYSTEMD_JOURNAL_REVISION):$(LIBSYSTEMD_JOURNAL_AGE) \
+ 	-Wl,--version-script=$(top_srcdir)/src/journal/libsystemd-journal.sym
+@@ -2017,6 +2020,7 @@ libsystemd_login_la_CFLAGS = \
+ 	-fvisibility=hidden
+ 
+ libsystemd_login_la_LDFLAGS = \
++	$(AM_LDFLAGS) \
+ 	-shared \
+ 	-version-info $(LIBSYSTEMD_LOGIN_CURRENT):$(LIBSYSTEMD_LOGIN_REVISION):$(LIBSYSTEMD_LOGIN_AGE) \
+ 	-Wl,--version-script=$(top_srcdir)/src/login/libsystemd-login.sym
+@@ -2036,6 +2040,7 @@ pam_systemd_la_CFLAGS = \
+ 	-fvisibility=hidden
+ 
+ pam_systemd_la_LDFLAGS = \
++	$(AM_LDFLAGS) \
+ 	-module \
+ 	-export-dynamic \
+ 	-avoid-version \

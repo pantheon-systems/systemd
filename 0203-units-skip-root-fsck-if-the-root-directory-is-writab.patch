@@ -1,0 +1,23 @@
+From 8e493e53ddba1ed35ae638619632bdea98b79a10 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 13:38:46 +0200
+Subject: [PATCH] units: skip root fsck if the root directory is writable
+ (cherry picked from commit
+ 2c8049f3d31e4022845c1997a474925872ecea8f)
+
+---
+ units/fsck-root.service.in |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/fsck-root.service.in b/units/fsck-root.service.in
+index 4086149..dde8c20 100644
+--- a/units/fsck-root.service.in
++++ b/units/fsck-root.service.in
+@@ -13,6 +13,7 @@ Before=local-fs.target shutdown.target
+ 
+ # Dracut informs us with this flag file if the root fsck was already run
+ ConditionPathExists=!/run/initramfs/root-fsck
++ConditionPathIsReadWrite=!/
+ 
+ [Service]
+ Type=oneshot

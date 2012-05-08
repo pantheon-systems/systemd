@@ -1,0 +1,476 @@
+From f3ce59ad758058163cbd1ed96aef71d203bcb05b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Apr 2012 17:35:58 +0200
+Subject: [PATCH] cgls: don't show empty cgroups by default (cherry picked
+ from commit c3175a7f40a2d2fabc3a2de63033a6810d45221a)
+
+Conflicts:
+
+	TODO
+---
+ man/systemd-cgls.xml      |   18 +++++++++++++
+ src/cgls/cgls.c           |   27 ++++++++++++++++----
+ src/login/loginctl.c      |    4 +--
+ src/shared/cgroup-show.c  |   53 +++++++++++++++++++++++---------------
+ src/shared/cgroup-show.h  |    4 +--
+ src/shared/cgroup-util.c  |   62 +++++++++++++++++++++++++--------------------
+ src/systemctl/systemctl.c |    2 +-
+ 7 files changed, 113 insertions(+), 57 deletions(-)
+
+diff --git a/man/systemd-cgls.xml b/man/systemd-cgls.xml
+index 1e53147..28a8783 100644
+--- a/man/systemd-cgls.xml
++++ b/man/systemd-cgls.xml
+@@ -69,6 +69,9 @@
+                 of the control group the working directory refers
+                 to. Otherwise the full systemd control group hierarchy
+                 is shown.</para>
++
++                <para>By default empty control cgroups are not
++                shown.</para>
+         </refsect1>
+ 
+         <refsect1>
+@@ -86,6 +89,13 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><option>--version</option></term>
++
++                                <listitem><para>Prints a short version
++                                string and exits.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><option>--no-pager</option></term>
+ 
+ 				<listitem><para>Do not pipe output into a
+@@ -93,6 +103,14 @@
+ 			</varlistentry>
+ 
+                         <varlistentry>
++                                <term><option>--all</option></term>
++
++				<listitem><para>Don't hide empty
++				control groups in the
++				outpout.</para></listitem>
++			</varlistentry>
++
++                        <varlistentry>
+                                 <term><option>-k</option></term>
+ 
+                                 <listitem><para>Include kernel
+diff --git a/src/cgls/cgls.c b/src/cgls/cgls.c
+index d5417f9..8c9d039 100644
+--- a/src/cgls/cgls.c
++++ b/src/cgls/cgls.c
+@@ -31,16 +31,20 @@
+ #include "log.h"
+ #include "util.h"
+ #include "pager.h"
++#include "build.h"
+ 
+ static bool arg_no_pager = false;
+ static bool arg_kernel_threads = false;
++static bool arg_all = false;
+ 
+ static void help(void) {
+ 
+         printf("%s [OPTIONS...] [CGROUP...]\n\n"
+                "Recursively show control group contents.\n\n"
+                "  -h --help           Show this help\n"
++               "     --version        Show package version\n"
+                "     --no-pager       Do not pipe output into a pager\n"
++               "  -a --all            Show all groups, including empty\n"
+                "  -k                  Include kernel threads in output\n",
+                program_invocation_short_name);
+ }
+@@ -48,12 +52,15 @@ static void help(void) {
+ static int parse_argv(int argc, char *argv[]) {
+ 
+         enum {
+-                ARG_NO_PAGER = 0x100
++                ARG_NO_PAGER = 0x100,
++                ARG_VERSION
+         };
+ 
+         static const struct option options[] = {
+                 { "help",      no_argument,       NULL, 'h'          },
++                { "version",   no_argument,       NULL, ARG_VERSION  },
+                 { "no-pager",  no_argument,       NULL, ARG_NO_PAGER },
++                { "all",       no_argument,       NULL, 'a'          },
+                 { NULL,        0,                 NULL, 0            }
+         };
+ 
+@@ -62,7 +69,7 @@ static int parse_argv(int argc, char *argv[]) {
+         assert(argc >= 1);
+         assert(argv);
+ 
+-        while ((c = getopt_long(argc, argv, "hk", options, NULL)) >= 0) {
++        while ((c = getopt_long(argc, argv, "hka", options, NULL)) >= 0) {
+ 
+                 switch (c) {
+ 
+@@ -70,10 +77,20 @@ static int parse_argv(int argc, char *argv[]) {
+                         help();
+                         return 0;
+ 
++                case ARG_VERSION:
++                        puts(PACKAGE_STRING);
++                        puts(DISTRIBUTION);
++                        puts(SYSTEMD_FEATURES);
++                        return 0;
++
+                 case ARG_NO_PAGER:
+                         arg_no_pager = true;
+                         break;
+ 
++                case 'a':
++                        arg_all = true;
++                        break;
++
+                 case 'k':
+                         arg_kernel_threads = true;
+                         break;
+@@ -114,7 +131,7 @@ int main(int argc, char *argv[]) {
+                         int q;
+                         printf("%s:\n", argv[i]);
+ 
+-                        q = show_cgroup_by_path(argv[i], NULL, 0, arg_kernel_threads);
++                        q = show_cgroup_by_path(argv[i], NULL, 0, arg_kernel_threads, arg_all);
+                         if (q < 0)
+                                 r = q;
+                 }
+@@ -130,7 +147,7 @@ int main(int argc, char *argv[]) {
+ 
+                 if (path_startswith(p, "/sys/fs/cgroup")) {
+                         printf("Working Directory %s:\n", p);
+-                        r = show_cgroup_by_path(p, NULL, 0, arg_kernel_threads);
++                        r = show_cgroup_by_path(p, NULL, 0, arg_kernel_threads, arg_all);
+                 } else {
+                         char *root = NULL;
+                         const char *t = NULL;
+@@ -145,7 +162,7 @@ int main(int argc, char *argv[]) {
+                                 t = root[0] ? root : "/";
+                         }
+ 
+-                        r = show_cgroup(SYSTEMD_CGROUP_CONTROLLER, t, NULL, 0, arg_kernel_threads);
++                        r = show_cgroup(SYSTEMD_CGROUP_CONTROLLER, t, NULL, 0, arg_kernel_threads, arg_all);
+                         free(root);
+                 }
+ 
+diff --git a/src/login/loginctl.c b/src/login/loginctl.c
+index 2633b47..7968b05 100644
+--- a/src/login/loginctl.c
++++ b/src/login/loginctl.c
+@@ -473,7 +473,7 @@ static void print_session_status_info(SessionStatusInfo *i) {
+                         else
+                                 c = 0;
+ 
+-                        show_cgroup_by_path(i->control_group, "\t\t  ", c, false);
++                        show_cgroup_by_path(i->control_group, "\t\t  ", c, false, arg_all);
+                 }
+         }
+ }
+@@ -525,7 +525,7 @@ static void print_user_status_info(UserStatusInfo *i) {
+                         else
+                                 c = 0;
+ 
+-                        show_cgroup_by_path(i->control_group, "\t\t  ", c, false);
++                        show_cgroup_by_path(i->control_group, "\t\t  ", c, false, arg_all);
+                 }
+         }
+ }
+diff --git a/src/shared/cgroup-show.c b/src/shared/cgroup-show.c
+index ee2a241..c7c8840 100644
+--- a/src/shared/cgroup-show.c
++++ b/src/shared/cgroup-show.c
+@@ -160,7 +160,7 @@ finish:
+         return r;
+ }
+ 
+-int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns, bool kernel_threads) {
++int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns, bool kernel_threads, bool all) {
+         DIR *d;
+         char *last = NULL;
+         char *p1 = NULL, *p2 = NULL, *fn = NULL, *gn = NULL;
+@@ -173,15 +173,31 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+         if (!prefix)
+                 prefix = "";
+ 
+-        if ((r = cg_fix_path(path, &fn)) < 0)
++        r = cg_fix_path(path, &fn);
++        if (r < 0)
+                 return r;
+ 
+-        if (!(d = opendir(fn))) {
++        d = opendir(fn);
++        if (!d) {
+                 free(fn);
+                 return -errno;
+         }
+ 
+         while ((r = cg_read_subgroup(d, &gn)) > 0) {
++                char *k;
++
++                r = asprintf(&k, "%s/%s", fn, gn);
++                free(gn);
++
++                if (r < 0) {
++                        r = -ENOMEM;
++                        goto finish;
++                }
++
++                if (!all && cg_is_empty_recursive(NULL, k, false) > 0) {
++                        free(k);
++                        continue;
++                }
+ 
+                 if (!shown_pids) {
+                         show_cgroup_one_by_path(path, prefix, n_columns, true, kernel_threads);
+@@ -191,25 +207,20 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+                 if (last) {
+                         printf("%s\342\224\234 %s\n", prefix, file_name_from_path(last));
+ 
+-                        if (!p1)
+-                                if (!(p1 = strappend(prefix, "\342\224\202 "))) {
++                        if (!p1) {
++                                p1 = strappend(prefix, "\342\224\202 ");
++                                if (!p1) {
++                                        free(k);
+                                         r = -ENOMEM;
+                                         goto finish;
+                                 }
++                        }
+ 
+-                        show_cgroup_by_path(last, p1, n_columns-2, kernel_threads);
+-
++                        show_cgroup_by_path(last, p1, n_columns-2, kernel_threads, all);
+                         free(last);
+-                        last = NULL;
+                 }
+ 
+-                r = asprintf(&last, "%s/%s", fn, gn);
+-                free(gn);
+-
+-                if (r < 0) {
+-                        r = -ENOMEM;
+-                        goto finish;
+-                }
++                last = k;
+         }
+ 
+         if (r < 0)
+@@ -221,13 +232,15 @@ int show_cgroup_by_path(const char *path, const char *prefix, unsigned n_columns
+         if (last) {
+                 printf("%s\342\224\224 %s\n", prefix, file_name_from_path(last));
+ 
+-                if (!p2)
+-                        if (!(p2 = strappend(prefix, "  "))) {
++                if (!p2) {
++                        p2 = strappend(prefix, "  ");
++                        if (!p2) {
+                                 r = -ENOMEM;
+                                 goto finish;
+                         }
++                }
+ 
+-                show_cgroup_by_path(last, p2, n_columns-2, kernel_threads);
++                show_cgroup_by_path(last, p2, n_columns-2, kernel_threads, all);
+         }
+ 
+         r = 0;
+@@ -243,7 +256,7 @@ finish:
+         return r;
+ }
+ 
+-int show_cgroup(const char *controller, const char *path, const char *prefix, unsigned n_columns, bool kernel_threads) {
++int show_cgroup(const char *controller, const char *path, const char *prefix, unsigned n_columns, bool kernel_threads, bool all) {
+         char *p;
+         int r;
+ 
+@@ -254,7 +267,7 @@ int show_cgroup(const char *controller, const char *path, const char *prefix, un
+         if (r < 0)
+                 return r;
+ 
+-        r = show_cgroup_by_path(p, prefix, n_columns, kernel_threads);
++        r = show_cgroup_by_path(p, prefix, n_columns, kernel_threads, all);
+         free(p);
+ 
+         return r;
+diff --git a/src/shared/cgroup-show.h b/src/shared/cgroup-show.h
+index 992e17b..c409231 100644
+--- a/src/shared/cgroup-show.h
++++ b/src/shared/cgroup-show.h
+@@ -24,7 +24,7 @@
+ 
+ #include <stdbool.h>
+ 
+-int show_cgroup_by_path(const char *path, const char *prefix, unsigned columns, bool kernel_threads);
+-int show_cgroup(const char *controller, const char *path, const char *prefix, unsigned columns, bool kernel_threads);
++int show_cgroup_by_path(const char *path, const char *prefix, unsigned columns, bool kernel_threads, bool all);
++int show_cgroup(const char *controller, const char *path, const char *prefix, unsigned columns, bool kernel_threads, bool all);
+ 
+ #endif
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index 6ae70f6..43e24bd 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -40,11 +40,11 @@ int cg_enumerate_processes(const char *controller, const char *path, FILE **_f)
+         int r;
+         FILE *f;
+ 
+-        assert(controller);
+         assert(path);
+         assert(_f);
+ 
+-        if ((r = cg_get_path(controller, path, "cgroup.procs", &fs)) < 0)
++        r = cg_get_path(controller, path, "cgroup.procs", &fs);
++        if (r < 0)
+                 return r;
+ 
+         f = fopen(fs, "re");
+@@ -62,11 +62,11 @@ int cg_enumerate_tasks(const char *controller, const char *path, FILE **_f) {
+         int r;
+         FILE *f;
+ 
+-        assert(controller);
+         assert(path);
+         assert(_f);
+ 
+-        if ((r = cg_get_path(controller, path, "tasks", &fs)) < 0)
++        r = cg_get_path(controller, path, "tasks", &fs);
++        if (r < 0)
+                 return r;
+ 
+         f = fopen(fs, "re");
+@@ -106,13 +106,13 @@ int cg_enumerate_subgroups(const char *controller, const char *path, DIR **_d) {
+         int r;
+         DIR *d;
+ 
+-        assert(controller);
+         assert(path);
+         assert(_d);
+ 
+         /* This is not recursive! */
+ 
+-        if ((r = cg_get_path(controller, path, NULL, &fs)) < 0)
++        r = cg_get_path(controller, path, NULL, &fs);
++        if (r < 0)
+                 return r;
+ 
+         d = opendir(fs);
+@@ -515,14 +515,24 @@ static const char *normalize_controller(const char *controller) {
+ static int join_path(const char *controller, const char *path, const char *suffix, char **fs) {
+         char *t;
+ 
+-        if (path && suffix)
+-                t = join("/sys/fs/cgroup/", controller, "/", path, "/", suffix, NULL);
+-        else if (path)
+-                t = join("/sys/fs/cgroup/", controller, "/", path, NULL);
+-        else if (suffix)
+-                t = join("/sys/fs/cgroup/", controller, "/", suffix, NULL);
+-        else
+-                t = join("/sys/fs/cgroup/", controller, NULL);
++        if (!(controller || path))
++                return -EINVAL;
++
++        if (controller) {
++                if (path && suffix)
++                        t = join("/sys/fs/cgroup/", controller, "/", path, "/", suffix, NULL);
++                else if (path)
++                        t = join("/sys/fs/cgroup/", controller, "/", path, NULL);
++                else if (suffix)
++                        t = join("/sys/fs/cgroup/", controller, "/", suffix, NULL);
++                else
++                        t = join("/sys/fs/cgroup/", controller, NULL);
++        } else {
++                if (path && suffix)
++                        t = join(path, "/", suffix, NULL);
++                else if (path)
++                        t = strdup(path);
++        }
+ 
+         if (!t)
+                 return -ENOMEM;
+@@ -537,12 +547,8 @@ int cg_get_path(const char *controller, const char *path, const char *suffix, ch
+         const char *p;
+         static __thread bool good = false;
+ 
+-        assert(controller);
+         assert(fs);
+ 
+-        if (isempty(controller))
+-                return -EINVAL;
+-
+         if (_unlikely_(!good)) {
+                 int r;
+ 
+@@ -554,8 +560,7 @@ int cg_get_path(const char *controller, const char *path, const char *suffix, ch
+                 good = true;
+         }
+ 
+-        p = normalize_controller(controller);
+-
++        p = controller ? normalize_controller(controller) : NULL;
+         return join_path(p, path, suffix, fs);
+ }
+ 
+@@ -883,20 +888,22 @@ finish:
+ }
+ 
+ int cg_is_empty(const char *controller, const char *path, bool ignore_self) {
+-        pid_t pid = 0;
++        pid_t pid = 0, self_pid;
+         int r;
+         FILE *f = NULL;
+         bool found = false;
+ 
+-        assert(controller);
+         assert(path);
+ 
+-        if ((r = cg_enumerate_tasks(controller, path, &f)) < 0)
++        r = cg_enumerate_tasks(controller, path, &f);
++        if (r < 0)
+                 return r == -ENOENT ? 1 : r;
+ 
++        self_pid = getpid();
++
+         while ((r = cg_read_pid(f, &pid)) > 0) {
+ 
+-                if (ignore_self && pid == getpid())
++                if (ignore_self && pid == self_pid)
+                         continue;
+ 
+                 found = true;
+@@ -916,13 +923,14 @@ int cg_is_empty_recursive(const char *controller, const char *path, bool ignore_
+         DIR *d = NULL;
+         char *fn;
+ 
+-        assert(controller);
+         assert(path);
+ 
+-        if ((r = cg_is_empty(controller, path, ignore_self)) <= 0)
++        r = cg_is_empty(controller, path, ignore_self);
++        if (r <= 0)
+                 return r;
+ 
+-        if ((r = cg_enumerate_subgroups(controller, path, &d)) < 0)
++        r = cg_enumerate_subgroups(controller, path, &d);
++        if (r < 0)
+                 return r == -ENOENT ? 1 : r;
+ 
+         while ((r = cg_read_subgroup(d, &fn)) > 0) {
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 7abd928..04bd9ca 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2383,7 +2383,7 @@ static void print_status_info(UnitStatusInfo *i) {
+                         else
+                                 c = 0;
+ 
+-                        show_cgroup_by_path(i->default_control_group, "\t\t  ", c, false);
++                        show_cgroup_by_path(i->default_control_group, "\t\t  ", c, false, arg_all);
+                 }
+         }
+ 

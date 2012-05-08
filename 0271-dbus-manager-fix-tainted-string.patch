@@ -1,0 +1,39 @@
+From 6f9fb8acab32e0a20645ecc7ae1b7a81a95c0d61 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 9 May 2012 21:42:56 +0200
+Subject: [PATCH] dbus-manager: fix tainted string
+
+The pointer to the end of the string was not advanced after adding
+the "cgroups-missing" taint. If "local-hwclock" was detected too,
+it would overwrite the previous string.
+
+With 'e' always pointing to the end of the string, removing the last
+delimiter is easier.
+(cherry picked from commit 1ebf0cb73dacaf12c095580d8223a83cc96e441d)
+---
+ src/core/dbus-manager.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 003428c..adbef55 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -310,13 +310,14 @@ static int bus_manager_append_tainted(DBusMessageIter *i, const char *property,
+                 free(p);
+ 
+         if (access("/proc/cgroups", F_OK) < 0)
+-                stpcpy(e, "cgroups-missing:");
++                e = stpcpy(e, "cgroups-missing:");
+ 
+         if (hwclock_is_localtime() > 0)
+-                stpcpy(e, "local-hwclock:");
++                e = stpcpy(e, "local-hwclock:");
+ 
+-        if (endswith(buf, ":"))
+-                buf[strlen(buf)-1] = 0;
++        /* remove the last ':' */
++        if (e != buf)
++                e[-1] = 0;
+ 
+         t = buf;
+ 

@@ -1,0 +1,38 @@
+From ff495cf540294f3b801973e0531e031bbc1e6013 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 19:38:57 +0200
+Subject: [PATCH] units: drop audit reference from description of utmp units
+ since that is build-time optional (cherry picked from
+ commit 186b97d99fc4017d9c88221791bf8423130a9a1f)
+
+---
+ units/systemd-update-utmp-runlevel.service.in |    2 +-
+ units/systemd-update-utmp-shutdown.service.in |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/units/systemd-update-utmp-runlevel.service.in b/units/systemd-update-utmp-runlevel.service.in
+index 614c759..9bdb7a4 100644
+--- a/units/systemd-update-utmp-runlevel.service.in
++++ b/units/systemd-update-utmp-runlevel.service.in
+@@ -6,7 +6,7 @@
+ #  (at your option) any later version.
+ 
+ [Unit]
+-Description=Notify Audit System and Update UTMP about System Runlevel Changes
++Description=Update UTMP about System Runlevel Changes
+ DefaultDependencies=no
+ After=local-fs.target sysinit.target auditd.service runlevel1.target runlevel2.target runlevel3.target runlevel4.target runlevel5.target systemd-tmpfiles-setup.service
+ Before=poweroff.service reboot.service halt.service
+diff --git a/units/systemd-update-utmp-shutdown.service.in b/units/systemd-update-utmp-shutdown.service.in
+index e7c3c04..3832356 100644
+--- a/units/systemd-update-utmp-shutdown.service.in
++++ b/units/systemd-update-utmp-shutdown.service.in
+@@ -6,7 +6,7 @@
+ #  (at your option) any later version.
+ 
+ [Unit]
+-Description=Notify Audit System and Update UTMP about System Shutdown
++Description=Update UTMP about System Shutdown
+ DefaultDependencies=no
+ After=local-fs.target sysinit.target auditd.service systemd-update-utmp-runlevel.service
+ Before=poweroff.service reboot.service halt.service

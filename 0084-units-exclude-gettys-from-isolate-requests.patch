@@ -1,0 +1,52 @@
+From 00ed414ba351388c5cd7ad2dff10e34365e7bb36 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 21:58:33 +0200
+Subject: [PATCH] units: exclude gettys from isolate requests
+
+gettys are nowadays mostly autospawned and hence usually subject to
+being shut down on isolate requests, since they are no dependency of any
+other unit. This is a bad idea if the user isolates between
+multi-user.graphical and graphical.target, hence exclude them from the
+isolation.
+
+This has the effect that gettys no longer cleaned up when
+emergency.target is isolated, which might actualy be considered a
+feature, even though it is a change from previous behaviour...
+
+Note that the one getty that really matters (the one on tty1) is still
+removed when isolating to emergency.target since it conflicts with
+emergency.service.
+(cherry picked from commit 4771148bb92ace55eaa6759a53d04a0f2de9b0d2)
+
+Conflicts:
+
+	TODO
+---
+ units/getty@.service.m4        |    1 +
+ units/serial-getty@.service.m4 |    1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index a02838d..6b931fb 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -32,6 +32,7 @@ After=rc-local.service
+ # sure that this is synchronized before getty.target, even though
+ # getty.target didn't actually pull it in.
+ Before=getty.target
++IgnoreOnIsolate=yes
+ 
+ [Service]
+ Environment=TERM=linux
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index fc8b57b..d1d14d3 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -32,6 +32,7 @@ After=rc-local.service
+ # sure that this is synchronized before getty.target, even though
+ # getty.target didn't actually pull it in.
+ Before=getty.target
++IgnoreOnIsolate=yes
+ 
+ [Service]
+ Environment=TERM=vt100

@@ -1,0 +1,27 @@
+From fff72a4ecd05b8f535e4b7e8148edebdee090bf4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 4 May 2012 01:02:32 +0200
+Subject: [PATCH] systemctl: fix typo
+
+as Sergey Ptashnick pointed out we should write "poweroff" once instead
+of "reboot" twice.
+(cherry picked from commit 59ddae9f9c0992fe193fa371a5d114227b35785c)
+---
+ src/systemctl/systemctl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index b1a56c3..bbf2a6b 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -5204,8 +5204,8 @@ static int systemctl_main(DBusConnection *bus, int argc, char *argv[], DBusError
+                 }
+ 
+                 if (((!streq(verbs[i].verb, "reboot") &&
+-                     !streq(verbs[i].verb, "halt") &&
+-                     !streq(verbs[i].verb, "reboot")) || arg_force <= 0) && !bus) {
++                      !streq(verbs[i].verb, "halt") &&
++                      !streq(verbs[i].verb, "poweroff")) || arg_force <= 0) && !bus) {
+                         log_error("Failed to get D-Bus connection: %s",
+                                   dbus_error_is_set(error) ? error->message : "No connection to service manager.");
+                         return -EIO;

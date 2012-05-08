@@ -1,0 +1,523 @@
+From dfbcb4f2b6b43f6b859db16c0127044f504ae054 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 5 May 2012 02:06:58 +0200
+Subject: [PATCH] sleep: implement suspend/hibernate as first class targets
+ (cherry picked from commit
+ 6edd7d0a09171ea5ae8e01b7b1cbcb0bdfbfeb16)
+
+Conflicts:
+
+	.gitignore
+	Makefile.am
+	TODO
+	units/.gitignore
+---
+ Makefile.am                |   18 +++++++++-
+ man/systemctl.xml          |   10 ++++++
+ man/systemd.special.xml    |   34 ++++++++++++++++++
+ src/core/shutdown.c        |    6 +++-
+ src/core/special.h         |    2 ++
+ src/shared/util.c          |    3 +-
+ src/sleep/Makefile         |    1 +
+ src/sleep/sleep.c          |   83 ++++++++++++++++++++++++++++++++++++++++++++
+ src/systemctl/systemctl.c  |   16 +++++++--
+ units/hibernate.service.in |   16 +++++++++
+ units/hibernate.target     |   14 ++++++++
+ units/sleep.target         |   13 +++++++
+ units/suspend.service.in   |   16 +++++++++
+ units/suspend.target       |   14 ++++++++
+ 14 files changed, 240 insertions(+), 6 deletions(-)
+ create mode 120000 src/sleep/Makefile
+ create mode 100644 src/sleep/sleep.c
+ create mode 100644 units/hibernate.service.in
+ create mode 100644 units/hibernate.target
+ create mode 100644 units/sleep.target
+ create mode 100644 units/suspend.service.in
+ create mode 100644 units/suspend.target
+
+diff --git a/Makefile.am b/Makefile.am
+index 96cf5e5..b440a80 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -59,6 +59,7 @@ usergeneratordir=$(pkglibexecdir)/user-generators
+ pkgincludedir=$(includedir)/systemd
+ systemgeneratordir=$(rootlibexecdir)/system-generators
+ systemshutdowndir=$(rootlibexecdir)/system-shutdown
++systemsleepdir=$(rootlibexecdir)/system-sleep
+ systemunitdir=$(rootprefix)/lib/systemd/system
+ 
+ # And these are the special ones for /
+@@ -99,6 +100,7 @@ AM_CPPFLAGS = \
+ 	-DSYSTEMD_CGROUP_AGENT_PATH=\"$(rootlibexecdir)/systemd-cgroups-agent\" \
+ 	-DSYSTEMD_BINARY_PATH=\"$(rootlibexecdir)/systemd\" \
+ 	-DSYSTEMD_SHUTDOWN_BINARY_PATH=\"$(rootlibexecdir)/systemd-shutdown\" \
++	-DSYSTEMD_SLEEP_BINARY_PATH=\"$(rootlibexecdir)/systemd-sleep\" \
+ 	-DSYSTEMCTL_BINARY_PATH=\"$(rootbindir)/systemctl\" \
+ 	-DSYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH=\"$(rootbindir)/systemd-tty-ask-password-agent\" \
+ 	-DSYSTEMD_STDIO_BRIDGE_BINARY_PATH=\"$(bindir)/systemd-stdio-bridge\" \
+@@ -215,7 +217,8 @@ rootlibexec_PROGRAMS = \
+ 	systemd-fsck \
+ 	systemd-timestamp \
+ 	systemd-ac-power \
+-	systemd-sysctl
++	systemd-sysctl \
++	systemd-sleep
+ 
+ systemgenerator_PROGRAMS = \
+ 	systemd-getty-generator
+@@ -254,6 +257,7 @@ dist_systemunit_DATA = \
+ 	units/nss-lookup.target \
+ 	units/nss-user-lookup.target \
+ 	units/mail-transfer-agent.target \
++	units/hibernate.target \
+ 	units/http-daemon.target \
+ 	units/poweroff.target \
+ 	units/reboot.target \
+@@ -264,7 +268,9 @@ dist_systemunit_DATA = \
+ 	units/final.target \
+ 	units/umount.target \
+ 	units/sigpwr.target \
++	units/sleep.target \
+ 	units/sockets.target \
++	units/suspend.target \
+ 	units/swap.target \
+ 	units/systemd-initctl.socket \
+ 	units/systemd-shutdownd.socket \
+@@ -304,12 +310,14 @@ nodist_systemunit_DATA = \
+ 	units/systemd-sysctl.service \
+ 	units/halt.service \
+ 	units/emergency.service \
++	units/hibernate.service \
+ 	units/poweroff.service \
+ 	units/reboot.service \
+ 	units/kexec.service \
+ 	units/fsck@.service \
+ 	units/fsck-root.service \
+ 	units/rescue.service \
++	units/suspend.service \
+ 	units/user@.service
+ 
+ dist_userunit_DATA = \
+@@ -1055,6 +1063,13 @@ systemd_sysctl_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
++systemd_sleep_SOURCES = \
++	src/sleep/sleep.c
++
++systemd_sleep_LDADD = \
++	libsystemd-shared.la
++
++# ------------------------------------------------------------------------------
+ systemd_fsck_SOURCES = \
+ 	src/fsck/fsck.c
+ 
+@@ -2455,6 +2470,7 @@ systemd-install-data-hook:
+ 		$(DESTDIR)$(prefix)/lib/sysctl.d \
+ 		$(DESTDIR)$(sysconfdir)/sysctl.d \
+ 		$(DESTDIR)$(systemshutdowndir) \
++		$(DESTDIR)$(systemsleepdir) \
+ 		$(DESTDIR)$(systemgeneratordir) \
+ 		$(DESTDIR)$(usergeneratordir)
+ 	$(MKDIR_P) -m 0755 \
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 97280fd..15cc91d 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -1150,6 +1150,16 @@
+                                 <option>--user</option> option) and
+                                 will fail otherwise.</para></listitem>
+                         </varlistentry>
++                        <varlistentry>
++                                <term><command>suspend</command></term>
++
++                                <listitem><para>Suspend the system.</para></listitem>
++                        </varlistentry>
++                        <varlistentry>
++                                <term><command>hibernate</command></term>
++
++                                <listitem><para>Hibernate the system.</para></listitem>
++                        </varlistentry>
+                 </variablelist>
+ 
+         </refsect1>
+diff --git a/man/systemd.special.xml b/man/systemd.special.xml
+index 4c64a0f..9bb4297 100644
+--- a/man/systemd.special.xml
++++ b/man/systemd.special.xml
+@@ -58,6 +58,7 @@
+                 <filename>exit.service</filename>,
+                 <filename>final.service</filename>,
+                 <filename>graphical.target</filename>,
++                <filename>hibernate.target</filename>,
+                 <filename>http-daemon.target</filename>,
+                 <filename>halt.target</filename>,
+                 <filename>kbrequest.target</filename>,
+@@ -80,7 +81,9 @@
+                 <filename>runlevel5.target</filename>,
+                 <filename>shutdown.target</filename>,
+                 <filename>sigpwr.target</filename>,
++                <filename>sleep.target</filename>,
+                 <filename>sockets.target</filename>,
++                <filename>suspend.target</filename>,
+                 <filename>swap.target</filename>,
+                 <filename>sysinit.target</filename>,
+                 <filename>syslog.service</filename>,
+@@ -240,6 +243,15 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>hibernate.target</filename></term>
++                                <listitem>
++                                        <para>A special target unit
++                                        for hibernating the
++                                        system. This pulls in
++                                        <filename>sleep.target</filename>.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>http-daemon.target</filename></term>
+                                 <listitem>
+                                         <para>A target for pulling in
+@@ -591,6 +603,19 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>sleep.target</filename></term>
++                                <listitem>
++                                        <para>A special target unit
++                                        that is pulled in by
++                                        <filename>suspend.target</filename>
++                                        and
++                                        <filename>hibernate.target</filename>
++                                        and may be used to hook units
++                                        into the sleep state
++                                        logic.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>sockets.target</filename></term>
+                                 <listitem>
+                                         <para>A special target unit
+@@ -605,6 +630,15 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>suspend.target</filename></term>
++                                <listitem>
++                                        <para>A special target unit
++                                        for suspending the
++                                        system. This pulls in
++                                        <filename>sleep.target</filename>.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>swap.target</filename></term>
+                                 <listitem>
+                                         <para>Similar to
+diff --git a/src/core/shutdown.c b/src/core/shutdown.c
+index 0d0fe44..b4e1b69 100644
+--- a/src/core/shutdown.c
++++ b/src/core/shutdown.c
+@@ -309,6 +309,7 @@ int main(int argc, char *argv[]) {
+         unsigned retries;
+         bool need_umount = true, need_swapoff = true, need_loop_detach = true, need_dm_detach = true;
+         bool killed_everbody = false, in_container, use_watchdog = false;
++        char *arguments[3];
+ 
+         log_parse_environment();
+         log_set_target(LOG_TARGET_CONSOLE); /* syslog will die if not gone yet */
+@@ -442,7 +443,10 @@ int main(int argc, char *argv[]) {
+         if (retries >= FINALIZE_ATTEMPTS)
+                 log_error("Too many iterations, giving up.");
+ 
+-        execute_directory(SYSTEM_SHUTDOWN_PATH, NULL, NULL);
++        arguments[0] = NULL;
++        arguments[1] = argv[1];
++        arguments[2] = NULL;
++        execute_directory(SYSTEM_SHUTDOWN_PATH, NULL, arguments);
+ 
+         /* If we are in a container, just exit, this will kill our
+          * container for good. */
+diff --git a/src/core/special.h b/src/core/special.h
+index d910d2a..8c712af 100644
+--- a/src/core/special.h
++++ b/src/core/special.h
+@@ -36,6 +36,8 @@
+ #define SPECIAL_REBOOT_TARGET "reboot.target"
+ #define SPECIAL_KEXEC_TARGET "kexec.target"
+ #define SPECIAL_EXIT_TARGET "exit.target"
++#define SPECIAL_SUSPEND_TARGET "suspend.target"
++#define SPECIAL_HIBERNATE_TARGET "hibernate.target"
+ 
+ /* Special boot targets */
+ #define SPECIAL_RESCUE_TARGET "rescue.target"
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 125826e..e889610 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4106,8 +4106,7 @@ void execute_directory(const char *directory, DIR *d, char *argv[]) {
+                                 _argv[1] = NULL;
+                                 argv = _argv;
+                         } else
+-                                if (!argv[0])
+-                                        argv[0] = path;
++                                argv[0] = path;
+ 
+                         execv(path, argv);
+ 
+diff --git a/src/sleep/Makefile b/src/sleep/Makefile
+new file mode 120000
+index 0000000..d0b0e8e
+--- /dev/null
++++ b/src/sleep/Makefile
+@@ -0,0 +1 @@
++../Makefile
+\ No newline at end of file
+diff --git a/src/sleep/sleep.c b/src/sleep/sleep.c
+new file mode 100644
+index 0000000..7062dc2
+--- /dev/null
++++ b/src/sleep/sleep.c
+@@ -0,0 +1,83 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <stdio.h>
++#include <errno.h>
++#include <string.h>
++
++#include "log.h"
++#include "util.h"
++
++int main(int argc, char *argv[]) {
++        const char *verb;
++        char* arguments[4];
++        int r;
++        FILE *f;
++
++        log_set_target(LOG_TARGET_AUTO);
++        log_parse_environment();
++        log_open();
++
++        if (argc != 2) {
++                log_error("Invalid number of arguments.");
++                r = -EINVAL;
++                goto finish;
++        }
++
++        if (streq(argv[1], "suspend"))
++                verb = "mem";
++        else if (streq(argv[1], "hibernate"))
++                verb = "disk";
++        else {
++                log_error("Unknown action '%s'.", argv[1]);
++                r = -EINVAL;
++                goto finish;
++        }
++
++        f = fopen("/sys/power/state", "we");
++        if (!f) {
++                log_error("Failed to open /sys/power/state: %m");
++                r = -errno;
++                goto finish;
++        }
++
++        arguments[0] = NULL;
++        arguments[1] = (char*) "pre";
++        arguments[2] = argv[1];
++        arguments[3] = NULL;
++        execute_directory(SYSTEMD_SLEEP_BINARY_PATH, NULL, arguments);
++
++        fputs(verb, f);
++        fputc('\n', f);
++        fflush(f);
++
++        r = ferror(f) ? -errno : 0;
++
++        arguments[1] = (char*) "post";
++        execute_directory(SYSTEMD_SLEEP_BINARY_PATH, NULL, arguments);
++
++        fclose(f);
++
++finish:
++
++        return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
++
++}
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index a4f3de7..10a5d8c 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -97,6 +97,8 @@ static enum action {
+         ACTION_REBOOT,
+         ACTION_KEXEC,
+         ACTION_EXIT,
++        ACTION_SUSPEND,
++        ACTION_HIBERNATE,
+         ACTION_RUNLEVEL2,
+         ACTION_RUNLEVEL3,
+         ACTION_RUNLEVEL4,
+@@ -1585,6 +1587,10 @@ static enum action verb_to_action(const char *verb) {
+                 return ACTION_DEFAULT;
+         else if (streq(verb, "exit"))
+                 return ACTION_EXIT;
++        else if (streq(verb, "suspend"))
++                return ACTION_SUSPEND;
++        else if (streq(verb, "hibernate"))
++                return ACTION_HIBERNATE;
+         else
+                 return ACTION_INVALID;
+ }
+@@ -1603,7 +1609,9 @@ static int start_unit(DBusConnection *bus, char **args) {
+                 [ACTION_RESCUE] = SPECIAL_RESCUE_TARGET,
+                 [ACTION_EMERGENCY] = SPECIAL_EMERGENCY_TARGET,
+                 [ACTION_DEFAULT] = SPECIAL_DEFAULT_TARGET,
+-                [ACTION_EXIT] = SPECIAL_EXIT_TARGET
++                [ACTION_EXIT] = SPECIAL_EXIT_TARGET,
++                [ACTION_SUSPEND] = SPECIAL_SUSPEND_TARGET,
++                [ACTION_HIBERNATE] = SPECIAL_HIBERNATE_TARGET
+         };
+ 
+         int r, ret = 0;
+@@ -4181,7 +4189,9 @@ static int systemctl_help(void) {
+                "  poweroff                        Shut down and power-off the system\n"
+                "  reboot                          Shut down and reboot the system\n"
+                "  kexec                           Shut down and reboot the system with kexec\n"
+-               "  exit                            Ask for user instance termination\n",
++               "  exit                            Request user instance exit\n"
++               "  suspend                         Suspend the system\n"
++               "  hibernate                       Hibernate the system\n",
+                program_invocation_short_name);
+ 
+         return 0;
+@@ -5115,6 +5125,8 @@ static int systemctl_main(DBusConnection *bus, int argc, char *argv[], DBusError
+                 { "poweroff",              EQUAL, 1, start_special     },
+                 { "reboot",                EQUAL, 1, start_special     },
+                 { "kexec",                 EQUAL, 1, start_special     },
++                { "suspend",               EQUAL, 1, start_special     },
++                { "hibernate",             EQUAL, 1, start_special     },
+                 { "default",               EQUAL, 1, start_special     },
+                 { "rescue",                EQUAL, 1, start_special     },
+                 { "emergency",             EQUAL, 1, start_special     },
+diff --git a/units/hibernate.service.in b/units/hibernate.service.in
+new file mode 100644
+index 0000000..6dba653
+--- /dev/null
++++ b/units/hibernate.service.in
+@@ -0,0 +1,16 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++[Unit]
++Description=Hibernate
++DefaultDependencies=no
++Requires=sleep.target
++After=sleep.target
++
++[Service]
++Type=oneshot
++ExecStart=@rootlibexecdir@/systemd-sleep hibernate
+diff --git a/units/hibernate.target b/units/hibernate.target
+new file mode 100644
+index 0000000..05238a7
+--- /dev/null
++++ b/units/hibernate.target
+@@ -0,0 +1,14 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++# See systemd.special(7) for details
++
++[Unit]
++Description=Hibernate
++DefaultDependencies=no
++BindTo=hibernate.service
++After=hibernate.service
+diff --git a/units/sleep.target b/units/sleep.target
+new file mode 100644
+index 0000000..9f4b247
+--- /dev/null
++++ b/units/sleep.target
+@@ -0,0 +1,13 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++# See systemd.special(7) for details
++
++[Unit]
++Description=Sleep
++DefaultDependencies=no
++RefuseManualStart=yes
+diff --git a/units/suspend.service.in b/units/suspend.service.in
+new file mode 100644
+index 0000000..3cf819e
+--- /dev/null
++++ b/units/suspend.service.in
+@@ -0,0 +1,16 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++[Unit]
++Description=Suspend
++DefaultDependencies=no
++Requires=sleep.target
++After=sleep.target
++
++[Service]
++Type=oneshot
++ExecStart=@rootlibexecdir@/systemd-sleep suspend
+diff --git a/units/suspend.target b/units/suspend.target
+new file mode 100644
+index 0000000..3ddb449
+--- /dev/null
++++ b/units/suspend.target
+@@ -0,0 +1,14 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++# See systemd.special(7) for details
++
++[Unit]
++Description=Suspend
++DefaultDependencies=no
++BindTo=suspend.service
++After=suspend.service

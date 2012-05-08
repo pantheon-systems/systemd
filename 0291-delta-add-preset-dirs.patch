@@ -1,0 +1,27 @@
+From af3778a3826539f39332321171ce7844f1b12295 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 16 May 2012 03:39:41 +0200
+Subject: [PATCH] delta: add preset dirs (cherry picked from commit
+ 3ea6e73287921e1aa7f1173761cf522ae44e0977)
+
+---
+ src/delta/delta.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 65e720e..2e33759 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -338,9 +338,11 @@ int main(int argc, char *argv[]) {
+                 "sysctl.d\0"
+                 "tmpfiles.d\0"
+                 "modules-load.d\0"
++                "binfmt.d\0"
+                 "systemd/system\0"
+                 "systemd/user\0"
+-                "binfmt.d\0"
++                "systemd/system.preset\0"
++                "systemd/user.preset\0"
+                 "udev/rules.d\0"
+                 "modprobe.d\0";
+ 

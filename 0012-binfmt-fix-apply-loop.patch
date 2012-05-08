@@ -1,0 +1,24 @@
+From f0bd52e567edb38d1648865bd86aaf37c2e1166d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 22 Mar 2012 00:35:42 +0100
+Subject: [PATCH] binfmt: fix apply loop
+
+Noticed by Sergey Ptashnick
+(cherry picked from commit 170dcb7bd575f61aa75ce55d7fc0183ace6b8b76)
+---
+ src/binfmt/binfmt.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/binfmt/binfmt.c b/src/binfmt/binfmt.c
+index 28925ac..3c8d815 100644
+--- a/src/binfmt/binfmt.c
++++ b/src/binfmt/binfmt.c
+@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
+                 for (i = 1; i < argc; i++) {
+                         int k;
+ 
+-                        k = apply_file(argv[1], false);
++                        k = apply_file(argv[i], false);
+                         if (k < 0 && r == 0)
+                                 r = k;
+                 }

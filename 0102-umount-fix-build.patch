@@ -1,0 +1,23 @@
+From 280fc0fcf623472cbb942f6d6fa3a82aa70c2e58 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 13:48:20 +0200
+Subject: [PATCH] umount: fix build (cherry picked from commit
+ 7f81d81ada9fe147173e35e87a1214e9092a603c)
+
+---
+ src/umount.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/umount.c b/src/umount.c
+index 7861def..75a92b9 100644
+--- a/src/umount.c
++++ b/src/umount.c
+@@ -119,7 +119,7 @@ static int mount_points_list_get(MountPoint **head) {
+                  * /dev/console) */
+                 if (mount_point_is_api(p) ||
+                     mount_point_ignore(p) ||
+-                    path_streq(p, "/dev/console")) {
++                    path_equal(p, "/dev/console")) {
+                         free(p);
+                         continue;
+                 }

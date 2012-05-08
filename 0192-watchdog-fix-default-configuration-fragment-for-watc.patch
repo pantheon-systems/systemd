@@ -1,0 +1,23 @@
+From 81d8a14e014b9557d130200a1fcee841c2f1da1d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 21 Apr 2012 15:47:38 +0200
+Subject: [PATCH] watchdog: fix default configuration fragment for watchdog
+ (cherry picked from commit
+ 461282d52a980bc5800307a24070d275a66e3d07)
+
+---
+ src/core/system.conf |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/system.conf b/src/core/system.conf
+index 36eac07..807d184 100644
+--- a/src/core/system.conf
++++ b/src/core/system.conf
+@@ -24,5 +24,5 @@
+ #DefaultStandardOutput=journal
+ #DefaultStandardError=inherit
+ #JoinControllers=cpu,cpuacct
+-#RuntimeWatchdog=0
+-#ShutdownWatchdog=10min
++#RuntimeWatchdogSec=0
++#ShutdownWatchdogSec=10min

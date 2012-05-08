@@ -1,0 +1,53 @@
+From 946c2c74cd94602fb633c178e36d41559431e75e Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 18 Apr 2012 13:37:45 +0200
+Subject: [PATCH] remove MS_* which can not be combined with current kernel
+ code
+
+MS_BIND|MS_MOVE can not be combined:
+  do_mount()
+    else if (flags & MS_BIND)
+      do_loopback(&path, dev_name, flags & MS_REC);
+    [...]
+    else if (flags & MS_MOVE)
+      do_move_mount(&path, dev_name);
+
+MS_REMOUNT|MS_UNBINDABLE can not be combined:
+  do_mount()
+    if (flags & MS_REMOUNT)
+      do_remount(&path, flags & ~MS_REMOUNT, mnt_flags, data_page);
+    [...]
+    else if (flags & (MS_SHARED | MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
+      do_change_type(&path, flags);
+(cherry picked from commit 4d46fec56db73e1d2d01076792f9b8f3231d5cb1)
+---
+ src/core/namespace.c |    2 +-
+ src/nspawn/nspawn.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index 09bc829..2462552 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -167,7 +167,7 @@ static int apply_mount(Path *p, const char *root_dir, const char *inaccessible_d
+ 
+                 /* Avoid exponential growth of trees */
+                 if (r >= 0 && path_equal(p->path, "/"))
+-                        r = mount(NULL, where, NULL, MS_REMOUNT|MS_BIND|MS_UNBINDABLE|flags, NULL);
++                        r = mount(NULL, where, NULL, MS_REMOUNT|MS_BIND|flags, NULL);
+ 
+                 if (r < 0) {
+                         r = -errno;
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index f44cab9..0075cdc 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -928,7 +928,7 @@ int main(int argc, char *argv[]) {
+                     dup2(STDIN_FILENO, STDERR_FILENO) != STDERR_FILENO)
+                         goto child_fail;
+ 
+-                if (mount(arg_directory, "/", "bind", MS_BIND|MS_MOVE, NULL) < 0) {
++                if (mount(arg_directory, "/", "bind", MS_BIND, NULL) < 0) {
+                         log_error("mount(MS_MOVE) failed: %m");
+                         goto child_fail;
+                 }

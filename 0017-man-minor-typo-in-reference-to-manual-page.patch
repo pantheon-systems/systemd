@@ -1,0 +1,23 @@
+From 7d34f8bdf72bd6482b2662ec26ec1d55db365bb9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Elan=20Ruusam=C3=A4e?= <glen@delfi.ee>
+Date: Sat, 24 Mar 2012 15:06:00 +0200
+Subject: [PATCH] man: minor typo in reference to manual page (cherry picked
+ from commit 6ad548625e53cb4fcf1fd092b44707777d6a5071)
+
+---
+ src/login/systemd-logind.conf |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/login/systemd-logind.conf b/src/login/systemd-logind.conf
+index 9909804..a8d9833 100644
+--- a/src/login/systemd-logind.conf
++++ b/src/login/systemd-logind.conf
+@@ -5,7 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ #
+-# See system-logind.conf(5) for details
++# See systemd-logind.conf(5) for details
+ 
+ [Login]
+ #NAutoVTs=6

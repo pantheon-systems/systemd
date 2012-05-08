@@ -1,0 +1,94 @@
+From 78cfba4f1937d5150d0484cc59910ece5d2213a9 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 16:41:52 +0200
+Subject: [PATCH] udev: fix gcc warnings showing up after adding $(AM_CFLAGS)
+ (cherry picked from commit
+ 04a9d3a00a9290cbf254d0b0ba2ce4521be632ae)
+
+[ not really about udev; just took minor Makefile.am changes -- michich ]
+
+Conflicts:
+
+	.gitignore
+	Makefile.am
+	src/udev/udev-builtin-blkid.c
+	src/udev/udev-builtin-input_id.c
+	src/udev/udev-builtin-usb_id.c
+	src/udev/udev-ctrl.c
+	src/udev/udev-event.c
+	src/udev/udev-node.c
+	src/udev/udev-rules.c
+	src/udev/udevadm-info.c
+	src/udev/udevadm-trigger.c
+	src/udev/udevd.c
+---
+ Makefile.am |   21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 6e00bd8..bb86f8a 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -70,6 +70,7 @@ INSTALL_EXEC_HOOKS =
+ UNINSTALL_EXEC_HOOKS =
+ INSTALL_DATA_HOOKS =
+ pkginclude_HEADERS =
++noinst_LTLIBRARIES =
+ lib_LTLIBRARIES =
+ pkgconfiglib_DATA =
+ polkitpolicy_in_files =
+@@ -535,12 +536,8 @@ EXTRA_DIST += \
+ 	$(MANPAGES_ALIAS)
+ 
+ # ------------------------------------------------------------------------------
+-noinst_LTLIBRARIES = \
+-	libsystemd-basic.la \
+-	libsystemd-capability.la \
+-	libsystemd-audit.la \
+-	libsystemd-acl.la \
+-	libsystemd-core.la
++noinst_LTLIBRARIES += \
++	libsystemd-basic.la
+ 
+ libsystemd_basic_la_SOURCES = \
+ 	src/shared/util.c \
+@@ -577,6 +574,9 @@ libsystemd_basic_la_LIBADD = \
+ 	$(SELINUX_LIBS)
+ 
+ # ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-capability.la
++
+ libsystemd_capability_la_SOURCES = \
+ 	src/shared/capability.c \
+ 	src/shared/capability.h
+@@ -589,6 +589,9 @@ libsystemd_capability_la_LIBADD = \
+ 	$(CAP_LIBS)
+ 
+ # ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-audit.la
++
+ libsystemd_audit_la_SOURCES = \
+ 	src/shared/audit.c \
+ 	src/shared/audit.h
+@@ -597,6 +600,9 @@ libsystemd_audit_la_LIBADD = \
+ 	libsystemd-capability.la
+ 
+ # ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-acl.la
++
+ libsystemd_acl_la_SOURCES = \
+ 	src/shared/acl.c \
+ 	src/shared/acl.h
+@@ -609,6 +615,9 @@ libsystemd_acl_la_LIBADD = \
+ 	$(ACL_LIBS)
+ 
+ # ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-core.la
++
+ libsystemd_core_la_SOURCES = \
+ 	src/unit.c \
+ 	src/unit.h \

@@ -1,0 +1,133 @@
+From 0d0c87a57f701a30ce5ecafdbfb7169c62412793 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 14 Apr 2012 02:34:10 +0200
+Subject: [PATCH] manager: remove unavailable/redundant entries from default
+ controllers list (cherry picked from commit
+ 9156e799a258658cf3f51434708cdb194c13eaa4)
+
+---
+ src/core/cgroup.c  |   41 ++++++++++++++++++++++++++++++++++++++---
+ src/core/cgroup.h  |    1 +
+ src/core/manager.c |    5 ++++-
+ 3 files changed, 43 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 6ae9f48..0ea6395 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -30,6 +30,7 @@
+ #include "cgroup.h"
+ #include "cgroup-util.h"
+ #include "log.h"
++#include "strv.h"
+ 
+ int cgroup_bonding_realize(CGroupBonding *b) {
+         int r;
+@@ -305,7 +306,8 @@ int manager_setup_cgroup(Manager *m) {
+         }
+ 
+         /* 1. Determine hierarchy */
+-        if ((r = cg_get_by_pid(SYSTEMD_CGROUP_CONTROLLER, 0, &current)) < 0) {
++        r = cg_get_by_pid(SYSTEMD_CGROUP_CONTROLLER, 0, &current);
++        if (r < 0) {
+                 log_error("Cannot determine cgroup we are running in: %s", strerror(-r));
+                 goto finish;
+         }
+@@ -352,7 +354,8 @@ int manager_setup_cgroup(Manager *m) {
+                 log_debug("Release agent already installed.");
+ 
+         /* 4. Realize the group */
+-        if ((r = cg_create_and_attach(SYSTEMD_CGROUP_CONTROLLER, m->cgroup_hierarchy, 0)) < 0) {
++        r = cg_create_and_attach(SYSTEMD_CGROUP_CONTROLLER, m->cgroup_hierarchy, 0);
++        if (r < 0) {
+                 log_error("Failed to create root cgroup hierarchy: %s", strerror(-r));
+                 goto finish;
+         }
+@@ -361,7 +364,8 @@ int manager_setup_cgroup(Manager *m) {
+         if (m->pin_cgroupfs_fd >= 0)
+                 close_nointr_nofail(m->pin_cgroupfs_fd);
+ 
+-        if ((m->pin_cgroupfs_fd = open(path, O_RDONLY|O_CLOEXEC|O_DIRECTORY|O_NOCTTY|O_NONBLOCK)) < 0) {
++        m->pin_cgroupfs_fd = open(path, O_RDONLY|O_CLOEXEC|O_DIRECTORY|O_NOCTTY|O_NONBLOCK);
++        if (r < 0) {
+                 log_error("Failed to open pin file: %m");
+                 r = -errno;
+                 goto finish;
+@@ -369,6 +373,8 @@ int manager_setup_cgroup(Manager *m) {
+ 
+         log_debug("Created root group.");
+ 
++        manager_shorten_default_controllers(m);
++
+ finish:
+         free(current);
+         free(path);
+@@ -391,6 +397,35 @@ void manager_shutdown_cgroup(Manager *m, bool delete) {
+         m->cgroup_hierarchy = NULL;
+ }
+ 
++void manager_shorten_default_controllers(Manager *m) {
++        char **f, **t;
++
++        strv_uniq(m->default_controllers);
++
++        if (!m->default_controllers)
++                return;
++
++        for (f = m->default_controllers, t = m->default_controllers; *f; f++) {
++
++                if (!streq(*f, "systemd") && !streq(*f, "name=systemd")) {
++                        char *cc;
++
++                        cc = alloca(sizeof("/sys/fs/cgroup/") + strlen(*f));
++                        strcpy(stpcpy(cc, "/sys/fs/cgroup/"), *f);
++
++                        if (access(cc, F_OK) >= 0) {
++                                *(t++) = *f;
++                                continue;
++                        }
++                }
++
++                log_debug("Controller %s not available or redundant, removing from default controllers list.", *f);
++                free(*f);
++        }
++
++        *t = NULL;
++}
++
+ int cgroup_bonding_get(Manager *m, const char *cgroup, CGroupBonding **bonding) {
+         CGroupBonding *b;
+         char *p;
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 35ae52b..17ae14f 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -85,6 +85,7 @@ pid_t cgroup_bonding_search_main_pid_list(CGroupBonding *b);
+ 
+ int manager_setup_cgroup(Manager *m);
+ void manager_shutdown_cgroup(Manager *m, bool delete);
++void manager_shorten_default_controllers(Manager *m);
+ 
+ int cgroup_bonding_get(Manager *m, const char *cgroup, CGroupBonding **bonding);
+ int cgroup_notify_empty(Manager *m, const char *group);
+diff --git a/src/core/manager.c b/src/core/manager.c
+index d57e8c1..97be7ce 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3165,12 +3165,15 @@ int manager_set_default_controllers(Manager *m, char **controllers) {
+ 
+         assert(m);
+ 
+-        if (!(l = strv_copy(controllers)))
++        l = strv_copy(controllers);
++        if (!l)
+                 return -ENOMEM;
+ 
+         strv_free(m->default_controllers);
+         m->default_controllers = l;
+ 
++        manager_shorten_default_controllers(m);
++
+         return 0;
+ }
+ 

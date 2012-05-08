@@ -1,0 +1,44 @@
+From 0791e7acaa4512eba5f694aa28e4aeb63f3f69df Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 12:48:27 +0200
+Subject: [PATCH] main: add URL to cgroups check message (cherry picked from
+ commit 966a5d37c3405afe105fbdb4209c4de64747e00f)
+
+---
+ src/main.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index 40be2b2..589d9f0 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1097,7 +1097,8 @@ static struct dual_timestamp* parse_initrd_timestamp(struct dual_timestamp *t) {
+ 
+         assert(t);
+ 
+-        if (!(e = getenv("RD_TIMESTAMP")))
++        e = getenv("RD_TIMESTAMP");
++        if (!e)
+                 return NULL;
+ 
+         if (sscanf(e, "%llu %llu", &a, &b) != 2)
+@@ -1150,7 +1151,8 @@ static void test_cgroups(void) {
+                     "Systems without control groups are not supported. "
+                     "We will now sleep for 10s, and then continue boot-up. "
+                     "Expect breakage and please do not file bugs. "
+-                    "Instead fix your kernel and enable CONFIG_CGROUPS." );
++                    "Instead fix your kernel and enable CONFIG_CGROUPS. "
++                    "Consult http://0pointer.de/blog/projects/cgroups-vs-cgroups.html for more information.");
+ 
+         sleep(10);
+ }
+@@ -1311,7 +1313,8 @@ int main(int argc, char *argv[]) {
+ 
+         /* Remember open file descriptors for later deserialization */
+         if (serialization) {
+-                if ((r = fdset_new_fill(&fds)) < 0) {
++                r = fdset_new_fill(&fds);
++                if (r < 0) {
+                         log_error("Failed to allocate fd set: %s", strerror(-r));
+                         goto finish;
+                 }

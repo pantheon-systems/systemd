@@ -1,0 +1,25 @@
+From 2d471b4544fdad40a29cd826da231bb379fa0797 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 15 May 2012 14:52:53 +0200
+Subject: [PATCH] build-sys: fix distcheck (cherry picked from commit
+ 0e483bf91153938c3360885129a1382776c9b206)
+
+Conflicts:
+	Makefile.am
+---
+ Makefile.am |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index b440a80..a8382d5 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -353,6 +353,8 @@ EXTRA_DIST += \
+ 	units/fsck@.service.in \
+ 	units/fsck-root.service.in \
+ 	units/user@.service.in \
++	units/hibernate.service.in \
++	units/suspend.service.in \
+ 	introspect.awk \
+ 	src/99-systemd.rules.in \
+ 	man/custom-html.xsl

@@ -1,0 +1,22 @@
+From 1450bc16bab04b77618db619374ea313af13cb8f Mon Sep 17 00:00:00 2001
+From: Frederic Crozat <fcrozat@suse.com>
+Date: Fri, 4 May 2012 16:14:19 +0200
+Subject: [PATCH] logind: fix memory leak (cherry picked from commit
+ b80efeb9ae23b493d03501caa7e6334d1db65dd9)
+
+---
+ src/login/logind-session.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 6c48a69..baf1ab2 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -327,6 +327,7 @@ finish:
+         free(vtnr);
+         free(leader);
+         free(audit_id);
++        free(class);
+ 
+         return r;
+ }

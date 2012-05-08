@@ -1,0 +1,37 @@
+From 8a1fff38ce258238a24a8064edb463385efd3a27 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 12:58:08 +0200
+Subject: [PATCH] nspawn: bind mount /dev/nul to /proc/kmsg, so that the
+ container can't muck with the host kmsg (cherry picked from
+ commit 68fb08920b2162b48cf0fa8dd98b021327b42896)
+
+---
+ src/nspawn.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/nspawn.c b/src/nspawn.c
+index 37453c8..8cd8647 100644
+--- a/src/nspawn.c
++++ b/src/nspawn.c
+@@ -184,7 +184,8 @@ static int mount_all(const char *dest) {
+                         break;
+                 }
+ 
+-                if ((t = path_is_mount_point(where, false)) < 0) {
++                t = path_is_mount_point(where, false);
++                if (t < 0) {
+                         log_error("Failed to detect whether %s is a mount point: %s", where, strerror(-t));
+                         free(where);
+ 
+@@ -229,6 +230,11 @@ static int mount_all(const char *dest) {
+                 free(where);
+         }
+ 
++        if (asprintf(&where, "%s/proc/kmsg", dest) >= 0) {
++                mount("/dev/null", where, "bind", MS_BIND, NULL);
++                free(where);
++        }
++
+         return r;
+ }
+ 

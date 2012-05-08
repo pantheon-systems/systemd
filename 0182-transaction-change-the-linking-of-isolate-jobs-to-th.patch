@@ -1,0 +1,39 @@
+From b72976f6791bc350f4a854a0eceabc47c800f06c Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 20 Apr 2012 10:33:37 +0200
+Subject: [PATCH] transaction: change the linking of isolate jobs to the
+ anchor
+
+When isolating, the JOB_STOP jobs have no parent job, so they are all peers
+of the real anchor job. This is a bit odd.
+
+Link them from the anchor job.
+(cherry picked from commit 4483f694983382b4092e3e295ffb59926cff96d9)
+---
+ src/core/transaction.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index d7ecfdb..09abe00 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -893,8 +893,8 @@ int transaction_add_job_and_dependencies(
+         /* If the link has no subject job, it's the anchor link. */
+         if (!by) {
+                 LIST_PREPEND(JobDependency, subject, tr->anchor, l);
+-                if (!tr->anchor_job)
+-                        tr->anchor_job = ret;
++                assert(!tr->anchor_job);
++                tr->anchor_job = ret;
+         }
+ 
+         if (is_new && !ignore_requirements) {
+@@ -1077,7 +1077,7 @@ int transaction_add_isolate_jobs(Transaction *tr, Manager *m) {
+                 if (hashmap_get(tr->jobs, u))
+                         continue;
+ 
+-                r = transaction_add_job_and_dependencies(tr, JOB_STOP, u, NULL, true, false, false, false, false, NULL);
++                r = transaction_add_job_and_dependencies(tr, JOB_STOP, u, tr->anchor_job, true, false, false, false, false, NULL);
+                 if (r < 0)
+                         log_warning("Cannot add isolate job for unit %s, ignoring: %s", u->id, strerror(-r));
+         }

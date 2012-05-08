@@ -1,0 +1,91 @@
+From 3a9d76d4643e28232a3d05cb1c2d1c4821cf9195 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 11 Apr 2012 16:39:31 +0200
+Subject: [PATCH] put acl.la in 'if HAVE_ACL' and rename acl.[ch] to
+ acl-util.[ch] (cherry picked from commit
+ 79c077224be5a868d0bba66972ef9546dae85977)
+
+---
+ Makefile.am                      |    6 ++++--
+ src/journal/journald.c           |    2 +-
+ src/login/logind-acl.c           |    2 +-
+ src/shared/{acl.c => acl-util.c} |    2 +-
+ src/shared/{acl.h => acl-util.h} |    0
+ 5 files changed, 7 insertions(+), 5 deletions(-)
+ rename src/shared/{acl.c => acl-util.c} (98%)
+ rename src/shared/{acl.h => acl-util.h} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 161d44e..23ca11a 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -618,12 +618,13 @@ libsystemd_audit_la_LIBADD = \
+ 	libsystemd-capability.la
+ 
+ # ------------------------------------------------------------------------------
++if HAVE_ACL
+ noinst_LTLIBRARIES += \
+ 	libsystemd-acl.la
+ 
+ libsystemd_acl_la_SOURCES = \
+-	src/shared/acl.c \
+-	src/shared/acl.h
++	src/shared/acl-util.c \
++	src/shared/acl-util.h
+ 
+ libsystemd_acl_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -631,6 +632,7 @@ libsystemd_acl_la_CFLAGS = \
+ 
+ libsystemd_acl_la_LIBADD = \
+ 	$(ACL_LIBS)
++endif
+ 
+ # ------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 18efd32..a6e50fc 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -51,7 +51,7 @@
+ #ifdef HAVE_ACL
+ #include <sys/acl.h>
+ #include <acl/libacl.h>
+-#include "acl.h"
++#include "acl-util.h"
+ #endif
+ 
+ #ifdef HAVE_SELINUX
+diff --git a/src/login/logind-acl.c b/src/login/logind-acl.c
+index e2e8696..eb8a48d 100644
+--- a/src/login/logind-acl.c
++++ b/src/login/logind-acl.c
+@@ -27,7 +27,7 @@
+ 
+ #include "logind-acl.h"
+ #include "util.h"
+-#include "acl.h"
++#include "acl-util.h"
+ 
+ static int flush_acl(acl_t acl) {
+         acl_entry_t i;
+diff --git a/src/shared/acl.c b/src/shared/acl-util.c
+similarity index 98%
+rename from src/shared/acl.c
+rename to src/shared/acl-util.c
+index d6a80f4..a2a9f9a 100644
+--- a/src/shared/acl.c
++++ b/src/shared/acl-util.c
+@@ -25,7 +25,7 @@
+ #include <errno.h>
+ #include <stdbool.h>
+ 
+-#include "acl.h"
++#include "acl-util.h"
+ 
+ int acl_find_uid(acl_t acl, uid_t uid, acl_entry_t *entry) {
+         acl_entry_t i;
+diff --git a/src/shared/acl.h b/src/shared/acl-util.h
+similarity index 100%
+rename from src/shared/acl.h
+rename to src/shared/acl-util.h

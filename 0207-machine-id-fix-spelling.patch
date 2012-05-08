@@ -1,0 +1,32 @@
+From 10e537a0c947da39315cf698c7d1d900f7c5b4de Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 15:07:35 +0200
+Subject: [PATCH] machine-id: fix spelling (cherry picked from commit
+ 8e47b1d2ebefc4ca02c681eba87bb290c5af02d2)
+
+---
+ src/core/machine-id-setup.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/machine-id-setup.c b/src/core/machine-id-setup.c
+index d53757c..470c624 100644
+--- a/src/core/machine-id-setup.c
++++ b/src/core/machine-id-setup.c
+@@ -100,7 +100,7 @@ static int generate(char id[34]) {
+                         if (k >= 36) {
+                                 r = shorten_uuid(id, uuid);
+                                 if (r >= 0) {
+-                                        log_info("Initializing machine ID from KVM UUID");
++                                        log_info("Initializing machine ID from KVM UUID.");
+                                         return 0;
+                                 }
+                         }
+@@ -119,7 +119,7 @@ static int generate(char id[34]) {
+                         if (strlen(e) >= 36) {
+                                 r = shorten_uuid(id, e);
+                                 if (r >= 0) {
+-                                        log_info("Initializing machine ID from container UUID");
++                                        log_info("Initializing machine ID from container UUID.");
+                                         free(e);
+                                         return 0;
+                                 }

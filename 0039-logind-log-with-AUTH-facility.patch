@@ -1,0 +1,109 @@
+From fecd9eb23a204de1d7bba217bd0ac200b5c2bdb6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Apr 2012 19:25:29 +0200
+Subject: [PATCH] logind: log with AUTH facility (cherry picked from commit
+ 3eff4208ffecedd778fec260f0d4b18e94dab443)
+
+---
+ TODO                   |    2 --
+ src/journal/journald.c |    1 +
+ src/log.c              |    9 ++++++++-
+ src/log.h              |    1 +
+ src/login/logind.c     |    1 +
+ 5 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/TODO b/TODO
+index 84718bb..6796289 100644
+--- a/TODO
++++ b/TODO
+@@ -21,8 +21,6 @@ Features:
+ 
+ * Make -f in systemctl enable both --follow and --force
+ 
+-* ensure that logind sets the syslog facility to AUTH when logging
+-
+ * when a service has the same env var set twice we actually store it twice and return that in systemctl show -p... We should only show the last setting
+ 
+ * add man page documenting all kernel cmdline options, including stuff like fsck.mode=
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index f0f5103..f817df6 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2765,6 +2765,7 @@ int main(int argc, char *argv[]) {
+         }
+ 
+         log_set_target(LOG_TARGET_CONSOLE);
++        log_set_facility(LOG_SYSLOG);
+         log_parse_environment();
+         log_open();
+ 
+diff --git a/src/log.c b/src/log.c
+index 5b17211..9fffc1d 100644
+--- a/src/log.c
++++ b/src/log.c
+@@ -37,6 +37,7 @@
+ 
+ static LogTarget log_target = LOG_TARGET_CONSOLE;
+ static int log_max_level = LOG_INFO;
++static int log_facility = LOG_DAEMON;
+ 
+ static int console_fd = STDERR_FILENO;
+ static int syslog_fd = -1;
+@@ -310,6 +311,10 @@ void log_set_max_level(int level) {
+         log_max_level = level;
+ }
+ 
++void log_set_facility(int facility) {
++        log_facility = facility;
++}
++
+ static int write_to_console(
+                 int level,
+                 const char*file,
+@@ -457,11 +462,13 @@ static int write_to_journal(
+ 
+         snprintf(header, sizeof(header),
+                  "PRIORITY=%i\n"
++                 "SYSLOG_FACILITY=%i\n"
+                  "CODE_FILE=%s\n"
+                  "CODE_LINE=%i\n"
+                  "CODE_FUNCTION=%s\n"
+                  "MESSAGE=",
+                  LOG_PRI(level),
++                 LOG_FAC(level),
+                  file,
+                  line,
+                  func);
+@@ -497,7 +504,7 @@ static int log_dispatch(
+ 
+         /* Patch in LOG_DAEMON facility if necessary */
+         if ((level & LOG_FACMASK) == 0)
+-                level = LOG_DAEMON | LOG_PRI(level);
++                level = log_facility | LOG_PRI(level);
+ 
+         do {
+                 char *e;
+diff --git a/src/log.h b/src/log.h
+index 5c6310e..3283808 100644
+--- a/src/log.h
++++ b/src/log.h
+@@ -43,6 +43,7 @@ typedef enum LogTarget{
+ 
+ void log_set_target(LogTarget target);
+ void log_set_max_level(int level);
++void log_set_facility(int facility);
+ 
+ int log_set_target_from_string(const char *e);
+ int log_set_max_level_from_string(const char *e);
+diff --git a/src/login/logind.c b/src/login/logind.c
+index 7fd6515..fd1f624 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -1240,6 +1240,7 @@ int main(int argc, char *argv[]) {
+         int r;
+ 
+         log_set_target(LOG_TARGET_AUTO);
++        log_set_facility(LOG_AUTH);
+         log_parse_environment();
+         log_open();
+ 

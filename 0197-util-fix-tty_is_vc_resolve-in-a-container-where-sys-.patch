@@ -1,0 +1,89 @@
+From c6accdaa7b2a4cf991bf13c77ae2c1158cefbb2e Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 01:59:11 +0200
+Subject: [PATCH] util: fix tty_is_vc_resolve() in a container where
+ /sys/class/tty/console/active is misleading (cherry picked
+ from commit 3d9a412243035beeaaf3465a62065444a5adf21c)
+
+Conflicts:
+
+	TODO
+---
+ src/core/condition.c |   10 ++--------
+ src/shared/util.c    |   18 ++++++++++++++++--
+ src/shared/util.h    |    1 +
+ 3 files changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/src/core/condition.c b/src/core/condition.c
+index 4ed4eee..3ee9944 100644
+--- a/src/core/condition.c
++++ b/src/core/condition.c
+@@ -223,14 +223,8 @@ bool condition_test(Condition *c) {
+         case CONDITION_PATH_IS_MOUNT_POINT:
+                 return (path_is_mount_point(c->parameter, true) > 0) == !c->negate;
+ 
+-        case CONDITION_PATH_IS_READ_WRITE: {
+-                struct statvfs st;
+-
+-                if (statvfs(c->parameter, &st) < 0)
+-                        return c->negate;
+-
+-                return !(st.f_flag & ST_RDONLY) == !c->negate;
+-        }
++        case CONDITION_PATH_IS_READ_WRITE:
++                return (path_is_read_only_fs(c->parameter) > 0) == c->negate;
+ 
+         case CONDITION_DIRECTORY_NOT_EMPTY: {
+                 int k;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index e82a336..6d12766 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -56,6 +56,7 @@
+ #include <glob.h>
+ #include <grp.h>
+ #include <sys/mman.h>
++#include <sys/statvfs.h>
+ 
+ #include "macro.h"
+ #include "util.h"
+@@ -4319,8 +4320,10 @@ bool tty_is_vc_resolve(const char *tty) {
+         if (startswith(tty, "/dev/"))
+                 tty += 5;
+ 
+-        /* Resolve where /dev/console is pointing to */
+-        if (streq(tty, "console"))
++        /* Resolve where /dev/console is pointing to, if /sys is
++         * actually ours (i.e. not read-only-mounted which is a sign
++         * for container setups) */
++        if (streq(tty, "console") && path_is_read_only_fs("/sys") <= 0)
+                 if (read_one_line_file("/sys/class/tty/console/active", &active) >= 0) {
+                         /* If multiple log outputs are configured the
+                          * last one is what /dev/console points to */
+@@ -6145,3 +6148,14 @@ int setrlimit_closest(int resource, const struct rlimit *rlim) {
+ 
+         return 0;
+ }
++
++int path_is_read_only_fs(const char *path) {
++        struct statvfs st;
++
++        assert(path);
++
++        if (statvfs(path, &st) < 0)
++                return -errno;
++
++        return !!(st.f_flag & ST_RDONLY);
++}
+diff --git a/src/shared/util.h b/src/shared/util.h
+index d4932eb..aaa0426 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -350,6 +350,7 @@ ssize_t loop_read(int fd, void *buf, size_t nbytes, bool do_poll);
+ ssize_t loop_write(int fd, const void *buf, size_t nbytes, bool do_poll);
+ 
+ int path_is_mount_point(const char *path, bool allow_symlink);
++int path_is_read_only_fs(const char *path);
+ 
+ bool is_device_path(const char *path);
+ 

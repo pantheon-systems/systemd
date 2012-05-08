@@ -1,0 +1,27 @@
+From 8ad583523ad4478d2d194fef628d2122f2c6f02e Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 17:36:41 +0200
+Subject: [PATCH] main: unset some more env vars (cherry picked from commit
+ 9f28b98ec6461b4e06edd1e149c1ee5e9dcc4be0)
+
+---
+ src/core/main.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 7b41554..80ef8b1 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1350,6 +1350,12 @@ int main(int argc, char *argv[]) {
+                 unsetenv("SHLVL");
+                 unsetenv("_");
+ 
++                /* When we are invoked by a tool chroot-like such as
++                 * nspawn, these might be set, but make little sense
++                 * to pass on */
++                unsetenv("USER");
++                unsetenv("LOGNAME");
++
+                 /* All other variables are left as is, so that clients
+                  * can still read them via /proc/1/environ */
+         }

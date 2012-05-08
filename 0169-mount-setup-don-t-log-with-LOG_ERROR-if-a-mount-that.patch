@@ -1,0 +1,24 @@
+From fc29c3a5c5255d7b4b2b77699419822efbadd9a4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 20 Apr 2012 12:39:09 +0200
+Subject: [PATCH] mount-setup: don't log with LOG_ERROR if a mount that
+ doesn't matter fails (cherry picked from commit
+ 71f737d2de635d4ac6183face7e9c8b7981631ab)
+
+---
+ src/core/mount-setup.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index 09ba8b7..1efc5b5 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -131,7 +131,7 @@ static int mount_one(const MountPoint *p, bool relabel) {
+                   p->type,
+                   p->flags,
+                   p->options) < 0) {
+-                log_error("Failed to mount %s: %s", p->where, strerror(errno));
++                log_full(p->fatal ? LOG_ERR : LOG_DEBUG, "Failed to mount %s: %s", p->where, strerror(errno));
+                 return p->fatal ? -errno : 0;
+         }
+ 

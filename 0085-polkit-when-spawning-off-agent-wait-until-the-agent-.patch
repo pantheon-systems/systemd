@@ -1,0 +1,115 @@
+From 279a9d8303afd956d81520bdda1161a07981e122 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 22:37:13 +0200
+Subject: [PATCH] polkit: when spawning off agent, wait until the agent is
+ fully initialized (cherry picked from commit
+ 9bdc770ccd3e23419a0d908782a661dd81a36bc8)
+
+---
+ src/shared/util.c              |    4 ++--
+ src/shared/util.h              |    2 +-
+ src/spawn-ask-password-agent.c |    5 ++++-
+ src/spawn-polkit-agent.c       |   24 +++++++++++++++++++++++-
+ 4 files changed, 30 insertions(+), 5 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 7f41fc4..7778b0a 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -6036,7 +6036,7 @@ int fd_inc_rcvbuf(int fd, size_t n) {
+         return 1;
+ }
+ 
+-int fork_agent(pid_t *pid, const char *path, ...) {
++int fork_agent(pid_t *pid, const int except[], unsigned n_except, const char *path, ...) {
+         pid_t parent_pid, agent_pid;
+         int fd;
+         bool stdout_is_tty, stderr_is_tty;
+@@ -6073,7 +6073,7 @@ int fork_agent(pid_t *pid, const char *path, ...) {
+                 _exit(EXIT_SUCCESS);
+ 
+         /* Don't leak fds to the agent */
+-        close_all_fds(NULL, 0);
++        close_all_fds(except, n_except);
+ 
+         stdout_is_tty = isatty(STDOUT_FILENO);
+         stderr_is_tty = isatty(STDERR_FILENO);
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 5e927df..062ab6d 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -529,6 +529,6 @@ int is_kernel_thread(pid_t pid);
+ int fd_inc_sndbuf(int fd, size_t n);
+ int fd_inc_rcvbuf(int fd, size_t n);
+ 
+-int fork_agent(pid_t *pid, const char *path, ...);
++int fork_agent(pid_t *pid, const int except[], unsigned n_except, const char *path, ...);
+ 
+ #endif
+diff --git a/src/spawn-ask-password-agent.c b/src/spawn-ask-password-agent.c
+index 82db08c..c77c713 100644
+--- a/src/spawn-ask-password-agent.c
++++ b/src/spawn-ask-password-agent.c
+@@ -44,7 +44,10 @@ int ask_password_agent_open(void) {
+         if (!isatty(STDIN_FILENO))
+                 return 0;
+ 
+-        r = fork_agent(&agent_pid, SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, "--watch", NULL);
++        r = fork_agent(&agent_pid,
++                       NULL, 0,
++                       SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH,
++                       SYSTEMD_TTY_ASK_PASSWORD_AGENT_BINARY_PATH, "--watch", NULL);
+         if (r < 0)
+                 log_error("Failed to fork TTY ask password agent: %s", strerror(-r));
+ 
+diff --git a/src/spawn-polkit-agent.c b/src/spawn-polkit-agent.c
+index 0da9abb..97bc9f5 100644
+--- a/src/spawn-polkit-agent.c
++++ b/src/spawn-polkit-agent.c
+@@ -26,6 +26,8 @@
+ #include <sys/prctl.h>
+ #include <signal.h>
+ #include <fcntl.h>
++#include <errno.h>
++#include <sys/poll.h>
+ 
+ #include "log.h"
+ #include "util.h"
+@@ -35,6 +37,8 @@ static pid_t agent_pid = 0;
+ 
+ int polkit_agent_open(void) {
+         int r;
++        int pipe_fd[2];
++        char notify_fd[10 + 1];
+ 
+         if (agent_pid > 0)
+                 return 0;
+@@ -44,9 +48,27 @@ int polkit_agent_open(void) {
+         if (!isatty(STDIN_FILENO))
+                 return 0;
+ 
+-        r = fork_agent(&agent_pid, POLKIT_AGENT_BINARY_PATH, POLKIT_AGENT_BINARY_PATH, NULL);
++        if (pipe2(pipe_fd, 0) < 0)
++                return -errno;
++
++        snprintf(notify_fd, sizeof(notify_fd), "%i", pipe_fd[1]);
++        char_array_0(notify_fd);
++
++        r = fork_agent(&agent_pid,
++                       &pipe_fd[1], 1,
++                       POLKIT_AGENT_BINARY_PATH,
++                       POLKIT_AGENT_BINARY_PATH, "--notify-fd", notify_fd, NULL);
++
++        /* Close the writing side, because that's the one for the agent */
++        close_nointr_nofail(pipe_fd[1]);
++
+         if (r < 0)
+                 log_error("Failed to fork TTY ask password agent: %s", strerror(-r));
++        else
++                /* Wait until the agent closes the fd */
++                fd_wait_for_event(pipe_fd[0], POLLHUP, (usec_t) -1);
++
++        close_nointr_nofail(pipe_fd[0]);
+ 
+         return r;
+ }

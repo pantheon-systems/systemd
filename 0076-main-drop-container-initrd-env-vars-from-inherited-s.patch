@@ -1,0 +1,168 @@
+From 13d47e020cb9c91d90add257e607fc0feba224fb Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 12:56:51 +0200
+Subject: [PATCH] main: drop container/initrd env vars from inherited set
+
+Leave the env vars used in the container/initrd logic set for PID1, but
+don't inherit them to any children.
+(cherry picked from commit 71ecc858fa91a686a050bee51804d43865ce1acc)
+
+Conflicts:
+
+	TODO
+---
+ src/main.c        |    5 +++--
+ src/manager.c     |   20 +++++++++++++++++++-
+ src/shared/strv.c |   25 +++++++++++++++++++++++++
+ src/shared/strv.h |    1 +
+ src/shared/util.c |   18 ------------------
+ src/shared/util.h |    2 --
+ 6 files changed, 48 insertions(+), 23 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index 589d9f0..a0bcbdf 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1333,9 +1333,10 @@ int main(int argc, char *argv[]) {
+                arg_running_as == MANAGER_SYSTEM);
+ 
+         if (arg_running_as == MANAGER_SYSTEM) {
+-                /* Parse the data passed to us by the initrd and unset it */
++                /* Parse the data passed to us. We leave this
++                 * variables set, but the manager later on will not
++                 * pass them on to our children. */
+                 parse_initrd_timestamp(&initrd_timestamp);
+-                filter_environ("RD_");
+ 
+                 /* Unset some environment variables passed in from the
+                  * kernel that don't really make sense for us. */
+diff --git a/src/manager.c b/src/manager.c
+index 971990b..312527a 100644
+--- a/src/manager.c
++++ b/src/manager.c
+@@ -221,6 +221,21 @@ static int manager_setup_signals(Manager *m) {
+         return 0;
+ }
+ 
++static void manager_strip_environment(Manager *m) {
++        assert(m);
++
++        /* Remove variables from the inherited set that are part of
++         * the container interface:
++         * http://www.freedesktop.org/wiki/Software/systemd/ContainerInterface */
++        strv_remove_prefix(m->environment, "container=");
++        strv_remove_prefix(m->environment, "container_");
++
++        /* Remove variables from the inherited set that are part of
++         * the initrd interface:
++         * http://www.freedesktop.org/wiki/Software/systemd/InitrdInterface */
++        strv_remove_prefix(m->environment, "RD_");
++}
++
+ int manager_new(ManagerRunningAs running_as, Manager **_m) {
+         Manager *m;
+         int r = -ENOMEM;
+@@ -246,9 +261,12 @@ int manager_new(ManagerRunningAs running_as, Manager **_m) {
+         m->signal_watch.fd = m->mount_watch.fd = m->udev_watch.fd = m->epoll_fd = m->dev_autofs_fd = m->swap_watch.fd = -1;
+         m->current_job_id = 1; /* start as id #1, so that we can leave #0 around as "null-like" value */
+ 
+-        if (!(m->environment = strv_copy(environ)))
++        m->environment = strv_copy(environ);
++        if (!m->environment)
+                 goto fail;
+ 
++        manager_strip_environment(m);
++
+         if (running_as == MANAGER_SYSTEM) {
+                 m->default_controllers = strv_new("cpu", NULL);
+                 if (!m->default_controllers)
+diff --git a/src/shared/strv.c b/src/shared/strv.c
+index bb309d9..f61680d 100644
+--- a/src/shared/strv.c
++++ b/src/shared/strv.c
+@@ -386,6 +386,31 @@ char **strv_remove(char **l, const char *s) {
+         return l;
+ }
+ 
++char **strv_remove_prefix(char **l, const char *s) {
++        char **f, **t;
++
++        if (!l)
++                return NULL;
++
++        assert(s);
++
++        /* Drops every occurrence of a string prefixed with s in the
++         * string list, edits in-place. */
++
++        for (f = t = l; *f; f++) {
++
++                if (startswith(*f, s)) {
++                        free(*f);
++                        continue;
++                }
++
++                *(t++) = *f;
++        }
++
++        *t = NULL;
++        return l;
++}
++
+ static int env_append(char **r, char ***k, char **a) {
+         assert(r);
+         assert(k);
+diff --git a/src/shared/strv.h b/src/shared/strv.h
+index d038c9f..9becf9b 100644
+--- a/src/shared/strv.h
++++ b/src/shared/strv.h
+@@ -39,6 +39,7 @@ char **strv_merge_concat(char **a, char **b, const char *suffix);
+ char **strv_append(char **l, const char *s);
+ 
+ char **strv_remove(char **l, const char *s);
++char **strv_remove_prefix(char **l, const char *s);
+ char **strv_uniq(char **l);
+ 
+ #define strv_contains(l, s) (!!strv_find((l), (s)))
+diff --git a/src/shared/util.c b/src/shared/util.c
+index fef58d5..73e0a29 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4276,24 +4276,6 @@ char *fstab_node_to_udev_node(const char *p) {
+         return strdup(p);
+ }
+ 
+-void filter_environ(const char *prefix) {
+-        int i, j;
+-        assert(prefix);
+-
+-        if (!environ)
+-                return;
+-
+-        for (i = 0, j = 0; environ[i]; i++) {
+-
+-                if (startswith(environ[i], prefix))
+-                        continue;
+-
+-                environ[j++] = environ[i];
+-        }
+-
+-        environ[j] = NULL;
+-}
+-
+ bool tty_is_vc(const char *tty) {
+         assert(tty);
+ 
+diff --git a/src/shared/util.h b/src/shared/util.h
+index a45f54d..e0934e5 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -409,8 +409,6 @@ void dual_timestamp_deserialize(const char *value, dual_timestamp *t);
+ 
+ char *fstab_node_to_udev_node(const char *p);
+ 
+-void filter_environ(const char *prefix);
+-
+ bool tty_is_vc(const char *tty);
+ bool tty_is_vc_resolve(const char *tty);
+ int vtnr_from_tty(const char *tty);

@@ -1,0 +1,27 @@
+From 5118cdf1adfa963251d7899ace72456a96c5a861 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 20 Apr 2012 12:37:57 +0200
+Subject: [PATCH] main: log to the journal in container mode, by default
+ (cherry picked from commit
+ a0a3844815b0f346dba03f41245c620f432e462f)
+
+Conflicts:
+
+	TODO
+---
+ src/core/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index e6b3353..81f76b2 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1211,7 +1211,7 @@ int main(int argc, char *argv[]) {
+ 
+         if (getpid() == 1) {
+                 arg_running_as = MANAGER_SYSTEM;
+-                log_set_target(detect_container(NULL) > 0 ? LOG_TARGET_CONSOLE : LOG_TARGET_JOURNAL_OR_KMSG);
++                log_set_target(detect_container(NULL) > 0 ? LOG_TARGET_JOURNAL : LOG_TARGET_JOURNAL_OR_KMSG);
+ 
+                 if (!is_reexec) {
+                         if (selinux_setup(&loaded_policy) < 0)

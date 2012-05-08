@@ -1,0 +1,184 @@
+From 4c139a723040750f844b9bacb31176f819e4c9f8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 14 Apr 2012 02:15:13 +0200
+Subject: [PATCH] cgroup: if a controller is not available don't try to create
+ cgroups in its hierarchy (cherry picked from commit
+ 3474ae3c7e1981301d0b35bc89d759ca13f06e8f)
+
+---
+ src/core/cgroup.c         |    6 ++--
+ src/shared/cgroup-label.c |    3 +-
+ src/shared/cgroup-util.c  |   82 +++++++++++++++++++++++++++++----------------
+ src/shared/cgroup-util.h  |    1 +
+ 4 files changed, 61 insertions(+), 31 deletions(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index a4eb6ed..6ae9f48 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -334,7 +334,8 @@ int manager_setup_cgroup(Manager *m) {
+         }
+ 
+         /* 2. Show data */
+-        if ((r = cg_get_path(SYSTEMD_CGROUP_CONTROLLER, m->cgroup_hierarchy, NULL, &path)) < 0) {
++        r = cg_get_path(SYSTEMD_CGROUP_CONTROLLER, m->cgroup_hierarchy, NULL, &path);
++        if (r < 0) {
+                 log_error("Cannot find cgroup mount point: %s", strerror(-r));
+                 goto finish;
+         }
+@@ -342,7 +343,8 @@ int manager_setup_cgroup(Manager *m) {
+         log_debug("Using cgroup controller " SYSTEMD_CGROUP_CONTROLLER ". File system hierarchy is at %s.", path);
+ 
+         /* 3. Install agent */
+-        if ((r = cg_install_release_agent(SYSTEMD_CGROUP_CONTROLLER, SYSTEMD_CGROUP_AGENT_PATH)) < 0)
++        r = cg_install_release_agent(SYSTEMD_CGROUP_CONTROLLER, SYSTEMD_CGROUP_AGENT_PATH);
++        if (r < 0)
+                 log_warning("Failed to install release agent, ignoring: %s", strerror(-r));
+         else if (r > 0)
+                 log_debug("Installed release agent.");
+diff --git a/src/shared/cgroup-label.c b/src/shared/cgroup-label.c
+index f9a42c6..3f00664 100644
+--- a/src/shared/cgroup-label.c
++++ b/src/shared/cgroup-label.c
+@@ -43,7 +43,8 @@ int cg_create(const char *controller, const char *path) {
+         assert(controller);
+         assert(path);
+ 
+-        if ((r = cg_get_path(controller, path, NULL, &fs)) < 0)
++        r = cg_get_path_and_check(controller, path, NULL, &fs);
++        if (r < 0)
+                 return r;
+ 
+         r = mkdir_parents(fs, 0755);
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index ad677d4..6ae70f6 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -502,14 +502,47 @@ finish:
+         return ret;
+ }
+ 
++static const char *normalize_controller(const char *controller) {
++
++        if (streq(controller, SYSTEMD_CGROUP_CONTROLLER))
++                return "systemd";
++        else if (startswith(controller, "name="))
++                return controller + 5;
++        else
++                return controller;
++}
++
++static int join_path(const char *controller, const char *path, const char *suffix, char **fs) {
++        char *t;
++
++        if (path && suffix)
++                t = join("/sys/fs/cgroup/", controller, "/", path, "/", suffix, NULL);
++        else if (path)
++                t = join("/sys/fs/cgroup/", controller, "/", path, NULL);
++        else if (suffix)
++                t = join("/sys/fs/cgroup/", controller, "/", suffix, NULL);
++        else
++                t = join("/sys/fs/cgroup/", controller, NULL);
++
++        if (!t)
++                return -ENOMEM;
++
++        path_kill_slashes(t);
++
++        *fs = t;
++        return 0;
++}
++
+ int cg_get_path(const char *controller, const char *path, const char *suffix, char **fs) {
+         const char *p;
+-        char *t;
+         static __thread bool good = false;
+ 
+         assert(controller);
+         assert(fs);
+ 
++        if (isempty(controller))
++                return -EINVAL;
++
+         if (_unlikely_(!good)) {
+                 int r;
+ 
+@@ -521,38 +554,30 @@ int cg_get_path(const char *controller, const char *path, const char *suffix, ch
+                 good = true;
+         }
+ 
+-        if (isempty(controller))
+-                return -EINVAL;
++        p = normalize_controller(controller);
+ 
+-        /* This is a very minimal lookup from controller names to
+-         * paths. Since we have mounted most hierarchies ourselves
+-         * should be kinda safe, but eventually we might want to
+-         * extend this to have a fallback to actually check
+-         * /proc/mounts. Might need caching then. */
++        return join_path(p, path, suffix, fs);
++}
+ 
+-        if (streq(controller, SYSTEMD_CGROUP_CONTROLLER))
+-                p = "systemd";
+-        else if (startswith(controller, "name="))
+-                p = controller + 5;
+-        else
+-                p = controller;
++int cg_get_path_and_check(const char *controller, const char *path, const char *suffix, char **fs) {
++        const char *p;
++        char *cc;
+ 
+-        if (path && suffix)
+-                t = join("/sys/fs/cgroup/", p, "/", path, "/", suffix, NULL);
+-        else if (path)
+-                t = join("/sys/fs/cgroup/", p, "/", path, NULL);
+-        else if (suffix)
+-                t = join("/sys/fs/cgroup/", p, "/", suffix, NULL);
+-        else
+-                t = join("/sys/fs/cgroup/", p, NULL);
++        assert(controller);
++        assert(fs);
+ 
+-        if (!t)
+-                return -ENOMEM;
++        if (isempty(controller))
++                return -EINVAL;
+ 
+-        path_kill_slashes(t);
++        p = normalize_controller(controller);
+ 
+-        *fs = t;
+-        return 0;
++        /* Check if this controller actually really exists */
++        cc = alloca(sizeof("/sys/fs/cgroup/") + strlen(p));
++        strcpy(stpcpy(cc, "/sys/fs/cgroup/"), p);
++        if (access(cc, F_OK) < 0)
++                return -errno;
++
++        return join_path(p, path, suffix, fs);
+ }
+ 
+ static int trim_cb(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+@@ -646,7 +671,8 @@ int cg_attach(const char *controller, const char *path, pid_t pid) {
+         assert(path);
+         assert(pid >= 0);
+ 
+-        if ((r = cg_get_path(controller, path, "tasks", &fs)) < 0)
++        r = cg_get_path_and_check(controller, path, "tasks", &fs);
++        if (r < 0)
+                 return r;
+ 
+         if (pid == 0)
+diff --git a/src/shared/cgroup-util.h b/src/shared/cgroup-util.h
+index 37e4255..1d1f93e 100644
+--- a/src/shared/cgroup-util.h
++++ b/src/shared/cgroup-util.h
+@@ -48,6 +48,7 @@ int cg_join_spec(const char *controller, const char *path, char **spec);
+ int cg_fix_path(const char *path, char **result);
+ 
+ int cg_get_path(const char *controller, const char *path, const char *suffix, char **fs);
++int cg_get_path_and_check(const char *controller, const char *path, const char *suffix, char **fs);
+ int cg_get_by_pid(const char *controller, pid_t pid, char **path);
+ 
+ int cg_trim(const char *controller, const char *path, bool delete_root);

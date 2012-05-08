@@ -1,0 +1,1646 @@
+From 684f0d576c8e13023f062a8d01b3e36d561db06d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Apr 2012 16:47:33 +0200
+Subject: [PATCH] logind: add shutdown/suspend/idle inhibition framework
+ (cherry picked from commit
+ f8e2fb7b14e53f5a4bcfd66d26910af1dee185c6)
+
+Conflicts:
+
+	.gitignore
+	Makefile.am
+	TODO
+---
+ Makefile.am                                |   17 ++
+ src/login/logind-dbus.c                    |  316 +++++++++++++++++++++---
+ src/login/logind-inhibit.c                 |  365 ++++++++++++++++++++++++++++
+ src/login/logind-inhibit.h                 |   76 ++++++
+ src/login/logind-session.c                 |   21 +-
+ src/login/logind.c                         |  114 ++++++++-
+ src/login/logind.h                         |    8 +-
+ src/login/org.freedesktop.login1.conf      |    8 +
+ src/login/org.freedesktop.login1.policy.in |   30 +++
+ src/login/test-inhibit.c                   |  137 +++++++++++
+ src/shared/dbus-common.c                   |   50 ++++
+ src/shared/dbus-common.h                   |    2 +
+ src/shared/polkit.c                        |   52 +---
+ src/shared/util.c                          |    3 +-
+ 14 files changed, 1082 insertions(+), 117 deletions(-)
+ create mode 100644 src/login/logind-inhibit.c
+ create mode 100644 src/login/logind-inhibit.h
+ create mode 100644 src/login/test-inhibit.c
+
+diff --git a/Makefile.am b/Makefile.am
+index d83473f..410b46b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1995,6 +1995,8 @@ systemd_logind_SOURCES = \
+ 	src/login/logind-session.h \
+ 	src/login/logind-user.c \
+ 	src/login/logind-user.h \
++	src/login/logind-inhibit.c \
++	src/login/logind-inhibit.h \
+ 	src/login/logind-session-dbus.c \
+ 	src/login/logind-seat-dbus.c \
+ 	src/login/logind-user-dbus.c \
+@@ -2061,6 +2063,21 @@ test_login_LDADD = \
+ noinst_PROGRAMS += \
+ 	test-login
+ 
++test_inhibit_SOURCES = \
++	src/login/test-inhibit.c
++
++test_inhibit_LDADD = \
++	libsystemd-shared.la \
++	libsystemd-dbus.la
++
++test_inhibit_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(DBUS_CFLAGS)
++
++noinst_PROGRAMS += \
++	test-login \
++	test-inhibit
++
+ libsystemd_login_la_SOURCES = \
+ 	src/login/sd-login.c
+ 
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 1c6dc97..dd7eddc 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -140,6 +140,15 @@
+         "  <method name=\"CanReboot\">\n"                               \
+         "   <arg name=\"result\" type=\"s\" direction=\"out\"/>\n"      \
+         "  </method>\n"                                                 \
++        "  <method name=\"Inhibit\">\n"                                 \
++        "   <arg name=\"what\" type=\"s\" direction=\"in\"/>\n"         \
++        "   <arg name=\"who\" type=\"s\" direction=\"in\"/>\n"          \
++        "   <arg name=\"why\" type=\"s\" direction=\"in\"/>\n"          \
++        "   <arg name=\"fd\" type=\"h\" direction=\"out\"/>\n"          \
++        "  </method>\n"                                                 \
++        "  <method name=\"ListInhibitors\">\n"                          \
++        "   <arg name=\"inhibitors\" type=\"a(sssuu)\" direction=\"out\"/>\n" \
++        "  </method>\n"                                                 \
+         "  <signal name=\"SessionNew\">\n"                              \
+         "   <arg name=\"id\" type=\"s\"/>\n"                            \
+         "   <arg name=\"path\" type=\"o\"/>\n"                          \
+@@ -174,6 +183,7 @@
+         "  <property name=\"IdleHint\" type=\"b\" access=\"read\"/>\n"  \
+         "  <property name=\"IdleSinceHint\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"IdleSinceHintMonotonic\" type=\"t\" access=\"read\"/>\n" \
++        "  <property name=\"Inhibited\" type=\"s\" access=\"read\"/>\n" \
+         " </interface>\n"
+ 
+ #define INTROSPECTION_BEGIN                                             \
+@@ -224,6 +234,20 @@ static int bus_manager_append_idle_hint_since(DBusMessageIter *i, const char *pr
+         return 0;
+ }
+ 
++static int bus_manager_append_inhibited(DBusMessageIter *i, const char *property, void *data) {
++        Manager *m = data;
++        InhibitWhat w;
++        const char *p;
++
++        w = manager_inhibit_what(m);
++        p = inhibit_what_to_string(w);
++
++        if (!dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &p))
++                return -ENOMEM;
++
++        return 0;
++}
++
+ static int bus_manager_create_session(Manager *m, DBusMessage *message, DBusMessage **_reply) {
+         Session *session = NULL;
+         User *user = NULL;
+@@ -466,9 +490,9 @@ static int bus_manager_create_session(Manager *m, DBusMessage *message, DBusMess
+         } else {
+                 do {
+                         free(id);
+-                        asprintf(&id, "c%lu", ++m->session_counter);
++                        id = NULL;
+ 
+-                        if (!id) {
++                        if (asprintf(&id, "c%lu", ++m->session_counter) < 0) {
+                                 r = -ENOMEM;
+                                 goto fail;
+                         }
+@@ -602,6 +626,122 @@ fail:
+         return r;
+ }
+ 
++static int bus_manager_inhibit(Manager *m, DBusConnection *connection, DBusMessage *message, DBusError *error, DBusMessage **_reply) {
++        Inhibitor *i = NULL;
++        char *id = NULL;
++        const char *who, *why, *what;
++        pid_t pid;
++        InhibitWhat w;
++        unsigned long ul;
++        int r, fifo_fd = -1;
++        DBusMessage *reply = NULL;
++
++        assert(m);
++        assert(connection);
++        assert(message);
++        assert(error);
++        assert(_reply);
++
++        if (!dbus_message_get_args(
++                            message,
++                            error,
++                            DBUS_TYPE_STRING, &what,
++                            DBUS_TYPE_STRING, &who,
++                            DBUS_TYPE_STRING, &why,
++                            DBUS_TYPE_INVALID)) {
++                r = -EIO;
++                goto fail;
++        }
++
++        w = inhibit_what_from_string(what);
++        if (w <= 0) {
++                r = -EINVAL;
++                goto fail;
++        }
++
++        r = verify_polkit(connection, message, "org.freedesktop.login1.inhibit", false, NULL, error);
++        if (r < 0)
++                goto fail;
++
++        ul = dbus_bus_get_unix_user(connection, dbus_message_get_sender(message), error);
++        if (ul == (unsigned long) -1) {
++                r = -EIO;
++                goto fail;
++        }
++
++        pid = bus_get_unix_process_id(connection, dbus_message_get_sender(message), error);
++        if (pid <= 0) {
++                r = -EIO;
++                goto fail;
++        }
++
++        do {
++                free(id);
++                id = NULL;
++
++                if (asprintf(&id, "%lu", ++m->inhibit_counter) < 0) {
++                        r = -ENOMEM;
++                        goto fail;
++                }
++        } while (hashmap_get(m->inhibitors, id));
++
++        r = manager_add_inhibitor(m, id, &i);
++        free(id);
++
++        if (r < 0)
++                goto fail;
++
++        i->what = w;
++        i->pid = pid;
++        i->uid = (uid_t) ul;
++        i->why = strdup(why);
++        i->who = strdup(who);
++
++        if (!i->why || !i->who) {
++                r = -ENOMEM;
++                goto fail;
++        }
++
++        fifo_fd = inhibitor_create_fifo(i);
++        if (fifo_fd < 0) {
++                r = fifo_fd;
++                goto fail;
++        }
++
++        reply = dbus_message_new_method_return(message);
++        if (!reply) {
++                r = -ENOMEM;
++                goto fail;
++        }
++
++        if (!dbus_message_append_args(
++                            reply,
++                            DBUS_TYPE_UNIX_FD, &fifo_fd,
++                            DBUS_TYPE_INVALID)) {
++                r = -ENOMEM;
++                goto fail;
++        }
++
++        close_nointr_nofail(fifo_fd);
++        *_reply = reply;
++
++        inhibitor_start(i);
++
++        return 0;
++
++fail:
++        if (i)
++                inhibitor_free(i);
++
++        if (fifo_fd >= 0)
++                close_nointr_nofail(fifo_fd);
++
++        if (reply)
++                dbus_message_unref(reply);
++
++        return r;
++}
++
+ static int trigger_device(Manager *m, struct udev_device *d) {
+         struct udev_enumerate *e;
+         struct udev_list_entry *first, *item;
+@@ -780,6 +920,7 @@ static const BusProperty bus_login_manager_properties[] = {
+         { "IdleHint",               bus_manager_append_idle_hint,       "b",  0 },
+         { "IdleSinceHint",          bus_manager_append_idle_hint_since, "t",  0 },
+         { "IdleSinceHintMonotonic", bus_manager_append_idle_hint_since, "t",  0 },
++        { "Inhibited",              bus_manager_append_inhibited,       "s",  0 },
+         { NULL, }
+ };
+ 
+@@ -1067,6 +1208,56 @@ static DBusHandlerResult manager_message_handler(
+                 if (!dbus_message_iter_close_container(&iter, &sub))
+                         goto oom;
+ 
++        } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "ListInhibitors")) {
++                Inhibitor *inhibitor;
++                Iterator i;
++                DBusMessageIter iter, sub;
++
++                reply = dbus_message_new_method_return(message);
++                if (!reply)
++                        goto oom;
++
++                dbus_message_iter_init_append(reply, &iter);
++
++                if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "(sssuu)", &sub))
++                        goto oom;
++
++                HASHMAP_FOREACH(inhibitor, m->inhibitors, i) {
++                        DBusMessageIter sub2;
++                        dbus_uint32_t uid, pid;
++                        const char *what, *who, *why;
++
++                        if (!dbus_message_iter_open_container(&sub, DBUS_TYPE_STRUCT, NULL, &sub2))
++                                goto oom;
++
++                        what = inhibit_what_to_string(inhibitor->what);
++                        who = strempty(inhibitor->who);
++                        why = strempty(inhibitor->why);
++                        uid = (dbus_uint32_t) inhibitor->uid;
++                        pid = (dbus_uint32_t) inhibitor->pid;
++
++                        if (!dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &what) ||
++                            !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &who) ||
++                            !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &why) ||
++                            !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_UINT32, &uid) ||
++                            !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_UINT32, &pid))
++                                goto oom;
++
++                        if (!dbus_message_iter_close_container(&sub, &sub2))
++                                goto oom;
++                }
++
++                if (!dbus_message_iter_close_container(&iter, &sub))
++                        goto oom;
++
++        } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "Inhibit")) {
++
++                r = bus_manager_inhibit(m, connection, message, &error, &reply);
++
++                if (r < 0)
++                        return bus_send_error_reply(connection, message, &error, r);
++
++
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "CreateSession")) {
+ 
+                 r = bus_manager_create_session(m, message, &reply);
+@@ -1077,7 +1268,7 @@ static DBusHandlerResult manager_message_handler(
+                  * see this fail quickly then be retried later */
+ 
+                 if (r < 0)
+-                        return bus_send_error_reply(connection, message, &error, r);
++                        return bus_send_error_reply(connection, message, NULL, r);
+ 
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "ReleaseSession")) {
+                 const char *name;
+@@ -1441,11 +1632,10 @@ static DBusHandlerResult manager_message_handler(
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "PowerOff") ||
+                    dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "Reboot")) {
+                 dbus_bool_t interactive;
+-                bool multiple_sessions;
++                bool multiple_sessions, inhibit;
+                 DBusMessage *forward, *freply;
+-                const char *name;
++                const char *name, *action;
+                 const char *mode = "replace";
+-                const char *action;
+ 
+                 if (!dbus_message_get_args(
+                                     message,
+@@ -1459,26 +1649,37 @@ static DBusHandlerResult manager_message_handler(
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+                 multiple_sessions = r > 0;
++                inhibit = !!(manager_inhibit_what(m) & INHIBIT_SHUTDOWN);
+ 
+-                if (streq(dbus_message_get_member(message), "PowerOff")) {
+-                        if (multiple_sessions)
+-                                action = "org.freedesktop.login1.power-off-multiple-sessions";
+-                        else
+-                                action = "org.freedesktop.login1.power-off";
++                if (multiple_sessions) {
++                        action = streq(dbus_message_get_member(message), "PowerOff") ?
++                                "org.freedesktop.login1.power-off-multiple-sessions" :
++                                "org.freedesktop.login1.reboot-multiple-sessions";
+ 
+-                        name = SPECIAL_POWEROFF_TARGET;
+-                } else {
+-                        if (multiple_sessions)
+-                                action = "org.freedesktop.login1.reboot-multiple-sessions";
+-                        else
+-                                action = "org.freedesktop.login1.reboot";
++                        r = verify_polkit(connection, message, action, interactive, NULL, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
++                }
++
++                if (inhibit) {
++                        action = streq(dbus_message_get_member(message), "PowerOff") ?
++                                "org.freedesktop.login1.power-off-ignore-inhibit" :
++                                "org.freedesktop.login1.reboot-ignore-inhibit";
+ 
+-                        name = SPECIAL_REBOOT_TARGET;
++                        r = verify_polkit(connection, message, action, interactive, NULL, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
+                 }
+ 
+-                r = verify_polkit(connection, message, action, interactive, NULL, &error);
+-                if (r < 0)
+-                        return bus_send_error_reply(connection, message, &error, r);
++                if (!multiple_sessions && !inhibit) {
++                        action = streq(dbus_message_get_member(message), "PowerOff") ?
++                                "org.freedesktop.login1.power-off" :
++                                "org.freedesktop.login1.reboot";
++
++                        r = verify_polkit(connection, message, action, interactive, NULL, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
++                }
+ 
+                 forward = dbus_message_new_method_call(
+                               "org.freedesktop.systemd1",
+@@ -1488,6 +1689,9 @@ static DBusHandlerResult manager_message_handler(
+                 if (!forward)
+                         return bus_send_error_reply(connection, message, NULL, -ENOMEM);
+ 
++                name = streq(dbus_message_get_member(message), "PowerOff") ?
++                        SPECIAL_POWEROFF_TARGET : SPECIAL_REBOOT_TARGET;
++
+                 if (!dbus_message_append_args(forward,
+                                               DBUS_TYPE_STRING, &name,
+                                               DBUS_TYPE_STRING, &mode,
+@@ -1511,43 +1715,77 @@ static DBusHandlerResult manager_message_handler(
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "CanPowerOff") ||
+                    dbus_message_is_method_call(message, "org.freedesktop.login1.Manager", "CanReboot")) {
+ 
+-                bool multiple_sessions, challenge, b;
+-                const char *t, *action;
++                bool multiple_sessions, challenge, inhibit, b;
++                const char *action, *result;
+ 
+                 r = have_multiple_sessions(connection, m, message, &error);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+                 multiple_sessions = r > 0;
++                inhibit = !!(manager_inhibit_what(m) & INHIBIT_SHUTDOWN);
++
++                if (multiple_sessions) {
++                        action = streq(dbus_message_get_member(message), "CanPowerOff") ?
++                                "org.freedesktop.login1.power-off-multiple-sessions" :
++                                "org.freedesktop.login1.reboot-multiple-sessions";
+ 
+-                if (streq(dbus_message_get_member(message), "CanPowerOff")) {
+-                        if (multiple_sessions)
+-                                action = "org.freedesktop.login1.power-off-multiple-sessions";
++                        r = verify_polkit(connection, message, action, false, &challenge, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
++
++                        if (r > 0)
++                                result = "yes";
++                        else if (challenge)
++                                result = "challenge";
+                         else
+-                                action = "org.freedesktop.login1.power-off";
++                                result = "no";
++                }
+ 
+-                } else {
+-                        if (multiple_sessions)
+-                                action = "org.freedesktop.login1.reboot-multiple-sessions";
++                if (inhibit) {
++                        action = streq(dbus_message_get_member(message), "CanPowerOff") ?
++                                "org.freedesktop.login1.power-off-ignore-inhibit" :
++                                "org.freedesktop.login1.reboot-ignore-inhibit";
++
++                        r = verify_polkit(connection, message, action, false, &challenge, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
++
++                        if (r > 0 && !result)
++                                result = "yes";
++                        else if (challenge && (!result || streq(result, "yes")))
++                                result = "challenge";
+                         else
+-                                action = "org.freedesktop.login1.reboot";
++                                result = "no";
+                 }
+ 
+-                r = verify_polkit(connection, message, action, false, &challenge, &error);
+-                if (r < 0)
+-                        return bus_send_error_reply(connection, message, &error, r);
++                if (!multiple_sessions && !inhibit) {
++                        /* If neither inhibit nor multiple sessions
++                         * apply then just check the normal policy */
++
++                        action = streq(dbus_message_get_member(message), "CanPowerOff") ?
++                                "org.freedesktop.login1.power-off" :
++                                "org.freedesktop.login1.reboot";
++
++                        r = verify_polkit(connection, message, action, false, &challenge, &error);
++                        if (r < 0)
++                                return bus_send_error_reply(connection, message, &error, r);
++
++                        if (r > 0)
++                                result = "yes";
++                        else if (challenge)
++                                result = "challenge";
++                        else
++                                result = "no";
++                }
+ 
+                 reply = dbus_message_new_method_return(message);
+                 if (!reply)
+                         goto oom;
+ 
+-                t =     r > 0 ?     "yes" :
+-                        challenge ? "challenge" :
+-                                    "no";
+-
+                 b = dbus_message_append_args(
+                                 reply,
+-                                DBUS_TYPE_STRING, &t,
++                                DBUS_TYPE_STRING, &result,
+                                 DBUS_TYPE_INVALID);
+                 if (!b)
+                         goto oom;
+diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
+new file mode 100644
+index 0000000..2f7a758
+--- /dev/null
++++ b/src/login/logind-inhibit.c
+@@ -0,0 +1,365 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <errno.h>
++#include <fcntl.h>
++#include <sys/epoll.h>
++#include <string.h>
++#include <errno.h>
++#include <unistd.h>
++
++#include "util.h"
++#include "mkdir.h"
++
++#include "logind-inhibit.h"
++
++Inhibitor* inhibitor_new(Manager *m, const char* id) {
++        Inhibitor *i;
++
++        assert(m);
++
++        i = new0(Inhibitor, 1);
++        if (!i)
++                return NULL;
++
++        i->state_file = strappend("/run/systemd/inhibit/", id);
++        if (!i->state_file) {
++                free(i);
++                return NULL;
++        }
++
++        i->id = file_name_from_path(i->state_file);
++
++        if (hashmap_put(m->inhibitors, i->id, i) < 0) {
++                free(i->state_file);
++                free(i);
++                return NULL;
++        }
++
++        i->manager = m;
++        i->fifo_fd = -1;
++
++        return i;
++}
++
++void inhibitor_free(Inhibitor *i) {
++        assert(i);
++
++        free(i->who);
++        free(i->why);
++
++        hashmap_remove(i->manager->inhibitors, i->id);
++        inhibitor_remove_fifo(i);
++
++        if (i->state_file) {
++                unlink(i->state_file);
++                free(i->state_file);
++        }
++
++        free(i);
++}
++
++int inhibitor_save(Inhibitor *i) {
++        char *temp_path, *cc;
++        int r;
++        FILE *f;
++
++        assert(i);
++
++        r = safe_mkdir("/run/systemd/inhibit", 0755, 0, 0);
++        if (r < 0)
++                goto finish;
++
++        r = fopen_temporary(i->state_file, &f, &temp_path);
++        if (r < 0)
++                goto finish;
++
++        fchmod(fileno(f), 0644);
++
++        fprintf(f,
++                "# This is private data. Do not parse.\n"
++                "WHAT=%s\n"
++                "UID=%lu\n"
++                "PID=%lu\n",
++                inhibit_what_to_string(i->what),
++                (unsigned long) i->uid,
++                (unsigned long) i->pid);
++
++        if (i->who) {
++                cc = cescape(i->who);
++                if (!cc)
++                        r = -ENOMEM;
++                else {
++                        fprintf(f, "WHO=%s\n", cc);
++                        free(cc);
++                }
++        }
++
++        if (i->why) {
++                cc = cescape(i->why);
++                if (!cc)
++                        r = -ENOMEM;
++                else {
++                        fprintf(f, "WHY=%s\n", cc);
++                        free(cc);
++                }
++        }
++
++        if (i->fifo_path)
++                fprintf(f, "FIFO=%s\n", i->fifo_path);
++
++        fflush(f);
++
++        if (ferror(f) || rename(temp_path, i->state_file) < 0) {
++                r = -errno;
++                unlink(i->state_file);
++                unlink(temp_path);
++        }
++
++        fclose(f);
++        free(temp_path);
++
++finish:
++        if (r < 0)
++                log_error("Failed to save inhibit data for %s: %s", i->id, strerror(-r));
++
++        return r;
++}
++
++int inhibitor_start(Inhibitor *i) {
++        assert(i);
++
++        if (i->started)
++                return 0;
++
++        log_debug("Inhibitor %s (%s) pid=%lu uid=%lu started.",
++                  strna(i->who), strna(i->why),
++                  (unsigned long) i->pid, (unsigned long) i->uid);
++
++        inhibitor_save(i);
++
++        i->started = true;
++
++        manager_send_changed(i->manager, "Inhibited\0");
++
++        return 0;
++}
++
++int inhibitor_stop(Inhibitor *i) {
++        assert(i);
++
++        if (i->started)
++                log_debug("Inhibitor %s (%s) pid=%lu uid=%lu stopped.",
++                          strna(i->who), strna(i->why),
++                          (unsigned long) i->pid, (unsigned long) i->uid);
++
++        if (i->state_file)
++                unlink(i->state_file);
++
++        i->started = false;
++
++        manager_send_changed(i->manager, "Inhibited\0");
++
++        return 0;
++}
++
++int inhibitor_load(Inhibitor *i) {
++        InhibitWhat w;
++        int r;
++        char *cc,
++                *what = NULL,
++                *uid = NULL,
++                *pid = NULL,
++                *who = NULL,
++                *why = NULL;
++
++        r = parse_env_file(i->state_file, NEWLINE,
++                           "WHAT", &what,
++                           "UID", &uid,
++                           "PID", &pid,
++                           "WHO", &who,
++                           "WHY", &why,
++                           "FIFO", &i->fifo_path,
++                           NULL);
++        if (r < 0)
++                goto finish;
++
++        w = inhibit_what_from_string(what);
++        if (w >= 0)
++                i->what = w;
++
++        parse_uid(uid, &i->uid);
++        parse_pid(pid, &i->pid);
++
++        if (who) {
++                cc = cunescape(who);
++                if (!cc) {
++                        r = -ENOMEM;
++                        goto finish;
++                }
++
++                free(i->who);
++                i->who = cc;
++        }
++
++        if (why) {
++                cc = cunescape(why);
++                if (!cc) {
++                        r = -ENOMEM;
++                        goto finish;
++                }
++
++                free(i->why);
++                i->why = cc;
++        }
++
++        if (i->fifo_path) {
++                int fd;
++
++                fd = inhibitor_create_fifo(i);
++                if (fd >= 0)
++                        close_nointr_nofail(fd);
++        }
++
++finish:
++        free(what);
++        free(uid);
++        free(pid);
++        free(who);
++        free(why);
++
++        return r;
++}
++
++int inhibitor_create_fifo(Inhibitor *i) {
++        int r;
++
++        assert(i);
++
++        /* Create FIFO */
++        if (!i->fifo_path) {
++                r = safe_mkdir("/run/systemd/inhibit", 0755, 0, 0);
++                if (r < 0)
++                        return r;
++
++                if (asprintf(&i->fifo_path, "/run/systemd/inhibit/%s.ref", i->id) < 0)
++                        return -ENOMEM;
++
++                if (mkfifo(i->fifo_path, 0600) < 0 && errno != EEXIST)
++                        return -errno;
++        }
++
++        /* Open reading side */
++        if (i->fifo_fd < 0) {
++                struct epoll_event ev;
++
++                i->fifo_fd = open(i->fifo_path, O_RDONLY|O_CLOEXEC|O_NDELAY);
++                if (i->fifo_fd < 0)
++                        return -errno;
++
++                r = hashmap_put(i->manager->inhibitor_fds, INT_TO_PTR(i->fifo_fd + 1), i);
++                if (r < 0)
++                        return r;
++
++                zero(ev);
++                ev.events = 0;
++                ev.data.u32 = FD_FIFO_BASE + i->fifo_fd;
++
++                if (epoll_ctl(i->manager->epoll_fd, EPOLL_CTL_ADD, i->fifo_fd, &ev) < 0)
++                        return -errno;
++        }
++
++        /* Open writing side */
++        r = open(i->fifo_path, O_WRONLY|O_CLOEXEC|O_NDELAY);
++        if (r < 0)
++                return -errno;
++
++        return r;
++}
++
++void inhibitor_remove_fifo(Inhibitor *i) {
++        assert(i);
++
++        if (i->fifo_fd >= 0) {
++                assert_se(hashmap_remove(i->manager->inhibitor_fds, INT_TO_PTR(i->fifo_fd + 1)) == i);
++                assert_se(epoll_ctl(i->manager->epoll_fd, EPOLL_CTL_DEL, i->fifo_fd, NULL) == 0);
++                close_nointr_nofail(i->fifo_fd);
++                i->fifo_fd = -1;
++        }
++
++        if (i->fifo_path) {
++                unlink(i->fifo_path);
++                free(i->fifo_path);
++                i->fifo_path = NULL;
++        }
++}
++
++InhibitWhat manager_inhibit_what(Manager *m) {
++        Inhibitor *i;
++        Iterator j;
++        InhibitWhat what = 0;
++
++        assert(m);
++
++        HASHMAP_FOREACH(i, m->inhibitor_fds, j)
++                what |= i->what;
++
++        return what;
++}
++
++const char *inhibit_what_to_string(InhibitWhat w) {
++
++        static const char* const table[_INHIBIT_WHAT_MAX] = {
++                [0] = "",
++                [INHIBIT_SHUTDOWN] = "shutdown",
++                [INHIBIT_SUSPEND] = "suspend",
++                [INHIBIT_IDLE] = "idle",
++                [INHIBIT_SHUTDOWN|INHIBIT_SUSPEND] = "shutdown:suspend",
++                [INHIBIT_SHUTDOWN|INHIBIT_IDLE] = "shutdown:idle",
++                [INHIBIT_SHUTDOWN|INHIBIT_SUSPEND|INHIBIT_IDLE] = "shutdown:suspend:idle",
++                [INHIBIT_SUSPEND|INHIBIT_IDLE] = "suspend:idle"
++        };
++
++        if (w < 0 || w >= _INHIBIT_WHAT_MAX)
++                return NULL;
++
++        return table[w];
++}
++
++InhibitWhat inhibit_what_from_string(const char *s) {
++        InhibitWhat what = 0;
++        char *w, *state;
++        size_t l;
++
++        FOREACH_WORD_SEPARATOR(w, l, s, ":", state) {
++                if (l == 8 && strncmp(w, "shutdown", l) == 0)
++                        what |= INHIBIT_SHUTDOWN;
++                else if (l == 7 && strncmp(w, "suspend", l) == 0)
++                        what |= INHIBIT_SUSPEND;
++                else if (l == 4 && strncmp(w, "idle", l) == 0)
++                        what |= INHIBIT_IDLE;
++                else
++                        return _INHIBIT_WHAT_INVALID;
++        }
++
++        return what;
++
++}
+diff --git a/src/login/logind-inhibit.h b/src/login/logind-inhibit.h
+new file mode 100644
+index 0000000..0670a7f
+--- /dev/null
++++ b/src/login/logind-inhibit.h
+@@ -0,0 +1,76 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foologindinhibithfoo
++#define foologindinhibithfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++typedef struct Inhibitor Inhibitor;
++
++#include "list.h"
++#include "util.h"
++#include "logind.h"
++#include "logind-seat.h"
++
++typedef enum InhibitWhat {
++        INHIBIT_SHUTDOWN = 1,
++        INHIBIT_SUSPEND = 2,
++        INHIBIT_IDLE = 4,
++        _INHIBIT_WHAT_MAX = 8,
++        _INHIBIT_WHAT_INVALID = -1
++} InhibitWhat;
++
++struct Inhibitor {
++        Manager *manager;
++
++        char *id;
++        char *state_file;
++
++        bool started;
++
++        InhibitWhat what;
++        char *who;
++        char *why;
++
++        pid_t pid;
++        uid_t uid;
++
++        char *fifo_path;
++        int fifo_fd;
++};
++
++Inhibitor* inhibitor_new(Manager *m, const char *id);
++void inhibitor_free(Inhibitor *i);
++
++int inhibitor_save(Inhibitor *i);
++int inhibitor_load(Inhibitor *i);
++
++int inhibitor_start(Inhibitor *i);
++int inhibitor_stop(Inhibitor *i);
++
++int inhibitor_create_fifo(Inhibitor *i);
++void inhibitor_remove_fifo(Inhibitor *i);
++
++InhibitWhat manager_inhibit_what(Manager *m);
++
++const char *inhibit_what_to_string(InhibitWhat k);
++InhibitWhat inhibit_what_from_string(const char *s);
++
++#endif
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 6416782..6c48a69 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -25,11 +25,11 @@
+ #include <sys/epoll.h>
+ #include <fcntl.h>
+ 
+-#include "logind-session.h"
+ #include "strv.h"
+ #include "util.h"
+ #include "mkdir.h"
+ #include "cgroup-util.h"
++#include "logind-session.h"
+ 
+ #define IDLE_THRESHOLD_USEC (5*USEC_PER_MINUTE)
+ 
+@@ -52,7 +52,7 @@ Session* session_new(Manager *m, User *u, const char *id) {
+         s->id = file_name_from_path(s->state_file);
+ 
+         if (hashmap_put(m->sessions, s->id, s) < 0) {
+-                free(s->id);
++                free(s->state_file);
+                 free(s);
+                 return NULL;
+         }
+@@ -99,7 +99,6 @@ void session_free(Session *s) {
+         free(s->service);
+ 
+         hashmap_remove(s->manager->sessions, s->id);
+-
+         session_remove_fifo(s);
+ 
+         free(s->state_file);
+@@ -287,14 +286,9 @@ int session_load(Session *s) {
+         }
+ 
+         if (leader) {
+-                pid_t pid;
+-
+-                k = parse_pid(leader, &pid);
+-                if (k >= 0 && pid >= 1) {
+-                        s->leader = pid;
+-
+-                        audit_session_from_pid(pid, &s->audit_id);
+-                }
++                k = parse_pid(leader, &s->leader);
++                if (k >= 0)
++                        audit_session_from_pid(s->leader, &s->audit_id);
+         }
+ 
+         if (type) {
+@@ -326,7 +320,6 @@ int session_load(Session *s) {
+                         close_nointr_nofail(fd);
+         }
+ 
+-
+ finish:
+         free(remote);
+         free(kill_processes);
+@@ -840,7 +833,7 @@ int session_create_fifo(Session *s) {
+                 if (s->fifo_fd < 0)
+                         return -errno;
+ 
+-                r = hashmap_put(s->manager->fifo_fds, INT_TO_PTR(s->fifo_fd + 1), s);
++                r = hashmap_put(s->manager->session_fds, INT_TO_PTR(s->fifo_fd + 1), s);
+                 if (r < 0)
+                         return r;
+ 
+@@ -864,7 +857,7 @@ void session_remove_fifo(Session *s) {
+         assert(s);
+ 
+         if (s->fifo_fd >= 0) {
+-                assert_se(hashmap_remove(s->manager->fifo_fds, INT_TO_PTR(s->fifo_fd + 1)) == s);
++                assert_se(hashmap_remove(s->manager->session_fds, INT_TO_PTR(s->fifo_fd + 1)) == s);
+                 assert_se(epoll_ctl(s->manager->epoll_fd, EPOLL_CTL_DEL, s->fifo_fd, NULL) == 0);
+                 close_nointr_nofail(s->fifo_fd);
+                 s->fifo_fd = -1;
+diff --git a/src/login/logind.c b/src/login/logind.c
+index 57159e9..a3bf46b 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -55,10 +55,14 @@ Manager *manager_new(void) {
+         m->seats = hashmap_new(string_hash_func, string_compare_func);
+         m->sessions = hashmap_new(string_hash_func, string_compare_func);
+         m->users = hashmap_new(trivial_hash_func, trivial_compare_func);
++        m->inhibitors = hashmap_new(string_hash_func, string_compare_func);
++
+         m->cgroups = hashmap_new(string_hash_func, string_compare_func);
+-        m->fifo_fds = hashmap_new(trivial_hash_func, trivial_compare_func);
++        m->session_fds = hashmap_new(trivial_hash_func, trivial_compare_func);
++        m->inhibitor_fds = hashmap_new(trivial_hash_func, trivial_compare_func);
+ 
+-        if (!m->devices || !m->seats || !m->sessions || !m->users || !m->cgroups || !m->fifo_fds) {
++        if (!m->devices || !m->seats || !m->sessions || !m->users || !m->inhibitors ||
++            !m->cgroups || !m->session_fds || !m->inhibitor_fds) {
+                 manager_free(m);
+                 return NULL;
+         }
+@@ -89,6 +93,7 @@ void manager_free(Manager *m) {
+         User *u;
+         Device *d;
+         Seat *s;
++        Inhibitor *i;
+ 
+         assert(m);
+ 
+@@ -104,12 +109,18 @@ void manager_free(Manager *m) {
+         while ((s = hashmap_first(m->seats)))
+                 seat_free(s);
+ 
+-        hashmap_free(m->sessions);
+-        hashmap_free(m->users);
++        while ((i = hashmap_first(m->inhibitors)))
++                inhibitor_free(i);
++
+         hashmap_free(m->devices);
+         hashmap_free(m->seats);
++        hashmap_free(m->sessions);
++        hashmap_free(m->users);
++        hashmap_free(m->inhibitors);
++
+         hashmap_free(m->cgroups);
+-        hashmap_free(m->fifo_fds);
++        hashmap_free(m->session_fds);
++        hashmap_free(m->inhibitor_fds);
+ 
+         if (m->console_active_fd >= 0)
+                 close_nointr_nofail(m->console_active_fd);
+@@ -268,6 +279,30 @@ int manager_add_user_by_uid(Manager *m, uid_t uid, User **_user) {
+         return manager_add_user(m, uid, p->pw_gid, p->pw_name, _user);
+ }
+ 
++int manager_add_inhibitor(Manager *m, const char* id, Inhibitor **_inhibitor) {
++        Inhibitor *i;
++
++        assert(m);
++        assert(id);
++
++        i = hashmap_get(m->inhibitors, id);
++        if (i) {
++                if (_inhibitor)
++                        *_inhibitor = i;
++
++                return 0;
++        }
++
++        i = inhibitor_new(m, id);
++        if (!i)
++                return -ENOMEM;
++
++        if (_inhibitor)
++                *_inhibitor = i;
++
++        return 0;
++}
++
+ int manager_process_seat_device(Manager *m, struct udev_device *d) {
+         Device *device;
+         int r;
+@@ -412,10 +447,9 @@ int manager_enumerate_seats(Manager *m) {
+ }
+ 
+ static int manager_enumerate_users_from_cgroup(Manager *m) {
+-        int r = 0;
++        int r = 0, k;
+         char *name;
+         DIR *d;
+-        int k;
+ 
+         r = cg_enumerate_subgroups(SYSTEMD_CGROUP_CONTROLLER, m->cgroup_path, &d);
+         if (r < 0) {
+@@ -641,6 +675,46 @@ int manager_enumerate_sessions(Manager *m) {
+         return r;
+ }
+ 
++int manager_enumerate_inhibitors(Manager *m) {
++        DIR *d;
++        struct dirent *de;
++        int r = 0;
++
++        assert(m);
++
++        d = opendir("/run/systemd/inhibit");
++        if (!d) {
++                if (errno == ENOENT)
++                        return 0;
++
++                log_error("Failed to open /run/systemd/inhibit: %m");
++                return -errno;
++        }
++
++        while ((de = readdir(d))) {
++                int k;
++                Inhibitor *i;
++
++                if (!dirent_is_file(de))
++                        continue;
++
++                k = manager_add_inhibitor(m, de->d_name, &i);
++                if (k < 0) {
++                        log_notice("Couldn't add inhibitor %s: %s", de->d_name, strerror(-k));
++                        r = k;
++                        continue;
++                }
++
++                k = inhibitor_load(i);
++                if (k < 0)
++                        r = k;
++        }
++
++        closedir(d);
++
++        return r;
++}
++
+ int manager_dispatch_seat_udev(Manager *m) {
+         struct udev_device *d;
+         int r;
+@@ -853,15 +927,28 @@ void manager_cgroup_notify_empty(Manager *m, const char *cgroup) {
+ 
+ static void manager_pipe_notify_eof(Manager *m, int fd) {
+         Session *s;
++        Inhibitor *i;
+ 
+         assert_se(m);
+         assert_se(fd >= 0);
+ 
+-        assert_se(s = hashmap_get(m->fifo_fds, INT_TO_PTR(fd + 1)));
+-        assert(s->fifo_fd == fd);
+-        session_remove_fifo(s);
++        s = hashmap_get(m->session_fds, INT_TO_PTR(fd + 1));
++        if (s) {
++                assert(s->fifo_fd == fd);
++                session_remove_fifo(s);
++                session_stop(s);
++                return;
++        }
+ 
+-        session_stop(s);
++        i = hashmap_get(m->inhibitor_fds, INT_TO_PTR(fd + 1));
++        if (i) {
++                assert(i->fifo_fd == fd);
++                inhibitor_stop(i);
++                inhibitor_free(i);
++                return;
++        }
++
++        assert_not_reached("Got EOF on unknown pipe");
+ }
+ 
+ static int manager_connect_bus(Manager *m) {
+@@ -1110,6 +1197,7 @@ int manager_startup(Manager *m) {
+         Seat *seat;
+         Session *session;
+         User *user;
++        Inhibitor *inhibitor;
+         Iterator i;
+ 
+         assert(m);
+@@ -1144,6 +1232,7 @@ int manager_startup(Manager *m) {
+         manager_enumerate_seats(m);
+         manager_enumerate_users(m);
+         manager_enumerate_sessions(m);
++        manager_enumerate_inhibitors(m);
+ 
+         /* Remove stale objects before we start them */
+         manager_gc(m, false);
+@@ -1158,6 +1247,9 @@ int manager_startup(Manager *m) {
+         HASHMAP_FOREACH(session, m->sessions, i)
+                 session_start(session);
+ 
++        HASHMAP_FOREACH(inhibitor, m->inhibitors, i)
++                inhibitor_start(inhibitor);
++
+         return 0;
+ }
+ 
+diff --git a/src/login/logind.h b/src/login/logind.h
+index 9586793..65d396d 100644
+--- a/src/login/logind.h
++++ b/src/login/logind.h
+@@ -39,6 +39,7 @@ typedef struct Manager Manager;
+ #include "logind-seat.h"
+ #include "logind-session.h"
+ #include "logind-user.h"
++#include "logind-inhibit.h"
+ 
+ struct Manager {
+         DBusConnection *bus;
+@@ -47,6 +48,7 @@ struct Manager {
+         Hashmap *seats;
+         Hashmap *sessions;
+         Hashmap *users;
++        Hashmap *inhibitors;
+ 
+         LIST_HEAD(Seat, seat_gc_queue);
+         LIST_HEAD(Session, session_gc_queue);
+@@ -74,9 +76,11 @@ struct Manager {
+         bool kill_user_processes;
+ 
+         unsigned long session_counter;
++        unsigned long inhibit_counter;
+ 
+         Hashmap *cgroups;
+-        Hashmap *fifo_fds;
++        Hashmap *session_fds;
++        Hashmap *inhibitor_fds;
+ };
+ 
+ enum {
+@@ -96,6 +100,7 @@ int manager_add_session(Manager *m, User *u, const char *id, Session **_session)
+ int manager_add_user(Manager *m, uid_t uid, gid_t gid, const char *name, User **_user);
+ int manager_add_user_by_name(Manager *m, const char *name, User **_user);
+ int manager_add_user_by_uid(Manager *m, uid_t uid, User **_user);
++int manager_add_inhibitor(Manager *m, const char* id, Inhibitor **_inhibitor);
+ 
+ int manager_process_seat_device(Manager *m, struct udev_device *d);
+ int manager_dispatch_seat_udev(Manager *m);
+@@ -106,6 +111,7 @@ int manager_enumerate_devices(Manager *m);
+ int manager_enumerate_seats(Manager *m);
+ int manager_enumerate_sessions(Manager *m);
+ int manager_enumerate_users(Manager *m);
++int manager_enumerate_inhibitors(Manager *m);
+ 
+ int manager_startup(Manager *m);
+ int manager_run(Manager *m);
+diff --git a/src/login/org.freedesktop.login1.conf b/src/login/org.freedesktop.login1.conf
+index 9ef852b..38b9b5e 100644
+--- a/src/login/org.freedesktop.login1.conf
++++ b/src/login/org.freedesktop.login1.conf
+@@ -66,6 +66,14 @@
+ 
+                 <allow send_destination="org.freedesktop.login1"
+                        send_interface="org.freedesktop.login1.Manager"
++                       send_member="ListInhibitors"/>
++
++                <allow send_destination="org.freedesktop.login1"
++                       send_interface="org.freedesktop.login1.Manager"
++                       send_member="Inhibit"/>
++
++                <allow send_destination="org.freedesktop.login1"
++                       send_interface="org.freedesktop.login1.Manager"
+                        send_member="SetUserLinger"/>
+ 
+                 <allow send_destination="org.freedesktop.login1"
+diff --git a/src/login/org.freedesktop.login1.policy.in b/src/login/org.freedesktop.login1.policy.in
+index adc9048..0b4dd51 100644
+--- a/src/login/org.freedesktop.login1.policy.in
++++ b/src/login/org.freedesktop.login1.policy.in
+@@ -16,6 +16,16 @@
+         <vendor>The systemd Project</vendor>
+         <vendor_url>http://www.freedesktop.org/wiki/Software/systemd</vendor_url>
+ 
++        <action id="org.freedesktop.login1.inhibit">
++                <_description>Allow applications to inhibit system shutdown and suspend</_description>
++                <_message>Authentication is required to allow an application to inhibit system shutdown or suspend</_message>
++                <defaults>
++                        <allow_any>auth_admin_keep</allow_any>
++                        <allow_inactive>yes</allow_inactive>
++                        <allow_active>yes</allow_active>
++                </defaults>
++        </action>
++
+         <action id="org.freedesktop.login1.set-user-linger">
+                 <_description>Allow non-logged-in users to run programs</_description>
+                 <_message>Authentication is required to allow a non-logged-in user to run programs</_message>
+@@ -66,6 +76,16 @@
+                 </defaults>
+         </action>
+ 
++        <action id="org.freedesktop.login1.power-off-ignore-inhibit">
++                <_description>Power off the system when an application asked to inhibit it</_description>
++                <_message>Authentication is required to allow powering off the system while an application asked to inhibit it</_message>
++                <defaults>
++                        <allow_any>auth_admin_keep</allow_any>
++                        <allow_inactive>auth_admin_keep</allow_inactive>
++                        <allow_active>auth_admin_keep</allow_active>
++                </defaults>
++        </action>
++
+         <action id="org.freedesktop.login1.reboot">
+                 <_description>Reboot the system</_description>
+                 <_message>Authentication is required to allow rebooting the system</_message>
+@@ -86,4 +106,14 @@
+                 </defaults>
+         </action>
+ 
++        <action id="org.freedesktop.login1.reboot-ignore-inhibit">
++                <_description>Reboot the system when an application asked to inhibit it</_description>
++                <_message>Authentication is required to allow rebooting the system while an application asked to inhibit it</_message>
++                <defaults>
++                        <allow_any>auth_admin_keep</allow_any>
++                        <allow_inactive>auth_admin_keep</allow_inactive>
++                        <allow_active>auth_admin_keep</allow_active>
++                </defaults>
++        </action>
++
+ </policyconfig>
+diff --git a/src/login/test-inhibit.c b/src/login/test-inhibit.c
+new file mode 100644
+index 0000000..c83e960
+--- /dev/null
++++ b/src/login/test-inhibit.c
+@@ -0,0 +1,137 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <unistd.h>
++
++#include <dbus/dbus.h>
++
++#include "macro.h"
++#include "util.h"
++#include "dbus-common.h"
++
++static int inhibit(DBusConnection *bus, const char *what) {
++        DBusMessage *m, *reply;
++        DBusError error;
++        const char *who = "Test Tool", *reason = "Just because!";
++        int fd;
++
++        dbus_error_init(&error);
++
++        m = dbus_message_new_method_call(
++                        "org.freedesktop.login1",
++                        "/org/freedesktop/login1",
++                        "org.freedesktop.login1.Manager",
++                        "Inhibit");
++        assert(m);
++
++        assert_se(dbus_message_append_args(m,
++                                           DBUS_TYPE_STRING, &what,
++                                           DBUS_TYPE_STRING, &who,
++                                           DBUS_TYPE_STRING, &reason,
++                                           DBUS_TYPE_INVALID));
++
++        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, &error);
++        assert(reply);
++
++        assert(dbus_message_get_args(reply, &error,
++                                     DBUS_TYPE_UNIX_FD, &fd,
++                                     DBUS_TYPE_INVALID));
++
++        dbus_message_unref(m);
++        dbus_message_unref(reply);
++
++        return fd;
++}
++
++static void print_inhibitors(DBusConnection *bus) {
++        DBusMessage *m, *reply;
++        DBusError error;
++        unsigned n = 0;
++        DBusMessageIter iter, sub, sub2;
++
++        dbus_error_init(&error);
++
++        m = dbus_message_new_method_call(
++                        "org.freedesktop.login1",
++                        "/org/freedesktop/login1",
++                        "org.freedesktop.login1.Manager",
++                        "ListInhibitors");
++        assert(m);
++
++        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, &error);
++        assert(reply);
++
++        assert(dbus_message_iter_init(reply, &iter));
++        dbus_message_iter_recurse(&iter, &sub);
++
++        while (dbus_message_iter_get_arg_type(&sub) != DBUS_TYPE_INVALID) {
++                const char *what, *who, *reason;
++                dbus_uint32_t uid, pid;
++
++                dbus_message_iter_recurse(&sub, &sub2);
++
++                assert_se(bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &what, true) >= 0);
++                assert_se(bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &who, true) >= 0);
++                assert_se(bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_STRING, &reason, true) >= 0);
++                assert_se(bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_UINT32, &uid, true) >= 0);
++                assert_se(bus_iter_get_basic_and_next(&sub2, DBUS_TYPE_UINT32, &pid, false) >= 0);
++
++                printf("what=<%s> who=<%s> reason=<%s> uid=<%lu> pid=<%lu>\n",
++                       what, who, reason, (unsigned long) uid, (unsigned long) pid);
++
++                dbus_message_iter_next(&sub);
++
++                n++;
++        }
++
++        printf("%u inhibitors\n", n);
++
++        dbus_message_unref(m);
++        dbus_message_unref(reply);
++}
++
++int main(int argc, char*argv[]) {
++        DBusConnection *bus;
++        int fd1, fd2;
++
++        bus = dbus_bus_get_private(DBUS_BUS_SYSTEM, NULL);
++        assert(bus);
++
++        print_inhibitors(bus);
++
++        fd1 = inhibit(bus, "suspend");
++        assert(fd1 >= 0);
++        print_inhibitors(bus);
++
++        fd2 = inhibit(bus, "idle:shutdown");
++        assert(fd2 >= 0);
++        print_inhibitors(bus);
++
++        close_nointr_nofail(fd1);
++        sleep(1);
++        print_inhibitors(bus);
++
++        close_nointr_nofail(fd2);
++        sleep(1);
++        print_inhibitors(bus);
++
++        return 0;
++}
+diff --git a/src/shared/dbus-common.c b/src/shared/dbus-common.c
+index 373450f..6f68287 100644
+--- a/src/shared/dbus-common.c
++++ b/src/shared/dbus-common.c
+@@ -1155,3 +1155,53 @@ DBusHandlerResult bus_exit_idle_filter(DBusConnection *bus, DBusMessage *m, void
+ 
+         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+ }
++
++/* This mimics dbus_bus_get_unix_user() */
++pid_t bus_get_unix_process_id(
++                DBusConnection *connection,
++                const char *name,
++                DBusError *error) {
++
++        DBusMessage *m = NULL, *reply = NULL;
++        uint32_t pid = 0;
++
++        m = dbus_message_new_method_call(
++                        DBUS_SERVICE_DBUS,
++                        DBUS_PATH_DBUS,
++                        DBUS_INTERFACE_DBUS,
++                        "GetConnectionUnixProcessID");
++        if (!m) {
++                dbus_set_error_const(error, DBUS_ERROR_NO_MEMORY, NULL);
++                goto finish;
++        }
++
++        if (!dbus_message_append_args(
++                            m,
++                            DBUS_TYPE_STRING, &name,
++                            DBUS_TYPE_INVALID)) {
++                dbus_set_error_const(error, DBUS_ERROR_NO_MEMORY, NULL);
++                goto finish;
++        }
++
++        reply = dbus_connection_send_with_reply_and_block(connection, m, -1, error);
++        if (!reply)
++                goto finish;
++
++        if (dbus_set_error_from_message(error, reply))
++                goto finish;
++
++        if (!dbus_message_get_args(
++                            reply, error,
++                            DBUS_TYPE_UINT32, &pid,
++                            DBUS_TYPE_INVALID))
++                goto finish;
++
++finish:
++        if (m)
++                dbus_message_unref(m);
++
++        if (reply)
++                dbus_message_unref(reply);
++
++        return (pid_t) pid;
++}
+diff --git a/src/shared/dbus-common.h b/src/shared/dbus-common.h
+index 7721c22..bd71f59 100644
+--- a/src/shared/dbus-common.h
++++ b/src/shared/dbus-common.h
+@@ -199,4 +199,6 @@ void bus_async_unregister_and_exit(DBusConnection *bus, const char *name);
+ 
+ DBusHandlerResult bus_exit_idle_filter(DBusConnection *bus, DBusMessage *m, void *userdata);
+ 
++pid_t bus_get_unix_process_id(DBusConnection *connection, const char *name, DBusError *error);
++
+ #endif
+diff --git a/src/shared/polkit.c b/src/shared/polkit.c
+index 3acbdc6..70e07d8 100644
+--- a/src/shared/polkit.c
++++ b/src/shared/polkit.c
+@@ -27,56 +27,6 @@
+ #include "dbus-common.h"
+ #include "polkit.h"
+ 
+-/* This mimics dbus_bus_get_unix_user() */
+-static pid_t get_unix_process_id(
+-                DBusConnection *connection,
+-                const char *name,
+-                DBusError *error) {
+-
+-        DBusMessage *m = NULL, *reply = NULL;
+-        uint32_t pid = 0;
+-
+-        m = dbus_message_new_method_call(
+-                        DBUS_SERVICE_DBUS,
+-                        DBUS_PATH_DBUS,
+-                        DBUS_INTERFACE_DBUS,
+-                        "GetConnectionUnixProcessID");
+-        if (!m) {
+-                dbus_set_error_const(error, DBUS_ERROR_NO_MEMORY, NULL);
+-                goto finish;
+-        }
+-
+-        if (!dbus_message_append_args(
+-                            m,
+-                            DBUS_TYPE_STRING, &name,
+-                            DBUS_TYPE_INVALID)) {
+-                dbus_set_error_const(error, DBUS_ERROR_NO_MEMORY, NULL);
+-                goto finish;
+-        }
+-
+-        reply = dbus_connection_send_with_reply_and_block(connection, m, -1, error);
+-        if (!reply)
+-                goto finish;
+-
+-        if (dbus_set_error_from_message(error, reply))
+-                goto finish;
+-
+-        if (!dbus_message_get_args(
+-                            reply, error,
+-                            DBUS_TYPE_UINT32, &pid,
+-                            DBUS_TYPE_INVALID))
+-                goto finish;
+-
+-finish:
+-        if (m)
+-                dbus_message_unref(m);
+-
+-        if (reply)
+-                dbus_message_unref(reply);
+-
+-        return (pid_t) pid;
+-}
+-
+ int verify_polkit(
+                 DBusConnection *c,
+                 DBusMessage *request,
+@@ -104,7 +54,7 @@ int verify_polkit(
+         if (!sender)
+                 return -EINVAL;
+ 
+-        pid_raw = get_unix_process_id(c, sender, error);
++        pid_raw = bus_get_unix_process_id(c, sender, error);
+         if (pid_raw == 0)
+                 return -EINVAL;
+ 
+diff --git a/src/shared/util.c b/src/shared/util.c
+index f0ff9ba..e82a336 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -1690,7 +1690,8 @@ char *cescape(const char *s) {
+ 
+         /* Does C style string escaping. */
+ 
+-        if (!(r = new(char, strlen(s)*4 + 1)))
++        r = new(char, strlen(s)*4 + 1);
++        if (!r)
+                 return NULL;
+ 
+         for (f = s, t = r; *f; f++)

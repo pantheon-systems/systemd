@@ -1,0 +1,160 @@
+From 3d33bc2c7db730dd7b769b51cde79dded4d70b57 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 21:33:28 +0200
+Subject: [PATCH] watchdog: make watchdog dbus properties writable (cherry
+ picked from commit
+ c757a65b6afb462bde082b5362bbb5a074b5bb7b)
+
+---
+ src/core/dbus-manager.c  |   24 ++++++++++++++++++------
+ src/core/manager.c       |   19 ++++++++++---------
+ src/shared/dbus-common.c |   10 ++++++++++
+ src/shared/dbus-common.h |    3 +++
+ 4 files changed, 41 insertions(+), 15 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 46379d0..918d5fc 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -30,6 +30,7 @@
+ #include "build.h"
+ #include "dbus-common.h"
+ #include "install.h"
++#include "watchdog.h"
+ 
+ #define BUS_MANAGER_INTERFACE_BEGIN                                     \
+         " <interface name=\"org.freedesktop.systemd1.Manager\">\n"
+@@ -241,8 +242,8 @@
+         "  <property name=\"DefaultControllers\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"DefaultStandardOutput\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"DefaultStandardError\" type=\"s\" access=\"read\"/>\n" \
+-        "  <property name=\"RuntimeWatchdogUSec\" type=\"s\" access=\"read\"/>\n" \
+-        "  <property name=\"ShutdownWatchdogUSec\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"RuntimeWatchdogUSec\" type=\"s\" access=\"readwrite\"/>\n" \
++        "  <property name=\"ShutdownWatchdogUSec\" type=\"s\" access=\"readwrite\"/>\n" \
+         "  <property name=\"HaveWatchdog\" type=\"b\" access=\"read\"/>\n"
+ 
+ #ifdef HAVE_SYSV_COMPAT
+@@ -508,6 +509,17 @@ static int bus_manager_append_have_watchdog(DBusMessageIter *i, const char *prop
+         return 0;
+ }
+ 
++static int bus_manager_set_runtime_watchdog_usec(DBusMessageIter *i, const char *property, void *data) {
++        uint64_t *t = data;
++
++        assert(i);
++        assert(property);
++
++        dbus_message_iter_get_basic(i, t);
++
++        return watchdog_set_timeout(t);
++}
++
+ static const char systemd_property_string[] =
+         PACKAGE_STRING "\0"
+         DISTRIBUTION "\0"
+@@ -529,8 +541,8 @@ static const BusProperty bus_manager_properties[] = {
+         { "StartupTimestampMonotonic", bus_property_append_uint64, "t", offsetof(Manager, startup_timestamp.monotonic) },
+         { "FinishTimestamp", bus_property_append_uint64,           "t", offsetof(Manager, finish_timestamp.realtime)   },
+         { "FinishTimestampMonotonic", bus_property_append_uint64,  "t", offsetof(Manager, finish_timestamp.monotonic)  },
+-        { "LogLevel",      bus_manager_append_log_level,           "s", 0,                                             0, bus_manager_set_log_level },
+-        { "LogTarget",     bus_manager_append_log_target,          "s", 0,                                             0, bus_manager_set_log_target },
++        { "LogLevel",      bus_manager_append_log_level,           "s", 0,                                             false, bus_manager_set_log_level },
++        { "LogTarget",     bus_manager_append_log_target,          "s", 0,                                             false, bus_manager_set_log_target },
+         { "NNames",        bus_manager_append_n_names,             "u", 0                                              },
+         { "NJobs",         bus_manager_append_n_jobs,              "u", 0                                              },
+         { "NInstalledJobs",bus_property_append_uint32,             "u", offsetof(Manager, n_installed_jobs)            },
+@@ -547,8 +559,8 @@ static const BusProperty bus_manager_properties[] = {
+         { "DefaultControllers", bus_property_append_strv,         "as", offsetof(Manager, default_controllers),        true },
+         { "DefaultStandardOutput", bus_manager_append_exec_output, "s", offsetof(Manager, default_std_output)          },
+         { "DefaultStandardError",  bus_manager_append_exec_output, "s", offsetof(Manager, default_std_error)           },
+-        { "RuntimeWatchdogUSec", bus_property_append_usec,         "t", offsetof(Manager, runtime_watchdog),           },
+-        { "ShutdownWatchdogUSec", bus_property_append_usec,        "t", offsetof(Manager, shutdown_watchdog),          },
++        { "RuntimeWatchdogUSec", bus_property_append_usec,         "t", offsetof(Manager, runtime_watchdog),           false, bus_manager_set_runtime_watchdog_usec },
++        { "ShutdownWatchdogUSec", bus_property_append_usec,        "t", offsetof(Manager, shutdown_watchdog),          false, bus_property_set_usec },
+         { "HaveWatchdog",  bus_manager_append_have_watchdog,       "b", 0                                              },
+ #ifdef HAVE_SYSV_COMPAT
+         { "SysVConsole",   bus_property_append_bool,               "b", offsetof(Manager, sysv_console)                },
+diff --git a/src/core/manager.c b/src/core/manager.c
+index e46ca22..d57e8c1 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -2457,7 +2457,6 @@ static int process_event(Manager *m, struct epoll_event *ev) {
+ 
+ int manager_loop(Manager *m) {
+         int r;
+-        int wait_msec = -1;
+ 
+         RATELIMIT_DEFINE(rl, 1*USEC_PER_SEC, 50000);
+ 
+@@ -2476,18 +2475,12 @@ int manager_loop(Manager *m) {
+         if (r < 0)
+                 return r;
+ 
+-        /* Sleep for half the watchdog time */
+-        if (m->runtime_watchdog > 0 && m->running_as == MANAGER_SYSTEM)  {
+-                wait_msec = (int) (m->runtime_watchdog / 2 / USEC_PER_MSEC);
+-                if (wait_msec <= 0)
+-                        wait_msec = 1;
+-        }
+-
+         while (m->exit_code == MANAGER_RUNNING) {
+                 struct epoll_event event;
+                 int n;
++                int wait_msec = -1;
+ 
+-                if (wait_msec >= 0)
++                if (m->runtime_watchdog > 0 && m->running_as == MANAGER_SYSTEM)
+                         watchdog_ping();
+ 
+                 if (!ratelimit_test(&rl)) {
+@@ -2518,6 +2511,14 @@ int manager_loop(Manager *m) {
+                 if (swap_dispatch_reload(m) > 0)
+                         continue;
+ 
++                /* Sleep for half the watchdog time */
++                if (m->runtime_watchdog > 0 && m->running_as == MANAGER_SYSTEM) {
++                        wait_msec = (int) (m->runtime_watchdog / 2 / USEC_PER_MSEC);
++                        if (wait_msec <= 0)
++                                wait_msec = 1;
++                } else
++                        wait_msec = -1;
++
+                 n = epoll_wait(m->epoll_fd, &event, 1, wait_msec);
+                 if (n < 0) {
+ 
+diff --git a/src/shared/dbus-common.c b/src/shared/dbus-common.c
+index 54eab09..373450f 100644
+--- a/src/shared/dbus-common.c
++++ b/src/shared/dbus-common.c
+@@ -660,6 +660,16 @@ int bus_property_append_long(DBusMessageIter *i, const char *property, void *dat
+         return 0;
+ }
+ 
++int bus_property_set_uint64(DBusMessageIter *i, const char *property, void *data) {
++        uint64_t *t = data;
++
++        assert(i);
++        assert(property);
++
++        dbus_message_iter_get_basic(i, t);
++        return 0;
++}
++
+ const char *bus_errno_to_dbus(int error) {
+ 
+         switch(error) {
+diff --git a/src/shared/dbus-common.h b/src/shared/dbus-common.h
+index 7924a0e..7721c22 100644
+--- a/src/shared/dbus-common.h
++++ b/src/shared/dbus-common.h
+@@ -144,6 +144,9 @@ int bus_property_append_long(DBusMessageIter *i, const char *property, void *dat
+ #define bus_property_append_unsigned bus_property_append_uint32
+ #define bus_property_append_usec bus_property_append_uint64
+ 
++int bus_property_set_uint64(DBusMessageIter *i, const char *property, void *data);
++#define bus_property_set_usec bus_property_set_uint64
++
+ #define DEFINE_BUS_PROPERTY_APPEND_ENUM(function,name,type)             \
+         int function(DBusMessageIter *i, const char *property, void *data) { \
+                 const char *value;                                      \

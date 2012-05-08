@@ -1,0 +1,25 @@
+From dee2a4644fd0874085e183f58837c10f90b454cb Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 19 Apr 2012 23:56:26 +0200
+Subject: [PATCH] transaction: remove a couple of asserts
+
+We already asserted these facts in the previous loop.
+(cherry picked from commit f1c2bdca422dba1bc5615f72662dee5ce69c147b)
+---
+ src/core/transaction.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 39cfe54..41f7b82 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -611,9 +611,6 @@ static int transaction_apply(Transaction *tr, Manager *m, JobMode mode) {
+                 /* We're fully installed. Now let's free data we don't
+                  * need anymore. */
+ 
+-                assert(!j->transaction_next);
+-                assert(!j->transaction_prev);
+-
+                 /* Clean the job dependencies */
+                 transaction_unlink_job(tr, j, false);
+ 

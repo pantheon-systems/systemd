@@ -1,0 +1,43 @@
+From 3167e4c8d34a9674afc7e96062d32f0a31143f59 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 18:27:35 +0200
+Subject: [PATCH] build-sys: move src/linux/ to src/shared/linux (cherry
+ picked from commit
+ c0a0872d5c5a0e948c3ace0fb1578a64840ebc8e)
+
+---
+ Makefile.am                             |    6 +++---
+ src/{ => shared}/linux/auto_dev-ioctl.h |    0
+ src/{ => shared}/linux/fanotify.h       |    0
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+ rename src/{ => shared}/linux/auto_dev-ioctl.h (100%)
+ rename src/{ => shared}/linux/fanotify.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index bce4db3..a3a8d72 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -508,12 +508,12 @@ noinst_LTLIBRARIES += \
+ 	libsystemd-shared.la
+ 
+ libsystemd_shared_la_SOURCES = \
+-	src/linux/auto_dev-ioctl.h \
+-	src/linux/fanotify.h \
++	src/shared/linux/auto_dev-ioctl.h \
++	src/shared/linux/fanotify.h \
++	src/shared/missing.h \
+ 	src/shared/list.h \
+ 	src/shared/macro.h \
+ 	src/shared/def.h \
+-	src/shared/missing.h \
+ 	src/shared/util.c \
+ 	src/shared/util.h \
+ 	src/shared/virt.c \
+diff --git a/src/linux/auto_dev-ioctl.h b/src/shared/linux/auto_dev-ioctl.h
+similarity index 100%
+rename from src/linux/auto_dev-ioctl.h
+rename to src/shared/linux/auto_dev-ioctl.h
+diff --git a/src/linux/fanotify.h b/src/shared/linux/fanotify.h
+similarity index 100%
+rename from src/linux/fanotify.h
+rename to src/shared/linux/fanotify.h

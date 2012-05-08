@@ -1,0 +1,847 @@
+From 518076d947f4fd2c8204ad88382046f2fb3ee9df Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 25 Apr 2012 11:58:27 +0200
+Subject: [PATCH] core: add NOP jobs, job type collapsing
+
+Two of our current job types are special:
+JOB_TRY_RESTART, JOB_RELOAD_OR_START.
+
+They differ from other job types by being sensitive to the unit active state.
+They perform some action when the unit is active and some other action
+otherwise. This raises a question: when exactly should the unit state be
+checked to make the decision?
+
+Currently the unit state is checked when the job becomes runnable. It's more
+sensible to check the state immediately when the job is added by the user.
+When the user types "systemctl try-restart foo.service", he really intends
+to restart the service if it's running right now. If it isn't running right
+now, the restart is pointless.
+
+Consider the example (from Bugzilla[1]):
+
+sleep.service takes some time to start.
+hello.service has After=sleep.service.
+Both services get started. Two jobs will appear:
+ hello.service/start  waiting
+ sleep.service/start  running
+Then someone runs "systemctl try-restart hello.service".
+
+Currently the try-restart operation will block and wait for
+sleep.service/start to complete.
+
+The correct result is to complete the try-restart operation immediately
+with success, because hello.service is not running. The two original
+jobs must not be disturbed by this.
+
+To fix this we introduce two new concepts:
+- a new job type: JOB_NOP
+  A JOB_NOP job does not do anything to the unit. It does not pull in any
+  dependencies. It is always immediately runnable. When installed to a unit,
+  it sits in a special slot (u->nop_job) where it never conflicts with
+  the installed job (u->job) of a different type. It never merges with jobs
+  of other types, but it can merge into an already installed JOB_NOP job.
+
+- "collapsing" of job types
+  When a job of one of the two special types is added, the state of the unit
+  is checked immediately and the job type changes:
+  JOB_TRY_RESTART     -> JOB_RESTART or JOB_NOP
+  JOB_RELOAD_OR_START -> JOB_RELOAD or JOB_START
+  Should a job type JOB_RELOAD_OR_START appear later during job merging, it
+  collapses immediately afterwards.
+  Collapsing actually makes some things simpler, because there are now fewer
+  job types that are allowed in the transaction.
+
+[1] Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=753586
+(cherry picked from commit e0209d83e7b30153f43b1a633c955f66eb2c2e4a)
+---
+ Makefile.am              |    3 +-
+ src/core/job.c           |  163 +++++++++++++++++++++++++++++-----------------
+ src/core/job.h           |   44 +++++++++----
+ src/core/manager.c       |    2 +
+ src/core/transaction.c   |   18 ++---
+ src/core/unit.c          |   29 ++++++++-
+ src/core/unit.h          |    6 +-
+ src/test/test-job-type.c |   91 ++++++++++++++++----------
+ 8 files changed, 235 insertions(+), 121 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 2730006..3067c04 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -892,7 +892,8 @@ test_job_type_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ test_job_type_LDADD = \
+-	libsystemd-core.la
++	libsystemd-core.la \
++	libsystemd-daemon.la
+ 
+ test_ns_SOURCES = \
+ 	src/test/test-ns.c
+diff --git a/src/core/job.c b/src/core/job.c
+index 4ddbe8a..48fdae9 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -60,6 +60,7 @@ Job* job_new_raw(Unit *unit) {
+ 
+         j->manager = unit->manager;
+         j->unit = unit;
++        j->type = _JOB_TYPE_INVALID;
+         j->timer_watch.type = WATCH_INVALID;
+ 
+         return j;
+@@ -115,15 +116,21 @@ void job_free(Job *j) {
+ }
+ 
+ void job_uninstall(Job *j) {
++        Job **pj;
++
+         assert(j->installed);
+-        assert(j->unit->job == j);
++
++        pj = (j->type == JOB_NOP) ? &j->unit->nop_job : &j->unit->job;
++        assert(*pj == j);
++
+         /* Detach from next 'bigger' objects */
+ 
+         /* daemon-reload should be transparent to job observers */
+         if (j->manager->n_reloading <= 0)
+                 bus_job_send_removed_signal(j);
+ 
+-        j->unit->job = NULL;
++        *pj = NULL;
++
+         unit_add_to_gc_queue(j->unit);
+ 
+         hashmap_remove(j->manager->jobs, UINT32_TO_PTR(j->id));
+@@ -144,31 +151,38 @@ static bool job_type_allows_late_merge(JobType t) {
+          * patched into JOB_START after stopping the unit. So if we see a
+          * JOB_RESTART running, it means the unit hasn't stopped yet and at
+          * this time the merge is still allowed. */
+-        return !(t == JOB_RELOAD || t == JOB_RELOAD_OR_START);
++        return t != JOB_RELOAD;
+ }
+ 
+ static void job_merge_into_installed(Job *j, Job *other) {
+         assert(j->installed);
+         assert(j->unit == other->unit);
+ 
+-        j->type = job_type_lookup_merge(j->type, other->type);
+-        assert(j->type >= 0);
++        if (j->type != JOB_NOP)
++                job_type_merge_and_collapse(&j->type, other->type, j->unit);
++        else
++                assert(other->type == JOB_NOP);
+ 
+         j->override = j->override || other->override;
+ }
+ 
+ Job* job_install(Job *j) {
+-        Job *uj = j->unit->job;
++        Job **pj;
++        Job *uj;
+ 
+         assert(!j->installed);
++        assert(j->type < _JOB_TYPE_MAX_IN_TRANSACTION);
++
++        pj = (j->type == JOB_NOP) ? &j->unit->nop_job : &j->unit->job;
++        uj = *pj;
+ 
+         if (uj) {
+-                if (job_type_is_conflicting(uj->type, j->type))
++                if (j->type != JOB_NOP && job_type_is_conflicting(uj->type, j->type))
+                         job_finish_and_invalidate(uj, JOB_CANCELED, true);
+                 else {
+                         /* not conflicting, i.e. mergeable */
+ 
+-                        if (uj->state == JOB_WAITING ||
++                        if (j->type == JOB_NOP || uj->state == JOB_WAITING ||
+                             (job_type_allows_late_merge(j->type) && job_type_is_superset(uj->type, j->type))) {
+                                 job_merge_into_installed(uj, j);
+                                 log_debug("Merged into installed job %s/%s as %u",
+@@ -189,23 +203,33 @@ Job* job_install(Job *j) {
+         }
+ 
+         /* Install the job */
+-        j->unit->job = j;
++        *pj = j;
+         j->installed = true;
+         j->manager->n_installed_jobs ++;
+         log_debug("Installed new job %s/%s as %u", j->unit->id, job_type_to_string(j->type), (unsigned) j->id);
+         return j;
+ }
+ 
+-void job_install_deserialized(Job *j) {
++int job_install_deserialized(Job *j) {
++        Job **pj;
++
+         assert(!j->installed);
+ 
+-        if (j->unit->job) {
++        if (j->type < 0 || j->type >= _JOB_TYPE_MAX_IN_TRANSACTION) {
++                log_debug("Invalid job type %s in deserialization.", strna(job_type_to_string(j->type)));
++                return -EINVAL;
++        }
++
++        pj = (j->type == JOB_NOP) ? &j->unit->nop_job : &j->unit->job;
++
++        if (*pj) {
+                 log_debug("Unit %s already has a job installed. Not installing deserialized job.", j->unit->id);
+-                return;
++                return -EEXIST;
+         }
+-        j->unit->job = j;
++        *pj = j;
+         j->installed = true;
+         log_debug("Reinstalled deserialized job %s/%s as %u", j->unit->id, job_type_to_string(j->type), (unsigned) j->id);
++        return 0;
+ }
+ 
+ JobDependency* job_dependency_new(Job *subject, Job *object, bool matters, bool conflicts) {
+@@ -268,6 +292,10 @@ void job_dump(Job *j, FILE*f, const char *prefix) {
+  * its lower triangle to avoid duplication. We don't store the main diagonal,
+  * because A merged with A is simply A.
+  *
++ * If the resulting type is collapsed immediately afterwards (to get rid of
++ * the JOB_RELOAD_OR_START, which lies outside the lookup function's domain),
++ * the following properties hold:
++ *
+  * Merging is associative! A merged with B merged with C is the same as
+  * A merged with C merged with B.
+  *
+@@ -278,21 +306,19 @@ void job_dump(Job *j, FILE*f, const char *prefix) {
+  * be merged with C either.
+  */
+ static const JobType job_merging_table[] = {
+-/* What \ With       *  JOB_START         JOB_VERIFY_ACTIVE  JOB_STOP JOB_RELOAD   JOB_RELOAD_OR_START  JOB_RESTART JOB_TRY_RESTART */
+-/************************************************************************************************************************************/
++/* What \ With       *  JOB_START         JOB_VERIFY_ACTIVE  JOB_STOP JOB_RELOAD */
++/*********************************************************************************/
+ /*JOB_START          */
+ /*JOB_VERIFY_ACTIVE  */ JOB_START,
+ /*JOB_STOP           */ -1,                  -1,
+ /*JOB_RELOAD         */ JOB_RELOAD_OR_START, JOB_RELOAD,          -1,
+-/*JOB_RELOAD_OR_START*/ JOB_RELOAD_OR_START, JOB_RELOAD_OR_START, -1, JOB_RELOAD_OR_START,
+-/*JOB_RESTART        */ JOB_RESTART,         JOB_RESTART,         -1, JOB_RESTART,         JOB_RESTART,
+-/*JOB_TRY_RESTART    */ JOB_RESTART,         JOB_TRY_RESTART,     -1, JOB_TRY_RESTART,     JOB_RESTART, JOB_RESTART,
++/*JOB_RESTART        */ JOB_RESTART,         JOB_RESTART,         -1, JOB_RESTART,
+ };
+ 
+ JobType job_type_lookup_merge(JobType a, JobType b) {
+-        assert_cc(ELEMENTSOF(job_merging_table) == _JOB_TYPE_MAX * (_JOB_TYPE_MAX - 1) / 2);
+-        assert(a >= 0 && a < _JOB_TYPE_MAX);
+-        assert(b >= 0 && b < _JOB_TYPE_MAX);
++        assert_cc(ELEMENTSOF(job_merging_table) == _JOB_TYPE_MAX_MERGING * (_JOB_TYPE_MAX_MERGING - 1) / 2);
++        assert(a >= 0 && a < _JOB_TYPE_MAX_MERGING);
++        assert(b >= 0 && b < _JOB_TYPE_MAX_MERGING);
+ 
+         if (a == b)
+                 return a;
+@@ -328,24 +354,50 @@ bool job_type_is_redundant(JobType a, UnitActiveState b) {
+                 return
+                         b == UNIT_RELOADING;
+ 
+-        case JOB_RELOAD_OR_START:
+-                return
+-                        b == UNIT_ACTIVATING ||
+-                        b == UNIT_RELOADING;
+-
+         case JOB_RESTART:
+                 return
+                         b == UNIT_ACTIVATING;
+ 
++        default:
++                assert_not_reached("Invalid job type");
++        }
++}
++
++void job_type_collapse(JobType *t, Unit *u) {
++        UnitActiveState s;
++
++        switch (*t) {
++
+         case JOB_TRY_RESTART:
+-                return
+-                        b == UNIT_ACTIVATING;
++                s = unit_active_state(u);
++                if (UNIT_IS_INACTIVE_OR_DEACTIVATING(s))
++                        *t = JOB_NOP;
++                else
++                        *t = JOB_RESTART;
++                break;
++
++        case JOB_RELOAD_OR_START:
++                s = unit_active_state(u);
++                if (UNIT_IS_INACTIVE_OR_DEACTIVATING(s))
++                        *t = JOB_START;
++                else
++                        *t = JOB_RELOAD;
++                break;
+ 
+         default:
+-                assert_not_reached("Invalid job type");
++                ;
+         }
+ }
+ 
++int job_type_merge_and_collapse(JobType *a, JobType b, Unit *u) {
++        JobType t = job_type_lookup_merge(*a, b);
++        if (t < 0)
++                return -EEXIST;
++        *a = t;
++        job_type_collapse(a, u);
++        return 0;
++}
++
+ bool job_is_runnable(Job *j) {
+         Iterator i;
+         Unit *other;
+@@ -362,10 +414,12 @@ bool job_is_runnable(Job *j) {
+         if (j->ignore_order)
+                 return true;
+ 
++        if (j->type == JOB_NOP)
++                return true;
++
+         if (j->type == JOB_START ||
+             j->type == JOB_VERIFY_ACTIVE ||
+-            j->type == JOB_RELOAD ||
+-            j->type == JOB_RELOAD_OR_START) {
++            j->type == JOB_RELOAD) {
+ 
+                 /* Immediate result is that the job is or might be
+                  * started. In this case lets wait for the
+@@ -383,8 +437,7 @@ bool job_is_runnable(Job *j) {
+         SET_FOREACH(other, j->unit->dependencies[UNIT_BEFORE], i)
+                 if (other->job &&
+                     (other->job->type == JOB_STOP ||
+-                     other->job->type == JOB_RESTART ||
+-                     other->job->type == JOB_TRY_RESTART))
++                     other->job->type == JOB_RESTART))
+                         return false;
+ 
+         /* This means that for a service a and a service b where b
+@@ -416,6 +469,7 @@ int job_run_and_invalidate(Job *j) {
+ 
+         assert(j);
+         assert(j->installed);
++        assert(j->type < _JOB_TYPE_MAX_IN_TRANSACTION);
+ 
+         if (j->in_run_queue) {
+                 LIST_REMOVE(Job, run_queue, j->manager->run_queue, j);
+@@ -441,15 +495,6 @@ int job_run_and_invalidate(Job *j) {
+ 
+         switch (j->type) {
+ 
+-                case JOB_RELOAD_OR_START:
+-                        if (unit_active_state(j->unit) == UNIT_ACTIVE) {
+-                                job_change_type(j, JOB_RELOAD);
+-                                r = unit_reload(j->unit);
+-                                break;
+-                        }
+-                        job_change_type(j, JOB_START);
+-                        /* fall through */
+-
+                 case JOB_START:
+                         r = unit_start(j->unit);
+ 
+@@ -469,14 +514,6 @@ int job_run_and_invalidate(Job *j) {
+                         break;
+                 }
+ 
+-                case JOB_TRY_RESTART:
+-                        if (UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(j->unit))) {
+-                                r = -ENOEXEC;
+-                                break;
+-                        }
+-                        job_change_type(j, JOB_RESTART);
+-                        /* fall through */
+-
+                 case JOB_STOP:
+                 case JOB_RESTART:
+                         r = unit_stop(j->unit);
+@@ -490,11 +527,16 @@ int job_run_and_invalidate(Job *j) {
+                         r = unit_reload(j->unit);
+                         break;
+ 
++                case JOB_NOP:
++                        r = -EALREADY;
++                        break;
++
+                 default:
+                         assert_not_reached("Unknown job type");
+         }
+ 
+-        if ((j = manager_get_job(m, id))) {
++        j = manager_get_job(m, id);
++        if (j) {
+                 if (r == -EALREADY)
+                         r = job_finish_and_invalidate(j, JOB_DONE, true);
+                 else if (r == -ENOEXEC)
+@@ -564,6 +606,7 @@ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive) {
+ 
+         assert(j);
+         assert(j->installed);
++        assert(j->type < _JOB_TYPE_MAX_IN_TRANSACTION);
+ 
+         job_add_to_dbus_queue(j);
+ 
+@@ -597,29 +640,25 @@ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive) {
+         if (result != JOB_DONE && recursive) {
+ 
+                 if (t == JOB_START ||
+-                    t == JOB_VERIFY_ACTIVE ||
+-                    t == JOB_RELOAD_OR_START) {
++                    t == JOB_VERIFY_ACTIVE) {
+ 
+                         SET_FOREACH(other, u->dependencies[UNIT_REQUIRED_BY], i)
+                                 if (other->job &&
+                                     (other->job->type == JOB_START ||
+-                                     other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START))
++                                     other->job->type == JOB_VERIFY_ACTIVE))
+                                         job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+ 
+                         SET_FOREACH(other, u->dependencies[UNIT_BOUND_BY], i)
+                                 if (other->job &&
+                                     (other->job->type == JOB_START ||
+-                                     other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START))
++                                     other->job->type == JOB_VERIFY_ACTIVE))
+                                         job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+ 
+                         SET_FOREACH(other, u->dependencies[UNIT_REQUIRED_BY_OVERRIDABLE], i)
+                                 if (other->job &&
+                                     !other->job->override &&
+                                     (other->job->type == JOB_START ||
+-                                     other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START))
++                                     other->job->type == JOB_VERIFY_ACTIVE))
+                                         job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+ 
+                 } else if (t == JOB_STOP) {
+@@ -627,8 +666,7 @@ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive) {
+                         SET_FOREACH(other, u->dependencies[UNIT_CONFLICTED_BY], i)
+                                 if (other->job &&
+                                     (other->job->type == JOB_START ||
+-                                     other->job->type == JOB_VERIFY_ACTIVE ||
+-                                     other->job->type == JOB_RELOAD_OR_START))
++                                     other->job->type == JOB_VERIFY_ACTIVE))
+                                         job_finish_and_invalidate(other->job, JOB_DEPENDENCY, true);
+                 }
+         }
+@@ -808,6 +846,8 @@ int job_deserialize(Job *j, FILE *f, FDSet *fds) {
+                         JobType t = job_type_from_string(v);
+                         if (t < 0)
+                                 log_debug("Failed to parse job type %s", v);
++                        else if (t >= _JOB_TYPE_MAX_IN_TRANSACTION)
++                                log_debug("Cannot deserialize job of type %s", v);
+                         else
+                                 j->type = t;
+                 } else if (streq(l, "job-state")) {
+@@ -887,6 +927,7 @@ static const char* const job_type_table[_JOB_TYPE_MAX] = {
+         [JOB_RELOAD_OR_START] = "reload-or-start",
+         [JOB_RESTART] = "restart",
+         [JOB_TRY_RESTART] = "try-restart",
++        [JOB_NOP] = "nop",
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(job_type, JobType);
+diff --git a/src/core/job.h b/src/core/job.h
+index 5b326ef..4edf3b9 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -46,14 +46,34 @@ enum JobType {
+ 
+         JOB_STOP,
+ 
+-        JOB_RELOAD,                 /* if running reload */
+-        JOB_RELOAD_OR_START,        /* if running reload, if not running start */
++        JOB_RELOAD,                 /* if running, reload */
+ 
+         /* Note that restarts are first treated like JOB_STOP, but
+          * then instead of finishing are patched to become
+          * JOB_START. */
+-        JOB_RESTART,                /* if running stop, then start unconditionally */
+-        JOB_TRY_RESTART,            /* if running stop and then start */
++        JOB_RESTART,                /* If running, stop. Then start unconditionally. */
++
++        _JOB_TYPE_MAX_MERGING,
++
++        /* JOB_NOP can enter into a transaction, but as it won't pull in
++         * any dependencies, it won't have to merge with anything.
++         * job_install() avoids the problem of merging JOB_NOP too (it's
++         * special-cased, only merges with other JOB_NOPs). */
++        JOB_NOP = _JOB_TYPE_MAX_MERGING, /* do nothing */
++
++        _JOB_TYPE_MAX_IN_TRANSACTION,
++
++        /* JOB_TRY_RESTART can never appear in a transaction, because
++         * it always collapses into JOB_RESTART or JOB_NOP before entering.
++         * Thus we never need to merge it with anything. */
++        JOB_TRY_RESTART = _JOB_TYPE_MAX_IN_TRANSACTION, /* if running, stop and then start */
++
++        /* JOB_RELOAD_OR_START won't enter into a transaction and cannot result
++         * from transaction merging (there's no way for JOB_RELOAD and
++         * JOB_START to meet in one transaction). It can result from a merge
++         * during job installation, but then it will immediately collapse into
++         * one of the two simpler types. */
++        JOB_RELOAD_OR_START,        /* if running, reload, otherwise start */
+ 
+         _JOB_TYPE_MAX,
+         _JOB_TYPE_INVALID = -1
+@@ -150,7 +170,7 @@ Job* job_new(Unit *unit, JobType type);
+ Job* job_new_raw(Unit *unit);
+ void job_free(Job *job);
+ Job* job_install(Job *j);
+-void job_install_deserialized(Job *j);
++int job_install_deserialized(Job *j);
+ void job_uninstall(Job *j);
+ void job_dump(Job *j, FILE*f, const char *prefix);
+ int job_serialize(Job *j, FILE *f, FDSet *fds);
+@@ -164,14 +184,6 @@ int job_merge(Job *j, Job *other);
+ 
+ JobType job_type_lookup_merge(JobType a, JobType b);
+ 
+-static inline int job_type_merge(JobType *a, JobType b) {
+-        JobType t = job_type_lookup_merge(*a, b);
+-        if (t < 0)
+-                return -EEXIST;
+-        *a = t;
+-        return 0;
+-}
+-
+ static inline bool job_type_is_mergeable(JobType a, JobType b) {
+         return job_type_lookup_merge(a, b) >= 0;
+ }
+@@ -187,6 +199,12 @@ static inline bool job_type_is_superset(JobType a, JobType b) {
+ 
+ bool job_type_is_redundant(JobType a, UnitActiveState b);
+ 
++/* Collapses a state-dependent job type into a simpler type by observing
++ * the state of the unit which it is going to be applied to. */
++void job_type_collapse(JobType *t, Unit *u);
++
++int job_type_merge_and_collapse(JobType *a, JobType b, Unit *u);
++
+ bool job_is_runnable(Job *j);
+ 
+ void job_add_to_run_queue(Job *j);
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 9b25414..81a9131 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -678,6 +678,8 @@ int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool ove
+ 
+         log_debug("Trying to enqueue job %s/%s/%s", unit->id, job_type_to_string(type), job_mode_to_string(mode));
+ 
++        job_type_collapse(&type, unit);
++
+         tr = transaction_new();
+         if (!tr)
+                 return -ENOMEM;
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 09ed807..44fdc06 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -236,7 +236,7 @@ static int transaction_merge_jobs(Transaction *tr, DBusError *e) {
+ 
+                 t = j->type;
+                 LIST_FOREACH(transaction, k, j->transaction_next) {
+-                        if (job_type_merge(&t, k->type) >= 0)
++                        if (job_type_merge_and_collapse(&t, k->type, j->unit) >= 0)
+                                 continue;
+ 
+                         /* OK, we could not merge all jobs for this
+@@ -262,9 +262,9 @@ static int transaction_merge_jobs(Transaction *tr, DBusError *e) {
+                 JobType t = j->type;
+                 Job *k;
+ 
+-                /* Merge all transactions */
++                /* Merge all transaction jobs for j->unit */
+                 LIST_FOREACH(transaction, k, j->transaction_next)
+-                        assert_se(job_type_merge(&t, k->type) == 0);
++                        assert_se(job_type_merge_and_collapse(&t, k->type, j->unit) == 0);
+ 
+                 while ((k = j->transaction_next)) {
+                         if (tr->anchor_job == k) {
+@@ -809,6 +809,7 @@ int transaction_add_job_and_dependencies(
+ 
+         assert(tr);
+         assert(type < _JOB_TYPE_MAX);
++        assert(type < _JOB_TYPE_MAX_IN_TRANSACTION);
+         assert(unit);
+ 
+         /* log_debug("Pulling in %s/%s from %s/%s", */
+@@ -859,7 +860,8 @@ int transaction_add_job_and_dependencies(
+                 assert(!tr->anchor_job);
+                 tr->anchor_job = ret;
+         }
+-        if (is_new && !ignore_requirements) {
++
++        if (is_new && !ignore_requirements && type != JOB_NOP) {
+                 Set *following;
+ 
+                 /* If we are following some other unit, make sure we
+@@ -879,7 +881,7 @@ int transaction_add_job_and_dependencies(
+                 }
+ 
+                 /* Finally, recursively add in all dependencies. */
+-                if (type == JOB_START || type == JOB_RELOAD_OR_START || type == JOB_RESTART) {
++                if (type == JOB_START || type == JOB_RESTART) {
+                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_REQUIRES], i) {
+                                 r = transaction_add_job_and_dependencies(tr, JOB_START, dep, ret, true, override, false, false, ignore_order, e);
+                                 if (r < 0) {
+@@ -969,7 +971,7 @@ int transaction_add_job_and_dependencies(
+ 
+                 }
+ 
+-                if (type == JOB_STOP || type == JOB_RESTART || type == JOB_TRY_RESTART) {
++                if (type == JOB_STOP || type == JOB_RESTART) {
+ 
+                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_REQUIRED_BY], i) {
+                                 r = transaction_add_job_and_dependencies(tr, type, dep, ret, true, override, false, false, ignore_order, e);
+@@ -994,7 +996,7 @@ int transaction_add_job_and_dependencies(
+                         }
+                 }
+ 
+-                if (type == JOB_RELOAD || type == JOB_RELOAD_OR_START) {
++                if (type == JOB_RELOAD) {
+ 
+                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_PROPAGATE_RELOAD_TO], i) {
+                                 r = transaction_add_job_and_dependencies(tr, JOB_RELOAD, dep, ret, false, override, false, false, ignore_order, e);
+@@ -1007,7 +1009,7 @@ int transaction_add_job_and_dependencies(
+                         }
+                 }
+ 
+-                /* JOB_VERIFY_STARTED, JOB_RELOAD require no dependency handling */
++                /* JOB_VERIFY_STARTED require no dependency handling */
+         }
+ 
+         return 0;
+diff --git a/src/core/unit.c b/src/core/unit.c
+index ff8331c..3625ed2 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -249,6 +249,9 @@ bool unit_check_gc(Unit *u) {
+         if (u->job)
+                 return true;
+ 
++        if (u->nop_job)
++                return true;
++
+         if (unit_active_state(u) != UNIT_INACTIVE)
+                 return true;
+ 
+@@ -358,6 +361,12 @@ void unit_free(Unit *u) {
+                 job_free(j);
+         }
+ 
++        if (u->nop_job) {
++                Job *j = u->nop_job;
++                job_uninstall(j);
++                job_free(j);
++        }
++
+         for (d = 0; d < _UNIT_DEPENDENCY_MAX; d++)
+                 bidi_set_free(u, u->dependencies[d]);
+ 
+@@ -501,6 +510,9 @@ int unit_merge(Unit *u, Unit *other) {
+         if (other->job)
+                 return -EEXIST;
+ 
++        if (other->nop_job)
++                return -EEXIST;
++
+         if (!UNIT_IS_INACTIVE_OR_FAILED(unit_active_state(other)))
+                 return -EEXIST;
+ 
+@@ -729,6 +741,9 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+         if (u->job)
+                 job_dump(u->job, f, prefix2);
+ 
++        if (u->nop_job)
++                job_dump(u->nop_job, f, prefix2);
++
+         free(p2);
+ }
+ 
+@@ -1507,6 +1522,7 @@ bool unit_job_is_applicable(Unit *u, JobType j) {
+         case JOB_VERIFY_ACTIVE:
+         case JOB_START:
+         case JOB_STOP:
++        case JOB_NOP:
+                 return true;
+ 
+         case JOB_RESTART:
+@@ -2293,6 +2309,11 @@ int unit_serialize(Unit *u, FILE *f, FDSet *fds) {
+                 job_serialize(u->job, f, fds);
+         }
+ 
++        if (u->nop_job) {
++                fprintf(f, "job\n");
++                job_serialize(u->nop_job, f, fds);
++        }
++
+         dual_timestamp_serialize(f, "inactive-exit-timestamp", &u->inactive_exit_timestamp);
+         dual_timestamp_serialize(f, "active-enter-timestamp", &u->active_enter_timestamp);
+         dual_timestamp_serialize(f, "active-exit-timestamp", &u->active_exit_timestamp);
+@@ -2382,12 +2403,18 @@ int unit_deserialize(Unit *u, FILE *f, FDSet *fds) {
+                                         return r;
+                                 }
+ 
+-                                job_install_deserialized(j);
+                                 r = hashmap_put(u->manager->jobs, UINT32_TO_PTR(j->id), j);
+                                 if (r < 0) {
+                                         job_free(j);
+                                         return r;
+                                 }
++
++                                r = job_install_deserialized(j);
++                                if (r < 0) {
++                                        hashmap_remove(u->manager->jobs, UINT32_TO_PTR(j->id));
++                                        job_free(j);
++                                        return r;
++                                }
+                         } else {
+                                 /* legacy */
+                                 JobType type = job_type_from_string(v);
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 5fceabb..62b82bc 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -158,10 +158,12 @@ struct Unit {
+         char *fragment_path; /* if loaded from a config file this is the primary path to it */
+         usec_t fragment_mtime;
+ 
+-        /* If there is something to do with this unit, then this is
+-         * the job for it */
++        /* If there is something to do with this unit, then this is the installed job for it */
+         Job *job;
+ 
++        /* JOB_NOP jobs are special and can be installed without disturbing the real job. */
++        Job *nop_job;
++
+         usec_t job_timeout;
+ 
+         /* References to this */
+diff --git a/src/test/test-job-type.c b/src/test/test-job-type.c
+index 9de21e1..c7a9b5a 100644
+--- a/src/test/test-job-type.c
++++ b/src/test/test-job-type.c
+@@ -25,59 +25,80 @@
+ #include <unistd.h>
+ 
+ #include "job.h"
++#include "unit.h"
++#include "service.h"
+ 
+ int main(int argc, char*argv[]) {
+-        JobType a, b, c, d, e, f, g;
+-
+-        for (a = 0; a < _JOB_TYPE_MAX; a++)
+-                for (b = 0; b < _JOB_TYPE_MAX; b++) {
+-
+-                        if (!job_type_is_mergeable(a, b))
+-                                printf("Not mergeable: %s + %s\n", job_type_to_string(a), job_type_to_string(b));
+-
+-                        for (c = 0; c < _JOB_TYPE_MAX; c++) {
++        JobType a, b, c, ab, bc, ab_c, bc_a, a_bc;
++        const ServiceState test_states[] = { SERVICE_DEAD, SERVICE_RUNNING };
++        unsigned i;
++        bool merged_ab;
++
++        /* fake a unit */
++        static Service s = {
++                .meta.load_state = UNIT_LOADED,
++                .type = UNIT_SERVICE
++        };
++        Unit *u = UNIT(&s);
++
++        for (i = 0; i < ELEMENTSOF(test_states); i++) {
++                s.state = test_states[i];
++                printf("\nWith collapsing for service state %s\n"
++                       "=========================================\n", service_state_to_string(s.state));
++                for (a = 0; a < _JOB_TYPE_MAX_MERGING; a++) {
++                        for (b = 0; b < _JOB_TYPE_MAX_MERGING; b++) {
++
++                                ab = a;
++                                merged_ab = (job_type_merge_and_collapse(&ab, b, u) >= 0);
++
++                                if (!job_type_is_mergeable(a, b)) {
++                                        assert(!merged_ab);
++                                        printf("Not mergeable: %s + %s\n", job_type_to_string(a), job_type_to_string(b));
++                                        continue;
++                                }
+ 
+-                                /* Verify transitivity of mergeability
+-                                 * of job types */
+-                                assert(!job_type_is_mergeable(a, b) ||
+-                                       !job_type_is_mergeable(b, c) ||
+-                                       job_type_is_mergeable(a, c));
++                                assert(merged_ab);
++                                printf("%s + %s = %s\n", job_type_to_string(a), job_type_to_string(b), job_type_to_string(ab));
+ 
+-                                d = a;
+-                                if (job_type_merge(&d, b) >= 0) {
++                                for (c = 0; c < _JOB_TYPE_MAX_MERGING; c++) {
+ 
+-                                        printf("%s + %s = %s\n", job_type_to_string(a), job_type_to_string(b), job_type_to_string(d));
++                                        /* Verify transitivity of mergeability of job types */
++                                        assert(!job_type_is_mergeable(a, b) ||
++                                               !job_type_is_mergeable(b, c) ||
++                                               job_type_is_mergeable(a, c));
+ 
+-                                        /* Verify that merged entries can be
+-                                         * merged with the same entries they
+-                                         * can be merged with separately */
+-                                        assert(!job_type_is_mergeable(a, c) || job_type_is_mergeable(d, c));
+-                                        assert(!job_type_is_mergeable(b, c) || job_type_is_mergeable(d, c));
++                                        /* Verify that merged entries can be merged with the same entries
++                                         * they can be merged with separately */
++                                        assert(!job_type_is_mergeable(a, c) || job_type_is_mergeable(ab, c));
++                                        assert(!job_type_is_mergeable(b, c) || job_type_is_mergeable(ab, c));
+ 
+-                                        /* Verify that if a merged
+-                                         * with b is not mergeable with
+-                                         * c then either a or b is not
+-                                         * mergeable with c either. */
+-                                        assert(job_type_is_mergeable(d, c) || !job_type_is_mergeable(a, c) || !job_type_is_mergeable(b, c));
++                                        /* Verify that if a merged with b is not mergeable with c, then
++                                         * either a or b is not mergeable with c either. */
++                                        assert(job_type_is_mergeable(ab, c) || !job_type_is_mergeable(a, c) || !job_type_is_mergeable(b, c));
+ 
+-                                        e = b;
+-                                        if (job_type_merge(&e, c) >= 0) {
++                                        bc = b;
++                                        if (job_type_merge_and_collapse(&bc, c, u) >= 0) {
+ 
+                                                 /* Verify associativity */
+ 
+-                                                f = d;
+-                                                assert(job_type_merge(&f, c) == 0);
++                                                ab_c = ab;
++                                                assert(job_type_merge_and_collapse(&ab_c, c, u) == 0);
++
++                                                bc_a = bc;
++                                                assert(job_type_merge_and_collapse(&bc_a, a, u) == 0);
+ 
+-                                                g = e;
+-                                                assert(job_type_merge(&g, a) == 0);
++                                                a_bc = a;
++                                                assert(job_type_merge_and_collapse(&a_bc, bc, u) == 0);
+ 
+-                                                assert(f == g);
++                                                assert(ab_c == bc_a);
++                                                assert(ab_c == a_bc);
+ 
+-                                                printf("%s + %s + %s = %s\n", job_type_to_string(a), job_type_to_string(b), job_type_to_string(c), job_type_to_string(d));
++                                                printf("%s + %s + %s = %s\n", job_type_to_string(a), job_type_to_string(b), job_type_to_string(c), job_type_to_string(ab_c));
+                                         }
+                                 }
+                         }
+                 }
++        }
+ 
+ 
+         return 0;

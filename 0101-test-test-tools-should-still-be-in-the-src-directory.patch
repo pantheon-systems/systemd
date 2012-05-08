@@ -1,0 +1,193 @@
+From ebefdf25226735f4ac1ae4ddef734e1571ae032f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 13:48:01 +0200
+Subject: [PATCH] test: test tools should still be in the src/ directory
+ (cherry picked from commit
+ 379079ba6b06e82de9a8f0025456308a34b4b115)
+
+---
+ Makefile.am                           |   24 ++++++++++++------------
+ src/test/Makefile                     |    1 +
+ {test => src/test}/test-cgroup.c      |    0
+ {test => src/test}/test-daemon.c      |    0
+ {test => src/test}/test-engine.c      |    0
+ {test => src/test}/test-env-replace.c |    0
+ {test => src/test}/test-hostname.c    |    0
+ {test => src/test}/test-id128.c       |    0
+ {test => src/test}/test-install.c     |    0
+ {test => src/test}/test-job-type.c    |    0
+ {test => src/test}/test-loopback.c    |    0
+ {test => src/test}/test-ns.c          |    0
+ {test => src/test}/test-strv.c        |    0
+ {test => src/test}/test-watchdog.c    |    0
+ 14 files changed, 13 insertions(+), 12 deletions(-)
+ create mode 120000 src/test/Makefile
+ rename {test => src/test}/test-cgroup.c (100%)
+ rename {test => src/test}/test-daemon.c (100%)
+ rename {test => src/test}/test-engine.c (100%)
+ rename {test => src/test}/test-env-replace.c (100%)
+ rename {test => src/test}/test-hostname.c (100%)
+ rename {test => src/test}/test-id128.c (100%)
+ rename {test => src/test}/test-install.c (100%)
+ rename {test => src/test}/test-job-type.c (100%)
+ rename {test => src/test}/test-loopback.c (100%)
+ rename {test => src/test}/test-ns.c (100%)
+ rename {test => src/test}/test-strv.c (100%)
+ rename {test => src/test}/test-watchdog.c (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 8ce80b4..6f98b15 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -813,7 +813,7 @@ systemd_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ test_engine_SOURCES = \
+-	test/test-engine.c
++	src/test/test-engine.c
+ 
+ test_engine_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -824,7 +824,7 @@ test_engine_LDADD = \
+ 	libsystemd-daemon.la
+ 
+ test_job_type_SOURCES = \
+-	test/test-job-type.c
++	src/test/test-job-type.c
+ 
+ test_job_type_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -834,51 +834,51 @@ test_job_type_LDADD = \
+ 	libsystemd-core.la
+ 
+ test_ns_SOURCES = \
+-	test/test-ns.c
++	src/test/test-ns.c
+ 
+ test_ns_LDADD = \
+ 	libsystemd-core.la
+ 
+ test_loopback_SOURCES = \
+-	test/test-loopback.c
++	src/test/test-loopback.c
+ 
+ test_loopback_LDADD = \
+ 	libsystemd-shared.la
+ 
+ test_hostname_SOURCES = \
+-	test/test-hostname.c
++	src/test/test-hostname.c
+ 
+ test_hostname_LDADD = \
+ 	libsystemd-shared.la
+ 
+ test_daemon_SOURCES = \
+-	test/test-daemon.c
++	src/test/test-daemon.c
+ 
+ test_daemon_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la
+ 
+ test_cgroup_SOURCES = \
+-	test/test-cgroup.c
++	src/test/test-cgroup.c
+ 
+ test_cgroup_LDADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la
+ 
+ test_env_replace_SOURCES = \
+-	test/test-env-replace.c
++	src/test/test-env-replace.c
+ 
+ test_env_replace_LDADD = \
+ 	libsystemd-shared.la
+ 
+ test_strv_SOURCES = \
+-	test/test-strv.c
++	src/test/test-strv.c
+ 
+ test_strv_LDADD = \
+ 	libsystemd-shared.la
+ 
+ test_install_SOURCES = \
+-	test/test-install.c
++	src/test/test-install.c
+ 
+ test_install_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -889,7 +889,7 @@ test_install_LDADD = \
+ 	libsystemd-shared.la
+ 
+ test_watchdog_SOURCES = \
+-	test/test-watchdog.c
++	src/test/test-watchdog.c
+ 
+ test_watchdog_LDADD = \
+ 	libsystemd-shared.la
+@@ -1271,7 +1271,7 @@ libsystemd_id128_la_LIBADD = \
+ 	libsystemd-shared.la
+ 
+ test_id128_SOURCES = \
+-	test/test-id128.c
++	src/test/test-id128.c
+ 
+ test_id128_LDADD = \
+ 	libsystemd-shared.la \
+diff --git a/src/test/Makefile b/src/test/Makefile
+new file mode 120000
+index 0000000..d0b0e8e
+--- /dev/null
++++ b/src/test/Makefile
+@@ -0,0 +1 @@
++../Makefile
+\ No newline at end of file
+diff --git a/test/test-cgroup.c b/src/test/test-cgroup.c
+similarity index 100%
+rename from test/test-cgroup.c
+rename to src/test/test-cgroup.c
+diff --git a/test/test-daemon.c b/src/test/test-daemon.c
+similarity index 100%
+rename from test/test-daemon.c
+rename to src/test/test-daemon.c
+diff --git a/test/test-engine.c b/src/test/test-engine.c
+similarity index 100%
+rename from test/test-engine.c
+rename to src/test/test-engine.c
+diff --git a/test/test-env-replace.c b/src/test/test-env-replace.c
+similarity index 100%
+rename from test/test-env-replace.c
+rename to src/test/test-env-replace.c
+diff --git a/test/test-hostname.c b/src/test/test-hostname.c
+similarity index 100%
+rename from test/test-hostname.c
+rename to src/test/test-hostname.c
+diff --git a/test/test-id128.c b/src/test/test-id128.c
+similarity index 100%
+rename from test/test-id128.c
+rename to src/test/test-id128.c
+diff --git a/test/test-install.c b/src/test/test-install.c
+similarity index 100%
+rename from test/test-install.c
+rename to src/test/test-install.c
+diff --git a/test/test-job-type.c b/src/test/test-job-type.c
+similarity index 100%
+rename from test/test-job-type.c
+rename to src/test/test-job-type.c
+diff --git a/test/test-loopback.c b/src/test/test-loopback.c
+similarity index 100%
+rename from test/test-loopback.c
+rename to src/test/test-loopback.c
+diff --git a/test/test-ns.c b/src/test/test-ns.c
+similarity index 100%
+rename from test/test-ns.c
+rename to src/test/test-ns.c
+diff --git a/test/test-strv.c b/src/test/test-strv.c
+similarity index 100%
+rename from test/test-strv.c
+rename to src/test/test-strv.c
+diff --git a/test/test-watchdog.c b/src/test/test-watchdog.c
+similarity index 100%
+rename from test/test-watchdog.c
+rename to src/test/test-watchdog.c

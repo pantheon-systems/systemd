@@ -1,0 +1,145 @@
+From a23fd8d0c30fe16f8d59adc8a99eeb89daeedef1 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 18:46:51 +0200
+Subject: [PATCH] move cgroup-util.[ch] to shared/ (cherry picked from commit
+ 77d47be64f8b0497c44a4288f2531fc1056624ae)
+
+---
+ Makefile.am                    |   28 +++++++++-------------------
+ src/{ => shared}/cgroup-util.c |    0
+ src/{ => shared}/cgroup-util.h |    0
+ 3 files changed, 9 insertions(+), 19 deletions(-)
+ rename src/{ => shared}/cgroup-util.c (100%)
+ rename src/{ => shared}/cgroup-util.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index bb86f8a..5423d05 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -220,7 +220,7 @@ noinst_PROGRAMS = \
+ 	test-env-replace \
+ 	test-strv \
+ 	test-install \
+-        test-watchdog
++	test-watchdog
+ 
+ dist_pkgsysconf_DATA = \
+ 	src/system.conf \
+@@ -563,7 +563,9 @@ libsystemd_basic_la_SOURCES = \
+ 	src/shared/exit-status.c \
+ 	src/shared/exit-status.h \
+ 	src/shared/utf8.c \
+-	src/shared/utf8.h
++	src/shared/utf8.h \
++	src/shared/cgroup-util.c \
++	src/shared/cgroup-util.h
+ 
+ libsystemd_basic_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -705,8 +707,6 @@ libsystemd_core_la_SOURCES = \
+ 	src/machine-id-setup.h \
+ 	src/fdset.c \
+ 	src/fdset.h \
+-	src/cgroup-util.c \
+-	src/cgroup-util.h \
+ 	src/condition.c \
+ 	src/condition.h \
+ 	src/dbus-common.c \
+@@ -838,8 +838,7 @@ test_daemon_LDADD = \
+ 	libsystemd-daemon.la
+ 
+ test_cgroup_SOURCES = \
+-	src/test-cgroup.c \
+-	src/cgroup-util.c
++	src/test-cgroup.c
+ 
+ test_cgroup_LDADD = \
+ 	libsystemd-basic.la
+@@ -1051,7 +1050,6 @@ systemctl_SOURCES = \
+ 	src/dbus-common.c \
+ 	src/path-lookup.c \
+ 	src/cgroup-show.c \
+-	src/cgroup-util.c \
+ 	src/unit-name.c \
+ 	src/pager.c \
+ 	src/install.c \
+@@ -1097,7 +1095,6 @@ systemd_reply_password_LDADD = \
+ systemd_cgls_SOURCES = \
+ 	src/cgls.c \
+ 	src/cgroup-show.c \
+-	src/cgroup-util.c \
+ 	src/pager.c
+ 
+ systemd_cgls_LDADD = \
+@@ -1105,8 +1102,7 @@ systemd_cgls_LDADD = \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_cgtop_SOURCES = \
+-	src/cgtop.c \
+-        src/cgroup-util.c
++	src/cgtop.c
+ 
+ systemd_cgtop_LDADD = \
+ 	libsystemd-basic.la
+@@ -1114,7 +1110,6 @@ systemd_cgtop_LDADD = \
+ # ------------------------------------------------------------------------------
+ systemd_nspawn_SOURCES = \
+ 	src/nspawn.c \
+-	src/cgroup-util.c \
+ 	src/loopback-setup.c
+ 
+ systemd_nspawn_LDADD = \
+@@ -1316,8 +1311,7 @@ systemd_journald_SOURCES = \
+ 	src/journal/lookup3.c \
+ 	src/journal/journal-rate-limit.c \
+ 	src/journal/sparse-endian.h \
+-	src/sd-id128.c \
+-	src/cgroup-util.c
++	src/sd-id128.c
+ 
+ nodist_systemd_journald_SOURCES = \
+ 	src/journal/journald-gperf.c
+@@ -1933,7 +1927,6 @@ systemd_logind_SOURCES = \
+ 	src/login/logind-user-dbus.c \
+ 	src/dbus-common.c \
+ 	src/dbus-loop.c \
+-	src/cgroup-util.c \
+ 	src/polkit.c
+ 
+ nodist_systemd_logind_SOURCES = \
+@@ -1960,8 +1953,7 @@ systemd_logind_LDADD += \
+ endif
+ 
+ systemd_user_sessions_SOURCES = \
+-	src/login/user-sessions.c \
+-	src/cgroup-util.c
++	src/login/user-sessions.c
+ 
+ systemd_user_sessions_LDADD = \
+ 	libsystemd-basic.la
+@@ -1975,7 +1967,6 @@ loginctl_SOURCES = \
+ 	src/login/sysfs-show.c \
+ 	src/dbus-common.c \
+ 	src/cgroup-show.c \
+-	src/cgroup-util.c \
+ 	src/pager.c
+ 
+ loginctl_CFLAGS = \
+@@ -2002,8 +1993,7 @@ noinst_PROGRAMS += \
+ 	test-login
+ 
+ libsystemd_login_la_SOURCES = \
+-	src/login/sd-login.c \
+-	src/cgroup-util.c
++	src/login/sd-login.c
+ 
+ libsystemd_login_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+diff --git a/src/cgroup-util.c b/src/shared/cgroup-util.c
+similarity index 100%
+rename from src/cgroup-util.c
+rename to src/shared/cgroup-util.c
+diff --git a/src/cgroup-util.h b/src/shared/cgroup-util.h
+similarity index 100%
+rename from src/cgroup-util.h
+rename to src/shared/cgroup-util.h

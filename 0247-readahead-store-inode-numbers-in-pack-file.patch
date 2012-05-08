@@ -1,0 +1,160 @@
+From 33b11f7d2f2cbfff509b96cc36a1b081c97c0557 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 4 May 2012 00:34:12 +0200
+Subject: [PATCH] readahead: store inode numbers in pack file
+
+If the inode nr for each file is available in the pack file we can
+easily detect replaced files (like they result from package upgrades)
+which we can then skip to readahead.
+(cherry picked from commit 189455ab08a70f0c80a11847b65ce38563b9332a)
+---
+ TODO                              |    2 --
+ src/readahead/readahead-collect.c |   20 ++++++++++++++------
+ src/readahead/readahead-replay.c  |   23 ++++++++++++++++++++---
+ 3 files changed, 34 insertions(+), 11 deletions(-)
+
+diff --git a/TODO b/TODO
+index 56a838f..5dfaf3d 100644
+--- a/TODO
++++ b/TODO
+@@ -212,8 +212,6 @@ Features:
+ 
+ * drop /.readahead on bigger upgrades with yum
+ 
+-* add inode nr check to readahead to suppress preloading changed files
+-
+ * add support for /bin/mount -s
+ 
+ * GC unreferenced jobs (such as .device jobs)
+diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
+index f5c5c29..66d08bb 100644
+--- a/src/readahead/readahead-collect.c
++++ b/src/readahead/readahead-collect.c
+@@ -86,6 +86,7 @@ static int pack_file(FILE *pack, const char *fn, bool on_btrfs) {
+         void *start = MAP_FAILED;
+         uint8_t *vec;
+         uint32_t b, c;
++        uint64_t inode;
+         size_t l, pages;
+         bool mapped;
+         int r = 0, fd = -1, k;
+@@ -93,7 +94,8 @@ static int pack_file(FILE *pack, const char *fn, bool on_btrfs) {
+         assert(pack);
+         assert(fn);
+ 
+-        if ((fd = open(fn, O_RDONLY|O_CLOEXEC|O_NOATIME|O_NOCTTY|O_NOFOLLOW)) < 0) {
++        fd = open(fn, O_RDONLY|O_CLOEXEC|O_NOATIME|O_NOCTTY|O_NOFOLLOW);
++        if (fd < 0) {
+ 
+                 if (errno == ENOENT)
+                         return 0;
+@@ -106,7 +108,8 @@ static int pack_file(FILE *pack, const char *fn, bool on_btrfs) {
+                 goto finish;
+         }
+ 
+-        if ((k = file_verify(fd, fn, arg_file_size_max, &st)) <= 0) {
++        k = file_verify(fd, fn, arg_file_size_max, &st);
++        if (k <= 0) {
+                 r = k;
+                 goto finish;
+         }
+@@ -115,14 +118,14 @@ static int pack_file(FILE *pack, const char *fn, bool on_btrfs) {
+                 btrfs_defrag(fd);
+ 
+         l = PAGE_ALIGN(st.st_size);
+-        if ((start = mmap(NULL, l, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED) {
++        start = mmap(NULL, l, PROT_READ, MAP_SHARED, fd, 0);
++        if (start == MAP_FAILED) {
+                 log_warning("mmap(%s) failed: %m", fn);
+                 r = -errno;
+                 goto finish;
+         }
+ 
+         pages = l / page_size();
+-
+         vec = alloca(pages);
+         memset(vec, 0, pages);
+         if (mincore(start, l, vec) < 0) {
+@@ -134,6 +137,10 @@ static int pack_file(FILE *pack, const char *fn, bool on_btrfs) {
+         fputs(fn, pack);
+         fputc('\n', pack);
+ 
++        /* Store the inode, so that we notice when the file is deleted */
++        inode = (uint64_t) st.st_ino;
++        fwrite(&inode, sizeof(inode), 1, pack);
++
+         mapped = false;
+         for (c = 0; c < pages; c++) {
+                 bool new_mapped = !!(vec[c] & 1);
+@@ -479,13 +486,14 @@ done:
+                 goto finish;
+         }
+ 
+-        if (!(pack = fopen(pack_fn_new, "we"))) {
++        pack = fopen(pack_fn_new, "we");
++        if (!pack) {
+                 log_error("Failed to open pack file: %m");
+                 r = -errno;
+                 goto finish;
+         }
+ 
+-        fputs(CANONICAL_HOST "\n", pack);
++        fputs(CANONICAL_HOST ";VERSION=2\n", pack);
+         putc(on_ssd ? 'S' : 'R', pack);
+ 
+         if (on_ssd || on_btrfs) {
+diff --git a/src/readahead/readahead-replay.c b/src/readahead/readahead-replay.c
+index 3c94dbb..7636cd4 100644
+--- a/src/readahead/readahead-replay.c
++++ b/src/readahead/readahead-replay.c
+@@ -53,6 +53,7 @@ static int unpack_file(FILE *pack) {
+         int r = 0, fd = -1;
+         bool any = false;
+         struct stat st;
++        uint64_t inode;
+ 
+         assert(pack);
+ 
+@@ -62,7 +63,8 @@ static int unpack_file(FILE *pack) {
+         char_array_0(fn);
+         truncate_nl(fn);
+ 
+-        if ((fd = open(fn, O_RDONLY|O_CLOEXEC|O_NOATIME|O_NOCTTY|O_NOFOLLOW)) < 0) {
++        fd = open(fn, O_RDONLY|O_CLOEXEC|O_NOATIME|O_NOCTTY|O_NOFOLLOW);
++        if (fd < 0) {
+ 
+                 if (errno != ENOENT && errno != EPERM && errno != EACCES)
+                         log_warning("open(%s) failed: %m", fn);
+@@ -72,6 +74,21 @@ static int unpack_file(FILE *pack) {
+                 fd = -1;
+         }
+ 
++        if (fread(&inode, sizeof(inode), 1, pack) != 1) {
++                log_error("Premature end of pack file.");
++                r = -EIO;
++                goto finish;
++        }
++
++        if (fd >= 0) {
++                /* If the inode changed the file got deleted, so just
++                 * ignore this entry */
++                if (st.st_ino != (uint64_t) inode) {
++                        close_nointr_nofail(fd);
++                        fd = -1;
++                }
++        }
++
+         for (;;) {
+                 uint32_t b, c;
+ 
+@@ -166,8 +183,8 @@ static int replay(const char *root) {
+ 
+         char_array_0(line);
+ 
+-        if (!streq(line, CANONICAL_HOST "\n")) {
+-                log_debug("Pack file host type mismatch.");
++        if (!streq(line, CANONICAL_HOST ";VERSION=2\n")) {
++                log_debug("Pack file host or version type mismatch.");
+                 goto finish;
+         }
+ 

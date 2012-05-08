@@ -1,0 +1,1101 @@
+From 5a8656cc677486541b7bf7ed29ca07f1d0ca0502 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 10 Apr 2012 13:39:02 +0200
+Subject: [PATCH] util: move all to shared/ and split external dependencies in
+ separate internal libraries
+
+Before:
+  $ ldd /lib/systemd/systemd-timestamp
+  linux-vdso.so.1 =>  (0x00007fffb05ff000)
+  libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f90aac57000)
+  libcap.so.2 => /lib64/libcap.so.2 (0x00007f90aaa53000)
+  librt.so.1 => /lib64/librt.so.1 (0x00007f90aa84a000)
+  libc.so.6 => /lib64/libc.so.6 (0x00007f90aa494000)
+  /lib64/ld-linux-x86-64.so.2 (0x00007f90aae90000)
+  libdl.so.2 => /lib64/libdl.so.2 (0x00007f90aa290000)
+  libattr.so.1 => /lib64/libattr.so.1 (0x00007f90aa08a000)
+  libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f90a9e6e000)
+
+After:
+  $ ldd systemd-timestamp
+  linux-vdso.so.1 =>  (0x00007fff3cbff000)
+  libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f5eaa1c3000)
+  librt.so.1 => /lib64/librt.so.1 (0x00007f5ea9fbb000)
+  libc.so.6 => /lib64/libc.so.6 (0x00007f5ea9c04000)
+  /lib64/ld-linux-x86-64.so.2 (0x00007f5eaa3fc000)
+  libdl.so.2 => /lib64/libdl.so.2 (0x00007f5ea9a00000)
+  libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f5ea97e4000)
+(cherry picked from commit d7832d2c6e0ef5f2839a2296c1cc2fc85c7d9632)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am                    |  115 +++++++++++++++++++++++++---------
+ src/execute.c                  |    1 +
+ src/journal/journald.h         |    1 +
+ src/login/logind.h             |    1 +
+ src/login/pam-module.c         |    1 +
+ src/nspawn.c                   |    1 +
+ src/shared/audit.c             |  118 +++++++++++++++++++++++++++++++++++
+ src/shared/audit.h             |   29 +++++++++
+ src/shared/capability.c        |   86 ++++++++++++++++++++++++++
+ src/shared/capability.h        |   27 ++++++++
+ src/{ => shared}/conf-parser.c |    0
+ src/{ => shared}/conf-parser.h |    0
+ src/{ => shared}/exit-status.c |    0
+ src/{ => shared}/exit-status.h |    0
+ src/{ => shared}/hashmap.c     |    0
+ src/{ => shared}/hashmap.h     |    0
+ src/{ => shared}/label.c       |    0
+ src/{ => shared}/label.h       |    0
+ src/{ => shared}/log.c         |    0
+ src/{ => shared}/log.h         |    0
+ src/{ => shared}/ratelimit.c   |    0
+ src/{ => shared}/ratelimit.h   |    0
+ src/{ => shared}/set.c         |    0
+ src/{ => shared}/set.h         |    0
+ src/{ => shared}/socket-util.c |    0
+ src/{ => shared}/socket-util.h |    0
+ src/{ => shared}/strv.c        |    0
+ src/{ => shared}/strv.h        |    0
+ src/{ => shared}/utf8.c        |    0
+ src/{ => shared}/utf8.h        |    0
+ src/{ => shared}/util.c        |  133 ----------------------------------------
+ src/{ => shared}/util.h        |    8 ---
+ src/{ => shared}/virt.c        |    0
+ src/{ => shared}/virt.h        |    0
+ 34 files changed, 350 insertions(+), 171 deletions(-)
+ create mode 100644 src/shared/audit.c
+ create mode 100644 src/shared/audit.h
+ create mode 100644 src/shared/capability.c
+ create mode 100644 src/shared/capability.h
+ rename src/{ => shared}/conf-parser.c (100%)
+ rename src/{ => shared}/conf-parser.h (100%)
+ rename src/{ => shared}/exit-status.c (100%)
+ rename src/{ => shared}/exit-status.h (100%)
+ rename src/{ => shared}/hashmap.c (100%)
+ rename src/{ => shared}/hashmap.h (100%)
+ rename src/{ => shared}/label.c (100%)
+ rename src/{ => shared}/label.h (100%)
+ rename src/{ => shared}/log.c (100%)
+ rename src/{ => shared}/log.h (100%)
+ rename src/{ => shared}/ratelimit.c (100%)
+ rename src/{ => shared}/ratelimit.h (100%)
+ rename src/{ => shared}/set.c (100%)
+ rename src/{ => shared}/set.h (100%)
+ rename src/{ => shared}/socket-util.c (100%)
+ rename src/{ => shared}/socket-util.h (100%)
+ rename src/{ => shared}/strv.c (100%)
+ rename src/{ => shared}/strv.h (100%)
+ rename src/{ => shared}/utf8.c (100%)
+ rename src/{ => shared}/utf8.h (100%)
+ rename src/{ => shared}/util.c (97%)
+ rename src/{ => shared}/util.h (98%)
+ rename src/{ => shared}/virt.c (100%)
+ rename src/{ => shared}/virt.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 994e507..588121f 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -101,6 +101,7 @@ AM_CPPFLAGS = \
+ 	-DSYSTEMD_KBD_MODEL_MAP=\"$(pkgdatadir)/kbd-model-map\" \
+         -DX_SERVER=\"$(bindir)/X\" \
+ 	-I $(top_srcdir)/src \
++	-I $(top_srcdir)/src/shared \
+ 	-I $(top_srcdir)/src/readahead \
+ 	-I $(top_srcdir)/src/login \
+ 	-I $(top_srcdir)/src/journal \
+@@ -109,6 +110,7 @@ AM_CPPFLAGS = \
+ AM_CFLAGS = $(WARNINGFLAGS)
+ AM_LDFLAGS = $(GCLDFLAGS)
+ 
++# ------------------------------------------------------------------------------
+ if TARGET_GENTOO
+ AM_CPPFLAGS += \
+ 	-DKBD_LOADKEYS=\"/usr/bin/loadkeys\" \
+@@ -163,6 +165,7 @@ endif
+ endif
+ endif
+ 
++# ------------------------------------------------------------------------------
+ rootbin_PROGRAMS = \
+ 	systemctl \
+ 	systemd-notify \
+@@ -454,42 +457,66 @@ EXTRA_DIST += \
+ 
+ noinst_LTLIBRARIES = \
+ 	libsystemd-basic.la \
++	libsystemd-capability.la \
++	libsystemd-audit.la \
+ 	libsystemd-core.la
+ 
++# ------------------------------------------------------------------------------
+ libsystemd_basic_la_SOURCES = \
+-	src/util.c \
+-	src/util.h \
+-	src/virt.c \
+-	src/virt.h \
+-	src/label.c \
+-	src/label.h \
+-	src/hashmap.c \
+-	src/hashmap.h \
+-	src/set.c \
+-	src/set.h \
+-	src/strv.c \
+-	src/strv.h \
+-	src/conf-parser.c \
+-	src/conf-parser.h \
+-	src/socket-util.c \
+-	src/socket-util.h \
+-	src/log.c \
+-	src/log.h \
+-	src/ratelimit.h \
+-	src/ratelimit.c \
+-	src/exit-status.c \
+-	src/exit-status.h \
+-	src/utf8.c \
+-	src/utf8.h
++	src/shared/util.c \
++	src/shared/util.h \
++	src/shared/virt.c \
++	src/shared/virt.h \
++	src/shared/label.c \
++	src/shared/label.h \
++	src/shared/hashmap.c \
++	src/shared/hashmap.h \
++	src/shared/set.c \
++	src/shared/set.h \
++	src/shared/strv.c \
++	src/shared/strv.h \
++	src/shared/conf-parser.c \
++	src/shared/conf-parser.h \
++	src/shared/socket-util.c \
++	src/shared/socket-util.h \
++	src/shared/log.c \
++	src/shared/log.h \
++	src/shared/ratelimit.h \
++	src/shared/ratelimit.c \
++	src/shared/exit-status.c \
++	src/shared/exit-status.h \
++	src/shared/utf8.c \
++	src/shared/utf8.h
+ 
+ libsystemd_basic_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+ 	$(SELINUX_CFLAGS)
+ 
+ libsystemd_basic_la_LIBADD = \
+-	$(SELINUX_LIBS) \
++	libsystemd-capability.la \
++	$(SELINUX_LIBS)
++
++# ------------------------------------------------------------------------------
++libsystemd_capability_la_SOURCES = \
++	src/shared/capability.c \
++	src/shared/capability.h
++
++libsystemd_capability_la_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(CAP_CFLAGS)
++
++libsystemd_capability_la_LIBADD = \
+ 	$(CAP_LIBS)
+ 
++# ------------------------------------------------------------------------------
++libsystemd_audit_la_SOURCES = \
++	src/shared/audit.c \
++	src/shared/audit.h
++
++libsystemd_audit_la_LIBADD = \
++	libsystemd-capability.la
++
++# ------------------------------------------------------------------------------
+ libsystemd_core_la_SOURCES = \
+ 	src/unit.c \
+ 	src/unit.h \
+@@ -595,8 +622,8 @@ libsystemd_core_la_SOURCES = \
+ 	src/tcpwrap.h \
+ 	src/cgroup-attr.c \
+ 	src/cgroup-attr.h \
+-        src/watchdog.c \
+-        src/watchdog.h \
++	src/watchdog.c \
++	src/watchdog.h \
+ 	src/sd-daemon.c \
+ 	src/sd-id128.c \
+ 	src/macro.h \
+@@ -650,6 +677,7 @@ libsystemd_core_la_LIBADD = \
+ 	$(CAP_LIBS) \
+ 	$(KMOD_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ MANPAGES = \
+ 	man/systemd.1 \
+ 	man/systemctl.1 \
+@@ -728,6 +756,7 @@ EXTRA_DIST += \
+ 	$(MANPAGES) \
+ 	$(MANPAGES_ALIAS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_SOURCES = \
+ 	src/main.c
+ 
+@@ -739,6 +768,7 @@ systemd_CFLAGS = \
+ systemd_LDADD = \
+ 	libsystemd-core.la
+ 
++# ------------------------------------------------------------------------------
+ test_engine_SOURCES = \
+ 	src/test-engine.c
+ 
+@@ -819,6 +849,7 @@ test_watchdog_SOURCES = \
+ test_watchdog_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_initctl_SOURCES = \
+ 	src/initctl.c \
+ 	src/dbus-common.c
+@@ -832,6 +863,7 @@ systemd_initctl_LDADD = \
+ 	libsystemd-daemon.la \
+ 	$(DBUS_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_update_utmp_SOURCES = \
+ 	src/update-utmp.c \
+ 	src/dbus-common.c \
+@@ -847,6 +879,7 @@ systemd_update_utmp_LDADD = \
+ 	$(DBUS_LIBS) \
+ 	$(AUDIT_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_shutdownd_SOURCES = \
+ 	src/utmp-wtmp.c \
+ 	src/shutdownd.c
+@@ -873,6 +906,7 @@ systemd_shutdown_LDADD = \
+ 	libsystemd-basic.la \
+ 	$(UDEV_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_modules_load_SOURCES = \
+ 	src/modules-load.c
+ 
+@@ -883,12 +917,14 @@ systemd_modules_load_LDADD = \
+ 	libsystemd-basic.la \
+ 	$(KMOD_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_tmpfiles_SOURCES = \
+ 	src/tmpfiles.c
+ 
+ systemd_tmpfiles_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_machine_id_setup_SOURCES = \
+ 	src/machine-id-setup.c \
+ 	src/machine-id-main.c \
+@@ -897,12 +933,14 @@ systemd_machine_id_setup_SOURCES = \
+ systemd_machine_id_setup_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_sysctl_SOURCES = \
+ 	src/sysctl.c
+ 
+ systemd_sysctl_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_fsck_SOURCES = \
+ 	src/fsck.c \
+ 	src/dbus-common.c
+@@ -917,12 +955,14 @@ systemd_fsck_LDADD = \
+ 	$(UDEV_LIBS) \
+ 	$(DBUS_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_timestamp_SOURCES = \
+ 	src/timestamp.c
+ 
+ systemd_timestamp_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_ac_power_SOURCES = \
+ 	src/ac-power.c
+ 
+@@ -934,12 +974,14 @@ systemd_ac_power_LDADD = \
+ 	libsystemd-basic.la \
+ 	$(UDEV_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_detect_virt_SOURCES = \
+ 	src/detect-virt.c
+ 
+ systemd_detect_virt_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_getty_generator_SOURCES = \
+ 	src/getty-generator.c \
+ 	src/unit-name.c
+@@ -947,20 +989,22 @@ systemd_getty_generator_SOURCES = \
+ systemd_getty_generator_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_rc_local_generator_SOURCES = \
+ 	src/rc-local-generator.c
+ 
+ systemd_rc_local_generator_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_remount_api_vfs_SOURCES = \
+ 	src/remount-api-vfs.c \
+-	src/mount-setup.c \
+-	src/exit-status.c
++	src/mount-setup.c
+ 
+ systemd_remount_api_vfs_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_cgroups_agent_SOURCES = \
+ 	src/cgroups-agent.c \
+ 	src/dbus-common.c
+@@ -973,6 +1017,7 @@ systemd_cgroups_agent_LDADD = \
+ 	libsystemd-basic.la \
+ 	$(DBUS_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemctl_SOURCES = \
+ 	src/systemctl.c \
+ 	src/utmp-wtmp.c \
+@@ -980,7 +1025,6 @@ systemctl_SOURCES = \
+ 	src/path-lookup.c \
+ 	src/cgroup-show.c \
+ 	src/cgroup-util.c \
+-	src/exit-status.c \
+ 	src/unit-name.c \
+ 	src/pager.c \
+ 	src/install.c \
+@@ -998,6 +1042,7 @@ systemctl_LDADD = \
+ 	libsystemd-id128.la \
+ 	$(DBUS_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_notify_SOURCES = \
+ 	src/notify.c \
+ 	src/readahead/sd-readahead.c
+@@ -1006,6 +1051,7 @@ systemd_notify_LDADD = \
+ 	libsystemd-basic.la \
+ 	libsystemd-daemon.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_ask_password_SOURCES = \
+ 	src/ask-password.c \
+ 	src/ask-password-api.c
+@@ -1013,12 +1059,14 @@ systemd_ask_password_SOURCES = \
+ systemd_ask_password_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_reply_password_SOURCES = \
+ 	src/reply-password.c
+ 
+ systemd_reply_password_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_cgls_SOURCES = \
+ 	src/cgls.c \
+ 	src/cgroup-show.c \
+@@ -1028,6 +1076,7 @@ systemd_cgls_SOURCES = \
+ systemd_cgls_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_cgtop_SOURCES = \
+ 	src/cgtop.c \
+         src/cgroup-util.c
+@@ -1035,6 +1084,7 @@ systemd_cgtop_SOURCES = \
+ systemd_cgtop_LDADD = \
+ 	libsystemd-basic.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_nspawn_SOURCES = \
+ 	src/nspawn.c \
+ 	src/cgroup-util.c \
+@@ -1042,8 +1092,10 @@ systemd_nspawn_SOURCES = \
+ 
+ systemd_nspawn_LDADD = \
+ 	libsystemd-basic.la \
++	libsystemd-capability.la \
+ 	libsystemd-daemon.la
+ 
++# ------------------------------------------------------------------------------
+ systemd_stdio_bridge_SOURCES = \
+ 	src/bridge.c
+ 
+@@ -1096,6 +1148,7 @@ systemd_gnome_ask_password_agent_LDADD = \
+ 	$(LIBNOTIFY_LIBS) \
+ 	$(GTK_LIBS)
+ 
++# ------------------------------------------------------------------------------
+ systemd_tty_ask_password_agent_SOURCES = \
+ 	src/tty-ask-password-agent.c \
+ 	src/ask-password-api.c \
+@@ -1253,6 +1306,7 @@ systemd_journald_CFLAGS = \
+ 
+ systemd_journald_LDADD = \
+ 	libsystemd-basic.la \
++	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+ 	libsystemd-login.la \
+ 	$(ACL_LIBS)
+@@ -1871,6 +1925,7 @@ systemd_logind_CFLAGS = \
+ 
+ systemd_logind_LDADD = \
+ 	libsystemd-basic.la \
++	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+ 	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS) \
+diff --git a/src/execute.c b/src/execute.c
+index dab4856..179ca7e 100644
+--- a/src/execute.c
++++ b/src/execute.c
+@@ -45,6 +45,7 @@
+ #include "execute.h"
+ #include "strv.h"
+ #include "macro.h"
++#include "capability.h"
+ #include "util.h"
+ #include "log.h"
+ #include "ioprio.h"
+diff --git a/src/journal/journald.h b/src/journal/journald.h
+index 6160991..7840fd5 100644
+--- a/src/journal/journald.h
++++ b/src/journal/journald.h
+@@ -29,6 +29,7 @@
+ #include "journal-file.h"
+ #include "hashmap.h"
+ #include "util.h"
++#include "audit.h"
+ #include "journal-rate-limit.h"
+ #include "list.h"
+ 
+diff --git a/src/login/logind.h b/src/login/logind.h
+index a4b4602..9586793 100644
+--- a/src/login/logind.h
++++ b/src/login/logind.h
+@@ -28,6 +28,7 @@
+ #include <libudev.h>
+ 
+ #include "util.h"
++#include "audit.h"
+ #include "list.h"
+ #include "hashmap.h"
+ #include "cgroup-util.h"
+diff --git a/src/login/pam-module.c b/src/login/pam-module.c
+index 4106d2b..1edb91c 100644
+--- a/src/login/pam-module.c
++++ b/src/login/pam-module.c
+@@ -35,6 +35,7 @@
+ #include <systemd/sd-daemon.h>
+ 
+ #include "util.h"
++#include "audit.h"
+ #include "macro.h"
+ #include "strv.h"
+ #include "dbus-common.h"
+diff --git a/src/nspawn.c b/src/nspawn.c
+index 6f5a9d9..66910bc 100644
+--- a/src/nspawn.c
++++ b/src/nspawn.c
+@@ -43,6 +43,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "audit.h"
+ #include "missing.h"
+ #include "cgroup-util.h"
+ #include "strv.h"
+diff --git a/src/shared/audit.c b/src/shared/audit.c
+new file mode 100644
+index 0000000..3850059
+--- /dev/null
++++ b/src/shared/audit.c
+@@ -0,0 +1,118 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <assert.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <ctype.h>
++#include <sys/prctl.h>
++#include <sys/capability.h>
++
++#include "macro.h"
++#include "audit.h"
++#include "util.h"
++#include "log.h"
++
++int audit_session_from_pid(pid_t pid, uint32_t *id) {
++        char *s;
++        uint32_t u;
++        int r;
++
++        assert(id);
++
++        if (have_effective_cap(CAP_AUDIT_CONTROL) <= 0)
++                return -ENOENT;
++
++        if (pid == 0)
++                r = read_one_line_file("/proc/self/sessionid", &s);
++        else {
++                char *p;
++
++                if (asprintf(&p, "/proc/%lu/sessionid", (unsigned long) pid) < 0)
++                        return -ENOMEM;
++
++                r = read_one_line_file(p, &s);
++                free(p);
++        }
++
++        if (r < 0)
++                return r;
++
++        r = safe_atou32(s, &u);
++        free(s);
++
++        if (r < 0)
++                return r;
++
++        if (u == (uint32_t) -1 || u <= 0)
++                return -ENOENT;
++
++        *id = u;
++        return 0;
++}
++
++int audit_loginuid_from_pid(pid_t pid, uid_t *uid) {
++        char *s;
++        uid_t u;
++        int r;
++
++        assert(uid);
++
++        /* Only use audit login uid if we are executed with sufficient
++         * capabilities so that pam_loginuid could do its job. If we
++         * are lacking the CAP_AUDIT_CONTROL capabality we most likely
++         * are being run in a container and /proc/self/loginuid is
++         * useless since it probably contains a uid of the host
++         * system. */
++
++        if (have_effective_cap(CAP_AUDIT_CONTROL) <= 0)
++                return -ENOENT;
++
++        if (pid == 0)
++                r = read_one_line_file("/proc/self/loginuid", &s);
++        else {
++                char *p;
++
++                if (asprintf(&p, "/proc/%lu/loginuid", (unsigned long) pid) < 0)
++                        return -ENOMEM;
++
++                r = read_one_line_file(p, &s);
++                free(p);
++        }
++
++        if (r < 0)
++                return r;
++
++        r = parse_uid(s, &u);
++        free(s);
++
++        if (r < 0)
++                return r;
++
++        if (u == (uid_t) -1)
++                return -ENOENT;
++
++        *uid = (uid_t) u;
++        return 0;
++}
+diff --git a/src/shared/audit.h b/src/shared/audit.h
+new file mode 100644
+index 0000000..3529046
+--- /dev/null
++++ b/src/shared/audit.h
+@@ -0,0 +1,29 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef fooaudithfoo
++#define fooaudithfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "capability.h"
++
++int audit_session_from_pid(pid_t pid, uint32_t *id);
++int audit_loginuid_from_pid(pid_t pid, uid_t *uid);
++#endif
+diff --git a/src/shared/capability.c b/src/shared/capability.c
+new file mode 100644
+index 0000000..b800215
+--- /dev/null
++++ b/src/shared/capability.c
+@@ -0,0 +1,86 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <assert.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <stdio.h>
++#include <sys/types.h>
++#include <stdarg.h>
++#include <ctype.h>
++#include <sys/capability.h>
++#include <sys/prctl.h>
++
++#include "macro.h"
++#include "capability.h"
++#include "util.h"
++#include "log.h"
++
++int have_effective_cap(int value) {
++        cap_t cap;
++        cap_flag_value_t fv;
++        int r;
++
++        if (!(cap = cap_get_proc()))
++                return -errno;
++
++        if (cap_get_flag(cap, value, CAP_EFFECTIVE, &fv) < 0)
++                r = -errno;
++        else
++                r = fv == CAP_SET;
++
++        cap_free(cap);
++        return r;
++}
++
++unsigned long cap_last_cap(void) {
++        static __thread unsigned long saved;
++        static __thread bool valid = false;
++        unsigned long p;
++
++        if (valid)
++                return saved;
++
++        p = (unsigned long) CAP_LAST_CAP;
++
++        if (prctl(PR_CAPBSET_READ, p) < 0) {
++
++                /* Hmm, look downwards, until we find one that
++                 * works */
++                for (p--; p > 0; p --)
++                        if (prctl(PR_CAPBSET_READ, p) >= 0)
++                                break;
++
++        } else {
++
++                /* Hmm, look upwards, until we find one that doesn't
++                 * work */
++                for (;; p++)
++                        if (prctl(PR_CAPBSET_READ, p+1) < 0)
++                                break;
++        }
++
++        saved = p;
++        valid = true;
++
++        return p;
++}
+diff --git a/src/shared/capability.h b/src/shared/capability.h
+new file mode 100644
+index 0000000..ab7e40b
+--- /dev/null
++++ b/src/shared/capability.h
+@@ -0,0 +1,27 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef foocapabilityhfoo
++#define foocapabilityhfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++unsigned long cap_last_cap(void);
++int have_effective_cap(int value);
++#endif
+diff --git a/src/conf-parser.c b/src/shared/conf-parser.c
+similarity index 100%
+rename from src/conf-parser.c
+rename to src/shared/conf-parser.c
+diff --git a/src/conf-parser.h b/src/shared/conf-parser.h
+similarity index 100%
+rename from src/conf-parser.h
+rename to src/shared/conf-parser.h
+diff --git a/src/exit-status.c b/src/shared/exit-status.c
+similarity index 100%
+rename from src/exit-status.c
+rename to src/shared/exit-status.c
+diff --git a/src/exit-status.h b/src/shared/exit-status.h
+similarity index 100%
+rename from src/exit-status.h
+rename to src/shared/exit-status.h
+diff --git a/src/hashmap.c b/src/shared/hashmap.c
+similarity index 100%
+rename from src/hashmap.c
+rename to src/shared/hashmap.c
+diff --git a/src/hashmap.h b/src/shared/hashmap.h
+similarity index 100%
+rename from src/hashmap.h
+rename to src/shared/hashmap.h
+diff --git a/src/label.c b/src/shared/label.c
+similarity index 100%
+rename from src/label.c
+rename to src/shared/label.c
+diff --git a/src/label.h b/src/shared/label.h
+similarity index 100%
+rename from src/label.h
+rename to src/shared/label.h
+diff --git a/src/log.c b/src/shared/log.c
+similarity index 100%
+rename from src/log.c
+rename to src/shared/log.c
+diff --git a/src/log.h b/src/shared/log.h
+similarity index 100%
+rename from src/log.h
+rename to src/shared/log.h
+diff --git a/src/ratelimit.c b/src/shared/ratelimit.c
+similarity index 100%
+rename from src/ratelimit.c
+rename to src/shared/ratelimit.c
+diff --git a/src/ratelimit.h b/src/shared/ratelimit.h
+similarity index 100%
+rename from src/ratelimit.h
+rename to src/shared/ratelimit.h
+diff --git a/src/set.c b/src/shared/set.c
+similarity index 100%
+rename from src/set.c
+rename to src/shared/set.c
+diff --git a/src/set.h b/src/shared/set.h
+similarity index 100%
+rename from src/set.h
+rename to src/shared/set.h
+diff --git a/src/socket-util.c b/src/shared/socket-util.c
+similarity index 100%
+rename from src/socket-util.c
+rename to src/shared/socket-util.c
+diff --git a/src/socket-util.h b/src/shared/socket-util.h
+similarity index 100%
+rename from src/socket-util.h
+rename to src/shared/socket-util.h
+diff --git a/src/strv.c b/src/shared/strv.c
+similarity index 100%
+rename from src/strv.c
+rename to src/shared/strv.c
+diff --git a/src/strv.h b/src/shared/strv.h
+similarity index 100%
+rename from src/strv.h
+rename to src/shared/strv.h
+diff --git a/src/utf8.c b/src/shared/utf8.c
+similarity index 100%
+rename from src/utf8.c
+rename to src/shared/utf8.c
+diff --git a/src/utf8.h b/src/shared/utf8.h
+similarity index 100%
+rename from src/utf8.h
+rename to src/shared/utf8.h
+diff --git a/src/util.c b/src/shared/util.c
+similarity index 97%
+rename from src/util.c
+rename to src/shared/util.c
+index dfc1dc6..563853f 100644
+--- a/src/util.c
++++ b/src/shared/util.c
+@@ -4716,23 +4716,6 @@ void skip_syslog_date(char **buf) {
+         *buf = p;
+ }
+ 
+-int have_effective_cap(int value) {
+-        cap_t cap;
+-        cap_flag_value_t fv;
+-        int r;
+-
+-        if (!(cap = cap_get_proc()))
+-                return -errno;
+-
+-        if (cap_get_flag(cap, value, CAP_EFFECTIVE, &fv) < 0)
+-                r = -errno;
+-        else
+-                r = fv == CAP_SET;
+-
+-        cap_free(cap);
+-        return r;
+-}
+-
+ char* strshorten(char *s, size_t l) {
+         assert(s);
+ 
+@@ -5399,89 +5382,6 @@ int symlink_or_copy_atomic(const char *from, const char *to) {
+         return r;
+ }
+ 
+-int audit_session_from_pid(pid_t pid, uint32_t *id) {
+-        char *s;
+-        uint32_t u;
+-        int r;
+-
+-        assert(id);
+-
+-        if (have_effective_cap(CAP_AUDIT_CONTROL) <= 0)
+-                return -ENOENT;
+-
+-        if (pid == 0)
+-                r = read_one_line_file("/proc/self/sessionid", &s);
+-        else {
+-                char *p;
+-
+-                if (asprintf(&p, "/proc/%lu/sessionid", (unsigned long) pid) < 0)
+-                        return -ENOMEM;
+-
+-                r = read_one_line_file(p, &s);
+-                free(p);
+-        }
+-
+-        if (r < 0)
+-                return r;
+-
+-        r = safe_atou32(s, &u);
+-        free(s);
+-
+-        if (r < 0)
+-                return r;
+-
+-        if (u == (uint32_t) -1 || u <= 0)
+-                return -ENOENT;
+-
+-        *id = u;
+-        return 0;
+-}
+-
+-int audit_loginuid_from_pid(pid_t pid, uid_t *uid) {
+-        char *s;
+-        uid_t u;
+-        int r;
+-
+-        assert(uid);
+-
+-        /* Only use audit login uid if we are executed with sufficient
+-         * capabilities so that pam_loginuid could do its job. If we
+-         * are lacking the CAP_AUDIT_CONTROL capabality we most likely
+-         * are being run in a container and /proc/self/loginuid is
+-         * useless since it probably contains a uid of the host
+-         * system. */
+-
+-        if (have_effective_cap(CAP_AUDIT_CONTROL) <= 0)
+-                return -ENOENT;
+-
+-        if (pid == 0)
+-                r = read_one_line_file("/proc/self/loginuid", &s);
+-        else {
+-                char *p;
+-
+-                if (asprintf(&p, "/proc/%lu/loginuid", (unsigned long) pid) < 0)
+-                        return -ENOMEM;
+-
+-                r = read_one_line_file(p, &s);
+-                free(p);
+-        }
+-
+-        if (r < 0)
+-                return r;
+-
+-        r = parse_uid(s, &u);
+-        free(s);
+-
+-        if (r < 0)
+-                return r;
+-
+-        if (u == (uid_t) -1)
+-                return -ENOENT;
+-
+-        *uid = (uid_t) u;
+-        return 0;
+-}
+-
+ bool display_is_local(const char *display) {
+         assert(display);
+ 
+@@ -6137,39 +6037,6 @@ int prot_from_flags(int flags) {
+         }
+ }
+ 
+-unsigned long cap_last_cap(void) {
+-        static __thread unsigned long saved;
+-        static __thread bool valid = false;
+-        unsigned long p;
+-
+-        if (valid)
+-                return saved;
+-
+-        p = (unsigned long) CAP_LAST_CAP;
+-
+-        if (prctl(PR_CAPBSET_READ, p) < 0) {
+-
+-                /* Hmm, look downwards, until we find one that
+-                 * works */
+-                for (p--; p > 0; p --)
+-                        if (prctl(PR_CAPBSET_READ, p) >= 0)
+-                                break;
+-
+-        } else {
+-
+-                /* Hmm, look upwards, until we find one that doesn't
+-                 * work */
+-                for (;; p++)
+-                        if (prctl(PR_CAPBSET_READ, p+1) < 0)
+-                                break;
+-        }
+-
+-        saved = p;
+-        valid = true;
+-
+-        return p;
+-}
+-
+ char *format_bytes(char *buf, size_t l, off_t t) {
+         unsigned i;
+ 
+diff --git a/src/util.h b/src/shared/util.h
+similarity index 98%
+rename from src/util.h
+rename to src/shared/util.h
+index b1af6db..e96d56d 100644
+--- a/src/util.h
++++ b/src/shared/util.h
+@@ -431,8 +431,6 @@ void parse_syslog_priority(char **p, int *priority);
+ void skip_syslog_pid(char **buf);
+ void skip_syslog_date(char **buf);
+ 
+-int have_effective_cap(int value);
+-
+ bool hostname_is_valid(const char *s);
+ char* hostname_cleanup(char *s);
+ 
+@@ -457,9 +455,6 @@ int hwclock_reset_localtime_delta(void);
+ int hwclock_get_time(struct tm *tm);
+ int hwclock_set_time(const struct tm *tm);
+ 
+-int audit_session_from_pid(pid_t pid, uint32_t *id);
+-int audit_loginuid_from_pid(pid_t pid, uid_t *uid);
+-
+ bool display_is_local(const char *display);
+ int socket_from_display(const char *display, char **path);
+ 
+@@ -526,8 +521,6 @@ bool kexec_loaded(void);
+ 
+ int prot_from_flags(int flags);
+ 
+-unsigned long cap_last_cap(void);
+-
+ char *format_bytes(char *buf, size_t l, off_t t);
+ 
+ int fd_wait_for_event(int fd, int event, usec_t timeout);
+@@ -540,5 +533,4 @@ int is_kernel_thread(pid_t pid);
+ 
+ int fd_inc_sndbuf(int fd, size_t n);
+ int fd_inc_rcvbuf(int fd, size_t n);
+-
+ #endif
+diff --git a/src/virt.c b/src/shared/virt.c
+similarity index 100%
+rename from src/virt.c
+rename to src/shared/virt.c
+diff --git a/src/virt.h b/src/shared/virt.h
+similarity index 100%
+rename from src/virt.h
+rename to src/shared/virt.h

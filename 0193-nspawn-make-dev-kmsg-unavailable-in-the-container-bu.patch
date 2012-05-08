@@ -1,0 +1,52 @@
+From a4fbf57614a88b17ff7c52c0415954d45468b755 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 00:32:13 +0200
+Subject: [PATCH] nspawn: make /dev/kmsg unavailable in the container, but
+ allow access to /proc/kmsg (cherry picked from commit
+ f1e5dfe2c065670e0dac63c7bb2dd82fe820e2ab)
+
+---
+ Makefile.am         |    1 -
+ src/nspawn/nspawn.c |   10 ++++++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index a08a2dc..26de30a 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2551,7 +2551,6 @@ systemd-install-data-hook:
+ 		$(LN_S) ../system-services/org.freedesktop.systemd1.service org.freedesktop.systemd1.service )
+ if HAVE_PLYMOUTH
+ 	$(MKDIR_P) -m 0755 \
+-		$(DESTDIR)$(SYSTEM_SYSVINIT_PATH) \
+ 		$(DESTDIR)$(systemunitdir)/reboot.target.wants \
+ 		$(DESTDIR)$(systemunitdir)/kexec.target.wants \
+ 		$(DESTDIR)$(systemunitdir)/poweroff.target.wants \
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 0075cdc..1ce3c33 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -394,6 +394,13 @@ static int setup_kmsg(const char *dest, int kmsg_socket) {
+ 
+         u = umask(0000);
+ 
++        /* We create the kmsg FIFO as /dev/kmsg, but immediately
++         * delete it after bind mounting it to /proc/kmsg. While FIFOs
++         * on the reading side behave very similar to /proc/kmsg,
++         * their writing side behaves differently from /dev/kmsg in
++         * that writing blocks when nothing is reading. In order to
++         * avoid any problems with containers deadlocking due to this
++         * we simply make /dev/kmsg unavailable to the container. */
+         if (asprintf(&from, "%s/dev/kmsg", dest) < 0) {
+                 log_error("Out of memory");
+                 r = -ENOMEM;
+@@ -456,6 +463,9 @@ static int setup_kmsg(const char *dest, int kmsg_socket) {
+                 goto finish;
+         }
+ 
++        /* And now make the FIFO unavailable as /dev/kmsg... */
++        unlink(from);
++
+ finish:
+         free(from);
+         free(to);

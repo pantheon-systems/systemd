@@ -1,0 +1,25 @@
+From 78502fa17187d98ecc0038b6036a6eb771ab75d3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 11 Apr 2012 00:34:06 +0200
+Subject: [PATCH] logs-show: fix output of log lines lacking comm (cherry
+ picked from commit
+ b5936820c7b38aebe02cfc6344a0731979d072a1)
+
+---
+ src/logs-show.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/logs-show.c b/src/logs-show.c
+index a622035..42d84ed 100644
+--- a/src/logs-show.c
++++ b/src/logs-show.c
+@@ -213,7 +213,8 @@ static int output_short(sd_journal *j, unsigned line, unsigned n_columns, bool s
+         } else if (comm && shall_print(show_all, comm, comm_len)) {
+                 printf(" %.*s", (int) comm_len, comm);
+                 n += comm_len + 1;
+-        }
++        } else
++                putchar(' ');
+ 
+         if (pid && shall_print(show_all, pid, pid_len)) {
+                 printf("[%.*s]", (int) pid_len, pid);

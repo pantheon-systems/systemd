@@ -1,0 +1,73 @@
+From be8d57db9f8f1b30ea3737f01552598b542b9f4d Mon Sep 17 00:00:00 2001
+From: Michael Olbrich <m.olbrich@pengutronix.de>
+Date: Fri, 6 Apr 2012 21:38:00 +0200
+Subject: [PATCH] dbus: add data argument to BusPropertySetCallback
+
+BusPropertyCallback already has the argument. It is necesary for the
+callback to know what data to access.
+(cherry picked from commit 9612f07cbf2b0ec54c5dc6ed7e521e181cc3612d)
+---
+ src/dbus-common.c  |    6 +++++-
+ src/dbus-common.h  |    2 +-
+ src/dbus-manager.c |    4 ++--
+ 3 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/dbus-common.c b/src/dbus-common.c
+index 2905ac3..fc97108 100644
+--- a/src/dbus-common.c
++++ b/src/dbus-common.c
+@@ -402,6 +402,7 @@ get_prop:
+                 const BusProperty *p;
+                 DBusMessageIter sub;
+                 char *sig;
++                void *data;
+ 
+                 if (!dbus_message_iter_init(message, &iter) ||
+                     dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_STRING)
+@@ -456,7 +457,10 @@ set_prop:
+ 
+                 dbus_free(sig);
+ 
+-                r = p->set(&sub, property);
++                data = (char*)bp->base + p->offset;
++                if (p->indirect)
++                        data = *(void**)data;
++                r = p->set(&sub, property, data);
+                 if (r < 0) {
+                         if (r == -ENOMEM)
+                                 goto oom;
+diff --git a/src/dbus-common.h b/src/dbus-common.h
+index 15811a7..1dc0f59 100644
+--- a/src/dbus-common.h
++++ b/src/dbus-common.h
+@@ -93,7 +93,7 @@ int bus_connect_system_polkit(DBusConnection **_bus, DBusError *error);
+ const char *bus_error_message(const DBusError *error);
+ 
+ typedef int (*BusPropertyCallback)(DBusMessageIter *iter, const char *property, void *data);
+-typedef int (*BusPropertySetCallback)(DBusMessageIter *iter, const char *property);
++typedef int (*BusPropertySetCallback)(DBusMessageIter *iter, const char *property, void *data);
+ 
+ typedef struct BusProperty {
+         const char *property;            /* name of the property */
+diff --git a/src/dbus-manager.c b/src/dbus-manager.c
+index 0a6e55d..3bf0c07 100644
+--- a/src/dbus-manager.c
++++ b/src/dbus-manager.c
+@@ -326,7 +326,7 @@ static int bus_manager_append_log_target(DBusMessageIter *i, const char *propert
+         return 0;
+ }
+ 
+-static int bus_manager_set_log_target(DBusMessageIter *i, const char *property) {
++static int bus_manager_set_log_target(DBusMessageIter *i, const char *property, void *data) {
+         const char *t;
+ 
+         assert(i);
+@@ -351,7 +351,7 @@ static int bus_manager_append_log_level(DBusMessageIter *i, const char *property
+         return 0;
+ }
+ 
+-static int bus_manager_set_log_level(DBusMessageIter *i, const char *property) {
++static int bus_manager_set_log_level(DBusMessageIter *i, const char *property, void *data) {
+         const char *t;
+ 
+         assert(i);

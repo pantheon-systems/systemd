@@ -1,0 +1,46 @@
+From 754189f9cf1ef9705689c0594bf1e377d446e861 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 11 May 2012 17:17:57 +0200
+Subject: [PATCH] core: add extra safety check before switching root (cherry
+ picked from commit
+ 50913bc0c8ced894ceabc7e893c0fdf73af9a261)
+
+---
+ src/core/dbus-manager.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index adbef55..802389c 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -1188,6 +1188,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "SwitchRoot")) {
+                 const char *switch_root, *switch_root_init;
+                 char *u, *v;
++                int k;
+ 
+                 if (!dbus_message_get_args(
+                                     message,
+@@ -1208,6 +1209,22 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
+                 }
+ 
++                /* Safety check */
++                if (isempty(switch_root_init))
++                        k = access(switch_root, F_OK);
++                else {
++                        char *p;
++
++                        p = join(switch_root, "/", switch_root_init, NULL);
++                        if (!p)
++                                goto oom;
++
++                        k = access(p, X_OK);
++                        free(p);
++                }
++                if (k < 0)
++                        return bus_send_error_reply(connection, message, NULL, -errno);
++
+                 u = strdup(switch_root);
+                 if (!u)
+                         goto oom;

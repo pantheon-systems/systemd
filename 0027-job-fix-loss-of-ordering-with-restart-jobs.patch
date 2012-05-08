@@ -1,0 +1,144 @@
+From 9c53948822726352c65cbe74da919106da957993 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 28 Mar 2012 00:42:27 +0200
+Subject: [PATCH] job: fix loss of ordering with restart jobs
+
+Suppose that foo.service/start is a job waiting on other job bar.service/start
+to finish. And then foo.service/restart is enqueued (not using
+--ignore-dependencies).
+
+Currently this makes foo.service start immediately, forgetting about the
+ordering to bar.service.
+
+The runnability check for JOB_RESTART jobs looks only at dependencies for
+stopping. That's actually correct, because restart jobs should be treated the
+same as stop jobs at first. The bug is that job_run_and_invalidate() does not
+treat them exactly the same as stop jobs. unit_start() gets called without
+checking for the runnability of the converted JOB_START job.
+
+The fix is to simplify the switch in job_run_and_invalidate(). Handle
+JOB_RESTART identically to JOB_STOP.
+Also simplify the handling of JOB_TRY_RESTART - just convert it to JOB_RESTART
+if the unit is active and let it fall through to the JOB_RESTART case.
+Similarly for JOB_RELOAD_OR_START - have a fall through to JOB_START.
+
+In job_finish_and_invalidate() it's not necessary to check for JOB_TRY_RESTART
+with JOB_DONE, because JOB_TRY_RESTART jobs will have been converted to
+JOB_RESTART already.
+
+Speeding up the restart of services in "auto-restart" state still works as
+before.
+
+Improves: https://bugzilla.redhat.com/show_bug.cgi?id=753586
+but it's still not perfect. With this fix the try-restart action will wait for
+the restart to complete in the right order, but the optimal behaviour would be
+to finish quickly (without disturbing the start job).
+(cherry picked from commit dd17d38879503f018fdf6bbff822970afcddb6f1)
+---
+ src/job.c |   64 ++++++++++++++++++++-----------------------------------------
+ 1 file changed, 21 insertions(+), 43 deletions(-)
+
+diff --git a/src/job.c b/src/job.c
+index e57286f..d43ce8e 100644
+--- a/src/job.c
++++ b/src/job.c
+@@ -387,14 +387,21 @@ int job_run_and_invalidate(Job *j) {
+ 
+         switch (j->type) {
+ 
++                case JOB_RELOAD_OR_START:
++                        if (unit_active_state(j->unit) == UNIT_ACTIVE) {
++                                j->type = JOB_RELOAD;
++                                r = unit_reload(j->unit);
++                                break;
++                        }
++                        j->type = JOB_START;
++                        /* fall through */
++
+                 case JOB_START:
+                         r = unit_start(j->unit);
+ 
+-                        /* If this unit cannot be started, then simply
+-                         * wait */
++                        /* If this unit cannot be started, then simply wait */
+                         if (r == -EBADR)
+                                 r = 0;
+-
+                         break;
+ 
+                 case JOB_VERIFY_ACTIVE: {
+@@ -408,11 +415,19 @@ int job_run_and_invalidate(Job *j) {
+                         break;
+                 }
+ 
++                case JOB_TRY_RESTART:
++                        if (UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(j->unit))) {
++                                r = -ENOEXEC;
++                                break;
++                        }
++                        j->type = JOB_RESTART;
++                        /* fall through */
++
+                 case JOB_STOP:
++                case JOB_RESTART:
+                         r = unit_stop(j->unit);
+ 
+-                        /* If this unit cannot stopped, then simply
+-                         * wait. */
++                        /* If this unit cannot stopped, then simply wait. */
+                         if (r == -EBADR)
+                                 r = 0;
+                         break;
+@@ -421,43 +436,6 @@ int job_run_and_invalidate(Job *j) {
+                         r = unit_reload(j->unit);
+                         break;
+ 
+-                case JOB_RELOAD_OR_START:
+-                        if (unit_active_state(j->unit) == UNIT_ACTIVE) {
+-                                j->type = JOB_RELOAD;
+-                                r = unit_reload(j->unit);
+-                        } else {
+-                                j->type = JOB_START;
+-                                r = unit_start(j->unit);
+-
+-                                if (r == -EBADR)
+-                                        r = 0;
+-                        }
+-                        break;
+-
+-                case JOB_RESTART: {
+-                        UnitActiveState t = unit_active_state(j->unit);
+-                        if (t == UNIT_INACTIVE || t == UNIT_FAILED || t == UNIT_ACTIVATING) {
+-                                j->type = JOB_START;
+-                                r = unit_start(j->unit);
+-                        } else
+-                                r = unit_stop(j->unit);
+-                        break;
+-                }
+-
+-                case JOB_TRY_RESTART: {
+-                        UnitActiveState t = unit_active_state(j->unit);
+-                        if (t == UNIT_INACTIVE || t == UNIT_FAILED || t == UNIT_DEACTIVATING)
+-                                r = -ENOEXEC;
+-                        else if (t == UNIT_ACTIVATING) {
+-                                j->type = JOB_START;
+-                                r = unit_start(j->unit);
+-                        } else {
+-                                j->type = JOB_RESTART;
+-                                r = unit_stop(j->unit);
+-                        }
+-                        break;
+-                }
+-
+                 default:
+                         assert_not_reached("Unknown job type");
+         }
+@@ -536,7 +514,7 @@ int job_finish_and_invalidate(Job *j, JobResult result) {
+         job_add_to_dbus_queue(j);
+ 
+         /* Patch restart jobs so that they become normal start jobs */
+-        if (result == JOB_DONE && (j->type == JOB_RESTART || j->type == JOB_TRY_RESTART)) {
++        if (result == JOB_DONE && j->type == JOB_RESTART) {
+ 
+                 log_debug("Converting job %s/%s -> %s/%s",
+                           j->unit->id, job_type_to_string(j->type),

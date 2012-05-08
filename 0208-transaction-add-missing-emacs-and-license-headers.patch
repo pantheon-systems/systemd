@@ -1,0 +1,73 @@
+From 67b5d7eba6e227c835c16f8a93c038d3529db58b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 15:22:27 +0200
+Subject: [PATCH] transaction: add missing emacs and license headers (cherry
+ picked from commit
+ 7c0436b94c52915f2c39fe4a29616313378c3b78)
+
+---
+ src/core/transaction.c |   21 +++++++++++++++++++++
+ src/core/transaction.h |   21 +++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index a2efcbc..91feab0 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -1,3 +1,24 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
+ #include "transaction.h"
+ #include "bus-errors.h"
+ 
+diff --git a/src/core/transaction.h b/src/core/transaction.h
+index 74d7461..67ace4d 100644
+--- a/src/core/transaction.h
++++ b/src/core/transaction.h
+@@ -1,6 +1,27 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
+ #ifndef footransactionhfoo
+ #define footransactionhfoo
+ 
++/***
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
+ typedef struct Transaction Transaction;
+ 
+ #include "unit.h"

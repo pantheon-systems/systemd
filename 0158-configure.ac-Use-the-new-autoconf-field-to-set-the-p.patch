@@ -1,0 +1,35 @@
+From cb009f8e658f83b021f66751459739376ceaabb9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Javier=20Jard=C3=B3n?= <jjardon@gnome.org>
+Date: Mon, 21 Nov 2011 17:18:33 +0000
+Subject: [PATCH] configure.ac: Use the new autoconf field to set the project
+ webpage (cherry picked from commit
+ 4e949c11a1df4547d5f102e4131e07b026369cd7)
+
+Conflicts:
+
+	configure.ac
+---
+ configure.ac |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 5f66b6c..bb01b46 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -15,9 +15,14 @@
+ #  You should have received a copy of the GNU General Public License
+ #  along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ 
+-AC_PREREQ(2.63)
++AC_PREREQ([2.64])
++
++AC_INIT([systemd],
++        [44],
++        [http://bugs.freedesktop.org/enter_bug.cgi?product=systemd],
++        [systemd],
++        [http://www.freedesktop.org/wiki/Software/systemd])
+ 
+-AC_INIT([systemd],[44],[systemd-devel@lists.freedesktop.org])
+ AC_CONFIG_SRCDIR([src/core/main.c])
+ AC_CONFIG_MACRO_DIR([m4])
+ AC_CONFIG_HEADERS([config.h])

@@ -1,0 +1,376 @@
+From ea4473608f902b556a1194aa55e318463d91f8b4 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 20 Apr 2012 12:28:31 +0200
+Subject: [PATCH] dbus-job: allow multiple bus clients
+
+Merging of jobs can result in more than one client being interested in a job.
+(cherry picked from commit 97e6a11996855800f68dc41c13537784198c8b61)
+---
+ src/core/dbus-job.c     |  146 ++++++++++++++++++++++++++++-------------------
+ src/core/dbus-manager.c |    6 +-
+ src/core/dbus.c         |   14 +++--
+ src/core/job.c          |   21 ++++++-
+ src/core/job.h          |   15 ++++-
+ 5 files changed, 131 insertions(+), 71 deletions(-)
+
+diff --git a/src/core/dbus-job.c b/src/core/dbus-job.c
+index ab6d610..aa1b4eb 100644
+--- a/src/core/dbus-job.c
++++ b/src/core/dbus-job.c
+@@ -225,61 +225,71 @@ const DBusObjectPathVTable bus_job_vtable = {
+         .message_function = bus_job_message_handler
+ };
+ 
+-static int job_send_message(Job *j, DBusMessage *m) {
++static int job_send_message(Job *j, DBusMessage* (*new_message)(Job *j)) {
++        DBusMessage *m = NULL;
+         int r;
+ 
+         assert(j);
+-        assert(m);
++        assert(new_message);
+ 
+         if (bus_has_subscriber(j->manager)) {
+-                if ((r = bus_broadcast(j->manager, m)) < 0)
++                m = new_message(j);
++                if (!m)
++                        goto oom;
++                r = bus_broadcast(j->manager, m);
++                dbus_message_unref(m);
++                if (r < 0)
+                         return r;
+ 
+-        } else  if (j->bus_client) {
++        } else {
+                 /* If nobody is subscribed, we just send the message
+-                 * to the client which created the job */
++                 * to the client(s) which created the job */
++                JobBusClient *cl;
++                assert(j->bus_client_list);
++                LIST_FOREACH(client, cl, j->bus_client_list) {
++                        assert(cl->bus);
++
++                        m = new_message(j);
++                        if (!m)
++                                goto oom;
+ 
+-                assert(j->bus);
++                        if (!dbus_message_set_destination(m, cl->name))
++                                goto oom;
+ 
+-                if (!dbus_message_set_destination(m, j->bus_client))
+-                        return -ENOMEM;
++                        if (!dbus_connection_send(cl->bus, m, NULL))
++                                goto oom;
+ 
+-                if (!dbus_connection_send(j->bus, m, NULL))
+-                        return -ENOMEM;
++                        dbus_message_unref(m);
++                        m = NULL;
++                }
+         }
+ 
+         return 0;
++oom:
++        if (m)
++                dbus_message_unref(m);
++        return -ENOMEM;
+ }
+ 
+-void bus_job_send_change_signal(Job *j) {
+-        char *p = NULL;
++static DBusMessage* new_change_signal_message(Job *j) {
+         DBusMessage *m = NULL;
++        char *p = NULL;
+ 
+-        assert(j);
+-
+-        if (j->in_dbus_queue) {
+-                LIST_REMOVE(Job, dbus_queue, j->manager->dbus_job_queue, j);
+-                j->in_dbus_queue = false;
+-        }
+-
+-        if (!bus_has_subscriber(j->manager) && !j->bus_client) {
+-                j->sent_dbus_new_signal = true;
+-                return;
+-        }
+-
+-        if (!(p = job_dbus_path(j)))
++        p = job_dbus_path(j);
++        if (!p)
+                 goto oom;
+ 
+         if (j->sent_dbus_new_signal) {
+                 /* Send a properties changed signal */
+-
+-                if (!(m = bus_properties_changed_new(p, "org.freedesktop.systemd1.Job", INVALIDATING_PROPERTIES)))
++                m = bus_properties_changed_new(p, "org.freedesktop.systemd1.Job", INVALIDATING_PROPERTIES);
++                if (!m)
+                         goto oom;
+ 
+         } else {
+                 /* Send a new signal */
+ 
+-                if (!(m = dbus_message_new_signal("/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "JobNew")))
++                m = dbus_message_new_signal("/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "JobNew");
++                if (!m)
+                         goto oom;
+ 
+                 if (!dbus_message_append_args(m,
+@@ -289,42 +299,26 @@ void bus_job_send_change_signal(Job *j) {
+                         goto oom;
+         }
+ 
+-        if (job_send_message(j, m) < 0)
+-                goto oom;
+-
+-        free(p);
+-        dbus_message_unref(m);
+-
+-        j->sent_dbus_new_signal = true;
+-
+-        return;
++        return m;
+ 
+ oom:
+-        free(p);
+-
+         if (m)
+                 dbus_message_unref(m);
+-
+-        log_error("Failed to allocate job change signal.");
++        free(p);
++        return NULL;
+ }
+ 
+-void bus_job_send_removed_signal(Job *j) {
+-        char *p = NULL;
++static DBusMessage* new_removed_signal_message(Job *j) {
+         DBusMessage *m = NULL;
++        char *p = NULL;
+         const char *r;
+ 
+-        assert(j);
+-
+-        if (!bus_has_subscriber(j->manager) && !j->bus_client)
+-                return;
+-
+-        if (!j->sent_dbus_new_signal)
+-                bus_job_send_change_signal(j);
+-
+-        if (!(p = job_dbus_path(j)))
++        p = job_dbus_path(j);
++        if (!p)
+                 goto oom;
+ 
+-        if (!(m = dbus_message_new_signal("/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "JobRemoved")))
++        m = dbus_message_new_signal("/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "JobRemoved");
++        if (!m)
+                 goto oom;
+ 
+         r = job_result_to_string(j->result);
+@@ -336,19 +330,53 @@ void bus_job_send_removed_signal(Job *j) {
+                                       DBUS_TYPE_INVALID))
+                 goto oom;
+ 
+-        if (job_send_message(j, m) < 0)
+-                goto oom;
++        return m;
+ 
++oom:
++        if (m)
++                dbus_message_unref(m);
+         free(p);
+-        dbus_message_unref(m);
++        return NULL;
++}
++
++void bus_job_send_change_signal(Job *j) {
++        assert(j);
++
++        if (j->in_dbus_queue) {
++                LIST_REMOVE(Job, dbus_queue, j->manager->dbus_job_queue, j);
++                j->in_dbus_queue = false;
++        }
++
++        if (!bus_has_subscriber(j->manager) && !j->bus_client_list) {
++                j->sent_dbus_new_signal = true;
++                return;
++        }
++
++        if (job_send_message(j, new_change_signal_message) < 0)
++                goto oom;
++
++        j->sent_dbus_new_signal = true;
+ 
+         return;
+ 
+ oom:
+-        free(p);
++        log_error("Failed to allocate job change signal.");
++}
+ 
+-        if (m)
+-                dbus_message_unref(m);
++void bus_job_send_removed_signal(Job *j) {
++        assert(j);
+ 
++        if (!bus_has_subscriber(j->manager) && !j->bus_client_list)
++                return;
++
++        if (!j->sent_dbus_new_signal)
++                bus_job_send_change_signal(j);
++
++        if (job_send_message(j, new_removed_signal_message) < 0)
++                goto oom;
++
++        return;
++
++oom:
+         log_error("Failed to allocate job remove signal.");
+ }
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 918d5fc..b850020 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -1470,6 +1470,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                 const char *name, *smode, *old_name = NULL;
+                 JobMode mode;
+                 Job *j;
++                JobBusClient *cl;
+                 Unit *u;
+                 bool b;
+ 
+@@ -1527,10 +1528,11 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                 if ((r = manager_add_job(m, job_type, u, mode, true, &error, &j)) < 0)
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+-                if (!(j->bus_client = strdup(message_get_sender_with_fallback(message))))
++                cl = job_bus_client_new(connection, message_get_sender_with_fallback(message));
++                if (!cl)
+                         goto oom;
+ 
+-                j->bus = connection;
++                LIST_PREPEND(JobBusClient, client, j->bus_client_list, cl);
+ 
+                 if (!(reply = dbus_message_new_method_return(message)))
+                         goto oom;
+diff --git a/src/core/dbus.c b/src/core/dbus.c
+index ddf91f2..1cf93c5 100644
+--- a/src/core/dbus.c
++++ b/src/core/dbus.c
+@@ -1167,13 +1167,15 @@ static void shutdown_connection(Manager *m, DBusConnection *c) {
+         Job *j;
+         Iterator i;
+ 
+-        HASHMAP_FOREACH(j, m->jobs, i)
+-                if (j->bus == c) {
+-                        free(j->bus_client);
+-                        j->bus_client = NULL;
+-
+-                        j->bus = NULL;
++        HASHMAP_FOREACH(j, m->jobs, i) {
++                JobBusClient *cl, *nextcl;
++                LIST_FOREACH_SAFE(client, cl, nextcl, j->bus_client_list) {
++                        if (cl->bus == c) {
++                                LIST_REMOVE(JobBusClient, client, j->bus_client_list, cl);
++                                free(cl);
++                        }
+                 }
++        }
+ 
+         set_remove(m->bus_connections, c);
+         set_remove(m->bus_connections_for_dispatch, c);
+diff --git a/src/core/job.c b/src/core/job.c
+index 46127ea..43e7575 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -33,6 +33,20 @@
+ #include "log.h"
+ #include "dbus-job.h"
+ 
++JobBusClient* job_bus_client_new(DBusConnection *connection, const char *name) {
++        JobBusClient *cl;
++        size_t name_len;
++
++        name_len = strlen(name);
++        cl = malloc0(sizeof(JobBusClient) + name_len + 1);
++        if (!cl)
++                return NULL;
++
++        cl->bus = connection;
++        memcpy(cl->name, name, name_len + 1);
++        return cl;
++}
++
+ Job* job_new(Unit *unit, JobType type) {
+         Job *j;
+ 
+@@ -55,6 +69,8 @@ Job* job_new(Unit *unit, JobType type) {
+ }
+ 
+ void job_free(Job *j) {
++        JobBusClient *cl;
++
+         assert(j);
+         assert(!j->installed);
+         assert(!j->transaction_prev);
+@@ -77,7 +93,10 @@ void job_free(Job *j) {
+                 close_nointr_nofail(j->timer_watch.fd);
+         }
+ 
+-        free(j->bus_client);
++        while ((cl = j->bus_client_list)) {
++                LIST_REMOVE(JobBusClient, client, j->bus_client_list, cl);
++                free(cl);
++        }
+         free(j);
+ }
+ 
+diff --git a/src/core/job.h b/src/core/job.h
+index eab0e07..2025b5b 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -28,6 +28,7 @@
+ 
+ typedef struct Job Job;
+ typedef struct JobDependency JobDependency;
++typedef struct JobBusClient JobBusClient;
+ typedef enum JobType JobType;
+ typedef enum JobState JobState;
+ typedef enum JobMode JobMode;
+@@ -99,6 +100,13 @@ struct JobDependency {
+         bool conflicts;
+ };
+ 
++struct JobBusClient {
++        LIST_FIELDS(JobBusClient, client);
++        /* Note that this bus object is not ref counted here. */
++        DBusConnection *bus;
++        char name[0];
++};
++
+ struct Job {
+         Manager *manager;
+         Unit *unit;
+@@ -121,9 +129,8 @@ struct Job {
+ 
+         Watch timer_watch;
+ 
+-        /* Note that this bus object is not ref counted here. */
+-        DBusConnection *bus;
+-        char *bus_client;
++        /* There can be more than one client, because of job merging. */
++        LIST_HEAD(JobBusClient, bus_client_list);
+ 
+         JobResult result;
+ 
+@@ -136,6 +143,8 @@ struct Job {
+         bool ignore_order:1;
+ };
+ 
++JobBusClient* job_bus_client_new(DBusConnection *connection, const char *name);
++
+ Job* job_new(Unit *unit, JobType type);
+ void job_free(Job *job);
+ Job* job_install(Job *j);

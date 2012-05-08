@@ -1,0 +1,64 @@
+From 3ce44049e34648de7d50d13a474e489b64e5bf66 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Fri, 13 Apr 2012 15:57:13 +0200
+Subject: [PATCH] udev: unpack sysfs test tree only on 'make check'; fix
+ test-udev binary location (cherry picked from commit
+ 9b80f05fb727edc70a305d912ab6cf1c3bdbf67e)
+
+Conflicts:
+
+	Makefile.am
+	src/udev/test/udev-test.pl
+---
+ Makefile.am |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 3f51ae6..d5c5c35 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -82,6 +82,8 @@ dist_dbuspolicy_DATA =
+ dbusinterface_DATA =
+ dist_dbussystemservice_DATA =
+ check_PROGRAMS =
++check_DATA =
++noinst_PROGRAMS =
+ TESTS =
+ 
+ AM_CPPFLAGS = \
+@@ -846,7 +848,7 @@ EXTRA_DIST += \
+ 	src/core/systemd.pc.in
+ 
+ # ------------------------------------------------------------------------------
+-check_PROGRAMS += \
++noinst_PROGRAMS += \
+ 	test-engine \
+ 	test-job-type \
+ 	test-ns \
+@@ -1340,7 +1342,7 @@ test_id128_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-id128.la
+ 
+-check_PROGRAMS += \
++noinst_PROGRAMS += \
+ 	test-id128
+ 
+ TESTS += \
+@@ -1522,7 +1524,7 @@ libsystemd-journal-uninstall-hook:
+ UNINSTALL_EXEC_HOOKS += \
+ 	libsystemd-journal-uninstall-hook
+ 
+-check_PROGRAMS += \
++noinst_PROGRAMS += \
+ 	test-journal \
+ 	test-journal-send
+ 
+@@ -2056,7 +2058,7 @@ test_login_LDADD = \
+ 	libsystemd-login.la \
+ 	libsystemd-shared.la
+ 
+-check_PROGRAMS += \
++noinst_PROGRAMS += \
+ 	test-login
+ 
+ libsystemd_login_la_SOURCES = \

@@ -1,0 +1,29 @@
+From 41d9cc7a5e245a1bfa30dade46f87c8f1ad1b2a6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 13:34:09 +0200
+Subject: [PATCH] umount: don't try to umount /dev/console, since we are using
+ it (cherry picked from commit
+ 46108b3bfd8c4bdf11ec55fa36758057c23c131d)
+
+---
+ src/umount.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/umount.c b/src/umount.c
+index 0a63d23..7861def 100644
+--- a/src/umount.c
++++ b/src/umount.c
+@@ -114,7 +114,12 @@ static int mount_points_list_get(MountPoint **head) {
+                         goto finish;
+                 }
+ 
+-                if (mount_point_is_api(p) || mount_point_ignore(p)) {
++                /* Ignore mount points we can't unmount because they
++                 * are API or because we are keeping them open (like
++                 * /dev/console) */
++                if (mount_point_is_api(p) ||
++                    mount_point_ignore(p) ||
++                    path_streq(p, "/dev/console")) {
+                         free(p);
+                         continue;
+                 }

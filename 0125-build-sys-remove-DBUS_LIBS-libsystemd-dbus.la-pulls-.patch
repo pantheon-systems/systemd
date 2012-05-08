@@ -1,0 +1,132 @@
+From ff726ce662451e77df6bf03b8d832171a50be293 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 18:29:20 +0200
+Subject: [PATCH] build-sys: remove $(DBUS_LIBS), libsystemd-dbus.la pulls it
+ in (cherry picked from commit
+ b7739c77dff36332db79118b42f34babeef9e05e)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am |   30 +++++++++---------------------
+ 1 file changed, 9 insertions(+), 21 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index bd69281..a927187 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -783,7 +783,6 @@ libsystemd_core_la_LIBADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
+ 	libsystemd-dbus.la \
+-	$(DBUS_LIBS) \
+ 	$(UDEV_LIBS) \
+ 	$(LIBWRAP_LIBS) \
+ 	$(PAM_LIBS) \
+@@ -953,8 +952,7 @@ systemd_initctl_CFLAGS = \
+ systemd_initctl_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-dbus.la \
+-	$(DBUS_LIBS)
++	libsystemd-dbus.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_update_utmp_SOURCES = \
+@@ -968,7 +966,6 @@ systemd_update_utmp_CFLAGS = \
+ systemd_update_utmp_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-dbus.la \
+-	$(DBUS_LIBS) \
+ 	$(AUDIT_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+@@ -1050,8 +1047,7 @@ systemd_fsck_CFLAGS = \
+ systemd_fsck_LDADD = \
+ 	libsystemd-shared.la \
+ 	$(UDEV_LIBS) \
+-	libsystemd-dbus.la \
+-	$(DBUS_LIBS)
++	libsystemd-dbus.la
+ 
+ # ------------------------------------------------------------------------------
+ systemd_timestamp_SOURCES = \
+@@ -1114,8 +1110,7 @@ systemd_cgroups_agent_CFLAGS = \
+ 
+ systemd_cgroups_agent_LDADD = \
+ 	libsystemd-shared.la \
+-	libsystemd-dbus.la \
+-	$(DBUS_LIBS)
++	libsystemd-dbus.la
+ 
+ # ------------------------------------------------------------------------------
+ systemctl_SOURCES = \
+@@ -1133,7 +1128,6 @@ systemctl_LDADD = \
+ 	libsystemd-id128.la \
+ 	libsystemd-dbus.la \
+ 	libsystemd-logs.la
+-	$(DBUS_LIBS)
+ 
+ # ------------------------------------------------------------------------------
+ systemd_notify_SOURCES = \
+@@ -1829,8 +1823,7 @@ systemd_hostnamed_CFLAGS = \
+ systemd_hostnamed_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-dbus.la \
+-	$(DBUS_LIBS)
++	libsystemd-dbus.la
+ 
+ rootlibexec_PROGRAMS += \
+ 	systemd-hostnamed
+@@ -1880,8 +1873,7 @@ systemd_localed_LDADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-dbus.la \
+-	$(DBUS_LIBS)
++	libsystemd-dbus.la
+ 
+ nodist_systemunit_DATA += \
+ 	units/systemd-localed.service
+@@ -1940,8 +1932,7 @@ systemd_timedated_CFLAGS = \
+ systemd_timedated_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \
+-	libsystemd-dbus.la \
+-	$(DBUS_LIBS)
++	libsystemd-dbus.la
+ 
+ rootlibexec_PROGRAMS += \
+ 	systemd-timedated
+@@ -2011,8 +2002,7 @@ systemd_logind_LDADD = \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+ 	libsystemd-dbus.la \
+-	$(UDEV_LIBS) \
+-	$(DBUS_LIBS)
++	$(UDEV_LIBS)
+ 
+ if HAVE_ACL
+ systemd_logind_SOURCES += \
+@@ -2044,8 +2034,7 @@ loginctl_CFLAGS = \
+ loginctl_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-dbus.la \
+-	$(UDEV_LIBS) \
+-	$(DBUS_LIBS)
++	$(UDEV_LIBS)
+ 
+ rootbin_PROGRAMS += \
+ 	loginctl
+@@ -2099,8 +2088,7 @@ pam_systemd_la_LIBADD = \
+ 	libsystemd-audit.la \
+ 	libsystemd-dbus.la \
+ 	libsystemd-shared.la \
+-	$(PAM_LIBS) \
+-	$(DBUS_LIBS)
++	$(PAM_LIBS)
+ 
+ pamlib_LTLIBRARIES = \
+ 	pam_systemd.la

@@ -1,0 +1,92 @@
+From d382e91d86b7ac7ed15e7819aad00a7764586dd7 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 12 Apr 2012 19:00:28 +0200
+Subject: [PATCH] build-sys: use check_PROGRAMS for test-*.c (cherry picked
+ from commit 6cbf079f10ba998e4d8debb7f5b7dab4efaae3d0)
+
+Conflicts:
+
+	Makefile.am
+---
+ Makefile.am |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index a927187..753213b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -81,6 +81,7 @@ dist_pkgsysconf_DATA =
+ dist_dbuspolicy_DATA =
+ dbusinterface_DATA =
+ dist_dbussystemservice_DATA =
++check_PROGRAMS =
+ 
+ AM_CPPFLAGS = \
+ 	-include $(top_builddir)/config.h \
+@@ -216,19 +217,6 @@ rootlibexec_PROGRAMS = \
+ systemgenerator_PROGRAMS = \
+ 	systemd-getty-generator
+ 
+-noinst_PROGRAMS = \
+-	test-engine \
+-	test-job-type \
+-	test-ns \
+-	test-loopback \
+-	test-hostname \
+-	test-daemon \
+-	test-cgroup \
+-	test-env-replace \
+-	test-strv \
+-	test-install \
+-	test-watchdog
+-
+ nodist_udevrules_DATA = \
+ 	src/99-systemd.rules
+ 
+@@ -857,6 +845,19 @@ EXTRA_DIST += \
+ 	src/core/systemd.pc.in
+ 
+ # ------------------------------------------------------------------------------
++check_PROGRAMS += \
++	test-engine \
++	test-job-type \
++	test-ns \
++	test-loopback \
++	test-hostname \
++	test-daemon \
++	test-cgroup \
++	test-env-replace \
++	test-strv \
++	test-install \
++	test-watchdog
++
+ test_engine_SOURCES = \
+ 	src/test/test-engine.c
+ 
+@@ -1333,7 +1334,7 @@ test_id128_LDADD = \
+ 	libsystemd-shared.la \
+ 	libsystemd-id128.la
+ 
+-noinst_PROGRAMS += \
++check_PROGRAMS += \
+ 	test-id128
+ 
+ pkginclude_HEADERS += \
+@@ -1512,7 +1513,7 @@ libsystemd-journal-uninstall-hook:
+ UNINSTALL_EXEC_HOOKS += \
+ 	libsystemd-journal-uninstall-hook
+ 
+-noinst_PROGRAMS += \
++check_PROGRAMS += \
+ 	test-journal \
+ 	test-journal-send
+ 
+@@ -2046,7 +2047,7 @@ test_login_LDADD = \
+ 	libsystemd-login.la \
+ 	libsystemd-shared.la
+ 
+-noinst_PROGRAMS += \
++check_PROGRAMS += \
+ 	test-login
+ 
+ libsystemd_login_la_SOURCES = \

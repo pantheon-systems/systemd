@@ -1,0 +1,27 @@
+From a6618249428769b680369b91546acc974d0f6c40 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 15:50:52 +0200
+Subject: [PATCH] shutdown: don't try to shut down DM devices in a container
+ (cherry picked from commit
+ ff644623750b4f672a79cab6cc52e8681e55a044)
+
+---
+ src/core/shutdown.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/shutdown.c b/src/core/shutdown.c
+index b0c680a..8bde974 100644
+--- a/src/core/shutdown.c
++++ b/src/core/shutdown.c
+@@ -356,8 +356,10 @@ int main(int argc, char *argv[]) {
+         log_info("Sending SIGKILL to remaining processes...");
+         send_signal(SIGKILL);
+ 
+-        if (in_container)
++        if (in_container) {
+                 need_swapoff = false;
++                need_dm_detach = false;
++        }
+ 
+         /* Unmount all mountpoints, swaps, and loopback devices */
+         for (retries = 0; retries < FINALIZE_ATTEMPTS; retries++) {

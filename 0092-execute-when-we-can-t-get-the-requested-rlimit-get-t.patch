@@ -1,0 +1,77 @@
+From f776c66d6f0016c0a17109170b506511cbaeb881 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 03:38:52 +0200
+Subject: [PATCH] execute: when we can't get the requested rlimit, get the
+ next closest (cherry picked from commit
+ 68faf98ca09314b61314ad2ac0cc133c400a83f9)
+
+---
+ src/core/execute.c |    2 +-
+ src/shared/util.c  |   24 ++++++++++++++++++++++++
+ src/shared/util.h  |    3 +++
+ 3 files changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 179ca7e..143ff35 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1367,7 +1367,7 @@ int exec_spawn(ExecCommand *command,
+                                 if (!context->rlimit[i])
+                                         continue;
+ 
+-                                if (setrlimit(i, context->rlimit[i]) < 0) {
++                                if (setrlimit_closest(i, context->rlimit[i]) < 0) {
+                                         err = -errno;
+                                         r = EXIT_LIMITS;
+                                         goto fail_child;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 7778b0a..f0ff9ba 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -6120,3 +6120,27 @@ int fork_agent(pid_t *pid, const int except[], unsigned n_except, const char *pa
+         execv(path, l);
+         _exit(EXIT_FAILURE);
+ }
++
++int setrlimit_closest(int resource, const struct rlimit *rlim) {
++        struct rlimit highest, fixed;
++
++        assert(rlim);
++
++        if (setrlimit(resource, rlim) >= 0)
++                return 0;
++
++        if (errno != EPERM)
++                return -errno;
++
++        /* So we failed to set the desired setrlimit, then let's try
++         * to get as close as we can */
++        assert_se(getrlimit(resource, &highest) == 0);
++
++        fixed.rlim_cur = MIN(rlim->rlim_cur, highest.rlim_max);
++        fixed.rlim_max = MIN(rlim->rlim_max, highest.rlim_max);
++
++        if (setrlimit(resource, &fixed) < 0)
++                return -errno;
++
++        return 0;
++}
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 062ab6d..9fb2259 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -34,6 +34,7 @@
+ #include <limits.h>
+ #include <sys/stat.h>
+ #include <dirent.h>
++#include <sys/resource.h>
+ 
+ #include "macro.h"
+ 
+@@ -531,4 +532,6 @@ int fd_inc_rcvbuf(int fd, size_t n);
+ 
+ int fork_agent(pid_t *pid, const int except[], unsigned n_except, const char *path, ...);
+ 
++int setrlimit_closest(int resource, const struct rlimit *rlim);
++
+ #endif

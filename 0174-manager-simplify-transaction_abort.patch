@@ -1,0 +1,29 @@
+From ab6674f9bfbfbb29f94c2431ad3c5a6696736f24 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 19 Apr 2012 23:23:04 +0200
+Subject: [PATCH] manager: simplify transaction_abort()
+
+This is equivalent.
+(cherry picked from commit 121b3b318042b7fd67ac96601971c1c2f9b77be5)
+---
+ src/core/manager.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 9204d58..38a733d 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -710,12 +710,7 @@ static void transaction_abort(Manager *m) {
+         assert(m);
+ 
+         while ((j = hashmap_first(m->transaction_jobs)))
+-                if (j->installed)
+-                        transaction_delete_job(m, j, true);
+-                else {
+-                        transaction_unlink_job(m, j, true);
+-                        job_free(j);
+-                }
++                transaction_delete_job(m, j, true);
+ 
+         assert(hashmap_isempty(m->transaction_jobs));
+ 

@@ -1,0 +1,39 @@
+From 01c04b32cefc75aea65d3cea777a089584041492 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 02:03:08 +0200
+Subject: [PATCH] loginctl: avoid segfault for kill-session and kill-user
+ commands
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+As reported by Mantas Mikulėnas.
+
+http://lists.freedesktop.org/archives/systemd-devel/2012-April/004993.html
+(cherry picked from commit cc1368e3b3585ab822d76e00945ed4c064047530)
+---
+ src/login/loginctl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/login/loginctl.c b/src/login/loginctl.c
+index 172fb7f..a494447 100644
+--- a/src/login/loginctl.c
++++ b/src/login/loginctl.c
+@@ -1260,7 +1260,7 @@ static int kill_session(DBusConnection *bus, char **args, unsigned n) {
+                 if (!dbus_message_append_args(m,
+                                               DBUS_TYPE_STRING, &args[i],
+                                               DBUS_TYPE_STRING, &arg_kill_who,
+-                                              DBUS_TYPE_INT32, arg_signal,
++                                              DBUS_TYPE_INT32, &arg_signal,
+                                               DBUS_TYPE_INVALID)) {
+                         log_error("Could not append arguments to message.");
+                         ret = -ENOMEM;
+@@ -1464,7 +1464,7 @@ static int kill_user(DBusConnection *bus, char **args, unsigned n) {
+                 u = (uint32_t) uid;
+                 if (!dbus_message_append_args(m,
+                                               DBUS_TYPE_UINT32, &u,
+-                                              DBUS_TYPE_INT32, arg_signal,
++                                              DBUS_TYPE_INT32, &arg_signal,
+                                               DBUS_TYPE_INVALID)) {
+                         log_error("Could not append arguments to message.");
+                         ret = -ENOMEM;

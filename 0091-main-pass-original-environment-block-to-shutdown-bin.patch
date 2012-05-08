@@ -1,0 +1,57 @@
+From 2030ec3bf9e3d8c0a4fc124576a30593cdf6ad3c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 03:19:28 +0200
+Subject: [PATCH] main: pass original environment block to shutdown binary so
+ that it can detect container environments (cherry picked
+ from commit d18f337c3f2fe14240598c18415f72d0cf15393f)
+
+---
+ src/main.c |   19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index 4e800e7..1374316 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1648,19 +1648,16 @@ finish:
+                 fdset_free(fds);
+ 
+         if (shutdown_verb) {
+-                char e[32];
+-
+                 const char * command_line[] = {
+                         SYSTEMD_SHUTDOWN_BINARY_PATH,
+                         shutdown_verb,
+                         NULL
+                 };
+-                const char * env_block[] = {
+-                        NULL,
+-                        NULL
+-                };
++                char **env_block;
+ 
+                 if (arm_reboot_watchdog && arg_shutdown_watchdog > 0) {
++                        char e[32];
++
+                         /* If we reboot let's set the shutdown
+                          * watchdog and tell the shutdown binary to
+                          * repeatedly ping it */
+@@ -1670,11 +1667,15 @@ finish:
+                         /* Tell the binary how often to ping */
+                         snprintf(e, sizeof(e), "WATCHDOG_USEC=%llu", (unsigned long long) arg_shutdown_watchdog);
+                         char_array_0(e);
+-                        env_block[0] = e;
+-                } else
++
++                        env_block = strv_append(environ, e);
++                } else {
++                        env_block = strv_copy(environ);
+                         watchdog_close(true);
++                }
+ 
+-                execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, (char**) env_block);
++                execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, env_block);
++                free(env_block);
+                 log_error("Failed to execute shutdown binary, freezing: %m");
+         }
+ 

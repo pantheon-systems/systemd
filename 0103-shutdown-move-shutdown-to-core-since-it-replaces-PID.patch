@@ -1,0 +1,46 @@
+From fa5832c01d45a11c7a370beb2066d06a6bb1c72c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 14:18:36 +0200
+Subject: [PATCH] shutdown: move shutdown to core since it replaces PID 1
+ (cherry picked from commit
+ 146de8175e11c877908f20f8ed1b5a3805455c0a)
+
+---
+ Makefile.am               |    6 +++---
+ src/{ => core}/shutdown.c |    0
+ src/{ => core}/umount.c   |    0
+ src/{ => core}/umount.h   |    0
+ 4 files changed, 3 insertions(+), 3 deletions(-)
+ rename src/{ => core}/shutdown.c (100%)
+ rename src/{ => core}/umount.c (100%)
+ rename src/{ => core}/umount.h (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 6f98b15..0f45415 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -935,9 +935,9 @@ pkginclude_HEADERS += \
+ 
+ # ------------------------------------------------------------------------------
+ systemd_shutdown_SOURCES = \
+-	src/umount.c \
+-	src/umount.h \
+-	src/shutdown.c
++	src/core/umount.c \
++	src/core/umount.h \
++	src/core/shutdown.c
+ 
+ systemd_shutdown_CFLAGS = \
+ 	$(AM_CFLAGS) \
+diff --git a/src/shutdown.c b/src/core/shutdown.c
+similarity index 100%
+rename from src/shutdown.c
+rename to src/core/shutdown.c
+diff --git a/src/umount.c b/src/core/umount.c
+similarity index 100%
+rename from src/umount.c
+rename to src/core/umount.c
+diff --git a/src/umount.h b/src/core/umount.h
+similarity index 100%
+rename from src/umount.h
+rename to src/core/umount.h

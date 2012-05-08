@@ -1,0 +1,39 @@
+From 9d7b43ea9c2cc5f35e301ed7be8ab204358039e8 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 11 Apr 2012 21:33:12 +0200
+Subject: [PATCH] tmpfiles: open directories with O_NOATIME to preserve
+ timestamp
+
+Before:
+  # stat /tmp/pulse-Du5ectm60QYM | grep 'Access: 20'
+  Access: 2012-04-11 21:32:48.444920237 +0200
+  # systemd-tmpfiles --clean
+  # stat /tmp/pulse-Du5ectm60QYM | grep 'Access: 20'
+  Access: 2012-04-11 21:36:27.628925459 +0200
+
+After:
+  # stat /tmp/pulse-Du5ectm60QYM | grep 'Access: 20'
+  Access: 2012-04-11 21:32:48.444920237 +0200
+  # ./systemd-tmpfiles --clean
+  # stat /tmp/pulse-Du5ectm60QYM | grep 'Access: 20'
+  Access: 2012-04-11 21:32:48.444920237 +0200
+
+Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=810257
+(cherry picked from commit e5f3d1ba124f14477d6b5434982d7d44a472a66f)
+---
+ src/tmpfiles.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tmpfiles.c b/src/tmpfiles.c
+index 5e85e37..c5f6fc0 100644
+--- a/src/tmpfiles.c
++++ b/src/tmpfiles.c
+@@ -269,7 +269,7 @@ static int dir_cleanup(
+                                 DIR *sub_dir;
+                                 int q;
+ 
+-                                sub_dir = xopendirat(dirfd(d), dent->d_name, O_NOFOLLOW);
++                                sub_dir = xopendirat(dirfd(d), dent->d_name, O_NOFOLLOW|O_NOATIME);
+                                 if (sub_dir == NULL) {
+                                         if (errno != ENOENT) {
+                                                 log_error("opendir(%s/%s) failed: %m", p, dent->d_name);

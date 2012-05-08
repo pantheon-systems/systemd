@@ -1,0 +1,38 @@
+From 508157bef06840c3df94bfd2dc8fa5f65af950f6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 27 Mar 2012 18:50:34 +0200
+Subject: [PATCH] journal: properly handle if we interleave files with
+ different boot ids
+
+If we try to locate a monotonic time in a file that doesn't have any
+entries with the matching boot id, then don't fail on it, simply
+fall back to calendar time.
+(cherry picked from commit 6030831d5b85539a2a209b6d3a6f28b400207d78)
+---
+ src/journal/sd-journal.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index e9cd26e..92ba578 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -325,9 +325,17 @@ static int find_location(sd_journal *j, JournalFile *f, direction_t direction, O
+                 else if (j->current_location.seqnum_set &&
+                          sd_id128_equal(j->current_location.seqnum_id, f->header->seqnum_id))
+                         r = journal_file_move_to_entry_by_seqnum(f, j->current_location.seqnum, direction, &o, &p);
+-                else if (j->current_location.monotonic_set)
++                else if (j->current_location.monotonic_set) {
+                         r = journal_file_move_to_entry_by_monotonic(f, j->current_location.boot_id, j->current_location.monotonic, direction, &o, &p);
+-                else if (j->current_location.realtime_set)
++
++                        if (r == -ENOENT) {
++                                /* boot id unknown in this file */
++                                if (j->current_location.realtime_set)
++                                        r = journal_file_move_to_entry_by_realtime(f, j->current_location.realtime, direction, &o, &p);
++                                else
++                                        r = journal_file_next_entry(f, NULL, 0, direction, &o, &p);
++                        }
++                } else if (j->current_location.realtime_set)
+                         r = journal_file_move_to_entry_by_realtime(f, j->current_location.realtime, direction, &o, &p);
+                 else
+                         r = journal_file_next_entry(f, NULL, 0, direction, &o, &p);

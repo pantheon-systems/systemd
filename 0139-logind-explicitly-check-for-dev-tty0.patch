@@ -1,0 +1,37 @@
+From 09aa970fd904905da5c626b238e672cf25aeb7bb Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 17:54:33 +0200
+Subject: [PATCH] logind: explicitly check for /dev/tty0 (cherry picked from
+ commit 74afee9c18fe74035387e4e17ca60c6b51ee9af3)
+
+---
+ src/login/logind.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/src/login/logind.c b/src/login/logind.c
+index fd1f624..57159e9 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -945,14 +945,16 @@ static int manager_connect_console(Manager *m) {
+         assert(m);
+         assert(m->console_active_fd < 0);
+ 
++        /* On certain architectures (S390 and Xen, and containers),
++           /dev/tty0 does not exist, so don't fail if we can't open
++           it. */
++        if (access("/dev/tty0", F_OK) < 0) {
++                m->console_active_fd = -1;
++                return 0;
++        }
++
+         m->console_active_fd = open("/sys/class/tty/tty0/active", O_RDONLY|O_NOCTTY|O_CLOEXEC);
+         if (m->console_active_fd < 0) {
+-
+-                /* On certain architectures (S390 and Xen), /dev/tty0
+-                   does not exist, so don't fail if we can't open it.*/
+-                if (errno == ENOENT)
+-                        return 0;
+-
+                 log_error("Failed to open /sys/class/tty/tty0/active: %m");
+                 return -errno;
+         }

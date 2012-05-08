@@ -1,0 +1,24 @@
+From 1a00e659a6c001d2241b7f6478fcdb850469adcc Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 27 Mar 2012 00:20:48 +0200
+Subject: [PATCH] cat: fix priority type
+
+Needs to be "int", not "char". Spotted by Frederic Crozat.
+(cherry picked from commit d508ac0ba0c43efa8caacdd8050970efb1e30243)
+---
+ src/journal/cat.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/cat.c b/src/journal/cat.c
+index 31d76f3..f0a6666 100644
+--- a/src/journal/cat.c
++++ b/src/journal/cat.c
+@@ -33,7 +33,7 @@
+ #include "build.h"
+ 
+ static char *arg_identifier = NULL;
+-static char arg_priority = LOG_INFO;
++static int arg_priority = LOG_INFO;
+ static bool arg_level_prefix = true;
+ 
+ static int help(void) {

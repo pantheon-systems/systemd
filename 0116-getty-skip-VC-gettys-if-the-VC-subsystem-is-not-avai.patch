@@ -1,0 +1,27 @@
+From b60b51b119d4927e73e230dd5546dce955b89640 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 17:31:26 +0200
+Subject: [PATCH] getty: skip VC gettys if the VC subsystem is not available
+ (cherry picked from commit
+ 8ef58b3efcbafe062e0c2c2531839c1e583b81fd)
+
+---
+ units/getty@.service.m4 |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index 4588c56..5f16c21 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -33,6 +33,11 @@ After=rc-local.service
+ Before=getty.target
+ IgnoreOnIsolate=yes
+ 
++# On systems without virtual consoles, don't start any getty. (Note
++# that serial gettys are covered by serial-getty@.service, not this
++# unit
++ConditionPathExists=/dev/tty0
++
+ [Service]
+ Environment=TERM=linux
+ ExecStart=-/sbin/agetty %I 38400

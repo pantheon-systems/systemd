@@ -1,0 +1,100 @@
+From 9deb48f37ca46a4d29741ef77affa8d0f6d8d77c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 02:15:22 +0200
+Subject: [PATCH] container: spawn a getty instead of a sulogin in a container
+ (cherry picked from commit
+ 337eebb936be1da1215535e866965ce54c82d755)
+
+---
+ Makefile.am                           |    2 ++
+ src/getty-generator/getty-generator.c |    2 +-
+ units/console-getty.service.m4.in     |   47 +++++++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+), 1 deletion(-)
+ create mode 100644 units/console-getty.service.m4.in
+
+diff --git a/Makefile.am b/Makefile.am
+index 26de30a..7a980a6 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -290,6 +290,7 @@ nodist_systemunit_DATA = \
+ 	units/getty@.service \
+ 	units/serial-getty@.service \
+ 	units/console-shell.service \
++	units/console-getty.service \
+ 	units/systemd-initctl.service \
+ 	units/systemd-shutdownd.service \
+ 	units/systemd-modules-load.service \
+@@ -322,6 +323,7 @@ EXTRA_DIST += \
+ 	units/getty@.service.m4 \
+ 	units/serial-getty@.service.m4 \
+ 	units/console-shell.service.m4.in \
++	units/console-getty.service.m4.in \
+ 	units/rescue.service.m4.in \
+ 	units/systemd-initctl.service.in \
+ 	units/systemd-shutdownd.service.in \
+diff --git a/src/getty-generator/getty-generator.c b/src/getty-generator/getty-generator.c
+index dc979e9..323d29c 100644
+--- a/src/getty-generator/getty-generator.c
++++ b/src/getty-generator/getty-generator.c
+@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
+         if (detect_container(NULL) > 0) {
+                 log_debug("Automatically adding console shell.");
+ 
+-                if (add_symlink("console-shell.service", "console-shell.service") < 0)
++                if (add_symlink("console-getty.service", "console-getty.service") < 0)
+                         r = EXIT_FAILURE;
+ 
+                 /* Don't add any further magic if we are in a container */
+diff --git a/units/console-getty.service.m4.in b/units/console-getty.service.m4.in
+new file mode 100644
+index 0000000..9473d61
+--- /dev/null
++++ b/units/console-getty.service.m4.in
+@@ -0,0 +1,47 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++[Unit]
++Description=Console Getty
++After=systemd-user-sessions.service plymouth-quit-wait.service
++m4_ifdef(`TARGET_FEDORA',
++After=rc-local.service
++)m4_dnl
++m4_ifdef(`TARGET_ARCH',
++After=rc-local.service
++)m4_dnl
++m4_ifdef(`TARGET_FRUGALWARE',
++After=local.service
++)m4_dnl
++m4_ifdef(`TARGET_ALTLINUX',
++After=rc-local.service
++)m4_dnl
++m4_ifdef(`TARGET_MANDRIVA',
++After=rc-local.service
++)m4_dnl
++m4_ifdef(`TARGET_MAGEIA',
++After=rc-local.service
++)m4_dnl
++Before=getty.target
++
++[Service]
++ExecStart=-/sbin/agetty --noclear -s console 115200,38400,9600
++Restart=always
++RestartSec=0
++UtmpIdentifier=cons
++TTYPath=/dev/console
++TTYReset=yes
++TTYVHangup=yes
++KillMode=process
++IgnoreSIGPIPE=no
++
++# Bash ignores SIGTERM, so we send SIGHUP instead, to ensure that bash
++# terminates cleanly.
++KillSignal=SIGHUP
++
++[Install]
++WantedBy=getty.target

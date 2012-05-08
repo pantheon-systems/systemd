@@ -1,0 +1,317 @@
+From 6ea1cea8fa0eafd956537b9236974a7412d0d289 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 24 Apr 2012 14:28:00 +0200
+Subject: [PATCH] service: introduce Type=idle and use it for gettys
+
+Type=idle is much like Type=simple, however between the fork() and the
+exec() in the child we wait until PID 1 informs us that no jobs are
+left.
+
+This is mostly a cosmetic fix to make gettys appear only after all boot
+output is finished and complete.
+
+Note that this does not impact the normal job logic as we do not delay
+the completion of any jobs. We just delay the invocation of the actual
+binary, and only for services that otherwise would be of Type=simple.
+(cherry picked from commit f2b6878955b1f77ea1fa87b502b13d5dbefc57f6)
+---
+ src/core/execute.c                |   11 +++++++++++
+ src/core/execute.h                |    1 +
+ src/core/manager.c                |   10 ++++++++--
+ src/core/manager.h                |    3 +++
+ src/core/mount.c                  |    1 +
+ src/core/service.c                |    6 ++++--
+ src/core/service.h                |    1 +
+ src/core/socket.c                 |    1 +
+ src/core/swap.c                   |    1 +
+ src/core/transaction.c            |   14 ++++++++++++++
+ units/console-getty.service.m4.in |    1 +
+ units/console-shell.service.m4.in |    1 +
+ units/emergency.service.in        |    1 +
+ units/getty@.service.m4           |    1 +
+ units/rescue.service.m4.in        |    1 +
+ units/serial-getty@.service.m4    |    1 +
+ 16 files changed, 51 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index be94ba5..a594ee8 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -37,6 +37,7 @@
+ #include <sys/mount.h>
+ #include <linux/fs.h>
+ #include <linux/oom.h>
++#include <sys/poll.h>
+ 
+ #ifdef HAVE_PAM
+ #include <security/pam_appl.h>
+@@ -963,6 +964,7 @@ int exec_spawn(ExecCommand *command,
+                CGroupBonding *cgroup_bondings,
+                CGroupAttribute *cgroup_attributes,
+                const char *cgroup_suffix,
++               int idle_pipe[2],
+                pid_t *ret) {
+ 
+         pid_t pid;
+@@ -1050,6 +1052,15 @@ int exec_spawn(ExecCommand *command,
+                         goto fail_child;
+                 }
+ 
++                if (idle_pipe) {
++                        if (idle_pipe[1] >= 0)
++                                close_nointr_nofail(idle_pipe[1]);
++                        if (idle_pipe[0] >= 0) {
++                                fd_wait_for_event(idle_pipe[0], POLLHUP, DEFAULT_TIMEOUT_USEC);
++                                close_nointr_nofail(idle_pipe[0]);
++                        }
++                }
++
+                 /* Close sockets very early to make sure we don't
+                  * block init reexecution because it cannot bind its
+                  * sockets */
+diff --git a/src/core/execute.h b/src/core/execute.h
+index b8522a0..755fc2a 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -193,6 +193,7 @@ int exec_spawn(ExecCommand *command,
+                struct CGroupBonding *cgroup_bondings,
+                struct CGroupAttribute *cgroup_attributes,
+                const char *cgroup_suffix,
++               int pipe_fd[2],
+                pid_t *ret);
+ 
+ void exec_command_done(ExecCommand *c);
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 6939eea..9b25414 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -259,6 +259,7 @@ int manager_new(ManagerRunningAs running_as, Manager **_m) {
+         m->name_data_slot = m->conn_data_slot = m->subscribed_data_slot = -1;
+         m->exit_code = _MANAGER_EXIT_CODE_INVALID;
+         m->pin_cgroupfs_fd = -1;
++        m->idle_pipe[0] = m->idle_pipe[1] = -1;
+ 
+ #ifdef HAVE_AUDIT
+         m->audit_fd = -1;
+@@ -518,6 +519,8 @@ void manager_free(Manager *m) {
+         hashmap_free(m->cgroup_bondings);
+         set_free_free(m->unit_path_cache);
+ 
++        close_pipe(m->idle_pipe);
++
+         free(m);
+ }
+ 
+@@ -1962,10 +1965,13 @@ void manager_check_finished(Manager *m) {
+ 
+         assert(m);
+ 
+-        if (dual_timestamp_is_set(&m->finish_timestamp))
++        if (hashmap_size(m->jobs) > 0)
+                 return;
+ 
+-        if (hashmap_size(m->jobs) > 0)
++        /* Notify Type=idle units that we are done now */
++        close_pipe(m->idle_pipe);
++
++        if (dual_timestamp_is_set(&m->finish_timestamp))
+                 return;
+ 
+         dual_timestamp_get(&m->finish_timestamp);
+diff --git a/src/core/manager.h b/src/core/manager.h
+index 6732012..9335b3c 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -229,6 +229,9 @@ struct Manager {
+ 
+         unsigned n_installed_jobs;
+         unsigned n_failed_jobs;
++
++        /* Type=idle pipes */
++        int idle_pipe[2];
+ };
+ 
+ int manager_new(ManagerRunningAs running_as, Manager **m);
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 3bdc20f..7564699 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -806,6 +806,7 @@ static int mount_spawn(Mount *m, ExecCommand *c, pid_t *_pid) {
+                             UNIT(m)->cgroup_bondings,
+                             UNIT(m)->cgroup_attributes,
+                             NULL,
++                            NULL,
+                             &pid)) < 0)
+                 goto fail;
+ 
+diff --git a/src/core/service.c b/src/core/service.c
+index 807ffb9..94d1f34 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1769,6 +1769,7 @@ static int service_spawn(
+                        UNIT(s)->cgroup_bondings,
+                        UNIT(s)->cgroup_attributes,
+                        is_control ? "control" : NULL,
++                       s->type == SERVICE_IDLE ? UNIT(s)->manager->idle_pipe : NULL,
+                        &pid);
+ 
+         if (r < 0)
+@@ -2130,7 +2131,7 @@ static void service_enter_start(Service *s) {
+         if (r < 0)
+                 goto fail;
+ 
+-        if (s->type == SERVICE_SIMPLE) {
++        if (s->type == SERVICE_SIMPLE || s->type == SERVICE_IDLE) {
+                 /* For simple services we immediately start
+                  * the START_POST binaries. */
+ 
+@@ -3711,7 +3712,8 @@ static const char* const service_type_table[_SERVICE_TYPE_MAX] = {
+         [SERVICE_FORKING] = "forking",
+         [SERVICE_ONESHOT] = "oneshot",
+         [SERVICE_DBUS] = "dbus",
+-        [SERVICE_NOTIFY] = "notify"
++        [SERVICE_NOTIFY] = "notify",
++        [SERVICE_IDLE] = "idle"
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(service_type, ServiceType);
+diff --git a/src/core/service.h b/src/core/service.h
+index 60b1051..8b92aa3 100644
+--- a/src/core/service.h
++++ b/src/core/service.h
+@@ -65,6 +65,7 @@ typedef enum ServiceType {
+         SERVICE_ONESHOT,  /* we fork and wait until the program finishes (i.e. programs like fsck which run and need to finish before we continue) */
+         SERVICE_DBUS,     /* we fork and wait until a specific D-Bus name appears on the bus */
+         SERVICE_NOTIFY,   /* we fork and wait until a daemon sends us a ready message with sd_notify() */
++        SERVICE_IDLE,     /* much like simple, but delay exec() until all jobs are dispatched. */
+         _SERVICE_TYPE_MAX,
+         _SERVICE_TYPE_INVALID = -1
+ } ServiceType;
+diff --git a/src/core/socket.c b/src/core/socket.c
+index d03b35c..24cac74 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -1152,6 +1152,7 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
+                        UNIT(s)->cgroup_bondings,
+                        UNIT(s)->cgroup_attributes,
+                        NULL,
++                       NULL,
+                        &pid);
+ 
+         strv_free(argv);
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 2d39b4c..c0606d0 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -622,6 +622,7 @@ static int swap_spawn(Swap *s, ExecCommand *c, pid_t *_pid) {
+                             UNIT(s)->cgroup_bondings,
+                             UNIT(s)->cgroup_attributes,
+                             NULL,
++                            NULL,
+                             &pid)) < 0)
+                 goto fail;
+ 
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index aee155f..09ed807 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -19,6 +19,9 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
++#include <unistd.h>
++#include <fcntl.h>
++
+ #include "transaction.h"
+ #include "bus-errors.h"
+ 
+@@ -693,6 +696,17 @@ int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e
+ 
+         assert(hashmap_isempty(tr->jobs));
+ 
++        if (!hashmap_isempty(m->jobs)) {
++                /* Are there any jobs now? Then make sure we have the
++                 * idle pipe around. We don't really care too much
++                 * whether this works or not, as the idle pipe is a
++                 * feature for cosmetics, not actually useful for
++                 * anything beyond that. */
++
++                if (m->idle_pipe[0] < 0 && m->idle_pipe[1] < 0)
++                        pipe2(m->idle_pipe, O_NONBLOCK|O_CLOEXEC);
++        }
++
+         return 0;
+ }
+ 
+diff --git a/units/console-getty.service.m4.in b/units/console-getty.service.m4.in
+index 9473d61..298082b 100644
+--- a/units/console-getty.service.m4.in
++++ b/units/console-getty.service.m4.in
+@@ -30,6 +30,7 @@ Before=getty.target
+ 
+ [Service]
+ ExecStart=-/sbin/agetty --noclear -s console 115200,38400,9600
++Type=idle
+ Restart=always
+ RestartSec=0
+ UtmpIdentifier=cons
+diff --git a/units/console-shell.service.m4.in b/units/console-shell.service.m4.in
+index b0ced10..90c7c78 100644
+--- a/units/console-shell.service.m4.in
++++ b/units/console-shell.service.m4.in
+@@ -33,6 +33,7 @@ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStart=-/sbin/sulogin
+ ExecStopPost=-@SYSTEMCTL@ poweroff
++Type=idle
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/emergency.service.in b/units/emergency.service.in
+index 11ff472..c5492e6 100644
+--- a/units/emergency.service.in
++++ b/units/emergency.service.in
+@@ -20,6 +20,7 @@ ExecStartPre=-/bin/plymouth quit
+ ExecStartPre=-/bin/echo 'Welcome to emergency mode. Use "systemctl default" or ^D to enter default mode.'
+ ExecStart=-/sbin/sulogin
+ ExecStopPost=@SYSTEMCTL@ --fail --no-block default
++Type=idle
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index 5f16c21..ca6d52e 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -41,6 +41,7 @@ ConditionPathExists=/dev/tty0
+ [Service]
+ Environment=TERM=linux
+ ExecStart=-/sbin/agetty %I 38400
++Type=idle
+ Restart=always
+ RestartSec=0
+ UtmpIdentifier=%I
+diff --git a/units/rescue.service.m4.in b/units/rescue.service.m4.in
+index da4c4da..3f44187 100644
+--- a/units/rescue.service.m4.in
++++ b/units/rescue.service.m4.in
+@@ -33,6 +33,7 @@ m4_ifdef(`TARGET_MEEGO',
+ ExecStart=-/bin/bash -c "exec ${SINGLE}"',
+ `ExecStart=-/sbin/sulogin'))))
+ ExecStopPost=-@SYSTEMCTL@ --fail --no-block default
++Type=idle
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index d966f77..3f6b142 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -37,6 +37,7 @@ IgnoreOnIsolate=yes
+ [Service]
+ Environment=TERM=vt102
+ ExecStart=-/sbin/agetty -s %I 115200,38400,9600
++Type=idle
+ Restart=always
+ RestartSec=0
+ UtmpIdentifier=%I

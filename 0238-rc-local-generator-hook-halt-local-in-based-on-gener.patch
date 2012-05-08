@@ -1,0 +1,112 @@
+From c588f40025e618f2fd38ac342f9e442154f4a735 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 3 May 2012 15:55:38 +0200
+Subject: [PATCH] rc-local-generator: hook halt-local in based on generator
+ too (cherry picked from commit
+ 04b6f7c1a7ba7e7baef99b2b0db9842864c0ff82)
+
+---
+ Makefile.am                                 |   16 ----------------
+ src/rc-local-generator/rc-local-generator.c |   20 ++++++++++++++------
+ 2 files changed, 14 insertions(+), 22 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 949e35e..3ddbb7b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2594,10 +2594,6 @@ if TARGET_MEEGO
+ endif
+ 
+ if TARGET_FEDORA
+-	$(MKDIR_P) -m 0755 $(DESTDIR)$(systemunitdir)/final.target.wants
+-	( cd $(DESTDIR)$(systemunitdir)/final.target.wants && \
+-		rm -f halt-local.service && \
+-		$(LN_S) $(systemunitdir)/halt-local.service halt-local.service )
+ 	( cd $(DESTDIR)$(systemunitdir) && \
+ 		rm -f display-manager.service single.service && \
+ 		$(LN_S) prefdm.service display-manager.service && \
+@@ -2608,10 +2604,6 @@ if TARGET_FEDORA
+ endif
+ 
+ if TARGET_MANDRIVA
+-	$(MKDIR_P) -m 0755 $(DESTDIR)$(systemunitdir)/final.target.wants
+-	( cd $(DESTDIR)$(systemunitdir)/final.target.wants && \
+-		rm -f halt-local.service && \
+-		$(LN_S) $(systemunitdir)/halt-local.service halt-local.service )
+ 	( cd $(DESTDIR)$(systemunitdir) && \
+ 		rm -f display-manager.service dm.service single.service && \
+ 		$(LN_S) prefdm.service display-manager.service && \
+@@ -2629,20 +2621,12 @@ if TARGET_DEBIAN_OR_UBUNTU
+ endif
+ 
+ if TARGET_SUSE
+-	$(MKDIR_P) -m 0755 $(DESTDIR)$(systemunitdir)/final.target.wants
+ 	( cd $(DESTDIR)$(systemunitdir) && \
+ 		rm -f local.service && \
+ 		$(LN_S) rc-local.service local.service )
+-	( cd $(DESTDIR)$(systemunitdir)/final.target.wants && \
+-		rm -f halt-local.service && \
+-		$(LN_S) $(systemunitdir)/halt-local.service halt-local.service )
+ endif
+ 
+ if TARGET_MAGEIA
+-	$(MKDIR_P) -m 0755 $(DESTDIR)$(systemunitdir)/final.target.wants
+-	( cd $(DESTDIR)$(systemunitdir)/final.target.wants && \
+-		rm -f halt-local.service && \
+-		$(LN_S) $(systemunitdir)/halt-local.service halt-local.service )
+ 	( cd $(DESTDIR)$(systemunitdir) && \
+ 		rm -f display-manager.service && \
+ 		$(LN_S) prefdm.service display-manager.service && \
+diff --git a/src/rc-local-generator/rc-local-generator.c b/src/rc-local-generator/rc-local-generator.c
+index 108827d..26fe657 100644
+--- a/src/rc-local-generator/rc-local-generator.c
++++ b/src/rc-local-generator/rc-local-generator.c
+@@ -29,21 +29,23 @@
+ #include "mkdir.h"
+ 
+ #if defined(TARGET_FEDORA) || defined(TARGET_MANDRIVA) || defined(TARGET_MAGEIA)
+-#define SCRIPT_PATH "/etc/rc.d/rc.local"
++#define SCRIPT_PATH_START "/etc/rc.d/rc.local"
+ #elif defined(TARGET_SUSE)
+-#define SCRIPT_PATH "/etc/init.d/boot.local"
++#define SCRIPT_PATH_START "/etc/init.d/boot.local"
+ #endif
+ 
++#define SCRIPT_PATH_STOP "/sbin/halt.local"
++
+ const char *arg_dest = "/tmp";
+ 
+-static int add_symlink(const char *service) {
++static int add_symlink(const char *service, const char *where) {
+         char *from = NULL, *to = NULL;
+         int r;
+ 
+         assert(service);
+ 
+         asprintf(&from, SYSTEM_DATA_UNIT_PATH "/%s", service);
+-        asprintf(&to, "%s/multi-user.target.wants/%s", arg_dest, service);
++        asprintf(&to, "%s/%s.wants/%s", arg_dest, where, service);
+ 
+         if (!from || !to) {
+                 log_error("Out of memory");
+@@ -96,12 +98,18 @@ int main(int argc, char *argv[]) {
+         if (argc > 1)
+                 arg_dest = argv[1];
+ 
+-        if (file_is_executable(SCRIPT_PATH)) {
++        if (file_is_executable(SCRIPT_PATH_START)) {
+                 log_debug("Automatically adding rc-local.service.");
+ 
+-                if (add_symlink("rc-local.service") < 0)
++                if (add_symlink("rc-local.service", "multi-user.target") < 0)
+                         r = EXIT_FAILURE;
++        }
+ 
++        if (file_is_executable(SCRIPT_PATH_STOP)) {
++                log_debug("Automatically adding halt-local.service.");
++
++                if (add_symlink("halt-local.service", "final.target") < 0)
++                        r = EXIT_FAILURE;
+         }
+ 
+         return r;

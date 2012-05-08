@@ -1,0 +1,23 @@
+From 857fd69545c55acf7c6d9387ec988e0159972efa Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Apr 2012 02:51:16 +0200
+Subject: [PATCH] units: start vconsole-setup only if there's actually a
+ virtual console device (cherry picked from commit
+ 1d7f3f5cc80434f363e2f1e8284324d317c3faf4)
+
+---
+ units/systemd-vconsole-setup.service.in |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/systemd-vconsole-setup.service.in b/units/systemd-vconsole-setup.service.in
+index 673fb6c..943a982 100644
+--- a/units/systemd-vconsole-setup.service.in
++++ b/units/systemd-vconsole-setup.service.in
+@@ -11,6 +11,7 @@ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+ Before=sysinit.target shutdown.target
++ConditionPathExists=/dev/tty0
+ 
+ [Service]
+ Type=oneshot

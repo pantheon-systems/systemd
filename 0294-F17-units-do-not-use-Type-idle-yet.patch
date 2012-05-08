@@ -1,0 +1,90 @@
+From 0b4dd49539db110d27e327a5a34b739d634f7341 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 18 May 2012 23:06:06 +0200
+Subject: [PATCH] F17: units: do not use Type=idle yet
+
+Type=idle can delay the gettys for a long time if a service has a
+problem starting. A quite common issue is sendmail taking two minutes to
+timeout querying the hostname.
+Do not use Type=idle by default until it is at least time-limited.
+---
+ units/console-getty.service.m4.in |    1 -
+ units/console-shell.service.m4.in |    1 -
+ units/emergency.service.in        |    1 -
+ units/getty@.service.m4           |    1 -
+ units/rescue.service.m4.in        |    1 -
+ units/serial-getty@.service.m4    |    1 -
+ 6 files changed, 6 deletions(-)
+
+diff --git a/units/console-getty.service.m4.in b/units/console-getty.service.m4.in
+index 298082b..9473d61 100644
+--- a/units/console-getty.service.m4.in
++++ b/units/console-getty.service.m4.in
+@@ -30,7 +30,6 @@ Before=getty.target
+ 
+ [Service]
+ ExecStart=-/sbin/agetty --noclear -s console 115200,38400,9600
+-Type=idle
+ Restart=always
+ RestartSec=0
+ UtmpIdentifier=cons
+diff --git a/units/console-shell.service.m4.in b/units/console-shell.service.m4.in
+index 90c7c78..b0ced10 100644
+--- a/units/console-shell.service.m4.in
++++ b/units/console-shell.service.m4.in
+@@ -33,7 +33,6 @@ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStart=-/sbin/sulogin
+ ExecStopPost=-@SYSTEMCTL@ poweroff
+-Type=idle
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/emergency.service.in b/units/emergency.service.in
+index c5492e6..11ff472 100644
+--- a/units/emergency.service.in
++++ b/units/emergency.service.in
+@@ -20,7 +20,6 @@ ExecStartPre=-/bin/plymouth quit
+ ExecStartPre=-/bin/echo 'Welcome to emergency mode. Use "systemctl default" or ^D to enter default mode.'
+ ExecStart=-/sbin/sulogin
+ ExecStopPost=@SYSTEMCTL@ --fail --no-block default
+-Type=idle
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index ca6d52e..5f16c21 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -41,7 +41,6 @@ ConditionPathExists=/dev/tty0
+ [Service]
+ Environment=TERM=linux
+ ExecStart=-/sbin/agetty %I 38400
+-Type=idle
+ Restart=always
+ RestartSec=0
+ UtmpIdentifier=%I
+diff --git a/units/rescue.service.m4.in b/units/rescue.service.m4.in
+index 3f44187..da4c4da 100644
+--- a/units/rescue.service.m4.in
++++ b/units/rescue.service.m4.in
+@@ -33,7 +33,6 @@ m4_ifdef(`TARGET_MEEGO',
+ ExecStart=-/bin/bash -c "exec ${SINGLE}"',
+ `ExecStart=-/sbin/sulogin'))))
+ ExecStopPost=-@SYSTEMCTL@ --fail --no-block default
+-Type=idle
+ StandardInput=tty-force
+ StandardOutput=inherit
+ StandardError=inherit
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index 3f6b142..d966f77 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -37,7 +37,6 @@ IgnoreOnIsolate=yes
+ [Service]
+ Environment=TERM=vt102
+ ExecStart=-/sbin/agetty -s %I 115200,38400,9600
+-Type=idle
+ Restart=always
+ RestartSec=0
+ UtmpIdentifier=%I

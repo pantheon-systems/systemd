@@ -1,0 +1,72 @@
+From 465f0fb8ad45695e268a9d41ce4244e4191cc985 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Apr 2012 17:17:56 +0200
+Subject: [PATCH] audit: ignore if we get EPERM
+
+if auditing access is not available, then don't complain about it, in
+order to play nice with systems lacking CAP_SYS_AUDIT
+(cherry picked from commit 44785992c3c32e6abbf9d9345e0d68d579ef165b)
+---
+ src/core/manager.c            |   10 +++-------
+ src/update-utmp/update-utmp.c |    9 ++++++---
+ 2 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index d6cec40..e46ca22 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -2611,17 +2611,13 @@ void manager_send_unit_audit(Manager *m, Unit *u, int type, bool success) {
+         }
+ 
+         if (audit_log_user_comm_message(m->audit_fd, type, "", p, NULL, NULL, NULL, success) < 0) {
+-                log_warning("Failed to send audit message: %m");
+-
+                 if (errno == EPERM) {
+                         /* We aren't allowed to send audit messages?
+-                         * Then let's not retry again, to avoid
+-                         * spamming the user with the same and same
+-                         * messages over and over. */
+-
++                         * Then let's not retry again. */
+                         audit_close(m->audit_fd);
+                         m->audit_fd = -1;
+-                }
++                } else
++                        log_warning("Failed to send audit message: %m");
+         }
+ 
+         free(p);
+diff --git a/src/update-utmp/update-utmp.c b/src/update-utmp/update-utmp.c
+index 0d177d6..4b38a78 100644
+--- a/src/update-utmp/update-utmp.c
++++ b/src/update-utmp/update-utmp.c
+@@ -250,7 +250,8 @@ static int on_reboot(Context *c) {
+ 
+ #ifdef HAVE_AUDIT
+         if (c->audit_fd >= 0)
+-                if (audit_log_user_message(c->audit_fd, AUDIT_SYSTEM_BOOT, "init", NULL, NULL, NULL, 1) < 0) {
++                if (audit_log_user_message(c->audit_fd, AUDIT_SYSTEM_BOOT, "init", NULL, NULL, NULL, 1) < 0 &&
++                    errno != EPERM) {
+                         log_error("Failed to send audit message: %m");
+                         r = -errno;
+                 }
+@@ -278,7 +279,8 @@ static int on_shutdown(Context *c) {
+ 
+ #ifdef HAVE_AUDIT
+         if (c->audit_fd >= 0)
+-                if (audit_log_user_message(c->audit_fd, AUDIT_SYSTEM_SHUTDOWN, "init", NULL, NULL, NULL, 1) < 0) {
++                if (audit_log_user_message(c->audit_fd, AUDIT_SYSTEM_SHUTDOWN, "init", NULL, NULL, NULL, 1) < 0 &&
++                    errno != EPERM) {
+                         log_error("Failed to send audit message: %m");
+                         r = -errno;
+                 }
+@@ -330,7 +332,8 @@ static int on_runlevel(Context *c) {
+                              runlevel > 0 ? runlevel : 'N') < 0)
+                         return -ENOMEM;
+ 
+-                if (audit_log_user_message(c->audit_fd, AUDIT_SYSTEM_RUNLEVEL, s, NULL, NULL, NULL, 1) < 0) {
++                if (audit_log_user_message(c->audit_fd, AUDIT_SYSTEM_RUNLEVEL, s, NULL, NULL, NULL, 1) < 0 &&
++                    errno != EPERM) {
+                         log_error("Failed to send audit message: %m");
+                         r = -errno;
+                 }

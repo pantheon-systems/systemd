@@ -1,0 +1,58 @@
+From 0668b64c976ffdb781ccb4e6408b408dd28cd667 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 22 Apr 2012 15:33:43 +0200
+Subject: [PATCH] mount: don't fail if fstab doesn't exist (cherry picked from
+ commit e0295d2651cff034ab8200156f1ece06154b7bbc)
+
+---
+ src/core/mount.c                      |    5 +++--
+ src/cryptsetup/cryptsetup.c           |    3 ++-
+ src/remount-api-vfs/remount-api-vfs.c |    5 +++++
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index ca63a49..3bdc20f 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1537,8 +1537,9 @@ static int mount_load_etc_fstab(Manager *m) {
+         assert(m);
+ 
+         errno = 0;
+-        if (!(f = setmntent("/etc/fstab", "r")))
+-                return -errno;
++        f = setmntent("/etc/fstab", "r");
++        if (!f)
++                return errno == ENOENT ? 0 : -errno;
+ 
+         while ((me = getmntent(f))) {
+                 char *where, *what;
+diff --git a/src/cryptsetup/cryptsetup.c b/src/cryptsetup/cryptsetup.c
+index ac7b6d6..69901d6 100644
+--- a/src/cryptsetup/cryptsetup.c
++++ b/src/cryptsetup/cryptsetup.c
+@@ -190,7 +190,8 @@ static char *disk_mount_point(const char *label) {
+         if (asprintf(&device, "/dev/mapper/%s", label) < 0)
+                 goto finish;
+ 
+-        if (!(f = setmntent("/etc/fstab", "r")))
++        f = setmntent("/etc/fstab", "r");
++        if (!f)
+                 goto finish;
+ 
+         while ((m = getmntent(f)))
+diff --git a/src/remount-api-vfs/remount-api-vfs.c b/src/remount-api-vfs/remount-api-vfs.c
+index 3e146eb..976eb06 100644
+--- a/src/remount-api-vfs/remount-api-vfs.c
++++ b/src/remount-api-vfs/remount-api-vfs.c
+@@ -56,6 +56,11 @@ int main(int argc, char *argv[]) {
+ 
+         f = setmntent("/etc/fstab", "r");
+         if (!f) {
++                if (errno == ENOENT) {
++                        ret = EXIT_SUCCESS;
++                        goto finish;
++                }
++
+                 log_error("Failed to open /etc/fstab: %m");
+                 goto finish;
+         }
