@@ -1,0 +1,47 @@
+From 07e50f5f0cd6ef4b3aa36ec190df9860523d18bb Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:44 +0200
+Subject: [PATCH] core/main.c: handle the initrd timestamp differently, if in
+ the initrd
+
+If systemd is in the initrd/initramfs, set the initrd timestamp and do
+not try to read it from the RD_TIMESTAMP environment variable.
+(cherry picked from commit c3ba62509efe274c2bf6482056044e6fab65fec0)
+---
+ src/core/main.c |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index b4ff358..c42356d 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1314,6 +1314,19 @@ int main(int argc, char *argv[]) {
+         log_set_max_level(LOG_INFO);
+ 
+         if (getpid() == 1) {
++                if (in_initrd()) {
++                        char *rd_timestamp = NULL;
++
++                        dual_timestamp_get(&initrd_timestamp);
++                        asprintf(&rd_timestamp, "%llu %llu",
++                                 (unsigned long long) initrd_timestamp.realtime,
++                                 (unsigned long long) initrd_timestamp.monotonic);
++                        if (rd_timestamp) {
++                                setenv("RD_TIMESTAMP", rd_timestamp, 1);
++                                free(rd_timestamp);
++                        }
++                }
++
+                 arg_running_as = MANAGER_SYSTEM;
+                 log_set_target(detect_container(NULL) > 0 ? LOG_TARGET_JOURNAL : LOG_TARGET_JOURNAL_OR_KMSG);
+ 
+@@ -1441,7 +1454,8 @@ int main(int argc, char *argv[]) {
+                 /* Parse the data passed to us. We leave this
+                  * variables set, but the manager later on will not
+                  * pass them on to our children. */
+-                parse_initrd_timestamp(&initrd_timestamp);
++                if(!in_initrd())
++                        parse_initrd_timestamp(&initrd_timestamp);
+ 
+                 /* Unset some environment variables passed in from the
+                  * kernel that don't really make sense for us. */

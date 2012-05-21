@@ -1,0 +1,46 @@
+From 1f5ddedec35efb92c30a86ae300ce6bc11050044 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:40 +0200
+Subject: [PATCH] util.c: add in_initrd()
+
+in_initrd() checks, if the stat() for the device for "/" is 1, which it
+is for the initramfs.
+(cherry picked from commit 9be346c94eab9de0edc30f08b6c6d070c3a17c79)
+---
+ src/shared/util.c |   15 +++++++++++++++
+ src/shared/util.h |    1 +
+ 2 files changed, 16 insertions(+)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 61a6ad9..1254017 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5639,3 +5639,18 @@ bool is_valid_documentation_url(const char *url) {
+ 
+         return false;
+ }
++
++bool in_initrd(void) {
++        static bool checked=false;
++        static bool is_in_initrd=false;
++
++        if (!checked) {
++                struct stat sb;
++                if (stat("/", &sb) == 0) {
++                        is_in_initrd = (sb.st_dev == 1);
++                        checked = true;
++                }
++        }
++
++        return is_in_initrd;
++}
+diff --git a/src/shared/util.h b/src/shared/util.h
+index d338b08..a47f0b1 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -512,4 +512,5 @@ int can_sleep(const char *type);
+ 
+ bool is_valid_documentation_url(const char *url);
+ 
++bool in_initrd(void);
+ #endif

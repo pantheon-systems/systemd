@@ -1,0 +1,98 @@
+From fac7cd41ce3744efaddd60b8d96d41b5fc83a679 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 15:08:27 +0200
+Subject: [PATCH] util: rm_rf_children() add root_dev parameter
+
+if root_dev is set, remove subdirectories only, if the device is the
+same as the root_dev. This prevents to remove files across device
+boundaries.
+(cherry picked from commit 597f43c7849dc9fc9aeb806f8d4f9679cabce8e6)
+---
+ src/shared/util.c |   39 ++++++++++++++++++++++++++-------------
+ src/shared/util.h |    2 +-
+ 2 files changed, 27 insertions(+), 14 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 1254017..83b4a24 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -3139,7 +3139,7 @@ int get_ctty(pid_t pid, dev_t *_devnr, char **r) {
+         return 0;
+ }
+ 
+-int rm_rf_children(int fd, bool only_dirs, bool honour_sticky) {
++int rm_rf_children(int fd, bool only_dirs, bool honour_sticky, struct stat *root_dev) {
+         DIR *d;
+         int ret = 0;
+ 
+@@ -3208,24 +3208,37 @@ int rm_rf_children(int fd, bool only_dirs, bool honour_sticky) {
+ 
+                 if (is_dir) {
+                         int subdir_fd;
+-
+-                        subdir_fd = openat(fd, de->d_name, O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NOATIME);
+-                        if (subdir_fd < 0) {
+-                                if (ret == 0 && errno != ENOENT)
+-                                        ret = -errno;
+-                                continue;
++                        struct stat sb;
++                        if (root_dev) {
++                                if (fstatat(fd, de->d_name, &sb, AT_SYMLINK_NOFOLLOW)) {
++                                        if (ret == 0 && errno != ENOENT)
++                                                ret = -errno;
++                                        continue;
++                                }
+                         }
+ 
+-                        r = rm_rf_children(subdir_fd, only_dirs, honour_sticky);
+-                        if (r < 0 && ret == 0)
+-                                ret = r;
++                        /* if root_dev is set, remove subdirectories only, if device is same as dir */
++                        if ((root_dev == NULL) || (sb.st_dev == root_dev->st_dev)) {
+ 
+-                        if (!keep_around)
+-                                if (unlinkat(fd, de->d_name, AT_REMOVEDIR) < 0) {
++                                subdir_fd = openat(fd, de->d_name,
++                                                   O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NOATIME);
++                                if (subdir_fd < 0) {
+                                         if (ret == 0 && errno != ENOENT)
+                                                 ret = -errno;
++                                        continue;
+                                 }
+ 
++                                r = rm_rf_children(subdir_fd, only_dirs, honour_sticky, root_dev);
++                                if (r < 0 && ret == 0)
++                                        ret = r;
++
++                                if (!keep_around)
++                                        if (unlinkat(fd, de->d_name, AT_REMOVEDIR) < 0) {
++                                                if (ret == 0 && errno != ENOENT)
++                                                        ret = -errno;
++                                        }
++                        }
++
+                 } else if (!only_dirs && !keep_around) {
+ 
+                         if (unlinkat(fd, de->d_name, 0) < 0) {
+@@ -3259,7 +3272,7 @@ int rm_rf(const char *path, bool only_dirs, bool delete_root, bool honour_sticky
+                 return 0;
+         }
+ 
+-        r = rm_rf_children(fd, only_dirs, honour_sticky);
++        r = rm_rf_children(fd, only_dirs, honour_sticky, NULL);
+ 
+         if (delete_root) {
+ 
+diff --git a/src/shared/util.h b/src/shared/util.h
+index a47f0b1..38574d9 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -349,7 +349,7 @@ int get_ctty(pid_t, dev_t *_devnr, char **r);
+ int chmod_and_chown(const char *path, mode_t mode, uid_t uid, gid_t gid);
+ int fchmod_and_fchown(int fd, mode_t mode, uid_t uid, gid_t gid);
+ 
+-int rm_rf_children(int fd, bool only_dirs, bool honour_sticky);
++int rm_rf_children(int fd, bool only_dirs, bool honour_sticky, struct stat *root_dev);
+ int rm_rf(const char *path, bool only_dirs, bool delete_root, bool honour_sticky);
+ 
+ int pipe_eof(int fd);

@@ -1,0 +1,29 @@
+From 2d454c1d8d3f21d42ebfb2e1a3bd94b44ea75f17 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:41 +0200
+Subject: [PATCH] manager: only serialize the timestamps for the initramfs if
+ in_initrd() (cherry picked from commit
+ f38ed060600d124a68332694ab497c344bd8e089)
+
+---
+ src/core/manager.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 13d1ef5..c7d3e60 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -1735,8 +1735,11 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds) {
+         fprintf(f, "taint-usr=%s\n", yes_no(m->taint_usr));
+ 
+         dual_timestamp_serialize(f, "initrd-timestamp", &m->initrd_timestamp);
+-        dual_timestamp_serialize(f, "startup-timestamp", &m->startup_timestamp);
+-        dual_timestamp_serialize(f, "finish-timestamp", &m->finish_timestamp);
++
++        if (! in_initrd()) {
++                dual_timestamp_serialize(f, "startup-timestamp", &m->startup_timestamp);
++                dual_timestamp_serialize(f, "finish-timestamp", &m->finish_timestamp);
++        }
+ 
+         fputc('\n', f);
+ 

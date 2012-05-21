@@ -1,0 +1,51 @@
+From 4ec16a7a96f10c3afaf251ae848adbeb43162fdc Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 22 May 2012 00:54:19 +0200
+Subject: [PATCH] F17: fix manpage names
+
+In F17 we still use the systemd-*.conf names.
+---
+ units/systemd-journald.service.in |    2 +-
+ units/systemd-journald.socket     |    2 +-
+ units/systemd-logind.service.in   |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/units/systemd-journald.service.in b/units/systemd-journald.service.in
+index 0c88d53..809e48c 100644
+--- a/units/systemd-journald.service.in
++++ b/units/systemd-journald.service.in
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Journal Service
+-Documentation=man:journald.conf(5)
++Documentation=man:systemd-journald.conf(5)
+ DefaultDependencies=no
+ Requires=systemd-journald.socket
+ After=systemd-journald.socket
+diff --git a/units/systemd-journald.socket b/units/systemd-journald.socket
+index 62f34f9..9febdfc 100644
+--- a/units/systemd-journald.socket
++++ b/units/systemd-journald.socket
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Journal Socket
+-Documentation=man:journald.conf(5)
++Documentation=man:systemd-journald.conf(5)
+ DefaultDependencies=no
+ Before=sockets.target syslog.target
+ 
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index 8041030..cf0aa07 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -8,7 +8,7 @@
+ [Unit]
+ Description=Login Service
+ Documentation=http://www.freedesktop.org/wiki/Software/systemd/multiseat
+-Documentation=man:logind.conf(5)
++Documentation=man:systemd-logind.conf(5)
+ After=nss-user-lookup.target
+ 
+ [Service]

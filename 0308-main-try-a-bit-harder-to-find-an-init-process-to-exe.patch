@@ -1,0 +1,59 @@
+From 4aad592811be7854bf2a682c5a1a9c83b7820ed7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 17:26:19 +0200
+Subject: [PATCH] main: try a bit harder to find an init process to execute
+ after reexec/switch-root (cherry picked from commit
+ b8f8323268ae974288e49a7cc6c1c47531e436c9)
+
+---
+ src/core/main.c |   28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index c2a8922..3aeaa14 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1690,22 +1690,36 @@ finish:
+                  * getopt() in argv[], and some cleanups in envp[],
+                  * but let's hope that doesn't matter.) */
+ 
+-                if (serialization)
++                if (serialization) {
+                         fclose(serialization);
++                        serialization = NULL;
++                }
+ 
+-                if (fds)
++                if (fds) {
+                         fdset_free(fds);
++                        fds = NULL;
++                }
+ 
+-                i = 0;
+-                args[i++] = switch_root_init ? switch_root_init : "/sbin/init";
+-                for (j = 1; j < argc; j++)
++                for (j = 1, i = 1; j < argc; j++)
+                         args[i++] = argv[j];
+                 args[i++] = NULL;
+-
+                 assert(i <= args_size);
++
++                if (switch_root_init) {
++                        args[0] = switch_root_init;
++                        execv(args[0], (char* const*) args);
++                        log_warning("Failed to execute configured init, trying fallback: %m");
++                }
++
++                args[0] = "/sbin/init";
+                 execv(args[0], (char* const*) args);
+ 
+-                log_error("Failed to reexecute: %m");
++                log_warning("Failed to execute /sbin/init, trying fallback: %m");
++
++                args[0] = "/bin/sh";
++                args[1] = NULL;
++                execv(args[0], (char* const*) args);
++                log_error("Failed to execute /bin/sh, giving up: %m");
+         }
+ 
+         if (serialization)

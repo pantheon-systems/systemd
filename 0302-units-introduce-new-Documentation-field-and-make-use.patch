@@ -1,0 +1,1592 @@
+From 3cb32dbac8d02b080fe3aee1304995996b5e6009 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 15:12:18 +0200
+Subject: [PATCH] units: introduce new Documentation= field and make use of it
+ everywhere
+
+This should help making the boot process a bit easier to explore and
+understand for the administrator. The simple idea is that "systemctl
+status" now shows a link to documentation alongside the other status and
+decriptionary information of a service.
+
+This patch adds the necessary fields to all our shipped units if we have
+proper documentation for them.
+(cherry picked from commit 49dbfa7b2b0bf3906704dac1eaeb4eba91056a19)
+
+Conflicts:
+	units/systemd-udev-control.socket
+	units/systemd-udev-kernel.socket
+	units/systemd-udev-settle.service.in
+	units/systemd-udev-trigger.service.in
+	units/systemd-udev.service.in
+---
+ man/systemd.special.xml                        |   65 ++++++++++++++++++++++++
+ man/systemd.unit.xml                           |   17 +++++++
+ src/core/dbus-unit.c                           |    1 +
+ src/core/dbus-unit.h                           |    1 +
+ src/core/load-fragment-gperf.gperf.m4          |    1 +
+ src/core/load-fragment.c                       |   37 ++++++++++++++
+ src/core/load-fragment.h                       |    1 +
+ src/core/unit.c                                |    8 +--
+ src/core/unit.h                                |    1 +
+ src/shared/util.c                              |   21 ++++++++
+ src/shared/util.h                              |    2 +
+ src/systemctl/systemctl.c                      |   38 ++++++++++++++
+ units/basic.target                             |    3 +-
+ units/bluetooth.target                         |    3 +-
+ units/cryptsetup.target                        |    3 +-
+ units/dev-hugepages.mount                      |    1 +
+ units/dev-mqueue.mount                         |    1 +
+ units/emergency.service.in                     |    2 -
+ units/emergency.target                         |    3 +-
+ units/final.target                             |    3 +-
+ units/getty.target                             |    1 +
+ units/getty@.service.m4                        |    1 +
+ units/graphical.target                         |    3 +-
+ units/halt.target                              |    3 +-
+ units/hibernate.target                         |    3 +-
+ units/http-daemon.target                       |    3 +-
+ units/kexec.target                             |    3 +-
+ units/local-fs-pre.target                      |    3 +-
+ units/local-fs.target                          |    3 +-
+ units/mail-transfer-agent.target               |    3 +-
+ units/multi-user.target                        |    3 +-
+ units/network.target                           |    3 +-
+ units/nss-lookup.target                        |    3 +-
+ units/nss-user-lookup.target                   |    3 +-
+ units/poweroff.target                          |    3 +-
+ units/printer.target                           |    3 +-
+ units/proc-sys-fs-binfmt_misc.mount            |    1 +
+ units/reboot.target                            |    3 +-
+ units/remote-fs-pre.target                     |    3 +-
+ units/remote-fs.target                         |    3 +-
+ units/rescue.service.m4.in                     |    2 -
+ units/rescue.target                            |    3 +-
+ units/rpcbind.target                           |    3 +-
+ units/serial-getty@.service.m4                 |    1 +
+ units/shutdown.target                          |    3 +-
+ units/sigpwr.target                            |    3 +-
+ units/sleep.target                             |    3 +-
+ units/smartcard.target                         |    3 +-
+ units/sockets.target                           |    3 +-
+ units/sound.target                             |    3 +-
+ units/suspend.target                           |    3 +-
+ units/swap.target                              |    3 +-
+ units/sysinit.target                           |    3 +-
+ units/syslog.socket                            |    4 +-
+ units/syslog.target                            |    4 +-
+ units/systemd-ask-password-console.path        |    1 +
+ units/systemd-ask-password-console.service.in  |    1 +
+ units/systemd-ask-password-plymouth.path       |    1 +
+ units/systemd-ask-password-plymouth.service.in |    1 +
+ units/systemd-ask-password-wall.path           |    1 +
+ units/systemd-ask-password-wall.service.in     |    1 +
+ units/systemd-binfmt.service.in                |    2 +
+ units/systemd-hostnamed.service.in             |    5 +-
+ units/systemd-initctl.service.in               |    2 -
+ units/systemd-initctl.socket                   |    2 -
+ units/systemd-journald.service.in              |    3 +-
+ units/systemd-journald.socket                  |    3 +-
+ units/systemd-localed.service.in               |    5 +-
+ units/systemd-logind.service.in                |    4 +-
+ units/systemd-modules-load.service.in          |    1 +
+ units/systemd-shutdownd.service.in             |    2 -
+ units/systemd-shutdownd.socket                 |    2 -
+ units/systemd-sysctl.service.in                |    1 +
+ units/systemd-timedated-ntp.target             |    1 +
+ units/systemd-timedated.service.in             |    4 +-
+ units/systemd-tmpfiles-clean.service.in        |    1 +
+ units/systemd-tmpfiles-clean.timer             |    1 +
+ units/systemd-tmpfiles-setup.service.in        |    1 +
+ units/systemd-update-utmp-runlevel.service.in  |    1 +
+ units/systemd-update-utmp-shutdown.service.in  |    1 +
+ units/systemd-vconsole-setup.service.in        |    1 +
+ units/time-sync.target                         |    3 +-
+ units/umount.target                            |    3 +-
+ units/user/default.target                      |    3 +-
+ units/user/exit.service.in                     |    3 +-
+ units/user/exit.target                         |    3 +-
+ 86 files changed, 267 insertions(+), 107 deletions(-)
+
+diff --git a/man/systemd.special.xml b/man/systemd.special.xml
+index 9bb4297..27b98a2 100644
+--- a/man/systemd.special.xml
++++ b/man/systemd.special.xml
+@@ -49,7 +49,9 @@
+ 
+         <refsynopsisdiv>
+                 <para><filename>basic.target</filename>,
++                <filename>bluetooth.target</filename>,
+                 <filename>ctrl-alt-del.target</filename>,
++                <filename>cryptsetup.target</filename>,
+                 <filename>dbus.service</filename>,
+                 <filename>dbus.socket</filename>,
+                 <filename>default.target</filename>,
+@@ -57,6 +59,7 @@
+                 <filename>emergency.target</filename>,
+                 <filename>exit.service</filename>,
+                 <filename>final.service</filename>,
++                <filename>getty.target</filename>,
+                 <filename>graphical.target</filename>,
+                 <filename>hibernate.target</filename>,
+                 <filename>http-daemon.target</filename>,
+@@ -69,7 +72,9 @@
+                 <filename>multi-user.target</filename>,
+                 <filename>network.target</filename>,
+                 <filename>nss-lookup.target</filename>,
++                <filename>nss-user-lookup.target</filename>,
+                 <filename>poweroff.target</filename>,
++                <filename>printer.target</filename>,
+                 <filename>reboot.target</filename>,
+                 <filename>remote-fs.target</filename>,
+                 <filename>remote-fs-pre.target</filename>,
+@@ -82,7 +87,9 @@
+                 <filename>shutdown.target</filename>,
+                 <filename>sigpwr.target</filename>,
+                 <filename>sleep.target</filename>,
++                <filename>smartcard.target</filename>,
+                 <filename>sockets.target</filename>,
++                <filename>sound.target</filename>,
+                 <filename>suspend.target</filename>,
+                 <filename>swap.target</filename>,
+                 <filename>sysinit.target</filename>,
+@@ -128,6 +135,16 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>bluetooth.target</filename></term>
++                                <listitem>
++                                        <para>This target is started
++                                        automatically as soon as a
++                                        bluetooth controller is
++                                        plugged in or becomes
++                                        available at boot.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>ctrl-alt-del.target</filename></term>
+                                 <listitem>
+                                         <para>systemd starts this
+@@ -140,6 +157,15 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>cryptsetup.target</filename></term>
++                                <listitem>
++                                        <para>A target that pulls in
++                                        setup services for all
++                                        encrypted block
++                                        devices.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>dbus.service</filename></term>
+                                 <listitem>
+                                         <para>A special unit for the
+@@ -227,6 +253,15 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>getty.target</filename></term>
++                                <listitem>
++                                        <para>A special target unit
++                                        that pulls in all local TTY
++                                        <filename>getty</filename> instances.
++                                        </para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>graphical.target</filename></term>
+                                 <listitem>
+                                         <para>A special target unit
+@@ -443,6 +478,16 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>printer.target</filename></term>
++                                <listitem>
++                                        <para>This target is started
++                                        automatically as soon as a
++                                        printer is plugged in or
++                                        becomes available at
++                                        boot.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>reboot.target</filename></term>
+                                 <listitem>
+                                         <para>A special target unit
+@@ -616,6 +661,16 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>smartcard.target</filename></term>
++                                <listitem>
++                                        <para>This target is started
++                                        automatically as soon as a
++                                        smartcard controller is
++                                        plugged in or becomes
++                                        available at boot.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>sockets.target</filename></term>
+                                 <listitem>
+                                         <para>A special target unit
+@@ -630,6 +685,16 @@
+                                 </listitem>
+                         </varlistentry>
+                         <varlistentry>
++                                <term><filename>sound.target</filename></term>
++                                <listitem>
++                                        <para>This target is started
++                                        automatically as soon as a
++                                        sound card is plugged in or
++                                        becomes available at
++                                        boot.</para>
++                                </listitem>
++                        </varlistentry>
++                        <varlistentry>
+                                 <term><filename>suspend.target</filename></term>
+                                 <listitem>
+                                         <para>A special target unit
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 5975a63..88c28da 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -295,6 +295,23 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>Documentation=</varname></term>
++                                <listitem><para>A space separated list
++                                of URIs referencing documentation for
++                                this unit or its
++                                configuration. Accepted are only URIs
++                                of the types
++                                <literal>http://</literal>,
++                                <literal>https://</literal>,
++                                <literal>file:</literal>,
++                                <literal>info:</literal>,
++                                <literal>man:</literal>. For more
++                                information about the syntax of these
++                                URIs see
++                                <citerefentry><refentrytitle>uri</refentrytitle><manvolnum>7</manvolnum></citerefentry>.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>Requires=</varname></term>
+ 
+                                 <listitem><para>Configures requirement
+diff --git a/src/core/dbus-unit.c b/src/core/dbus-unit.c
+index 62484ba..23c6fa7 100644
+--- a/src/core/dbus-unit.c
++++ b/src/core/dbus-unit.c
+@@ -808,6 +808,7 @@ const BusProperty bus_unit_properties[] = {
+         { "PropagateReloadTo",    bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_PROPAGATE_RELOAD_TO]),     true },
+         { "PropagateReloadFrom",  bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_PROPAGATE_RELOAD_FROM]),   true },
+         { "RequiresMountsFor",    bus_property_append_strv,          "as", offsetof(Unit, requires_mounts_for),                        true },
++        { "Documentation",        bus_property_append_strv,          "as", offsetof(Unit, documentation),                              true },
+         { "Description",          bus_unit_append_description,        "s", 0 },
+         { "LoadState",            bus_unit_append_load_state,         "s", offsetof(Unit, load_state)                         },
+         { "ActiveState",          bus_unit_append_active_state,       "s", 0 },
+diff --git a/src/core/dbus-unit.h b/src/core/dbus-unit.h
+index 45fc813..0caecfe 100644
+--- a/src/core/dbus-unit.h
++++ b/src/core/dbus-unit.h
+@@ -87,6 +87,7 @@
+         "  <property name=\"PropagateReloadFrom\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"RequiresMountsFor\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"Description\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"Documentation\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"LoadState\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"ActiveState\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"SubState\" type=\"s\" access=\"read\"/>\n"  \
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index d929273..f0e25c0 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -92,6 +92,7 @@ $1.ControlGroupPersistent,       config_parse_tristate,              0,
+ )m4_dnl
+ Unit.Names,                      config_parse_unit_names,            0,                             0
+ Unit.Description,                config_parse_unit_string_printf,    0,                             offsetof(Unit, description)
++Unit.Documentation,              config_parse_documentation,         0,                             offsetof(Unit, documentation)
+ Unit.Requires,                   config_parse_unit_deps,             UNIT_REQUIRES,                 0
+ Unit.RequiresOverridable,        config_parse_unit_deps,             UNIT_REQUIRES_OVERRIDABLE,     0
+ Unit.Requisite,                  config_parse_unit_deps,             UNIT_REQUISITE,                0
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index b5c6d0f..b59029e 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -2063,6 +2063,43 @@ int config_parse_unit_requires_mounts_for(
+         return r;
+ }
+ 
++int config_parse_documentation(
++                const char *filename,
++                unsigned line,
++                const char *section,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++        Unit *u = userdata;
++        int r;
++        char **a, **b;
++
++        assert(filename);
++        assert(lvalue);
++        assert(rvalue);
++        assert(u);
++
++        r = config_parse_unit_strv_printf(filename, line, section, lvalue, ltype, rvalue, data, userdata);
++        if (r < 0)
++                return r;
++
++        for (a = b = u->documentation; a && *a; a++) {
++
++                if (is_valid_documentation_url(*a))
++                        *(b++) = *a;
++                else {
++                        log_error("[%s:%u] Invalid URL, ignoring: %s", filename, line, *a);
++                        free(*a);
++                }
++        }
++        *b = NULL;
++
++        return r;
++}
++
+ #define FOLLOW_MAX 8
+ 
+ static int open_follow(char **filename, FILE **_f, Set *names, char **_final) {
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index 98167b1..d0efa90 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -36,6 +36,7 @@ int config_parse_unit_names(const char *filename, unsigned line, const char *sec
+ int config_parse_unit_string_printf(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_unit_strv_printf(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_unit_path_printf(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
++int config_parse_documentation(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_socket_listen(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_socket_bind(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec_nice(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 8a51d6b..15e86e9 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -397,6 +397,7 @@ void unit_free(Unit *u) {
+         cgroup_attribute_free_list(u->cgroup_attributes);
+ 
+         free(u->description);
++        strv_free(u->documentation);
+         free(u->fragment_path);
+         free(u->instance);
+ 
+@@ -624,7 +625,7 @@ const char *unit_description(Unit *u) {
+ }
+ 
+ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+-        char *t;
++        char *t, **j;
+         UnitDependency d;
+         Iterator i;
+         char *p2;
+@@ -672,6 +673,9 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+         SET_FOREACH(t, u->names, i)
+                 fprintf(f, "%s\tName: %s\n", prefix, t);
+ 
++        STRV_FOREACH(j, u->documentation)
++                fprintf(f, "%s\tDocumentation: %s\n", prefix, *j);
++
+         if ((following = unit_following(u)))
+                 fprintf(f, "%s\tFollowing: %s\n", prefix, following->id);
+ 
+@@ -698,8 +702,6 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+         }
+ 
+         if (!strv_isempty(u->requires_mounts_for)) {
+-                char **j;
+-
+                 fprintf(f,
+                         "%s\tRequiresMountsFor:", prefix);
+ 
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 3c20850..e198d07 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -157,6 +157,7 @@ struct Unit {
+         char **requires_mounts_for;
+ 
+         char *description;
++        char **documentation;
+ 
+         char *fragment_path; /* if loaded from a config file this is the primary path to it */
+         usec_t fragment_mtime;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index c1fc1a7..2ce5b8c 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5610,3 +5610,24 @@ int can_sleep(const char *type) {
+         free(p);
+         return found;
+ }
++
++bool is_valid_documentation_url(const char *url) {
++        assert(url);
++
++        if (startswith(url, "http://") && url[7])
++                return true;
++
++        if (startswith(url, "https://") && url[8])
++                return true;
++
++        if (startswith(url, "file:") && url[5])
++                return true;
++
++        if (startswith(url, "info:") && url[5])
++                return true;
++
++        if (startswith(url, "man:") && url[4])
++                return true;
++
++        return false;
++}
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 5ef8c52..024b2fc 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -508,4 +508,6 @@ int getenv_for_pid(pid_t pid, const char *field, char **_value);
+ 
+ int can_sleep(const char *type);
+ 
++bool is_valid_documentation_url(const char *url);
++
+ #endif
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 484f7c3..2c2f637 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2138,6 +2138,8 @@ typedef struct UnitStatusInfo {
+         const char *description;
+         const char *following;
+ 
++        char **documentation;
++
+         const char *path;
+         const char *default_control_group;
+ 
+@@ -2283,6 +2285,19 @@ static void print_status_info(UnitStatusInfo *i) {
+         if (i->what)
+                 printf("\t    What: %s\n", i->what);
+ 
++        if (!strv_isempty(i->documentation)) {
++                char **t;
++                bool first = true;
++
++                STRV_FOREACH(t, i->documentation) {
++                        if (first) {
++                                printf("\t    Docs: %s\n", *t);
++                                first = false;
++                        } else
++                                printf("\t          %s\n", *t);
++                }
++        }
++
+         if (i->accept)
+                 printf("\tAccepted: %u; Connected: %u\n", i->n_accepted, i->n_connections);
+ 
+@@ -2589,6 +2604,27 @@ static int status_property(const char *name, DBusMessageIter *iter, UnitStatusIn
+ 
+                                 dbus_message_iter_next(&sub);
+                         }
++                } else if (dbus_message_iter_get_element_type(iter) == DBUS_TYPE_STRING &&
++                           streq(name, "Documentation")) {
++
++                        DBusMessageIter sub;
++
++                        dbus_message_iter_recurse(iter, &sub);
++                        while (dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_STRING) {
++                                const char *s;
++                                char **l;
++
++                                dbus_message_iter_get_basic(&sub, &s);
++
++                                l = strv_append(i->documentation, s);
++                                if (!l)
++                                        return -ENOMEM;
++
++                                strv_free(i->documentation);
++                                i->documentation = l;
++
++                                dbus_message_iter_next(&sub);
++                        }
+                 }
+ 
+                 break;
+@@ -2912,6 +2948,8 @@ static int show_one(const char *verb, DBusConnection *bus, const char *path, boo
+         if (!show_properties)
+                 print_status_info(&info);
+ 
++        strv_free(info.documentation);
++
+         if (!streq_ptr(info.active_state, "active") &&
+             !streq_ptr(info.active_state, "reloading") &&
+             streq(verb, "status"))
+diff --git a/units/basic.target b/units/basic.target
+index 0258ca0..3126384 100644
+--- a/units/basic.target
++++ b/units/basic.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Basic System
++Documentation=man:systemd.special(7)
+ Requires=sysinit.target sockets.target
+ After=sysinit.target sockets.target
+ RefuseManualStart=yes
+diff --git a/units/bluetooth.target b/units/bluetooth.target
+index c66718e..2cbd4be 100644
+--- a/units/bluetooth.target
++++ b/units/bluetooth.target
+@@ -5,8 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Bluetooth
++Documentation=man:systemd.special(7)
+ StopWhenUnneeded=yes
+diff --git a/units/cryptsetup.target b/units/cryptsetup.target
+index 64ee8c6..8187ff6 100644
+--- a/units/cryptsetup.target
++++ b/units/cryptsetup.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Encrypted Volumes
++Documentation=man:systemd.special(7)
+diff --git a/units/dev-hugepages.mount b/units/dev-hugepages.mount
+index 72a522e..4ffc9b9 100644
+--- a/units/dev-hugepages.mount
++++ b/units/dev-hugepages.mount
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Huge Pages File System
++Documentation=https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt
+ DefaultDependencies=no
+ Before=sysinit.target
+ ConditionPathExists=/sys/kernel/mm/hugepages
+diff --git a/units/dev-mqueue.mount b/units/dev-mqueue.mount
+index cffdaf7..fac66b1 100644
+--- a/units/dev-mqueue.mount
++++ b/units/dev-mqueue.mount
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=POSIX Message Queue File System
++Documentation=man:mq_overview(7)
+ DefaultDependencies=no
+ Before=sysinit.target
+ ConditionPathExists=/proc/sys/fs/mqueue
+diff --git a/units/emergency.service.in b/units/emergency.service.in
+index 11ff472..a1fc2ea 100644
+--- a/units/emergency.service.in
++++ b/units/emergency.service.in
+@@ -5,8 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Emergency Shell
+ DefaultDependencies=no
+diff --git a/units/emergency.target b/units/emergency.target
+index 6a99e05..ce28234 100644
+--- a/units/emergency.target
++++ b/units/emergency.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Emergency Mode
++Documentation=man:systemd.special(7)
+ Requires=emergency.service
+ After=emergency.service
+ AllowIsolate=yes
+diff --git a/units/final.target b/units/final.target
+index 9cfda19..82ac05d 100644
+--- a/units/final.target
++++ b/units/final.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Final Step
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ RefuseManualStart=yes
+ After=shutdown.target umount.target
+diff --git a/units/getty.target b/units/getty.target
+index e4435dc..a947c20 100644
+--- a/units/getty.target
++++ b/units/getty.target
+@@ -7,3 +7,4 @@
+ 
+ [Unit]
+ Description=Login Prompts
++Documentation=man:systemd.special(7)
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index 5f16c21..f57ba99 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Getty on %I
++Documentation=man:agetty(8)
+ After=systemd-user-sessions.service plymouth-quit-wait.service
+ m4_ifdef(`TARGET_FEDORA',
+ After=rc-local.service
+diff --git a/units/graphical.target b/units/graphical.target
+index f2e3034..cb0fe05 100644
+--- a/units/graphical.target
++++ b/units/graphical.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Graphical Interface
++Documentation=man:systemd.special(7)
+ Requires=multi-user.target
+ After=multi-user.target
+ Conflicts=rescue.target
+diff --git a/units/halt.target b/units/halt.target
+index 04b42cd..6572baa 100644
+--- a/units/halt.target
++++ b/units/halt.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Halt
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ Requires=halt.service
+ After=halt.service
+diff --git a/units/hibernate.target b/units/hibernate.target
+index 05238a7..23a9f99 100644
+--- a/units/hibernate.target
++++ b/units/hibernate.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2.1 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Hibernate
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ BindTo=hibernate.service
+ After=hibernate.service
+diff --git a/units/http-daemon.target b/units/http-daemon.target
+index 45f1018..cdb244d 100644
+--- a/units/http-daemon.target
++++ b/units/http-daemon.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for compatibility with SysV/LSB units, and
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+ Description=Web Server
++Documentation=man:systemd.special(7)
+diff --git a/units/kexec.target b/units/kexec.target
+index b77e6a4..ea9c6da 100644
+--- a/units/kexec.target
++++ b/units/kexec.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Reboot via kexec
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ Requires=kexec.service
+ After=kexec.service
+diff --git a/units/local-fs-pre.target b/units/local-fs-pre.target
+index 11e67ba..12998b7 100644
+--- a/units/local-fs-pre.target
++++ b/units/local-fs-pre.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Local File Systems (Pre)
++Documentation=man:systemd.special(7)
+diff --git a/units/local-fs.target b/units/local-fs.target
+index 1886f74..635f68c 100644
+--- a/units/local-fs.target
++++ b/units/local-fs.target
+@@ -5,9 +5,8 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Local File Systems
++Documentation=man:systemd.special(7)
+ OnFailure=emergency.target
+ OnFailureIsolate=yes
+diff --git a/units/mail-transfer-agent.target b/units/mail-transfer-agent.target
+index ebb1ea1..722b76f 100644
+--- a/units/mail-transfer-agent.target
++++ b/units/mail-transfer-agent.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for compatibility with SysV/LSB units, and
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+ Description=Mail Transfer Agent
++Documentation=man:systemd.special(7)
+diff --git a/units/multi-user.target b/units/multi-user.target
+index 66f1a95..04f3c90 100644
+--- a/units/multi-user.target
++++ b/units/multi-user.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Multi-User
++Documentation=man:systemd.special(7)
+ Requires=basic.target
+ Conflicts=rescue.service rescue.target
+ After=basic.target rescue.service rescue.target
+diff --git a/units/network.target b/units/network.target
+index d97f64f..d326488 100644
+--- a/units/network.target
++++ b/units/network.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Network
++Documentation=man:systemd.special(7)
+diff --git a/units/nss-lookup.target b/units/nss-lookup.target
+index f7b0b5c..aa5289e 100644
+--- a/units/nss-lookup.target
++++ b/units/nss-lookup.target
+@@ -5,11 +5,10 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for compatibility with SysV/LSB units, and
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+ Description=Host and Network Name Lookups
++Documentation=man:systemd.special(7)
+ After=network.target
+diff --git a/units/nss-user-lookup.target b/units/nss-user-lookup.target
+index 40e2148..32c0983 100644
+--- a/units/nss-user-lookup.target
++++ b/units/nss-user-lookup.target
+@@ -5,11 +5,10 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for implementations lacking socket/bus
+ # activation.
+ 
+ [Unit]
+ Description=User and Group Name Lookups
++Documentation=man:systemd.special(7)
+ After=network.target
+diff --git a/units/poweroff.target b/units/poweroff.target
+index d2ccf4b..b2390fe 100644
+--- a/units/poweroff.target
++++ b/units/poweroff.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Power-Off
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ Requires=poweroff.service
+ After=poweroff.service
+diff --git a/units/printer.target b/units/printer.target
+index 14c90ff..dc1858d 100644
+--- a/units/printer.target
++++ b/units/printer.target
+@@ -5,8 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Printer
++Documentation=man:systemd.special(7)
+ StopWhenUnneeded=yes
+diff --git a/units/proc-sys-fs-binfmt_misc.mount b/units/proc-sys-fs-binfmt_misc.mount
+index 1829c21..1bdd835 100644
+--- a/units/proc-sys-fs-binfmt_misc.mount
++++ b/units/proc-sys-fs-binfmt_misc.mount
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Arbitrary Executable File Formats File System
++Documentation=https://www.kernel.org/doc/Documentation/binfmt_misc.txt
+ DefaultDependencies=no
+ 
+ [Mount]
+diff --git a/units/reboot.target b/units/reboot.target
+index 41e133c..10a77c1 100644
+--- a/units/reboot.target
++++ b/units/reboot.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Reboot
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ Requires=reboot.service
+ After=reboot.service
+diff --git a/units/remote-fs-pre.target b/units/remote-fs-pre.target
+index eca271b..667a894 100644
+--- a/units/remote-fs-pre.target
++++ b/units/remote-fs-pre.target
+@@ -5,8 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Remote File Systems (Pre)
++Documentation=man:systemd.special(7)
+ After=network.target nss-lookup.target
+diff --git a/units/remote-fs.target b/units/remote-fs.target
+index a48f87e..0be60b0 100644
+--- a/units/remote-fs.target
++++ b/units/remote-fs.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Remote File Systems
++Documentation=man:systemd.special(7)
+ 
+ [Install]
+ WantedBy=multi-user.target
+diff --git a/units/rescue.service.m4.in b/units/rescue.service.m4.in
+index da4c4da..76f8946 100644
+--- a/units/rescue.service.m4.in
++++ b/units/rescue.service.m4.in
+@@ -5,8 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Rescue Shell
+ DefaultDependencies=no
+diff --git a/units/rescue.target b/units/rescue.target
+index 5bf3f8e..f6aff5f 100644
+--- a/units/rescue.target
++++ b/units/rescue.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Rescue Mode
++Documentation=man:systemd.special(7)
+ Requires=basic.target rescue.service
+ After=basic.target rescue.service
+ AllowIsolate=yes
+diff --git a/units/rpcbind.target b/units/rpcbind.target
+index a5cea8c..142f855 100644
+--- a/units/rpcbind.target
++++ b/units/rpcbind.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for compatibility with SysV/LSB units, and
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+ Description=RPC Port Mapper
++Documentation=man:systemd.special(7)
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index d966f77..66dfeed 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Serial Getty on %I
++Documentation=man:agetty(8)
+ BindTo=dev-%i.device
+ After=dev-%i.device systemd-user-sessions.service plymouth-quit-wait.service
+ m4_ifdef(`TARGET_FEDORA',
+diff --git a/units/shutdown.target b/units/shutdown.target
+index 99a659e..bff4481 100644
+--- a/units/shutdown.target
++++ b/units/shutdown.target
+@@ -5,9 +5,8 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Shutdown
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ RefuseManualStart=yes
+diff --git a/units/sigpwr.target b/units/sigpwr.target
+index 0ca502d..ed729c8 100644
+--- a/units/sigpwr.target
++++ b/units/sigpwr.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Power Failure
++Documentation=man:systemd.special(7)
+diff --git a/units/sleep.target b/units/sleep.target
+index 9f4b247..d7ebd28 100644
+--- a/units/sleep.target
++++ b/units/sleep.target
+@@ -5,9 +5,8 @@
+ #  the Free Software Foundation; either version 2.1 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Sleep
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ RefuseManualStart=yes
+diff --git a/units/smartcard.target b/units/smartcard.target
+index 28dd2bb..fa9d712 100644
+--- a/units/smartcard.target
++++ b/units/smartcard.target
+@@ -5,8 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Smart Card
++Documentation=man:systemd.special(7)
+ StopWhenUnneeded=yes
+diff --git a/units/sockets.target b/units/sockets.target
+index 2296312..3230a50 100644
+--- a/units/sockets.target
++++ b/units/sockets.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Sockets
++Documentation=man:systemd.special(7)
+diff --git a/units/sound.target b/units/sound.target
+index e53221c..188738c 100644
+--- a/units/sound.target
++++ b/units/sound.target
+@@ -5,8 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Sound Card
++Documentation=man:systemd.special(7)
+ StopWhenUnneeded=yes
+diff --git a/units/suspend.target b/units/suspend.target
+index 3ddb449..eaf79be 100644
+--- a/units/suspend.target
++++ b/units/suspend.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2.1 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Suspend
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ BindTo=suspend.service
+ After=suspend.service
+diff --git a/units/swap.target b/units/swap.target
+index 26dd261..8626ba4 100644
+--- a/units/swap.target
++++ b/units/swap.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Swap
++Documentation=man:systemd.special(7)
+diff --git a/units/sysinit.target b/units/sysinit.target
+index eb9a1c7..d1eef64 100644
+--- a/units/sysinit.target
++++ b/units/sysinit.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=System Initialization
++Documentation=man:systemd.special(7)
+ Conflicts=emergency.service emergency.target
+ Wants=local-fs.target swap.target
+ After=local-fs.target swap.target emergency.service emergency.target
+diff --git a/units/syslog.socket b/units/syslog.socket
+index 0e211e1..de22382 100644
+--- a/units/syslog.socket
++++ b/units/syslog.socket
+@@ -5,10 +5,10 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Syslog Socket
++Documentation=man:systemd.special(7)
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/syslog
+ DefaultDependencies=no
+ Before=sockets.target syslog.target
+ Conflicts=shutdown.target
+diff --git a/units/syslog.target b/units/syslog.target
+index 825b26e..8772fa2 100644
+--- a/units/syslog.target
++++ b/units/syslog.target
+@@ -5,13 +5,13 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for compatibility with SysV/LSB units, and
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+ Description=Syslog
++Documentation=man:systemd.special(7)
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/syslog
+ 
+ # Avoid that we conflict with shutdown.target, so that we can stay
+ # until the very end and do not cancel shutdown.target if we should
+diff --git a/units/systemd-ask-password-console.path b/units/systemd-ask-password-console.path
+index c3143d1..3a0f33e 100644
+--- a/units/systemd-ask-password-console.path
++++ b/units/systemd-ask-password-console.path
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Dispatch Password Requests to Console Directory Watch
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=plymouth-start.service
+diff --git a/units/systemd-ask-password-console.service.in b/units/systemd-ask-password-console.service.in
+index 5ff3ed5..1fc2cd2 100644
+--- a/units/systemd-ask-password-console.service.in
++++ b/units/systemd-ask-password-console.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Dispatch Password Requests to Console
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=plymouth-start.service
+diff --git a/units/systemd-ask-password-plymouth.path b/units/systemd-ask-password-plymouth.path
+index 06a5876..2cfc614 100644
+--- a/units/systemd-ask-password-plymouth.path
++++ b/units/systemd-ask-password-plymouth.path
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Forward Password Requests to Plymouth Directory Watch
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=plymouth-start.service
+diff --git a/units/systemd-ask-password-plymouth.service.in b/units/systemd-ask-password-plymouth.service.in
+index 92cbfdb..cc61fb8 100644
+--- a/units/systemd-ask-password-plymouth.service.in
++++ b/units/systemd-ask-password-plymouth.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Forward Password Requests to Plymouth
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=plymouth-start.service
+diff --git a/units/systemd-ask-password-wall.path b/units/systemd-ask-password-wall.path
+index 050b73b..d28bb4c 100644
+--- a/units/systemd-ask-password-wall.path
++++ b/units/systemd-ask-password-wall.path
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Forward Password Requests to Wall Directory Watch
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ Before=basic.target shutdown.target
+diff --git a/units/systemd-ask-password-wall.service.in b/units/systemd-ask-password-wall.service.in
+index d8e27bf..90b3c17 100644
+--- a/units/systemd-ask-password-wall.service.in
++++ b/units/systemd-ask-password-wall.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Forward Password Requests to Wall
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+ After=systemd-user-sessions.service
+ 
+ [Service]
+diff --git a/units/systemd-binfmt.service.in b/units/systemd-binfmt.service.in
+index 515c81b..1295ca0 100644
+--- a/units/systemd-binfmt.service.in
++++ b/units/systemd-binfmt.service.in
+@@ -7,6 +7,8 @@
+ 
+ [Unit]
+ Description=Set Up Additional Binary Formats
++Documentation=man:binfmt.d(5)
++Documentation=https://www.kernel.org/doc/Documentation/binfmt_misc.txt
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service proc-sys-fs-binfmt_misc.automount
+diff --git a/units/systemd-hostnamed.service.in b/units/systemd-hostnamed.service.in
+index 548e861..29ec113 100644
+--- a/units/systemd-hostnamed.service.in
++++ b/units/systemd-hostnamed.service.in
+@@ -5,10 +5,11 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Hostname Service
++Documentation=man:hostname(5)
++Documentation=man:machine-info(5)
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/hostnamed
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-hostnamed
+diff --git a/units/systemd-initctl.service.in b/units/systemd-initctl.service.in
+index 7df3aa6..d2f1ac6 100644
+--- a/units/systemd-initctl.service.in
++++ b/units/systemd-initctl.service.in
+@@ -5,8 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=/dev/initctl Compatibility Daemon
+ DefaultDependencies=no
+diff --git a/units/systemd-initctl.socket b/units/systemd-initctl.socket
+index 7a3a023..a52d6a6 100644
+--- a/units/systemd-initctl.socket
++++ b/units/systemd-initctl.socket
+@@ -5,8 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=/dev/initctl Compatibility Named Pipe
+ DefaultDependencies=no
+diff --git a/units/systemd-journald.service.in b/units/systemd-journald.service.in
+index 92606b0..0c88d53 100644
+--- a/units/systemd-journald.service.in
++++ b/units/systemd-journald.service.in
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Journal Service
++Documentation=man:journald.conf(5)
+ DefaultDependencies=no
+ Requires=systemd-journald.socket
+ After=systemd-journald.socket
+diff --git a/units/systemd-journald.socket b/units/systemd-journald.socket
+index 15fc49e..62f34f9 100644
+--- a/units/systemd-journald.socket
++++ b/units/systemd-journald.socket
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Journal Socket
++Documentation=man:journald.conf(5)
+ DefaultDependencies=no
+ Before=sockets.target syslog.target
+ 
+diff --git a/units/systemd-localed.service.in b/units/systemd-localed.service.in
+index 4f12519..0cf286e 100644
+--- a/units/systemd-localed.service.in
++++ b/units/systemd-localed.service.in
+@@ -5,10 +5,11 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Locale Service
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/localed
++Documentation=man:locale.conf(5)
++Documentation=man:vconsole.conf(5)
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-localed
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index eb82e4c..8041030 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -5,10 +5,10 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Login Service
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/multiseat
++Documentation=man:logind.conf(5)
+ After=nss-user-lookup.target
+ 
+ [Service]
+diff --git a/units/systemd-modules-load.service.in b/units/systemd-modules-load.service.in
+index 2f2b47f..6c2a164 100644
+--- a/units/systemd-modules-load.service.in
++++ b/units/systemd-modules-load.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Load Kernel Modules
++Documentation=man:modules-load.d(5)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+diff --git a/units/systemd-shutdownd.service.in b/units/systemd-shutdownd.service.in
+index 657365a..7160f48 100644
+--- a/units/systemd-shutdownd.service.in
++++ b/units/systemd-shutdownd.service.in
+@@ -5,8 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Delayed Shutdown Service
+ DefaultDependencies=no
+diff --git a/units/systemd-shutdownd.socket b/units/systemd-shutdownd.socket
+index 7f13c93..b3742de 100644
+--- a/units/systemd-shutdownd.socket
++++ b/units/systemd-shutdownd.socket
+@@ -5,8 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Delayed Shutdown Socket
+ DefaultDependencies=no
+diff --git a/units/systemd-sysctl.service.in b/units/systemd-sysctl.service.in
+index ead5f6e..4794df9 100644
+--- a/units/systemd-sysctl.service.in
++++ b/units/systemd-sysctl.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Apply Kernel Variables
++Documentation=man:sysctl.d(5)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+diff --git a/units/systemd-timedated-ntp.target b/units/systemd-timedated-ntp.target
+index 1284248..0837004 100644
+--- a/units/systemd-timedated-ntp.target
++++ b/units/systemd-timedated-ntp.target
+@@ -12,6 +12,7 @@
+ 
+ [Unit]
+ Description=Network Time Protocol
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/timedated
+ 
+ [Install]
+ WantedBy=multi-user.target
+diff --git a/units/systemd-timedated.service.in b/units/systemd-timedated.service.in
+index 3ec3080..d0458f1 100644
+--- a/units/systemd-timedated.service.in
++++ b/units/systemd-timedated.service.in
+@@ -5,10 +5,10 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Time & Date Service
++Documentation=http://www.freedesktop.org/wiki/Software/systemd/timedated
++Documentation=man:timezone(5)
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-timedated
+diff --git a/units/systemd-tmpfiles-clean.service.in b/units/systemd-tmpfiles-clean.service.in
+index 3c8e72e..f3f33bb 100644
+--- a/units/systemd-tmpfiles-clean.service.in
++++ b/units/systemd-tmpfiles-clean.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Cleanup of Temporary Directories
++Documentation=man:tmpfiles.d(5)
+ DefaultDependencies=no
+ Wants=local-fs.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service local-fs.target
+diff --git a/units/systemd-tmpfiles-clean.timer b/units/systemd-tmpfiles-clean.timer
+index d8529a8..e1c7175 100644
+--- a/units/systemd-tmpfiles-clean.timer
++++ b/units/systemd-tmpfiles-clean.timer
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Daily Cleanup of Temporary Directories
++Documentation=man:tmpfiles.d(5)
+ 
+ [Timer]
+ OnBootSec=15min
+diff --git a/units/systemd-tmpfiles-setup.service.in b/units/systemd-tmpfiles-setup.service.in
+index f90121e..bb0c9a5 100644
+--- a/units/systemd-tmpfiles-setup.service.in
++++ b/units/systemd-tmpfiles-setup.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Recreate Volatile Files and Directories
++Documentation=man:tmpfiles.d(5)
+ DefaultDependencies=no
+ Wants=local-fs.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service local-fs.target
+diff --git a/units/systemd-update-utmp-runlevel.service.in b/units/systemd-update-utmp-runlevel.service.in
+index 9bdb7a4..4a87ac1 100644
+--- a/units/systemd-update-utmp-runlevel.service.in
++++ b/units/systemd-update-utmp-runlevel.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Update UTMP about System Runlevel Changes
++Documentation=man:utmp(5)
+ DefaultDependencies=no
+ After=local-fs.target sysinit.target auditd.service runlevel1.target runlevel2.target runlevel3.target runlevel4.target runlevel5.target systemd-tmpfiles-setup.service
+ Before=poweroff.service reboot.service halt.service
+diff --git a/units/systemd-update-utmp-shutdown.service.in b/units/systemd-update-utmp-shutdown.service.in
+index 3832356..40cee16 100644
+--- a/units/systemd-update-utmp-shutdown.service.in
++++ b/units/systemd-update-utmp-shutdown.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Update UTMP about System Shutdown
++Documentation=man:utmp(5)
+ DefaultDependencies=no
+ After=local-fs.target sysinit.target auditd.service systemd-update-utmp-runlevel.service
+ Before=poweroff.service reboot.service halt.service
+diff --git a/units/systemd-vconsole-setup.service.in b/units/systemd-vconsole-setup.service.in
+index 943a982..a461997 100644
+--- a/units/systemd-vconsole-setup.service.in
++++ b/units/systemd-vconsole-setup.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Setup Virtual Console
++Documentation=man:vconsole.conf(5)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+diff --git a/units/time-sync.target b/units/time-sync.target
+index aa34ecb..8f175c1 100644
+--- a/units/time-sync.target
++++ b/units/time-sync.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ # This exists mostly for compatibility with SysV/LSB units, and
+ # implementations lacking socket/bus activation.
+ 
+ [Unit]
+ Description=System Time Synchronized
++Documentation=man:systemd.special(7)
+diff --git a/units/umount.target b/units/umount.target
+index b9ecca6..0cac44f 100644
+--- a/units/umount.target
++++ b/units/umount.target
+@@ -5,9 +5,8 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Unmount All Filesystems
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ RefuseManualStart=yes
+diff --git a/units/user/default.target b/units/user/default.target
+index deb310c..04bcee0 100644
+--- a/units/user/default.target
++++ b/units/user/default.target
+@@ -5,7 +5,6 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Default
++Documentation=man:systemd.special(7)
+diff --git a/units/user/exit.service.in b/units/user/exit.service.in
+index a20b089..5504601 100644
+--- a/units/user/exit.service.in
++++ b/units/user/exit.service.in
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Exit the Session
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ Requires=shutdown.target
+ After=shutdown.target
+diff --git a/units/user/exit.target b/units/user/exit.target
+index f34844c..69761ed 100644
+--- a/units/user/exit.target
++++ b/units/user/exit.target
+@@ -5,10 +5,9 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ 
+-# See systemd.special(7) for details
+-
+ [Unit]
+ Description=Exit the Session
++Documentation=man:systemd.special(7)
+ DefaultDependencies=no
+ Requires=exit.service
+ After=exit.service

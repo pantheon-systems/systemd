@@ -1,0 +1,24 @@
+From 91276ef7c74d0234e2b7f52ffd15c77e969f9a59 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:45 +0200
+Subject: [PATCH] delta/delta.c: initialize bottom for fail state (cherry
+ picked from commit
+ d966a7b3631a54602297ef3bff1dcaf35cbefd12)
+
+---
+ src/delta/delta.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 1a5b08a..4694fc8 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -231,7 +231,7 @@ finish:
+ static int process_suffix(const char *prefixes, const char *suffix) {
+         const char *p;
+         char *f;
+-        Hashmap *top, *bottom;
++        Hashmap *top, *bottom=NULL;
+         int r = 0, k;
+         Iterator i;
+         int n_found = 0;

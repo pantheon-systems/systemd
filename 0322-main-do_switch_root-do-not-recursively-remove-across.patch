@@ -1,0 +1,31 @@
+From e88aff92ae49cb5780b1f9bb916c25f7bb270aa7 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 15:08:28 +0200
+Subject: [PATCH] main: do_switch_root() do not recursively remove across
+ device boundaries (cherry picked from commit
+ 97a66e94700845239cfe628da3569ac06034fa4d)
+
+---
+ src/core/main.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index c42356d..76280ad 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1238,7 +1238,14 @@ static int do_switch_root(const char *switch_root) {
+         }
+ 
+         if (cfd >= 0) {
+-                rm_rf_children(cfd, false, false);
++                struct stat rb;
++
++                if (fstat(cfd, &rb)) {
++                        log_error("failed to stat old root directory");
++                        goto fail;
++                }
++
++                rm_rf_children(cfd, false, false, &rb);
+                 close(cfd);
+                 cfd=-1;
+         }

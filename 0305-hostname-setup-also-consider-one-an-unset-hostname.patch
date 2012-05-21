@@ -1,0 +1,97 @@
+From 0afe091e913a6f7214ef97e37fb0bd6760ebfb7a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 17:19:58 +0200
+Subject: [PATCH] =?UTF-8?q?hostname-setup:=20also=20consider=20(=C5=84one)=20?=
+ =?UTF-8?q?an=20unset=20hostname=20(cherry=20picked=20from=20commit=20344de6?=
+ =?UTF-8?q?0901f0e3ce0d2f112b7be97fc6d0e2f071)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/core/hostname-setup.c |   25 +++++++------------------
+ src/shared/util.c         |   10 +++++++++-
+ src/shared/util.h         |    1 +
+ 3 files changed, 17 insertions(+), 19 deletions(-)
+
+diff --git a/src/core/hostname-setup.c b/src/core/hostname-setup.c
+index fda102d..503cddf 100644
+--- a/src/core/hostname-setup.c
++++ b/src/core/hostname-setup.c
+@@ -151,31 +151,20 @@ int hostname_setup(void) {
+ 
+         r = read_hostname(&b);
+         if (r < 0) {
++                hn = NULL;
++
+                 if (r == -ENOENT)
+                         enoent = true;
+                 else
+                         log_warning("Failed to read configured hostname: %s", strerror(-r));
+-
+-                hn = NULL;
+         } else
+                 hn = b;
+ 
+-        if (!hn) {
+-                /* Don't override the hostname if it is unset and not
+-                 * explicitly configured */
+-
+-                char *old_hostname = NULL;
+-
+-                old_hostname = gethostname_malloc();
+-                if (old_hostname) {
+-                        bool already_set;
+-
+-                        already_set = old_hostname[0] != 0;
+-                        free(old_hostname);
+-
+-                        if (already_set)
+-                                goto finish;
+-                }
++        if (isempty(hn)) {
++                /* Don't override the hostname if it is already set
++                 * and not explicitly configured */
++                if (hostname_is_set())
++                        goto finish;
+ 
+                 if (enoent)
+                         log_info("No hostname configured.");
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 2ce5b8c..29d1f04 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -2949,12 +2949,20 @@ char* gethostname_malloc(void) {
+ 
+         assert_se(uname(&u) >= 0);
+ 
+-        if (u.nodename[0])
++        if (!isempty(u.nodename) && !streq(u.nodename, "(none)"))
+                 return strdup(u.nodename);
+ 
+         return strdup(u.sysname);
+ }
+ 
++bool hostname_is_set(void) {
++        struct utsname u;
++
++        assert_se(uname(&u) >= 0);
++
++        return !isempty(u.nodename) && !streq(u.nodename, "(none)");
++}
++
+ char* getlogname_malloc(void) {
+         uid_t uid;
+         long bufsize;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 024b2fc..c08c6f9 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -337,6 +337,7 @@ void rename_process(const char name[8]);
+ void sigset_add_many(sigset_t *ss, ...);
+ 
+ char* gethostname_malloc(void);
++bool hostname_is_set(void);
+ char* getlogname_malloc(void);
+ 
+ int getttyname_malloc(int fd, char **r);

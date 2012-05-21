@@ -1,0 +1,78 @@
+From 10860202b2afc50055a8d655ca68f3ddd2b2a18e Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:42 +0200
+Subject: [PATCH] core/main.c: add "--switchedroot" parameter
+
+If systemd serializes from a switch_root, it adds "--switchedroot" to
+the systemd in the real root.
+
+If "--switchedroot" is found, then we do not skip all the stuff, which
+is skipped for normal rexecs.
+(cherry picked from commit d03bc1b814b853497120c35a9a8d6a66925963ff)
+---
+ src/core/main.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 242b0bb..02cf5cb 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -750,6 +750,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 ARG_SHOW_STATUS,
+                 ARG_SYSV_CONSOLE,
+                 ARG_DESERIALIZE,
++                ARG_SWITCHEDROOT,
+                 ARG_INTROSPECT,
+                 ARG_DEFAULT_STD_OUTPUT,
+                 ARG_DEFAULT_STD_ERROR
+@@ -774,6 +775,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "sysv-console",             optional_argument, NULL, ARG_SYSV_CONSOLE             },
+ #endif
+                 { "deserialize",              required_argument, NULL, ARG_DESERIALIZE              },
++                { "switchedroot",             no_argument,       NULL, ARG_SWITCHEDROOT             },
+                 { "introspect",               optional_argument, NULL, ARG_INTROSPECT               },
+                 { "default-standard-output",  required_argument, NULL, ARG_DEFAULT_STD_OUTPUT,      },
+                 { "default-standard-error",   required_argument, NULL, ARG_DEFAULT_STD_ERROR,       },
+@@ -945,6 +947,10 @@ static int parse_argv(int argc, char *argv[]) {
+                         break;
+                 }
+ 
++                case ARG_SWITCHEDROOT:
++                        /* Nothing special yet */
++                        break;
++
+                 case ARG_INTROSPECT: {
+                         const char * const * i = NULL;
+ 
+@@ -1282,6 +1288,13 @@ int main(int argc, char *argv[]) {
+                         break;
+                 }
+ 
++        /* If we have switched root, do all the special things */
++        for (j = 1; j < argc; j++)
++                if (streq(argv[j], "--switchedroot")) {
++                        is_reexec = false;
++                        break;
++                }
++
+         /* If we get started via the /sbin/init symlink then we are
+            called 'init'. After a subsequent reexecution we are then
+            called 'systemd'. That is confusing, hence let's call us
+@@ -1699,7 +1712,7 @@ finish:
+                 if (switch_root)
+                         do_switch_root(switch_root);
+ 
+-                args_size = MAX(5, argc+1);
++                args_size = MAX(6, argc+1);
+                 args = newa(const char*, args_size);
+ 
+                 if (!switch_root_init) {
+@@ -1718,6 +1731,8 @@ finish:
+ 
+                         i = 0;
+                         args[i++] = SYSTEMD_BINARY_PATH;
++                        if (switch_root)
++                                args[i++] = "--switchedroot";
+                         args[i++] = arg_running_as == MANAGER_SYSTEM ? "--system" : "--user";
+                         args[i++] = "--deserialize";
+                         args[i++] = sfd;

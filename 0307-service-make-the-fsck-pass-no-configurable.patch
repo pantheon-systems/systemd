@@ -1,0 +1,43 @@
+From 8c10c743a15e2352ddf8e4ceeb52af6ac16e57af Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 17:24:26 +0200
+Subject: [PATCH] service: make the fsck pass no configurable (cherry picked
+ from commit 36140842612803d71fe771ce03f3dee7732284f0)
+
+---
+ man/systemd.service.xml               |    9 +++++++++
+ src/core/load-fragment-gperf.gperf.m4 |    1 +
+ 2 files changed, 10 insertions(+)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 9a80dd7..430971f 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -824,6 +824,15 @@
+                                 <option>none</option>.</para></listitem>
+                         </varlistentry>
+ 
++                        <varlistentry>
++                                <term><varname>FsckPassNo=</varname></term>
++
++                                <listitem><para>If this is an file
++                                system checking service specify the
++                                pass number. This should not be used
++                                for normal services.</para></listitem>
++                        </varlistentry>
++
+                 </variablelist>
+         </refsect1>
+ 
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 5be4dad..681f2e9 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -200,6 +200,7 @@ Mount.What,                      config_parse_string,                0,
+ Mount.Where,                     config_parse_path,                  0,                             offsetof(Mount, where)
+ Mount.Options,                   config_parse_string,                0,                             offsetof(Mount, parameters_fragment.options)
+ Mount.Type,                      config_parse_string,                0,                             offsetof(Mount, parameters_fragment.fstype)
++Mount.FsckPassNo,                config_parse_int,                   0,                             offsetof(Mount, parameters_fragment.passno)
+ Mount.TimeoutSec,                config_parse_usec,                  0,                             offsetof(Mount, timeout_usec)
+ Mount.DirectoryMode,             config_parse_mode,                  0,                             offsetof(Mount, directory_mode)
+ EXEC_CONTEXT_CONFIG_ITEMS(Mount)m4_dnl

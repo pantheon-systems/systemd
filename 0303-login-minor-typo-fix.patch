@@ -1,0 +1,23 @@
+From 442f55baa2cddd990d44905d4a49ced9c3bd43c4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 15:22:28 +0200
+Subject: [PATCH] login: minor typo fix (cherry picked from commit
+ 6ccf7562da826fd82a25aacfbe193691180649d0)
+
+---
+ src/login/logind-session.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index b5c6300..60b5965 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -382,7 +382,7 @@ static int session_link_x11_socket(Session *s) {
+         c[k] = 0;
+ 
+         if (access(f, F_OK) < 0) {
+-                log_warning("Session %s has display %s with nonexisting socket %s.", s->id, s->display, f);
++                log_warning("Session %s has display %s with non-existing socket %s.", s->id, s->display, f);
+                 free(f);
+                 return -ENOENT;
+         }

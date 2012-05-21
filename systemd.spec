@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -360,6 +360,35 @@ Patch0297:      0297-delta-don-t-highlight-unchanged-files.patch
 Patch0298:      0298-delta-drop-PHP-ism.patch
 Patch0299:      0299-dbus-unit-always-load-the-unit-before-handling-a-mes.patch
 Patch0300:      0300-systemctl-drop-useless-DBus-calls-from-systemctl-sho.patch
+Patch0301:      0301-F17-Revert-logind-close-FIFO-before-ending-sessions-.patch
+Patch0302:      0302-units-introduce-new-Documentation-field-and-make-use.patch
+Patch0303:      0303-login-minor-typo-fix.patch
+Patch0304:      0304-unit-introduce-RequiredBy-setting-in-Install-to-comp.patch
+Patch0305:      0305-hostname-setup-also-consider-one-an-unset-hostname.patch
+Patch0306:      0306-cryptsetup-a-few-simplifications.patch
+Patch0307:      0307-service-make-the-fsck-pass-no-configurable.patch
+Patch0308:      0308-main-try-a-bit-harder-to-find-an-init-process-to-exe.patch
+Patch0309:      0309-cryptsetup-support-discards-TRIM.patch
+Patch0310:      0310-journalctl-fix-built-in-usage-output.patch
+Patch0311:      0311-sd-pam-Drop-uid-so-parent-signal-arrives-at-child.patch
+Patch0312:      0312-util-fix-typo-in-newdup.patch
+Patch0313:      0313-delta-fix-spelling-of-overridden.patch
+Patch0314:      0314-main-corrected-do_switch_root.patch
+Patch0315:      0315-util.c-add-in_initrd.patch
+Patch0316:      0316-manager-only-serialize-the-timestamps-for-the-initra.patch
+Patch0317:      0317-core-main.c-add-switchedroot-parameter.patch
+Patch0318:      0318-core-main.c-do_switch_root-do-not-remove-the-old-roo.patch
+Patch0319:      0319-core-main.c-handle-the-initrd-timestamp-differently-.patch
+Patch0320:      0320-delta-delta.c-initialize-bottom-for-fail-state.patch
+Patch0321:      0321-util-rm_rf_children-add-root_dev-parameter.patch
+Patch0322:      0322-main-do_switch_root-do-not-recursively-remove-across.patch
+Patch0323:      0323-switch-root-move-switch_root-call-into-its-own-.c-fi.patch
+Patch0324:      0324-main-rename-a-few-fix-to-follow-general-naming-style.patch
+Patch0325:      0325-util-rework-in_initrd-logic.patch
+Patch0326:      0326-journald-fix-length-of-SYSLOG_IDENTIFIER.patch
+Patch0327:      0327-journald-one-more-SYSLOG_IDENTIFIER-length-fix.patch
+Patch0328:      0328-main-allow-system-wide-limits-for-services.patch
+Patch0329:      0329-F17-fix-manpage-names.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -736,6 +765,15 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Mon May 21 2012 Michal Schmidt <mschmidt@redhat.com> - 44-11
+- Fix weird "TIFIER=" messages in syslog (#823498)
+- Revert ReleaseSession patch (#823485)
+- Add more patches from upstream, notably:
+  - Documentation= field support
+  - RequiredBy= in [Install] support
+  - configurable ulimit defaults
+  - switch-root fixes
+
 * Mon May 21 2012 Michal Schmidt <mschmidt@redhat.com> - 44-10
 - Fix another cause of "Failed to issue method call" (#814966)
 - minor systemd-delta updates

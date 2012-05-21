@@ -1,0 +1,42 @@
+From 01595b35d598ca37cc4a4823d11ce1a9404f58e8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 20:00:58 +0200
+Subject: [PATCH] util: rework in_initrd() logic
+
+Checking the device major/minor is not a good idea. Let's replace this
+with an explicit flag file, which we model after /etc/os-release and
+call /etc/initrd-release.
+(cherry picked from commit 8f33b5b8b3e85f9c3b00eb004e601f7a72fa6461)
+
+Conflicts:
+	TODO
+---
+ src/shared/util.c |   16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 83b4a24..aef6ebd 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5654,16 +5654,10 @@ bool is_valid_documentation_url(const char *url) {
+ }
+ 
+ bool in_initrd(void) {
+-        static bool checked=false;
+-        static bool is_in_initrd=false;
+-
+-        if (!checked) {
+-                struct stat sb;
+-                if (stat("/", &sb) == 0) {
+-                        is_in_initrd = (sb.st_dev == 1);
+-                        checked = true;
+-                }
+-        }
++        static int saved = -1;
++
++        if (saved < 0)
++                saved = access("/etc/initrd-release", F_OK) >= 0;
+ 
+-        return is_in_initrd;
++        return saved;
+ }

@@ -1,0 +1,41 @@
+From d18edda2b90b533163a5eb848329414a1d8ac0bc Mon Sep 17 00:00:00 2001
+From: Matthew Monaco <matthew.monaco@0x01b.net>
+Date: Sat, 19 May 2012 09:05:50 -0600
+Subject: [PATCH] cryptsetup: support discards (TRIM) (cherry picked from
+ commit 2a2aab602e1d8b6bf0b440730e379f9dd6586b80)
+
+---
+ src/cryptsetup/cryptsetup.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/cryptsetup/cryptsetup.c b/src/cryptsetup/cryptsetup.c
+index f3116b7..c6ac7d2 100644
+--- a/src/cryptsetup/cryptsetup.c
++++ b/src/cryptsetup/cryptsetup.c
+@@ -41,6 +41,7 @@ static char *opt_hash = NULL;
+ static unsigned opt_tries = 0;
+ static bool opt_readonly = false;
+ static bool opt_verify = false;
++static bool opt_discards = false;
+ static usec_t opt_timeout = DEFAULT_TIMEOUT_USEC;
+ 
+ /* Options Debian's crypttab knows we don't:
+@@ -98,6 +99,8 @@ static int parse_one_option(const char *option) {
+                 opt_readonly = true;
+         else if (streq(option, "verify"))
+                 opt_verify = true;
++        else if (streq(option, "allow-discards"))
++                opt_discards = true;
+         else if (streq(option, "luks"))
+                 opt_type = CRYPT_LUKS1;
+         else if (streq(option, "plain") ||
+@@ -314,6 +317,9 @@ int main(int argc, char *argv[]) {
+                 if (opt_readonly)
+                         flags |= CRYPT_ACTIVATE_READONLY;
+ 
++                if (opt_discards)
++                        flags |= CRYPT_ACTIVATE_ALLOW_DISCARDS;
++
+                 if (opt_timeout > 0)
+                         until = now(CLOCK_MONOTONIC) + opt_timeout;
+                 else

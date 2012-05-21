@@ -1,0 +1,26 @@
+From 91dd3e2f04af31ad3666b45a9d0c46ec9214b22b Mon Sep 17 00:00:00 2001
+From: Daniel Mack <zonque@gmail.com>
+Date: Fri, 18 May 2012 21:58:35 +0200
+Subject: [PATCH] journalctl: fix built-in usage output
+
+This brings journalctl's built-in usage output in sync with the man page.
+There are no commands to pass, and the help screen should not confuse
+users.
+(cherry picked from commit 89834a7c1c5f194d072d42d1c30077f5b2c207ec)
+---
+ src/journal/journalctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 01dceca..aaf455a 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -50,7 +50,7 @@ static bool arg_local = false;
+ 
+ static int help(void) {
+ 
+-        printf("%s [OPTIONS...] {COMMAND} ...\n\n"
++        printf("%s [OPTIONS...] [MATCH]\n\n"
+                "Send control commands to or query the journal.\n\n"
+                "  -h --help           Show this help\n"
+                "     --version        Show package version\n"

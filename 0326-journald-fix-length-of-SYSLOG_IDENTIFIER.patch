@@ -1,0 +1,31 @@
+From 4141f01909b0abc02c59c4e41ef9a455da0c1306 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 21 May 2012 19:31:41 +0200
+Subject: [PATCH] journald: fix length of "SYSLOG_IDENTIFIER="
+
+Fixes weird messages like:
+May 20 22:23:30 jik2 TIFIER=systemd-logind[795]: New session 46 of user gdm.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=823498
+(cherry picked from commit fca1b90a0dd2800f8ec9e31ff0b942312b0b8bb0)
+---
+ src/journal/journald.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index a2b9c87..d689c30 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1235,10 +1235,10 @@ static void process_native_message(
+                                         priority = (priority & LOG_PRIMASK) | (((p[16] - '0')*10 + (p[17] - '0')) << 3);
+ 
+                                 else if (l >= 12 &&
+-                                         memcmp(p, "SYSLOG_IDENTIFIER=", 11) == 0) {
++                                         memcmp(p, "SYSLOG_IDENTIFIER=", 18) == 0) {
+                                         char *t;
+ 
+-                                        t = strndup(p + 11, l - 11);
++                                        t = strndup(p + 18, l - 18);
+                                         if (t) {
+                                                 free(identifier);
+                                                 identifier = t;

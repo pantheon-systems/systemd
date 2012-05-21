@@ -1,0 +1,123 @@
+From e047c9fb179b374b1c01e4b909a23ce0a7d53dc2 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:39 +0200
+Subject: [PATCH] main: corrected do_switch_root()
+
+do_switch_root now mount moves "/dev", "/proc", "/sys", "/run" and
+removes the old root recursively.
+(cherry picked from commit f67cc036ba92a3c71acb664ed2d548de5827cf1f)
+---
+ src/core/main.c   |   55 +++++++++++++++++++++++++++++++++++++++++++++++------
+ src/shared/util.c |    2 +-
+ src/shared/util.h |    1 +
+ 3 files changed, 51 insertions(+), 7 deletions(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 3aeaa14..242b0bb 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1172,30 +1172,73 @@ static void test_cgroups(void) {
+ }
+ 
+ static int do_switch_root(const char *switch_root) {
+-        int r;
++        int r=0;
++        /*  Don't try to unmount the old "/", there's no way to do it. */
++        const char *umounts[] = { "/dev", "/proc", "/sys", "/run", NULL };
++        int i;
++        int cfd = -1;
++        struct stat switch_root_stat, sb;
+ 
+         if (path_equal(switch_root, "/"))
+                 return 0;
+ 
+-        if (chdir(switch_root) < 0) {
++        if (stat(switch_root, &switch_root_stat) != 0) {
+                 r = -errno;
++                log_error("failed to stat directory %s", switch_root);
+                 goto fail;
+         }
+ 
++        for (i = 0; umounts[i] != NULL; i++) {
++                char newmount[PATH_MAX];
++
++                snprintf(newmount, sizeof(newmount), "%s%s", switch_root, umounts[i]);
++
++                if ((stat(newmount, &sb) != 0) || (sb.st_dev != switch_root_stat.st_dev)) {
++                        /* mount point seems to be mounted already or stat failed */
++                        umount2(umounts[i], MNT_DETACH);
++                        continue;
++                }
++
++                if (mount(umounts[i], newmount, NULL, MS_MOVE, NULL) < 0) {
++                        log_error("failed to mount moving %s to %s",
++                                  umounts[i], newmount);
++                        log_error("forcing unmount of %s", umounts[i]);
++                        umount2(umounts[i], MNT_FORCE);
++                }
++        }
++
++        if (chdir(switch_root)) {
++                r = -errno;
++                log_error("failed to change directory to %s", switch_root);
++                goto fail;
++        }
++
++        cfd = open("/", O_RDONLY);
++
+         if (mount(switch_root, "/", NULL, MS_MOVE, NULL) < 0) {
+                 r = -errno;
+-                chdir("/");
++                log_error("failed to mount moving %s to /", switch_root);
+                 goto fail;
+         }
+ 
+-        if (chroot(".") < 0)
+-                log_warning("Failed to change root, ignoring: %m");
++        if (chroot(".")) {
++                r = -errno;
++                log_error("failed to change root");
++                goto fail;
++        }
+ 
+-        /* FIXME: remove old root */
++        if (cfd >= 0) {
++                rm_rf_children(cfd, false, false);
++                close(cfd);
++                cfd=-1;
++        }
+ 
+         return 0;
+ 
+ fail:
++        if (cfd >= 0)
++                close(cfd);
++
+         log_error("Failed to switch root, ignoring: %s", strerror(-r));
+ 
+         return r;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 29d1f04..61a6ad9 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -3139,7 +3139,7 @@ int get_ctty(pid_t pid, dev_t *_devnr, char **r) {
+         return 0;
+ }
+ 
+-static int rm_rf_children(int fd, bool only_dirs, bool honour_sticky) {
++int rm_rf_children(int fd, bool only_dirs, bool honour_sticky) {
+         DIR *d;
+         int ret = 0;
+ 
+diff --git a/src/shared/util.h b/src/shared/util.h
+index a0060f7..d338b08 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -349,6 +349,7 @@ int get_ctty(pid_t, dev_t *_devnr, char **r);
+ int chmod_and_chown(const char *path, mode_t mode, uid_t uid, gid_t gid);
+ int fchmod_and_fchown(int fd, mode_t mode, uid_t uid, gid_t gid);
+ 
++int rm_rf_children(int fd, bool only_dirs, bool honour_sticky);
+ int rm_rf(const char *path, bool only_dirs, bool delete_root, bool honour_sticky);
+ 
+ int pipe_eof(int fd);

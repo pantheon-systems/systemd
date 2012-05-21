@@ -1,0 +1,44 @@
+From d8affe22f2a7cbebe28b15a0ef32c675bdaa0550 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 16 May 2012 14:22:43 +0200
+Subject: [PATCH] core/main.c: do_switch_root(): do not remove the old root if
+ not in initrd
+
+Only recursively remove the old root, if we have been in an
+initrd/initramfs.
+(cherry picked from commit e148ac5a6cccd1c9c23bf7b3085b50fdb1cd1cf9)
+---
+ src/core/main.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 02cf5cb..b4ff358 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1184,6 +1184,7 @@ static int do_switch_root(const char *switch_root) {
+         int i;
+         int cfd = -1;
+         struct stat switch_root_stat, sb;
++        bool remove_old_root;
+ 
+         if (path_equal(switch_root, "/"))
+                 return 0;
+@@ -1194,6 +1195,8 @@ static int do_switch_root(const char *switch_root) {
+                 goto fail;
+         }
+ 
++        remove_old_root = in_initrd();
++
+         for (i = 0; umounts[i] != NULL; i++) {
+                 char newmount[PATH_MAX];
+ 
+@@ -1219,7 +1222,8 @@ static int do_switch_root(const char *switch_root) {
+                 goto fail;
+         }
+ 
+-        cfd = open("/", O_RDONLY);
++        if (remove_old_root)
++                cfd = open("/", O_RDONLY);
+ 
+         if (mount(switch_root, "/", NULL, MS_MOVE, NULL) < 0) {
+                 r = -errno;

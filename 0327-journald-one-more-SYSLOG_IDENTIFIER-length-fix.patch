@@ -1,0 +1,24 @@
+From 5e66ee89dc87ebf8359800da570494eb9db3c425 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 21 May 2012 20:21:49 +0200
+Subject: [PATCH] journald: one more SYSLOG_IDENTIFIER length fix (cherry
+ picked from commit
+ 401cc72da8e59a1e49acafee69280f7ebaa52e74)
+
+---
+ src/journal/journald.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index d689c30..da683d6 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1234,7 +1234,7 @@ static void process_native_message(
+                                          p[17] >= '0' && p[17] <= '9')
+                                         priority = (priority & LOG_PRIMASK) | (((p[16] - '0')*10 + (p[17] - '0')) << 3);
+ 
+-                                else if (l >= 12 &&
++                                else if (l >= 19 &&
+                                          memcmp(p, "SYSLOG_IDENTIFIER=", 18) == 0) {
+                                         char *t;
+ 

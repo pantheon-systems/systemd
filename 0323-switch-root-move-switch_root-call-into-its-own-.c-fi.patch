@@ -1,0 +1,339 @@
+From ecb819d06faa9fe323efcbed9288a80da7d85dc1 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 19:33:39 +0200
+Subject: [PATCH] switch-root: move switch_root() call into its own .c file
+ (cherry picked from commit
+ 416693175bc317ef3fa4963af51a5ee077320d09)
+
+---
+ Makefile.am            |    4 +-
+ src/core/main.c        |   98 ++++---------------------------------
+ src/core/switch-root.c |  125 ++++++++++++++++++++++++++++++++++++++++++++++++
+ src/core/switch-root.h |   27 +++++++++++
+ 4 files changed, 164 insertions(+), 90 deletions(-)
+ create mode 100644 src/core/switch-root.c
+ create mode 100644 src/core/switch-root.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 85ffa01..56fe147 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -775,7 +775,9 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/special.h \
+ 	src/core/bus-errors.h \
+ 	src/core/build.h \
+-	src/core/sysfs-show.h
++	src/core/sysfs-show.h \
++	src/core/switch-root.h \
++	src/core/switch-root.c
+ 
+ nodist_libsystemd_core_la_SOURCES = \
+ 	src/core/load-fragment-gperf.c \
+diff --git a/src/core/main.c b/src/core/main.c
+index 76280ad..3e1d4dd 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -49,6 +49,7 @@
+ #include "virt.h"
+ #include "watchdog.h"
+ #include "path-util.h"
++#include "switch-root.h"
+ 
+ #include "mount-setup.h"
+ #include "loopback-setup.h"
+@@ -1177,90 +1178,6 @@ static void test_cgroups(void) {
+         sleep(10);
+ }
+ 
+-static int do_switch_root(const char *switch_root) {
+-        int r=0;
+-        /*  Don't try to unmount the old "/", there's no way to do it. */
+-        const char *umounts[] = { "/dev", "/proc", "/sys", "/run", NULL };
+-        int i;
+-        int cfd = -1;
+-        struct stat switch_root_stat, sb;
+-        bool remove_old_root;
+-
+-        if (path_equal(switch_root, "/"))
+-                return 0;
+-
+-        if (stat(switch_root, &switch_root_stat) != 0) {
+-                r = -errno;
+-                log_error("failed to stat directory %s", switch_root);
+-                goto fail;
+-        }
+-
+-        remove_old_root = in_initrd();
+-
+-        for (i = 0; umounts[i] != NULL; i++) {
+-                char newmount[PATH_MAX];
+-
+-                snprintf(newmount, sizeof(newmount), "%s%s", switch_root, umounts[i]);
+-
+-                if ((stat(newmount, &sb) != 0) || (sb.st_dev != switch_root_stat.st_dev)) {
+-                        /* mount point seems to be mounted already or stat failed */
+-                        umount2(umounts[i], MNT_DETACH);
+-                        continue;
+-                }
+-
+-                if (mount(umounts[i], newmount, NULL, MS_MOVE, NULL) < 0) {
+-                        log_error("failed to mount moving %s to %s",
+-                                  umounts[i], newmount);
+-                        log_error("forcing unmount of %s", umounts[i]);
+-                        umount2(umounts[i], MNT_FORCE);
+-                }
+-        }
+-
+-        if (chdir(switch_root)) {
+-                r = -errno;
+-                log_error("failed to change directory to %s", switch_root);
+-                goto fail;
+-        }
+-
+-        if (remove_old_root)
+-                cfd = open("/", O_RDONLY);
+-
+-        if (mount(switch_root, "/", NULL, MS_MOVE, NULL) < 0) {
+-                r = -errno;
+-                log_error("failed to mount moving %s to /", switch_root);
+-                goto fail;
+-        }
+-
+-        if (chroot(".")) {
+-                r = -errno;
+-                log_error("failed to change root");
+-                goto fail;
+-        }
+-
+-        if (cfd >= 0) {
+-                struct stat rb;
+-
+-                if (fstat(cfd, &rb)) {
+-                        log_error("failed to stat old root directory");
+-                        goto fail;
+-                }
+-
+-                rm_rf_children(cfd, false, false, &rb);
+-                close(cfd);
+-                cfd=-1;
+-        }
+-
+-        return 0;
+-
+-fail:
+-        if (cfd >= 0)
+-                close(cfd);
+-
+-        log_error("Failed to switch root, ignoring: %s", strerror(-r));
+-
+-        return r;
+-}
+-
+ int main(int argc, char *argv[]) {
+         Manager *m = NULL;
+         int r, retval = EXIT_FAILURE;
+@@ -1275,7 +1192,7 @@ int main(int argc, char *argv[]) {
+         int j;
+         bool loaded_policy = false;
+         bool arm_reboot_watchdog = false;
+-        char *switch_root = NULL, *switch_root_init = NULL;
++        char *switch_root_dir = NULL, *switch_root_init = NULL;
+ 
+ #ifdef HAVE_SYSV_COMPAT
+         if (getpid() != 1 && strstr(program_invocation_short_name, "init")) {
+@@ -1679,7 +1596,7 @@ int main(int argc, char *argv[]) {
+ 
+                 case MANAGER_SWITCH_ROOT:
+                         /* Steal the switch root parameters */
+-                        switch_root = m->switch_root;
++                        switch_root_dir = m->switch_root;
+                         switch_root_init = m->switch_root_init;
+                         m->switch_root = m->switch_root_init = NULL;
+ 
+@@ -1734,8 +1651,11 @@ finish:
+                  * rebooted while we do that */
+                 watchdog_close(true);
+ 
+-                if (switch_root)
+-                        do_switch_root(switch_root);
++                if (switch_root_dir) {
++                        r = switch_root(switch_root_dir);
++                        if (r < 0)
++                                log_error("Failed to switch root, ignoring: %s", strerror(-r));
++                }
+ 
+                 args_size = MAX(6, argc+1);
+                 args = newa(const char*, args_size);
+@@ -1756,7 +1676,7 @@ finish:
+ 
+                         i = 0;
+                         args[i++] = SYSTEMD_BINARY_PATH;
+-                        if (switch_root)
++                        if (switch_root_dir)
+                                 args[i++] = "--switchedroot";
+                         args[i++] = arg_running_as == MANAGER_SYSTEM ? "--system" : "--user";
+                         args[i++] = "--deserialize";
+diff --git a/src/core/switch-root.c b/src/core/switch-root.c
+new file mode 100644
+index 0000000..ed0a31e
+--- /dev/null
++++ b/src/core/switch-root.c
+@@ -0,0 +1,125 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Harald Hoyer, Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <sys/stat.h>
++#include <stdbool.h>
++#include <errno.h>
++#include <string.h>
++#include <sys/mount.h>
++#include <unistd.h>
++#include <fcntl.h>
++
++#include "util.h"
++#include "path-util.h"
++#include "switch-root.h"
++
++int switch_root(const char *new_root) {
++
++        /*  Don't try to unmount/move the old "/", there's no way to do it. */
++        static const char move_mounts[] =
++                "/dev\0"
++                "/proc\0"
++                "/sys\0"
++                "/run\0";
++
++        int r, old_root_fd = -1;
++        struct stat new_root_stat;
++        bool old_root_remove;
++        const char *i;
++
++        if (path_equal(new_root, "/"))
++                return 0;
++
++        old_root_remove = in_initrd();
++
++        if (stat(new_root, &new_root_stat) < 0) {
++                r = -errno;
++                log_error("Failed to stat directory %s: %m", new_root);
++                goto fail;
++        }
++
++        NULSTR_FOREACH(i, move_mounts) {
++                char new_mount[PATH_MAX];
++                struct stat sb;
++
++                snprintf(new_mount, sizeof(new_mount), "%s%s", new_root, i);
++                char_array_0(new_mount);
++
++                if ((stat(new_mount, &sb) < 0) ||
++                    sb.st_dev != new_root_stat.st_dev) {
++
++                        /* Mount point seems to be mounted already or
++                         * stat failed. Unmount the old mount
++                         * point. */
++                        if (umount2(i, MNT_DETACH) < 0)
++                                log_warning("Failed to unmount %s: %m", i);
++                        continue;
++                }
++
++                if (mount(i, new_mount, NULL, MS_MOVE, NULL) < 0) {
++                        log_error("Failed to move mount %s to %s, forcing unmount: %m", i, new_mount);
++
++                        if (umount2(i, MNT_FORCE) < 0)
++                                log_warning("Failed to unmount %s: %m", i);
++                }
++        }
++
++        if (chdir(new_root) < 0) {
++                r = -errno;
++                log_error("Failed to change directory to %s: %m", new_root);
++                goto fail;
++        }
++
++        if (old_root_remove) {
++                old_root_fd = open("/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_NOCTTY|O_DIRECTORY);
++                if (old_root_fd < 0)
++                        log_warning("Failed to open root directory: %m");
++        }
++
++        if (mount(new_root, "/", NULL, MS_MOVE, NULL) < 0) {
++                r = -errno;
++                log_error("Failed to mount moving %s to /: %m", new_root);
++                goto fail;
++        }
++
++        if (chroot(".") < 0) {
++                r = -errno;
++                log_error("Failed to change root: %m");
++                goto fail;
++        }
++
++        if (old_root_fd >= 0) {
++                struct stat rb;
++
++                if (fstat(old_root_fd, &rb) < 0)
++                        log_warning("Failed to stat old root directory, leaving: %m");
++                else
++                        rm_rf_children(old_root_fd, false, false, &rb);
++        }
++
++        r = 0;
++
++fail:
++        if (old_root_fd >= 0)
++                close_nointr_nofail(old_root_fd);
++
++        return r;
++}
+diff --git a/src/core/switch-root.h b/src/core/switch-root.h
+new file mode 100644
+index 0000000..0c4cd1e
+--- /dev/null
++++ b/src/core/switch-root.h
+@@ -0,0 +1,27 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#ifndef fooswitchroothfoo
++#define fooswitchroothfoo
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Harald Hoyer, Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++int switch_root(const char *switch_root);
++
++#endif

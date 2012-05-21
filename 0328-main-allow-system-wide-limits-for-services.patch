@@ -1,0 +1,196 @@
+From c9c18713ab9c787d128ec7c041df00be3046f9e3 Mon Sep 17 00:00:00 2001
+From: Frederic Crozat <fcrozat@suse.com>
+Date: Wed, 21 Mar 2012 18:03:40 +0100
+Subject: [PATCH] main: allow system wide limits for services (cherry picked
+ from commit c93ff2e913a6da516c83c0d3f8df73004acc6c8b)
+
+---
+ man/systemd.conf.xml |   27 +++++++++++++++++++++++++++
+ src/core/main.c      |   22 ++++++++++++++++++++++
+ src/core/manager.c   |   22 ++++++++++++++++++++++
+ src/core/manager.h   |    3 +++
+ src/core/service.c   |    4 ++++
+ 5 files changed, 78 insertions(+)
+
+diff --git a/man/systemd.conf.xml b/man/systemd.conf.xml
+index c789028..d37c574 100644
+--- a/man/systemd.conf.xml
++++ b/man/systemd.conf.xml
+@@ -194,6 +194,33 @@
+                                 effect if a hardware watchdog is not
+                                 available.</para></listitem>
+                         </varlistentry>
++
++                        <varlistentry>
++                                <term><varname>DefaultLimitCPU=</varname></term>
++                                <term><varname>DefaultLimitFSIZE=</varname></term>
++                                <term><varname>DefaultLimitDATA=</varname></term>
++                                <term><varname>DefaultLimitSTACK=</varname></term>
++                                <term><varname>DefaultLimitCORE=</varname></term>
++                                <term><varname>DefaultLimitRSS=</varname></term>
++                                <term><varname>DefaultLimitNOFILE=</varname></term>
++                                <term><varname>DefaultLimitAS=</varname></term>
++                                <term><varname>DefaultLimitNPROC=</varname></term>
++                                <term><varname>DefaultLimitMEMLOCK=</varname></term>
++                                <term><varname>DefaultLimitLOCKS=</varname></term>
++                                <term><varname>DefaultLimitSIGPENDING=</varname></term>
++                                <term><varname>DefaultLimitMSGQUEUE=</varname></term>
++                                <term><varname>DefaultLimitNICE=</varname></term>
++                                <term><varname>DefaultLimitRTPRIO=</varname></term>
++                                <term><varname>DefaultLimitRTTIME=</varname></term>
++                                <listitem><para>These settings control
++                                various default resource limits for units. See
++                                <citerefentry><refentrytitle>setrlimit</refentrytitle><manvolnum>2</manvolnum></citerefentry>
++                                for details. Use the string
++                                <varname>infinity</varname> to
++                                configure no limit on a specific
++				resource. They can be overriden in units files
++				using corresponding LimitXXXX parameter.</para></listitem>
++                        </varlistentry>
+                 </variablelist>
+         </refsect1>
+ 
+diff --git a/src/core/main.c b/src/core/main.c
+index e06db54..12679cb 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -88,6 +88,7 @@ static ExecOutput arg_default_std_output = EXEC_OUTPUT_JOURNAL;
+ static ExecOutput arg_default_std_error = EXEC_OUTPUT_INHERIT;
+ static usec_t arg_runtime_watchdog = 0;
+ static usec_t arg_shutdown_watchdog = 10 * USEC_PER_MINUTE;
++static struct rlimit *arg_default_rlimit[RLIMIT_NLIMITS] = {};
+ 
+ static FILE* serialization = NULL;
+ 
+@@ -670,6 +671,22 @@ static int parse_config_file(void) {
+                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
+                 { "Manager", "RuntimeWatchdogSec",    config_parse_usec,         0, &arg_runtime_watchdog    },
+                 { "Manager", "ShutdownWatchdogSec",   config_parse_usec,         0, &arg_shutdown_watchdog   },
++                { "Manager", "DefaultLimitCPU",       config_parse_limit,        0, &arg_default_rlimit[RLIMIT_CPU]},
++                { "Manager", "DefaultLimitFSIZE",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_FSIZE]},
++                { "Manager", "DefaultLimitDATA",      config_parse_limit,        0, &arg_default_rlimit[RLIMIT_DATA]},
++                { "Manager", "DefaultLimitSTACK",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_STACK]},
++                { "Manager", "DefaultLimitCORE",      config_parse_limit,        0, &arg_default_rlimit[RLIMIT_CORE]},
++                { "Manager", "DefaultLimitRSS",       config_parse_limit,        0, &arg_default_rlimit[RLIMIT_RSS]},
++                { "Manager", "DefaultLimitNOFILE",    config_parse_limit,        0, &arg_default_rlimit[RLIMIT_NOFILE]},
++                { "Manager", "DefaultLimitAS",        config_parse_limit,        0, &arg_default_rlimit[RLIMIT_AS]},
++                { "Manager", "DefaultLimitNPROC",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_NPROC]},
++                { "Manager", "DefaultLimitMEMLOCK",   config_parse_limit,        0, &arg_default_rlimit[RLIMIT_MEMLOCK]},
++                { "Manager", "DefaultLimitLOCKS",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_LOCKS]},
++                { "Manager", "DefaultLimitSIGPENDING",config_parse_limit,        0, &arg_default_rlimit[RLIMIT_SIGPENDING]},
++                { "Manager", "DefaultLimitMSGQUEUE",  config_parse_limit,        0, &arg_default_rlimit[RLIMIT_MSGQUEUE]},
++                { "Manager", "DefaultLimitNICE",      config_parse_limit,        0, &arg_default_rlimit[RLIMIT_NICE]},
++                { "Manager", "DefaultLimitRTPRIO",    config_parse_limit,        0, &arg_default_rlimit[RLIMIT_RTPRIO]},
++                { "Manager", "DefaultLimitRTTIME",    config_parse_limit,        0, &arg_default_rlimit[RLIMIT_RTTIME]},
+                 { NULL, NULL, NULL, 0, NULL }
+         };
+ 
+@@ -1476,6 +1493,8 @@ int main(int argc, char *argv[]) {
+         m->runtime_watchdog = arg_runtime_watchdog;
+         m->shutdown_watchdog = arg_shutdown_watchdog;
+ 
++        manager_set_default_rlimits(m, arg_default_rlimit);
++
+         if (dual_timestamp_is_set(&initrd_timestamp))
+                 m->initrd_timestamp = initrd_timestamp;
+ 
+@@ -1635,6 +1654,9 @@ finish:
+         if (m)
+                 manager_free(m);
+ 
++        for (j = 0; j < RLIMIT_NLIMITS; j++)
++                free (arg_default_rlimit[j]);
++
+         free(arg_default_unit);
+         strv_free(arg_default_controllers);
+         free_join_controllers();
+diff --git a/src/core/manager.c b/src/core/manager.c
+index c7d3e60..8af3241 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -476,6 +476,7 @@ static void manager_clear_jobs_and_units(Manager *m) {
+ 
+ void manager_free(Manager *m) {
+         UnitType c;
++        int i;
+ 
+         assert(m);
+ 
+@@ -525,6 +526,9 @@ void manager_free(Manager *m) {
+         free(m->switch_root);
+         free(m->switch_root_init);
+ 
++        for (i = 0; i < RLIMIT_NLIMITS; i++)
++                free(m->rlimit[i]);
++
+         free(m);
+ }
+ 
+@@ -2136,6 +2140,24 @@ int manager_set_default_controllers(Manager *m, char **controllers) {
+         return 0;
+ }
+ 
++int manager_set_default_rlimits(Manager *m, struct rlimit **default_rlimit) {
++        int i;
++
++        assert(m);
++
++        for (i = 0; i < RLIMIT_NLIMITS; i++) {
++                if (default_rlimit[i]) {
++                        m->rlimit[i] = newdup(struct rlimit, default_rlimit[i], 1);
++
++                        if (!m->rlimit[i])
++                                return -ENOMEM;
++                }
++        }
++
++        return 0;
++}
++
++
+ void manager_recheck_journal(Manager *m) {
+         Unit *u;
+ 
+diff --git a/src/core/manager.h b/src/core/manager.h
+index c36131e..7a79c0f 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -228,6 +228,8 @@ struct Manager {
+ 
+         ExecOutput default_std_output, default_std_error;
+ 
++        struct rlimit *rlimit[RLIMIT_NLIMITS];
++
+         /* non-zero if we are reloading or reexecuting, */
+         int n_reloading;
+ 
+@@ -270,6 +272,7 @@ unsigned manager_dispatch_run_queue(Manager *m);
+ unsigned manager_dispatch_dbus_queue(Manager *m);
+ 
+ int manager_set_default_controllers(Manager *m, char **controllers);
++int manager_set_default_rlimits(Manager *m, struct rlimit **default_rlimit);
+ 
+ int manager_loop(Manager *m);
+ 
+diff --git a/src/core/service.c b/src/core/service.c
+index 18e3a67..7ce2e72 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -110,6 +110,7 @@ static const UnitActiveState state_translation_table[_SERVICE_STATE_MAX] = {
+ 
+ static void service_init(Unit *u) {
+         Service *s = SERVICE(u);
++        int i;
+ 
+         assert(u);
+         assert(u->load_state == UNIT_STUB);
+@@ -129,6 +130,9 @@ static void service_init(Unit *u) {
+         s->guess_main_pid = true;
+ 
+         exec_context_init(&s->exec_context);
++        for (i = 0; i < RLIMIT_NLIMITS; i++)
++                if (UNIT(s)->manager->rlimit[i])
++                        s->exec_context.rlimit[i] = newdup(struct rlimit, UNIT(s)->manager->rlimit[i], 1);
+ 
+         RATELIMIT_INIT(s->start_limit, 10*USEC_PER_SEC, 5);
+ 
