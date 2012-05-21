@@ -1,0 +1,128 @@
+From 851cefb19e1364ca14a4b5b2a0fcf75f7aefa673 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 21 May 2012 12:54:34 +0200
+Subject: [PATCH] dbus-unit: always load the unit before handling a message
+ for it
+
+We need to be able to show the properties even of inactive units.
+systemctl loads the unit before getting its properties, but this is racy
+as the garbage collector may kick in right after the loading.
+
+Fix it by always loading the unit before handling a message for it.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=814966#c6
+(cherry picked from commit 80fbf05e75b75b7dd342ec844275efae90c479ec)
+---
+ src/core/dbus-unit.c |   23 ++++++++++-------------
+ src/core/manager.c   |   12 +++++++-----
+ src/core/manager.h   |    2 +-
+ 3 files changed, 18 insertions(+), 19 deletions(-)
+
+diff --git a/src/core/dbus-unit.c b/src/core/dbus-unit.c
+index afe146c..62484ba 100644
+--- a/src/core/dbus-unit.c
++++ b/src/core/dbus-unit.c
+@@ -558,12 +558,15 @@ static DBusHandlerResult bus_unit_message_handler(DBusConnection *connection, DB
+         Manager *m = data;
+         Unit *u;
+         int r;
+-        DBusMessage *reply;
++        DBusMessage *reply = NULL;
++        DBusError error;
+ 
+         assert(connection);
+         assert(message);
+         assert(m);
+ 
++        dbus_error_init(&error);
++
+         if (streq(dbus_message_get_path(message), "/org/freedesktop/systemd1/unit")) {
+                 /* Be nice to gdbus and return introspection data for our mid-level paths */
+ 
+@@ -638,20 +641,12 @@ static DBusHandlerResult bus_unit_message_handler(DBusConnection *connection, DB
+                 return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+         }
+ 
+-        if ((r = manager_get_unit_from_dbus_path(m, dbus_message_get_path(message), &u)) < 0) {
+-
++        r = manager_load_unit_from_dbus_path(m, dbus_message_get_path(message), &error, &u);
++        if (r < 0) {
+                 if (r == -ENOMEM)
+-                        return DBUS_HANDLER_RESULT_NEED_MEMORY;
+-
+-                if (r == -ENOENT) {
+-                        DBusError e;
+-
+-                        dbus_error_init(&e);
+-                        dbus_set_error_const(&e, DBUS_ERROR_UNKNOWN_OBJECT, "Unknown unit");
+-                        return bus_send_error_reply(connection, message, &e, r);
+-                }
++                        goto oom;
+ 
+-                return bus_send_error_reply(connection, message, NULL, r);
++                return bus_send_error_reply(connection, message, &error, r);
+         }
+ 
+         return bus_unit_message_dispatch(u, connection, message);
+@@ -660,6 +655,8 @@ oom:
+         if (reply)
+                 dbus_message_unref(reply);
+ 
++        dbus_error_free(&error);
++
+         return DBUS_HANDLER_RESULT_NEED_MEMORY;
+ }
+ 
+diff --git a/src/core/manager.c b/src/core/manager.c
+index bc09657..13d1ef5 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -1490,9 +1490,10 @@ int manager_loop(Manager *m) {
+         return m->exit_code;
+ }
+ 
+-int manager_get_unit_from_dbus_path(Manager *m, const char *s, Unit **_u) {
++int manager_load_unit_from_dbus_path(Manager *m, const char *s, DBusError *e, Unit **_u) {
+         char *n;
+         Unit *u;
++        int r;
+ 
+         assert(m);
+         assert(s);
+@@ -1501,14 +1502,15 @@ int manager_get_unit_from_dbus_path(Manager *m, const char *s, Unit **_u) {
+         if (!startswith(s, "/org/freedesktop/systemd1/unit/"))
+                 return -EINVAL;
+ 
+-        if (!(n = bus_path_unescape(s+31)))
++        n = bus_path_unescape(s+31);
++        if (!n)
+                 return -ENOMEM;
+ 
+-        u = manager_get_unit(m, n);
++        r = manager_load_unit(m, n, NULL, e, &u);
+         free(n);
+ 
+-        if (!u)
+-                return -ENOENT;
++        if (r < 0)
++                return r;
+ 
+         *_u = u;
+ 
+diff --git a/src/core/manager.h b/src/core/manager.h
+index bb19506..c36131e 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -251,11 +251,11 @@ int manager_startup(Manager *m, FILE *serialization, FDSet *fds);
+ Job *manager_get_job(Manager *m, uint32_t id);
+ Unit *manager_get_unit(Manager *m, const char *name);
+ 
+-int manager_get_unit_from_dbus_path(Manager *m, const char *s, Unit **_u);
+ int manager_get_job_from_dbus_path(Manager *m, const char *s, Job **_j);
+ 
+ int manager_load_unit_prepare(Manager *m, const char *name, const char *path, DBusError *e, Unit **_ret);
+ int manager_load_unit(Manager *m, const char *name, const char *path, DBusError *e, Unit **_ret);
++int manager_load_unit_from_dbus_path(Manager *m, const char *s, DBusError *e, Unit **_u);
+ 
+ int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool force, DBusError *e, Job **_ret);
+ int manager_add_job_by_name(Manager *m, JobType type, const char *name, JobMode mode, bool force, DBusError *e, Job **_ret);

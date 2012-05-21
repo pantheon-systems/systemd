@@ -1,0 +1,38 @@
+From aecc75d8796f6202fc5e70e356fd18208e7c3301 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 02:02:40 +0200
+Subject: [PATCH] delta: drop PHP'ism (cherry picked from commit
+ c0ef53aa5b54e2b1d4abe316ebb12d3e1d0d9250)
+
+---
+ src/delta/delta.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index cb63b4a..25c1f96 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -334,17 +334,17 @@ static int parse_flags(const char *flag_str, int flags) {
+         size_t l;
+ 
+         FOREACH_WORD(w, l, flag_str, state) {
+-                if (strncmp("masked", w, l) == 0) {
++                if (strncmp("masked", w, l) == 0)
+                         flags |= SHOW_MASKED;
+-                } else if (strncmp ("equivalent", w, l) == 0) {
++                else if (strncmp ("equivalent", w, l) == 0)
+                         flags |= SHOW_EQUIVALENT;
+-                } else if (strncmp("redirected", w, l) == 0) {
++                else if (strncmp("redirected", w, l) == 0)
+                         flags |= SHOW_REDIRECTED;
+-                } else if (strncmp("override", w, l) == 0) {
++                else if (strncmp("overriden", w, l) == 0)
+                         flags |= SHOW_OVERRIDEN;
+-                } else if (strncmp("unchanged", w, l) == 0) {
++                else if (strncmp("unchanged", w, l) == 0)
+                         flags |= SHOW_UNCHANGED;
+-                } else if (strncmp("default", w, l) == 0) {
++                else if (strncmp("default", w, l) == 0)
+                         flags |= SHOW_DEFAULTS;
+                 else
+                         return -EINVAL;

@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -354,6 +354,12 @@ Patch0291:      0291-delta-add-preset-dirs.patch
 Patch0292:      0292-delta-Support-filtering-what-type-of-deltas-to-show.patch
 Patch0293:      0293-delta-enums-are-much-cooler-than-defines.patch
 Patch0294:      0294-F17-units-do-not-use-Type-idle-yet.patch
+Patch0295:      0295-delta-use-same-nomenclature-for-equivalent-and-redir.patch
+Patch0296:      0296-delta-introduce-arg_flags-field-to-follow-our-usual-.patch
+Patch0297:      0297-delta-don-t-highlight-unchanged-files.patch
+Patch0298:      0298-delta-drop-PHP-ism.patch
+Patch0299:      0299-dbus-unit-always-load-the-unit-before-handling-a-mes.patch
+Patch0300:      0300-systemctl-drop-useless-DBus-calls-from-systemctl-sho.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -730,6 +736,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Mon May 21 2012 Michal Schmidt <mschmidt@redhat.com> - 44-10
+- Fix another cause of "Failed to issue method call" (#814966)
+- minor systemd-delta updates
+
 * Fri May 18 2012 Michal Schmidt <mschmidt@redhat.com> - 44-9
 - Applied most of the patches from current upstream, while avoiding
   incompatible changes.

@@ -1,0 +1,23 @@
+From f9ac2d3f0d0b6d0781a2d10613bccb58440fa43d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 21 May 2012 02:02:31 +0200
+Subject: [PATCH] delta: don't highlight unchanged files (cherry picked from
+ commit 8e812a2301ad9f849f1b09e95d93e55df4557ec6)
+
+---
+ src/delta/delta.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 0a29d32..cb63b4a 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -103,7 +103,7 @@ static int notify_override_unchanged(const char *f) {
+         if (!(arg_flags & SHOW_UNCHANGED))
+                 return 0;
+ 
+-        printf(ANSI_HIGHLIGHT_ON "[UNCHANGED]" ANSI_HIGHLIGHT_OFF "  %s → %s\n", top, bottom);
++        printf("[UNCHANGED]  %s\n", f);
+         return 1;
+ }
+ 
