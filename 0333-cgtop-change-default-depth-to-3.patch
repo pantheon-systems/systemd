@@ -1,0 +1,38 @@
+From fdab96a080b6e577ff74f9abcbde24dc6318bf88 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 22 May 2012 01:48:40 +0200
+Subject: [PATCH] cgtop: change default depth to 3
+
+https://bugs.freedesktop.org/show_bug.cgi?id=49778
+(cherry picked from commit 30edf1161600fe1b18f30264f05b4f602eb0e8a3)
+---
+ man/systemd-cgtop.xml |    2 +-
+ src/cgtop/cgtop.c     |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd-cgtop.xml b/man/systemd-cgtop.xml
+index 2d67ae5..5149021 100644
+--- a/man/systemd-cgtop.xml
++++ b/man/systemd-cgtop.xml
+@@ -166,7 +166,7 @@
+                                 the root group is monitored, for 1
+                                 only the first level of control groups
+                                 is monitored, and so on. Defaults to
+-                                2.</para></listitem>
++                                3.</para></listitem>
+                         </varlistentry>
+ 
+                 </variablelist>
+diff --git a/src/cgtop/cgtop.c b/src/cgtop/cgtop.c
+index 33d351b..b8cf3b7 100644
+--- a/src/cgtop/cgtop.c
++++ b/src/cgtop/cgtop.c
+@@ -54,7 +54,7 @@ typedef struct Group {
+         uint64_t io_input_bps, io_output_bps;
+ } Group;
+ 
+-static unsigned arg_depth = 2;
++static unsigned arg_depth = 3;
+ static usec_t arg_delay = 1*USEC_PER_SEC;
+ 
+ static enum {

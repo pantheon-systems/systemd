@@ -1,0 +1,29 @@
+From 238efd15fb361044f0473fc6445661c48ac5413f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 22 May 2012 01:12:46 +0200
+Subject: [PATCH] man: relax wording in journal-fields(7) a bit (cherry picked
+ from commit 33ba4c4b0e9d6a7f8a73647f130aabd5b3c6bc29)
+
+---
+ man/systemd.journal-fields.xml |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/man/systemd.journal-fields.xml b/man/systemd.journal-fields.xml
+index aa32693..c4187b2 100644
+--- a/man/systemd.journal-fields.xml
++++ b/man/systemd.journal-fields.xml
+@@ -74,9 +74,11 @@
+                                         message string for this
+                                         entry. This is supposed to be
+                                         the primary text shown to the
+-                                        user. It is not translated,
+-                                        and is not supposed to be
+-                                        parsed for meta data.</para>
++                                        user. It is usually not
++                                        translated (but might be in
++                                        some cases), and is not
++                                        supposed to be parsed for meta
++                                        data.</para>
+                                 </listitem>
+                         </varlistentry>
+ 

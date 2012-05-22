@@ -1,0 +1,25 @@
+From 71e7872f6c61368ecb0a76bba02d34b3fcb1467c Mon Sep 17 00:00:00 2001
+From: David Ward <david.ward@ll.mit.edu>
+Date: Sun, 29 Apr 2012 09:35:40 -0400
+Subject: [PATCH] service: actually delay auto-restart if another job is
+ pending
+
+https://bugs.freedesktop.org/show_bug.cgi?id=45511
+(cherry picked from commit feae8adb848e26110b28a06d1244e02f36cdf382)
+---
+ src/core/service.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 9fffb08..89f56ca 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2232,6 +2232,8 @@ static void service_enter_restart(Service *s) {
+ 
+                 if ((r = unit_watch_timer(UNIT(s), s->restart_usec, &s->timer_watch)) < 0)
+                         goto fail;
++
++                return;
+         }
+ 
+         /* Any units that are bound to this service must also be

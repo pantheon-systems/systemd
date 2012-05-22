@@ -1,0 +1,32 @@
+From 17549f658dd9858075875412931f4a245d5ad621 Mon Sep 17 00:00:00 2001
+From: David Ward <david.ward@ll.mit.edu>
+Date: Mon, 2 Apr 2012 23:45:35 -0400
+Subject: [PATCH] service: schedule JOB_RESTART from SERVICE_AUTO_RESTART
+ state
+
+Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=45511
+(cherry picked from commit 48bb58769a00e8e50a617ebbfff84599a0350fa5)
+---
+ src/core/service.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 7ce2e72..9fffb08 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2234,9 +2234,12 @@ static void service_enter_restart(Service *s) {
+                         goto fail;
+         }
+ 
+-        service_enter_dead(s, SERVICE_SUCCESS, false);
+-
+-        if ((r = manager_add_job(UNIT(s)->manager, JOB_START, UNIT(s), JOB_FAIL, false, &error, NULL)) < 0)
++        /* Any units that are bound to this service must also be
++         * restarted. We use JOB_RESTART (instead of the more obvious
++         * JOB_START) here so that those dependency jobs will be added
++         * as well. */
++        r = manager_add_job(UNIT(s)->manager, JOB_RESTART, UNIT(s), JOB_FAIL, false, &error, NULL);
++        if (r < 0)
+                 goto fail;
+ 
+         log_debug("%s scheduled restart job.", UNIT(s)->id);

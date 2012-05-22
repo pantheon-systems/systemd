@@ -1,0 +1,71 @@
+From 5d03cc1e81d0b2be3647f61973f259795b13b77f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 22 May 2012 02:00:53 +0200
+Subject: [PATCH] mount: use the same fstab extension option syntax everywhere
+
+The man page and the actual code differed, and this is now corrected
+(cherry picked from commit 92a39ae1989a7583d696afd4c89990aea802e9ea)
+
+Conflicts:
+	src/core/mount.c
+
+F17: keep the old x-systemd-* options in addition to the new ones.
+---
+ man/systemd.mount.xml |   11 ++++-------
+ src/core/mount.c      |    7 +++++--
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
+index 8f1cc51..a4e01fd 100644
+--- a/man/systemd.mount.xml
++++ b/man/systemd.mount.xml
+@@ -109,12 +109,9 @@
+                 <para>When reading <filename>/etc/fstab</filename> a
+                 few special mount options are understood by systemd
+                 which influence how dependencies are created for mount
+-                points from <filename>/etc/fstab</filename>. If
+-                <option>MountAuto=yes</option> is set in
+-                <filename>system.conf</filename> (which is the
+-                default), or if <option>x-systemd.mount</option> is
+-                specified as mount option, then systemd will create a
+-                dependency of type <option>Wants</option> from either
++                points from <filename>/etc/fstab</filename>. systemd
++                will create a dependency of type
++                <option>Wants</option> from either
+                 <filename>local-fs.target</filename> or
+                 <filename>remote-fs.target</filename>, depending
+                 whether the file system is local or remote. If
+@@ -123,7 +120,7 @@
+                 system. See
+                 <citerefentry><refentrytitle>systemd.automount</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                 for details. If
+-                <option>x-systemd-device-timeout=</option> is
++                <option>x-systemd.device-timeout=</option> is
+                 specified it may be used to configure how long systemd
+                 should wait for a device to show up before giving up
+                 on an entry from
+diff --git a/src/core/mount.c b/src/core/mount.c
+index e7a1c58..ffe1b2c 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -358,7 +358,8 @@ static int mount_add_fstab_links(Mount *m) {
+         nofail = !!mount_test_option(p->options, "nofail");
+         automount =
+                 mount_test_option(p->options, "comment=systemd.automount") ||
+-                mount_test_option(p->options, "x-systemd-automount");
++                mount_test_option(p->options, "x-systemd.automount") ||
++                mount_test_option(p->options, "x-systemd-automount"); /* F17 compat */
+         handle =
+                 automount ||
+                 mount_test_option(p->options, "comment=systemd.mount") ||
+@@ -520,7 +521,9 @@ static int mount_fix_timeouts(Mount *m) {
+ 
+         if ((timeout = mount_test_option(p->options, "comment=systemd.device-timeout")))
+                 timeout += 31;
+-        else if ((timeout = mount_test_option(p->options, "x-systemd-device-timeout")))
++        else if ((timeout = mount_test_option(p->options, "x-systemd.device-timeout")))
++                timeout += 25;
++        else if ((timeout = mount_test_option(p->options, "x-systemd-device-timeout"))) /* F17 compat */
+                 timeout += 25;
+         else
+                 return 0;

@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        12%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -389,6 +389,15 @@ Patch0326:      0326-journald-fix-length-of-SYSLOG_IDENTIFIER.patch
 Patch0327:      0327-journald-one-more-SYSLOG_IDENTIFIER-length-fix.patch
 Patch0328:      0328-main-allow-system-wide-limits-for-services.patch
 Patch0329:      0329-F17-fix-manpage-names.patch
+Patch0330:      0330-man-relax-wording-in-journal-fields-7-a-bit.patch
+Patch0331:      0331-systemd-analyze-switch-to-python-getopt-for-argument.patch
+Patch0332:      0332-Fixed-handling-of-posix_fallocate-returned-value.patch
+Patch0333:      0333-cgtop-change-default-depth-to-3.patch
+Patch0334:      0334-service-schedule-JOB_RESTART-from-SERVICE_AUTO_RESTA.patch
+Patch0335:      0335-service-actually-delay-auto-restart-if-another-job-i.patch
+Patch0336:      0336-service-fix-auto-restart-handling-in-service_stop.patch
+Patch0337:      0337-service-fix-auto-restart-handling-in-service_start.patch
+Patch0338:      0338-mount-use-the-same-fstab-extension-option-syntax-eve.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -765,6 +774,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue May 22 2012 Michal Schmidt <mschmidt@redhat.com> - 44-12
+- Fixes for auto-restart (#817968, fdo#45511)
+
 * Mon May 21 2012 Michal Schmidt <mschmidt@redhat.com> - 44-11
 - Fix weird "TIFIER=" messages in syslog (#823498)
 - Revert ReleaseSession patch (#823485)

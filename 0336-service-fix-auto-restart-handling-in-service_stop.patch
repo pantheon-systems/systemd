@@ -1,0 +1,49 @@
+From 6394fc7a0737becd995c990fc12cdf03b8f408f0 Mon Sep 17 00:00:00 2001
+From: David Ward <david.ward@ll.mit.edu>
+Date: Sun, 29 Apr 2012 09:35:48 -0400
+Subject: [PATCH] service: fix auto-restart handling in service_stop()
+
+When service_stop() handles a service in the SERVICE_AUTO_RESTART state,
+it calls service_set_state() to transition it to the SERVICE_DEAD state.
+However if the service failed, it should transition it to SERVICE_FAILED
+instead, which will trigger its OnFailure units. To achieve this, we now
+call service_enter_dead() in place of service_set_state(), which will
+transition the service to either SERVICE_DEAD or SERVICE_FAILED as is
+appropriate.
+
+Also, some misleading comments are adjusted: service_stop() is not only
+called on a user request, but also during an automatic restart in order
+to handle dependencies.
+
+Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=45511
+(cherry picked from commit f0c7b229e1aba12488ffb3ca39f606cc93291f55)
+---
+ src/core/service.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 89f56ca..7841195 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2460,8 +2460,7 @@ static int service_stop(Unit *u) {
+ 
+         assert(s);
+ 
+-        /* This is a user request, so don't do restarts on this
+-         * shutdown. */
++        /* Don't create restart jobs from here. */
+         s->forbid_restart = true;
+ 
+         /* Already on it */
+@@ -2473,9 +2472,9 @@ static int service_stop(Unit *u) {
+             s->state == SERVICE_FINAL_SIGKILL)
+                 return 0;
+ 
+-        /* Don't allow a restart */
++        /* A restart will be scheduled or is in progress. */
+         if (s->state == SERVICE_AUTO_RESTART) {
+-                service_set_state(s, SERVICE_DEAD);
++                service_enter_dead(s, SERVICE_SUCCESS, false);
+                 return 0;
+         }
+ 

@@ -1,0 +1,39 @@
+From 4a06ef92d76078e1a09c3ae35abb562f27166b39 Mon Sep 17 00:00:00 2001
+From: Guillermo Vidal <guillermo.vidal@continental-corporation.com>
+Date: Wed, 9 May 2012 13:43:34 -0500
+Subject: [PATCH] Fixed handling of posix_fallocate() returned value
+
+According to the man pages of posix_fallocate, it returns zero on
+success or an error number on failure; however,  errno is not set
+on failure. If the kernel or a library other than glibc does not
+support the function for example, EOPNOTSUPP will be returned and
+the error will not be handled properly with original code.
+(cherry picked from commit fec2aa2f9ee0748fdb7148613b8a359d246cc32a)
+---
+ src/journal/journal-file.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index a4df704..4fb416f 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -188,6 +188,7 @@ static int journal_file_verify_header(JournalFile *f) {
+ 
+ static int journal_file_allocate(JournalFile *f, uint64_t offset, uint64_t size) {
+         uint64_t old_size, new_size;
++        int r;
+ 
+         assert(f);
+ 
+@@ -232,8 +233,9 @@ static int journal_file_allocate(JournalFile *f, uint64_t offset, uint64_t size)
+         /* Note that the glibc fallocate() fallback is very
+            inefficient, hence we try to minimize the allocation area
+            as we can. */
+-        if (posix_fallocate(f->fd, old_size, new_size - old_size) < 0)
+-                return -errno;
++        r = posix_fallocate(f->fd, old_size, new_size - old_size);
++        if (r != 0)
++                return -r;
+ 
+         if (fstat(f->fd, &f->last_stat) < 0)
+                 return -errno;
