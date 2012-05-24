@@ -37,7 +37,7 @@ BuildRequires:  libtool
 Requires(post): authconfig
 Requires(post): coreutils
 Requires(post): gawk
-Requires(pre):  fileutils
+Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent /usr/sbin/groupadd
 Requires:       dbus
 Requires:       hwdata
@@ -227,6 +227,10 @@ getent group tape >/dev/null || /usr/sbin/groupadd -g 33 tape || :
 getent group dialout >/dev/null || /usr/sbin/groupadd -g 18 dialout || :
 getent group floppy >/dev/null || /usr/sbin/groupadd -g 19 floppy || :
 systemctl stop systemd-udev.service systemd-udev-control.socket systemd-udev-kernel.socket >/dev/null 2>&1 || :
+
+# Rename configuration files that changed their names
+/usr/bin/mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
+/usr/bin/mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
 
 %post
 /sbin/ldconfig
