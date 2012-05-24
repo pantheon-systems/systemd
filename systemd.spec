@@ -2,13 +2,11 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        44
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        183
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
-BuildRequires:  udev >= 179-2
-BuildRequires:  libudev-devel >= 179-2
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
@@ -20,10 +18,17 @@ BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
 BuildRequires:  libacl-devel
+BuildRequires:  pciutils-devel
+BuildRequires:  glib2-devel
+BuildRequires:  hwdata
+BuildRequires:  gobject-introspection-devel >= 0.6.2
+BuildRequires:  usbutils >= 0.82
+BuildRequires:  libblkid-devel >= 2.20
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
+BuildRequires:  gtk-doc
 %if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -32,13 +37,11 @@ BuildRequires:  libtool
 Requires(post): authconfig
 Requires(post): coreutils
 Requires(post): gawk
-Requires:       dbus >= 1.4.6-3.fc15
-Requires:       udev >= 179-2
-Requires:       libudev >= 179-2
-Requires:       initscripts >= 9.28
+Requires(pre):  fileutils
+Requires(pre):  /usr/bin/getent /usr/sbin/groupadd
+Requires:       dbus
+Requires:       hwdata
 Requires:       filesystem >= 3
-Conflicts:      selinux-policy < 3.9.16-12.fc15
-Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
 %if %{defined gitcommit}
 # Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
@@ -53,9 +56,7 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-Patch0:         systemd-PAGE_SIZE.patch
 
-# For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
 Provides:       sysvinit-userspace
@@ -70,8 +71,8 @@ Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
-# for the systemd-analyze split:
-Obsoletes:      systemd < 38-5
+Provides:       udev = 183
+Obsoletes:      udev < 183
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -87,6 +88,8 @@ work as a drop-in replacement for sysvinit.
 Group:          System Environment/Base
 Summary:        Development headers for systemd
 Requires:       %{name} = %{version}-%{release}
+Provides:       libudev-devel = 183
+Obsoletes:      libudev-devel < 183
 
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
@@ -114,22 +117,47 @@ initialization at boot.
 'systemd-analyze plot' renders an SVG visualizing the parallel start of units
 at boot.
 
+%package -n libgudev1
+Summary:        Libraries for adding libudev support to applications that use glib
+Group:          Development/Libraries
+Conflicts:      filesystem < 3
+License:        LGPLv2+
+
+%description -n libgudev1
+This package contains the libraries that make it easier to use libudev
+functionality from applications that use glib.
+
+%package -n libgudev1-devel
+Summary:        Header files for adding libudev support to applications that use glib
+Group:          Development/Libraries
+Requires:       libgudev1 = %{version}-%{release}
+License:        LGPLv2+
+
+%description -n libgudev1-devel
+This package contains the header and pkg-config files for developing
+glib-based applications using libudev functionality.
+
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
-%configure --with-distro=fedora --disable-static
+%configure \
+  --with-distro=fedora \
+  --libexecdir=%{_prefix}/lib \
+  --enable-gtk-doc \
+  --disable-static
 make %{?_smp_mflags}
 
 %install
 make DESTDIR=%{buildroot} install
 find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
+mkdir -p %{buildroot}/%{_sbindir}
+ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
+mkdir -p %{buildroot}%{_prefix}/lib/firmware/updates
 
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
-mkdir -p %{buildroot}/%{_sbindir}
 ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
 ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
@@ -191,21 +219,21 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 # Let rsyslog read from /proc/kmsg for now
-sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/systemd-journald.conf
+sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/journald.conf
+
+%pre
+getent group cdrom >/dev/null || /usr/sbin/groupadd -g 11 cdrom || :
+getent group tape >/dev/null || /usr/sbin/groupadd -g 33 tape || :
+getent group dialout >/dev/null || /usr/sbin/groupadd -g 18 dialout || :
+getent group floppy >/dev/null || /usr/sbin/groupadd -g 19 floppy || :
+systemctl stop systemd-udev.service systemd-udev-control.socket systemd-udev-kernel.socket >/dev/null 2>&1 || :
 
 %post
 /sbin/ldconfig
 /usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
-
-# Make sure pam_systemd is enabled
-if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || ! [ -h /etc/pam.d/system-auth ] ; then
-        /usr/sbin/authconfig --update --nostart >/dev/null 2>&1 || :
-
-        # Try harder
-        /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
-fi
+/bin/systemctl start systemd-udev.service >/dev/null 2>&1 || :
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
@@ -264,7 +292,11 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
         systemd-readahead-replay.service \
         systemd-readahead-collect.service
 
+%post -n libgudev1 -p /sbin/ldconfig
+%postun -n libgudev1 -p /sbin/ldconfig
+
 %files
+%doc NEWS README src/udev/keymap/README.keymap.txt
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
@@ -290,8 +322,11 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.timedate1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
-%config(noreplace) %{_sysconfdir}/systemd/systemd-logind.conf
-%config(noreplace) %{_sysconfdir}/systemd/systemd-journald.conf
+%config(noreplace) %{_sysconfdir}/systemd/logind.conf
+%config(noreplace) %{_sysconfdir}/systemd/journald.conf
+%config(noreplace) %{_sysconfdir}/udev/udev.conf
+%dir %{_sysconfdir}/udev/
+%dir %{_sysconfdir}/udev/rules.d/
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
@@ -314,26 +349,33 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
-%{_bindir}/systemd-loginctl
-%{_bindir}/systemd-journalctl
+%{_bindir}/loginctl
+%{_bindir}/journalctl
 %{_bindir}/systemd-tmpfiles
 %{_bindir}/systemd-nspawn
 %{_bindir}/systemd-stdio-bridge
 %{_bindir}/systemd-cat
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
+%{_bindir}/systemd-delta
+%{_bindir}/systemd-detect-virt
+%{_bindir}/systemd-inhibit
+%{_bindir}/udevadm
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
 %{_prefix}/lib/systemd/systemd-*
-%{_prefix}/lib/udev/rules.d/*.rules
+%{_prefix}/lib/udev
 %{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
 %{_prefix}/lib/systemd/system-generators/systemd-getty-generator
 %{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
+%{_prefix}/lib/systemd/system-generators/systemd-fstab-generator
+%{_prefix}/lib/systemd/system-generators/systemd-system-update-generator
 %{_libdir}/security/pam_systemd.so
 %{_libdir}/libsystemd-daemon.so.*
 %{_libdir}/libsystemd-login.so.*
 %{_libdir}/libsystemd-journal.so.*
 %{_libdir}/libsystemd-id128.so.*
+%{_libdir}/libudev.so.*
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -341,8 +383,8 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_sbindir}/shutdown
 %{_sbindir}/telinit
 %{_sbindir}/runlevel
+%{_sbindir}/udevadm
 %{_mandir}/man1/*
-%exclude %{_mandir}/man1/systemadm.*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
@@ -363,7 +405,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_datadir}/polkit-1/actions/org.freedesktop.locale1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
+%{_datadir}/pkgconfig/udev.pc
 %config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
+%dir %{_prefix}/lib/firmware
+%dir %{_prefix}/lib/firmware/updates
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -377,16 +422,23 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_libdir}/libsystemd-login.so
 %{_libdir}/libsystemd-journal.so
 %{_libdir}/libsystemd-id128.so
+%{_libdir}/libudev.so
 %{_includedir}/systemd/sd-daemon.h
 %{_includedir}/systemd/sd-login.h
 %{_includedir}/systemd/sd-journal.h
 %{_includedir}/systemd/sd-id128.h
 %{_includedir}/systemd/sd-messages.h
+%{_includedir}/systemd/sd-readahead.h
+%{_includedir}/systemd/sd-shutdown.h
+%{_includedir}/libudev.h
 %{_libdir}/pkgconfig/libsystemd-daemon.pc
 %{_libdir}/pkgconfig/libsystemd-login.pc
 %{_libdir}/pkgconfig/libsystemd-journal.pc
 %{_libdir}/pkgconfig/libsystemd-id128.pc
+%{_libdir}/pkgconfig/libudev.pc
 %{_mandir}/man3/*
+%dir %{_datadir}/gtk-doc/html/libudev
+%attr(0644,root,root) %{_datadir}/gtk-doc/html/libudev/*
 
 %files sysv
 %{_bindir}/systemd-sysv-convert
@@ -394,7 +446,24 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %files analyze
 %{_bindir}/systemd-analyze
 
+%files -n libgudev1
+%attr(0755,root,root) %{_libdir}/libgudev-1.0.so.*
+%attr(0644,root,root) %{_libdir}/girepository-1.0/GUdev-1.0.typelib
+
+%files -n libgudev1-devel
+%attr(0755,root,root) %{_libdir}/libgudev-1.0.so
+%dir %attr(0755,root,root) %{_includedir}/gudev-1.0
+%dir %attr(0755,root,root) %{_includedir}/gudev-1.0/gudev
+%attr(0644,root,root) %{_includedir}/gudev-1.0/gudev/*.h
+%attr(0644,root,root) %{_datadir}/gir-1.0/GUdev-1.0.gir
+%dir %{_datadir}/gtk-doc/html/gudev
+%attr(0644,root,root) %{_datadir}/gtk-doc/html/gudev/*
+%attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
+
 %changelog
+* Thu May 24 2012 Kay Sievers <kay@redhat.com> - 183-1
+- New upstream release including udev merge.
+
 * Wed Mar 28 2012 Michal Schmidt <mschmidt@redhat.com> - 44-4
 - Add triggers from Bill Nottingham to correct the damage done by
   the obsoleted systemd-units's preun scriptlet (#807457).
