@@ -167,10 +167,12 @@ ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
+ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
+
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the used deleted
 # them.
-rm -r %{buildroot}/etc/systemd/system/*.target.wants
+rm -r %{buildroot}%{_sysconfdir}/systemd/system/*.target.wants
 
 # Make sure the ghost-ing below works
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
@@ -354,6 +356,7 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
 %{_bindir}/loginctl
+%{_bindir}/systemd-loginctl
 %{_bindir}/journalctl
 %{_bindir}/systemd-tmpfiles
 %{_bindir}/systemd-nspawn
