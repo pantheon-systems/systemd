@@ -2,7 +2,7 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        183
+Version:        184
 Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
@@ -468,6 +468,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu May 31 2012 Lennart Poettering <lpoetter@redhat.com> - 184-1
+- New upstream release
+
 * Thu May 24 2012 Kay Sievers <kay@redhat.com> - 183-1
 - New upstream release including udev merge.
 
