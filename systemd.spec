@@ -34,7 +34,6 @@ BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
 %endif
-Requires(post): authconfig
 Requires(post): coreutils
 Requires(post): gawk
 Requires(pre):  coreutils
