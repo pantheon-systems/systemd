@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        185
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -56,6 +56,7 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+Patch0:         0001-udev-remove-remaining-selinux-labeling-for-file-in-r.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -71,8 +72,9 @@ Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
-Provides:       udev = 183
+Provides:       udev = %{version}
 Obsoletes:      udev < 183
+Conflicts:      dracut < 019
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -88,7 +90,7 @@ work as a drop-in replacement for sysvinit.
 Group:          System Environment/Base
 Summary:        Development headers for systemd
 Requires:       %{name} = %{version}-%{release}
-Provides:       libudev-devel = 183
+Provides:       libudev-devel = %{version}
 Obsoletes:      libudev-devel < 183
 
 %description devel
@@ -139,6 +141,7 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch0 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -468,6 +471,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Jun 05 2012 Kay Sievers - 185-2
+- selinux udev labeling fix
+- conflict with older dracut versions for new udev file names
+
 * Mon Jun 04 2012 Kay Sievers - 185-1
 - New upstream release
   - udev selinux labeling fixes
