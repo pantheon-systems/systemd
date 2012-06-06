@@ -1,9 +1,9 @@
-#global gitcommit 9fa2f41
+%global gitcommit a2368a3
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        185
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -56,7 +56,6 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-Patch0:         0001-udev-remove-remaining-selinux-labeling-for-file-in-r.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -87,9 +86,18 @@ state, maintains mount and automount points and implements an
 elaborate transactional dependency-based service control logic. It can
 work as a drop-in replacement for sysvinit.
 
+%package libs
+Group:          System Environment/Base
+Summary:        systemd libraries
+License:        LGPLv2+ and MIT
+
+%description libs
+Libraries for systemd and udev. systemd PAM module.
+
 %package devel
 Group:          System Environment/Base
 Summary:        Development headers for systemd
+License:        LGPLv2+ and MIT
 Requires:       %{name} = %{version}-%{release}
 Provides:       libudev-devel = %{version}
 Obsoletes:      libudev-devel < 183
@@ -100,6 +108,7 @@ Development headers and auxiliary files for developing applications for systemd.
 %package sysv
 Group:          System Environment/Base
 Summary:        SysV tools for systemd
+License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
 
 %description sysv
@@ -108,6 +117,7 @@ SysV compatibility tools for systemd
 %package analyze
 Group:          System Environment/Base
 Summary:        Tool for processing systemd profiling information
+License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
 Requires:       dbus-python
 Requires:       pycairo
@@ -142,7 +152,6 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -309,7 +318,6 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %postun -n libgudev1 -p /sbin/ldconfig
 
 %files
-%doc NEWS README src/udev/keymap/README.keymap.txt
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
@@ -374,6 +382,7 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-delta
 %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
+%{_bindir}/systemd-readahead-analyze
 %{_bindir}/udevadm
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
@@ -384,12 +393,6 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
 %{_prefix}/lib/systemd/system-generators/systemd-fstab-generator
 %{_prefix}/lib/systemd/system-generators/systemd-system-update-generator
-%{_libdir}/security/pam_systemd.so
-%{_libdir}/libsystemd-daemon.so.*
-%{_libdir}/libsystemd-login.so.*
-%{_libdir}/libsystemd-journal.so.*
-%{_libdir}/libsystemd-id128.so.*
-%{_libdir}/libudev.so.*
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -430,6 +433,14 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel3.target
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
+
+%files libs
+%{_libdir}/security/pam_systemd.so
+%{_libdir}/libsystemd-daemon.so.*
+%{_libdir}/libsystemd-login.so.*
+%{_libdir}/libsystemd-journal.so.*
+%{_libdir}/libsystemd-id128.so.*
+%{_libdir}/libudev.so.*
 
 %files devel
 %{_libdir}/libsystemd-daemon.so
@@ -475,7 +486,15 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Wed Jun 06 2012 Ray Strode <rstrode@redhat.com> 185-3
+* Wed Jun 06 2012 Michal Schmidt <mschmidt@redhat.com> - 185-4.gita2368a3
+- Update to current git snapshot
+  - Add systemd-readahead-analyze
+  - Drop upstream patch
+- Split systemd-libs
+- Drop duplicate doc files
+- Fixed License headers of subpackages
+
+* Wed Jun 06 2012 Ray Strode <rstrode@redhat.com> - 185-3
 - Drop plymouth files
 - Conflict with old plymouth
 
