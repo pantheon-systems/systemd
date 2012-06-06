@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        185
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -75,6 +75,7 @@ Provides:       systemd-units = %{version}-%{release}
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
 Conflicts:      dracut < 019
+Conflicts:      plymouth < 0.8.5.1
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -225,6 +226,9 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 # Let rsyslog read from /proc/kmsg for now
 sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/journald.conf
+
+# plymouth now ships these, remove them here until they get dropped in the next upstream systemd release
+rm -f %{buildroot}%{_prefix}/lib/systemd/system/plymouth-*.service
 
 %pre
 getent group cdrom >/dev/null || /usr/sbin/groupadd -g 11 cdrom || :
@@ -471,6 +475,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Jun 06 2012 Ray Strode <rstrode@redhat.com> 185-3
+- Drop plymouth files
+- Conflict with old plymouth
+
 * Tue Jun 05 2012 Kay Sievers - 185-2
 - selinux udev labeling fix
 - conflict with older dracut versions for new udev file names
