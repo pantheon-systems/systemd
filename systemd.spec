@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        185
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -157,6 +157,7 @@ glib-based applications using libudev functionality.
 %{?gitcommit: ./autogen.sh }
 %configure \
   --with-distro=fedora \
+  --disable-plymouth \
   --libexecdir=%{_prefix}/lib \
   --enable-gtk-doc \
   --disable-static
@@ -235,9 +236,6 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 # Let rsyslog read from /proc/kmsg for now
 sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/journald.conf
-
-# plymouth now ships these, remove them here until they get dropped in the next upstream systemd release
-rm -f %{buildroot}%{_prefix}/lib/systemd/system/plymouth-*.service
 
 %pre
 getent group cdrom >/dev/null || /usr/sbin/groupadd -g 11 cdrom || :
@@ -486,6 +484,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Jun 06 2012 Kay Sievers - 185-5.gita2368a3
+- disable plymouth in configure, to drop the .wants/ symlinks
+
 * Wed Jun 06 2012 Michal Schmidt <mschmidt@redhat.com> - 185-4.gita2368a3
 - Update to current git snapshot
   - Add systemd-readahead-analyze
