@@ -1,0 +1,74 @@
+From e607320d492d31917aac0d556684c532fe301dd1 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 31 May 2012 22:12:47 +0200
+Subject: [PATCH] build-sys: split-off D-Bus requires from selinux convenience
+ lib (cherry picked from commit
+ 477572f5c7ffc2febc75277ca84d15bd151d42ca)
+
+---
+ Makefile.am |   20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 600becf..c283738 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -595,13 +595,23 @@ libsystemd_dbus_la_LIBADD = \
+ 
+ # ------------------------------------------------------------------------------
+ noinst_LTLIBRARIES += \
+-	libsystemd-label.la
++	libsystemd-units.la
+ 
+-libsystemd_label_la_SOURCES = \
++libsystemd_units_la_SOURCES = \
+ 	src/shared/install.c \
+ 	src/shared/install.h \
+ 	src/shared/path-lookup.c \
+-	src/shared/path-lookup.h \
++	src/shared/path-lookup.h
++
++libsystemd_units_la_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(DBUS_CFLAGS)
++
++# ------------------------------------------------------------------------------
++noinst_LTLIBRARIES += \
++	libsystemd-label.la
++
++libsystemd_label_la_SOURCES = \
+ 	src/shared/cgroup-label.c \
+ 	src/shared/socket-label.c \
+ 	src/shared/label.c \
+@@ -615,7 +625,6 @@ libsystemd_label_la_SOURCES = \
+ 
+ libsystemd_label_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+-	$(DBUS_CFLAGS) \
+ 	$(SELINUX_CFLAGS)
+ 
+ libsystemd_label_la_LIBADD = \
+@@ -800,6 +809,7 @@ libsystemd_core_la_CFLAGS = \
+ 
+ libsystemd_core_la_LIBADD = \
+ 	libsystemd-capability.la \
++	libsystemd-units.la \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
+ 	libsystemd-dbus.la \
+@@ -971,6 +981,7 @@ test_install_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ test_install_LDADD = \
++	libsystemd-units.la \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la
+ 
+@@ -1174,6 +1185,7 @@ systemctl_CFLAGS = \
+ 	$(DBUS_CFLAGS)
+ 
+ systemctl_LDADD = \
++	libsystemd-units.la \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
+ 	libsystemd-daemon.la \

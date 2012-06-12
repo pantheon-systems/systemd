@@ -1,0 +1,28 @@
+From 97e10791ecf091bc784c9bffffe984c32f4c9347 Mon Sep 17 00:00:00 2001
+From: Gert Michael Kulyk <gkulyk@klio>
+Date: Sun, 27 May 2012 20:43:55 +0200
+Subject: [PATCH] bash: Reflect new name of loginctl in bash-completion script
+
+https://bugs.freedesktop.org/show_bug.cgi?id=50402
+(cherry picked from commit 80d37ae7b9d2c471e89e018a8f1e7cab8cd53123)
+---
+ bash-completion/systemd-bash-completion.sh |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/bash-completion/systemd-bash-completion.sh b/bash-completion/systemd-bash-completion.sh
+index 7128b33..7fba694 100644
+--- a/bash-completion/systemd-bash-completion.sh
++++ b/bash-completion/systemd-bash-completion.sh
+@@ -197,9 +197,9 @@ _systemctl () {
+ }
+ complete -F _systemctl systemctl
+ 
+-__get_all_sessions () { systemd-loginctl list-sessions | { while read -r a b; do printf "%s\n" "$a"; done; } ; }
+-__get_all_users    () { systemd-loginctl list-users    | { while read -r a b; do printf "%s\n" "$b"; done; } ; }
+-__get_all_seats    () { systemd-loginctl list-seats    | { while read -r a b; do printf "%s\n" "$a"; done; } ; }
++__get_all_sessions () { loginctl list-sessions | { while read -r a b; do printf "%s\n" "$a"; done; } ; }
++__get_all_users    () { loginctl list-users    | { while read -r a b; do printf "%s\n" "$b"; done; } ; }
++__get_all_seats    () { loginctl list-seats    | { while read -r a b; do printf "%s\n" "$a"; done; } ; }
+ 
+ _loginctl () {
+         local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}

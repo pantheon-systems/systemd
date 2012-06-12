@@ -1,0 +1,30 @@
+From 1065f2a05f99a7287408a88a4b33bc8003eb7c88 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 6 Jun 2012 11:26:30 +0200
+Subject: [PATCH] units: avoid redundant VT clearing by agetty
+
+TTYVTDisallocate=yes already clears the VT. agetty does not need to do
+it again. Run it with --noclear.
+
+Felix Miata found the double clearing confusing in this bugreport:
+https://bugzilla.redhat.com/show_bug.cgi?id=828007
+Add a comment explaining what clears the VT.
+(cherry picked from commit 3305d6806d428010b1cd2abd716aa1bb7f81311f)
+---
+ units/getty@.service.m4 |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index 7022743..fec101f 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -41,7 +41,8 @@ ConditionPathExists=/dev/tty0
+ 
+ [Service]
+ Environment=TERM=linux
+-ExecStart=-/sbin/agetty %I 38400
++# the VT is cleared by TTYVTDisallocate
++ExecStart=-/sbin/agetty --noclear %I 38400
+ Type=idle
+ Restart=always
+ RestartSec=0

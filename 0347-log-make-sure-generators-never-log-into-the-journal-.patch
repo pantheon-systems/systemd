@@ -1,0 +1,122 @@
+From 3c841d30cc4945ba6abc0884730afb21a0af23e9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 22 May 2012 22:00:37 +0200
+Subject: [PATCH] log: make sure generators never log into the journal to
+ avoid activation deadlocks
+
+This makes all generators log to kmsg by default.
+(cherry picked from commit a6903061530cac5fbaa99a080a93221c02c349f9)
+
+Conflicts:
+	src/fstab-generator/fstab-generator.c
+	src/system-update-generator/system-update-generator.c
+---
+ src/cryptsetup/cryptsetup-generator.c       |    2 +-
+ src/getty-generator/getty-generator.c       |    2 +-
+ src/journal/journald.c                      |    2 +-
+ src/rc-local-generator/rc-local-generator.c |    2 +-
+ src/shared/log.c                            |    5 ++++-
+ src/shared/log.h                            |    1 +
+ 6 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index 29a7bf5..2e43f5e 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
+         if (argc > 1)
+                 arg_dest = argv[1];
+ 
+-        log_set_target(LOG_TARGET_AUTO);
++        log_set_target(LOG_TARGET_SAFE);
+         log_parse_environment();
+         log_open();
+ 
+diff --git a/src/getty-generator/getty-generator.c b/src/getty-generator/getty-generator.c
+index 323d29c..6a27213 100644
+--- a/src/getty-generator/getty-generator.c
++++ b/src/getty-generator/getty-generator.c
+@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
+                 return EXIT_FAILURE;
+         }
+ 
+-        log_set_target(LOG_TARGET_AUTO);
++        log_set_target(LOG_TARGET_SAFE);
+         log_parse_environment();
+         log_open();
+ 
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index a097c72..99fbd6d 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2774,7 +2774,7 @@ int main(int argc, char *argv[]) {
+                 return EXIT_FAILURE;
+         }
+ 
+-        log_set_target(LOG_TARGET_KMSG);
++        log_set_target(LOG_TARGET_SAFE);
+         log_set_facility(LOG_SYSLOG);
+         log_parse_environment();
+         log_open();
+diff --git a/src/rc-local-generator/rc-local-generator.c b/src/rc-local-generator/rc-local-generator.c
+index 26fe657..7add072 100644
+--- a/src/rc-local-generator/rc-local-generator.c
++++ b/src/rc-local-generator/rc-local-generator.c
+@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
+                 return EXIT_FAILURE;
+         }
+ 
+-        log_set_target(LOG_TARGET_AUTO);
++        log_set_target(LOG_TARGET_SAFE);
+         log_parse_environment();
+         log_open();
+ 
+diff --git a/src/shared/log.c b/src/shared/log.c
+index b826880..a2fa653 100644
+--- a/src/shared/log.c
++++ b/src/shared/log.c
+@@ -240,7 +240,7 @@ int log_open(void) {
+                 return 0;
+         }
+ 
+-        if (log_target != LOG_TARGET_AUTO ||
++        if ((log_target != LOG_TARGET_AUTO && log_target != LOG_TARGET_SAFE) ||
+             getpid() == 1 ||
+             isatty(STDERR_FILENO) <= 0) {
+ 
+@@ -266,6 +266,7 @@ int log_open(void) {
+                 }
+ 
+                 if (log_target == LOG_TARGET_AUTO ||
++                    log_target == LOG_TARGET_SAFE ||
+                     log_target == LOG_TARGET_JOURNAL_OR_KMSG ||
+                     log_target == LOG_TARGET_SYSLOG_OR_KMSG ||
+                     log_target == LOG_TARGET_KMSG) {
+@@ -547,6 +548,7 @@ static int log_dispatch(
+ 
+                 if (k <= 0 &&
+                     (log_target == LOG_TARGET_AUTO ||
++                     log_target == LOG_TARGET_SAFE ||
+                      log_target == LOG_TARGET_SYSLOG_OR_KMSG ||
+                      log_target == LOG_TARGET_JOURNAL_OR_KMSG ||
+                      log_target == LOG_TARGET_KMSG)) {
+@@ -744,6 +746,7 @@ static const char *const log_target_table[] = {
+         [LOG_TARGET_SYSLOG] = "syslog",
+         [LOG_TARGET_SYSLOG_OR_KMSG] = "syslog-or-kmsg",
+         [LOG_TARGET_AUTO] = "auto",
++        [LOG_TARGET_SAFE] = "safe",
+         [LOG_TARGET_NULL] = "null"
+ };
+ 
+diff --git a/src/shared/log.h b/src/shared/log.h
+index 3283808..daea8b4 100644
+--- a/src/shared/log.h
++++ b/src/shared/log.h
+@@ -36,6 +36,7 @@ typedef enum LogTarget{
+         LOG_TARGET_SYSLOG,
+         LOG_TARGET_SYSLOG_OR_KMSG,
+         LOG_TARGET_AUTO, /* console if stderr is tty, JOURNAL_OR_KMSG otherwise */
++        LOG_TARGET_SAFE, /* console if stderr is tty, KMSG otherwise */
+         LOG_TARGET_NULL,
+         _LOG_TARGET_MAX,
+         _LOG_TARGET_INVALID = -1

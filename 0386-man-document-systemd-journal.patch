@@ -1,0 +1,250 @@
+From fa0108f678e002788d0ceadf49ea9f26f5d361a6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 01:05:38 +0200
+Subject: [PATCH] man: document systemd-journal (cherry picked from commit
+ 01cf0ca850dd1c21e1c405a4493fe61d0c28d721)
+
+Conflicts:
+	Makefile.am
+	man/systemd-journald.conf.xml
+	man/systemd-logind.conf.xml
+	units/systemd-journald.service.in
+---
+ Makefile.am                       |    5 +-
+ man/journalctl.xml                |    8 ++-
+ man/systemd-journald.conf.xml     |    7 ++-
+ man/systemd-journald.service.xml  |  110 +++++++++++++++++++++++++++++++++++++
+ man/systemd-logind.conf.xml       |    2 +-
+ units/systemd-journald.service.in |    2 +-
+ 6 files changed, 126 insertions(+), 8 deletions(-)
+ create mode 100644 man/systemd-journald.service.xml
+
+diff --git a/Makefile.am b/Makefile.am
+index 9693a84..cb6d77d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -476,6 +476,7 @@ MANPAGES = \
+ 	man/systemd-machine-id-setup.1 \
+ 	man/systemd-detect-virt.1 \
+ 	man/systemd-journald.conf.5 \
++	man/systemd-journald.service.8 \
+ 	man/journalctl.1 \
+ 	man/systemd-inhibit.1
+ 
+@@ -487,7 +488,8 @@ MANPAGES_ALIAS = \
+ 	man/systemd-loginctl.1 \
+ 	man/systemd-journalctl.1 \
+ 	man/systemd-modules-load.8 \
+-	man/systemd-sysctl.8
++	man/systemd-sysctl.8 \
++	man/systemd-journald.8
+ 
+ man/reboot.8: man/halt.8
+ man/poweroff.8: man/halt.8
+@@ -497,6 +499,7 @@ man/systemd-loginctl.1: man/loginctl.1
+ man/systemd-journalctl.1: man/journalctl.1
+ man/systemd-modules-load.8: man/systemd-modules-load.service.8
+ man/systemd-sysctl.8: man/systemd-sysctl.service.8
++man/systemd-journald.8: man/systemd-journald.service.8
+ 
+ XML_FILES = \
+ 	${patsubst %.1,%.xml,${patsubst %.3,%.xml,${patsubst %.5,%.xml,${patsubst %.7,%.xml,${patsubst %.8,%.xml,$(MANPAGES)}}}}}
+diff --git a/man/journalctl.xml b/man/journalctl.xml
+index 7e011c9..5594672 100644
+--- a/man/journalctl.xml
++++ b/man/journalctl.xml
+@@ -57,10 +57,11 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-                <para><command>journalctl</command> may be
+-                used to query the contents of the
++                <para><command>journalctl</command> may be used to
++                query the contents of the
+                 <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+-                journal.</para>
++                journal as written by
++                <citerefentry><refentrytitle>systemd-journald.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+ 
+                 <para>If called without parameter will show the full
+                 contents of the journal, starting with the oldest
+@@ -255,6 +256,7 @@
+                 <title>See Also</title>
+                 <para>
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-journald.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd-journald.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+diff --git a/man/systemd-journald.conf.xml b/man/systemd-journald.conf.xml
+index e96bbb1..b8a5749 100644
+--- a/man/systemd-journald.conf.xml
++++ b/man/systemd-journald.conf.xml
+@@ -48,13 +48,15 @@
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+-                <para><filename>systemd-journald.conf</filename></para>
++                <para><filename>/etc/systemd/systemd-journald.conf</filename></para>
+         </refsynopsisdiv>
+ 
+         <refsect1>
+                 <title>Description</title>
+ 
+-                <para>This files configures various parameters of the systemd journal service.</para>
++                <para>This files configures various parameters of the
++                systemd journal service
++                <citerefentry><refentrytitle>systemd-journald.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+ 
+         </refsect1>
+ 
+@@ -246,6 +248,7 @@
+                   <title>See Also</title>
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>systemd-journald.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+diff --git a/man/systemd-journald.service.xml b/man/systemd-journald.service.xml
+new file mode 100644
+index 0000000..202ea00
+--- /dev/null
++++ b/man/systemd-journald.service.xml
+@@ -0,0 +1,110 @@
++<?xml version='1.0'?> <!--*-nxml-*-->
++<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
++        "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
++
++<!--
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++
++<refentry id="systemd-journald.service">
++
++        <refentryinfo>
++                <title>systemd-journald</title>
++                <productname>systemd</productname>
++
++                <authorgroup>
++                        <author>
++                                <contrib>Developer</contrib>
++                                <firstname>Lennart</firstname>
++                                <surname>Poettering</surname>
++                                <email>lennart@poettering.net</email>
++                        </author>
++                </authorgroup>
++        </refentryinfo>
++
++        <refmeta>
++                <refentrytitle>systemd-journald</refentrytitle>
++                <manvolnum>8</manvolnum>
++        </refmeta>
++
++        <refnamediv>
++                <refname>systemd-journald.service</refname>
++                <refname>systemd-journald</refname>
++                <refpurpose>systemd Journal Service</refpurpose>
++        </refnamediv>
++
++        <refsynopsisdiv>
++                <para><filename>systemd-journald.service</filename></para>
++                <para><filename>/usr/lib/systemd/systemd-journald</filename></para>
++        </refsynopsisdiv>
++
++        <refsect1>
++                <title>Description</title>
++
++                <para><filename>systemd-journald</filename> is a
++                system service that collects and stores logging
++                data. It creates and maintains structured, indexed
++                journals based on logging information that is received
++                from the kernel, from user processes via the libc
++                <citerefentry><refentrytitle>syslog</refentrytitle><manvolnum>3</manvolnum></citerefentry>
++                call, from STDOUT/STDERR of system services or via its
++                native API. It will implicitly collect numerous meta
++                data fields for each log messages in a secure and
++                unfakeable way. See
++                <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>
++                for more information about the collected meta data.
++                </para>
++
++                <para>Log data collected by the journal is primarily
++                text based but can also include binary data where
++                necessary. All objects stored in the journal can be up
++                to 2^64-1 bytes in size.</para>
++
++                <para>By default the journal stores log data in
++                <filename>/run/log/journal/</filename>. Since
++                <filename>/run/</filename> is volatile log data is
++                lost at reboot. To make the data persistant it
++                is sufficient to create
++                <filename>/var/log/journal/</filename> where
++                <filename>systemd-journald</filename> will then store
++                the data.</para>
++
++                <para><filename>systemd-journald</filename> will
++                forward all received log messages to the AF_UNIX
++                SOCK_DGRAM socket
++                <filename>/run/systemd/journal/syslog</filename> (if it exists) which
++                may be used by UNIX syslog daemons to process the data
++                further.</para>
++
++                <para>See
++                <citerefentry><refentrytitle>journald.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
++                for information about the configuration of this
++                service.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>See Also</title>
++                <para>
++                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>journald.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd.journal-fields</refentrytitle><manvolnum>7</manvolnum></citerefentry>
++                </para>
++        </refsect1>
++
++</refentry>
+diff --git a/man/systemd-logind.conf.xml b/man/systemd-logind.conf.xml
+index 2ca0078..549122a 100644
+--- a/man/systemd-logind.conf.xml
++++ b/man/systemd-logind.conf.xml
+@@ -48,7 +48,7 @@
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+-                <para><filename>systemd-logind.conf</filename></para>
++                <para><filename>/etc/systemd/systemd-logind.conf</filename></para>
+         </refsynopsisdiv>
+ 
+         <refsect1>
+diff --git a/units/systemd-journald.service.in b/units/systemd-journald.service.in
+index 809e48c..c72fd7b 100644
+--- a/units/systemd-journald.service.in
++++ b/units/systemd-journald.service.in
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Journal Service
+-Documentation=man:systemd-journald.conf(5)
++Documentation=man:systemd-journald.service(7) man:systemd-journald.conf(5)
+ DefaultDependencies=no
+ Requires=systemd-journald.socket
+ After=systemd-journald.socket

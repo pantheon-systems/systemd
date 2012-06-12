@@ -1,0 +1,65 @@
+From 0a263591efe16ec17b366df5d62f6e6191dc6dbf Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 13 Jun 2012 00:08:46 +0200
+Subject: [PATCH] man: fix 'sysytemd' typos (cherry picked from commit
+ 68afbe5f0d079f16cc2ba69088a650ee3208eb43)
+
+---
+ man/systemd-binfmt.service.xml       |    2 +-
+ man/systemd-logind.service.xml       |    2 +-
+ man/systemd-modules-load.service.xml |    2 +-
+ man/systemd-sysctl.service.xml       |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemd-binfmt.service.xml b/man/systemd-binfmt.service.xml
+index 7f2bb9a..1db735a 100644
+--- a/man/systemd-binfmt.service.xml
++++ b/man/systemd-binfmt.service.xml
+@@ -47,7 +47,7 @@
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+-                <para><filename>sysytemd-binfmt.service</filename></para>
++                <para><filename>systemd-binfmt.service</filename></para>
+                 <para><filename>/usr/lib/systemd/systemd-binfmt</filename></para>
+         </refsynopsisdiv>
+ 
+diff --git a/man/systemd-logind.service.xml b/man/systemd-logind.service.xml
+index 98b31dd..d55c2d2 100644
+--- a/man/systemd-logind.service.xml
++++ b/man/systemd-logind.service.xml
+@@ -49,7 +49,7 @@
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+-                <para><filename>sysytemd-logind.service</filename></para>
++                <para><filename>systemd-logind.service</filename></para>
+                 <para><filename>/usr/lib/systemd/systemd-logind</filename></para>
+         </refsynopsisdiv>
+ 
+diff --git a/man/systemd-modules-load.service.xml b/man/systemd-modules-load.service.xml
+index c92947f..16c6a65 100644
+--- a/man/systemd-modules-load.service.xml
++++ b/man/systemd-modules-load.service.xml
+@@ -47,7 +47,7 @@
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+-                <para><filename>sysytemd-modules-load.service</filename></para>
++                <para><filename>systemd-modules-load.service</filename></para>
+                 <para><filename>/usr/lib/systemd/systemd-modules-load</filename></para>
+         </refsynopsisdiv>
+ 
+diff --git a/man/systemd-sysctl.service.xml b/man/systemd-sysctl.service.xml
+index 2ee6346..72a102c 100644
+--- a/man/systemd-sysctl.service.xml
++++ b/man/systemd-sysctl.service.xml
+@@ -47,7 +47,7 @@
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+-                <para><filename>sysytemd-sysctl.service</filename></para>
++                <para><filename>systemd-sysctl.service</filename></para>
+                 <para><filename>/usr/lib/systemd/systemd-sysctl</filename></para>
+         </refsynopsisdiv>
+ 

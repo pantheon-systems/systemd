@@ -1,0 +1,25 @@
+From 99f7dc3134d3f491c58a1096176f8fda26f1fee7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 14:51:05 +0200
+Subject: [PATCH] units: add Documentation= field to console-getty.service
+ (cherry picked from commit
+ 88f8ffbd63d09b0f2899a8d45fc82e22839aeb81)
+
+Conflicts:
+	TODO
+---
+ units/console-getty.service.m4.in |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/console-getty.service.m4.in b/units/console-getty.service.m4.in
+index 9473d61..cc8c364 100644
+--- a/units/console-getty.service.m4.in
++++ b/units/console-getty.service.m4.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Console Getty
++Documentation=man:agetty(8)
+ After=systemd-user-sessions.service plymouth-quit-wait.service
+ m4_ifdef(`TARGET_FEDORA',
+ After=rc-local.service

@@ -1,0 +1,220 @@
+From 8bd4cc6712282161ab085cf87f34cc3a682f2bdc Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 19:46:42 +0200
+Subject: [PATCH] logind: properly clean up user cgroups when they run empty
+ (cherry picked from commit
+ 8c8c43515cee56dfc2298998a9e5958308c46f99)
+
+Conflicts:
+	src/login/logind.c
+---
+ src/login/logind-session.c |    6 ++--
+ src/login/logind-user.c    |    6 ++++
+ src/login/logind.c         |   65 ++++++++++++++++++++++++++++++++++++++------
+ src/login/logind.h         |    5 +++-
+ 4 files changed, 70 insertions(+), 12 deletions(-)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 9bab7e8..49e1e5c 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -88,7 +88,7 @@ void session_free(Session *s) {
+         }
+ 
+         if (s->cgroup_path)
+-                hashmap_remove(s->manager->cgroups, s->cgroup_path);
++                hashmap_remove(s->manager->session_cgroups, s->cgroup_path);
+ 
+         free(s->cgroup_path);
+         strv_free(s->controllers);
+@@ -527,7 +527,7 @@ static int session_create_cgroup(Session *s) {
+                 }
+         }
+ 
+-        hashmap_put(s->manager->cgroups, s->cgroup_path, s);
++        hashmap_put(s->manager->session_cgroups, s->cgroup_path, s);
+ 
+         return 0;
+ }
+@@ -646,7 +646,7 @@ static int session_terminate_cgroup(Session *s) {
+         STRV_FOREACH(k, s->user->manager->controllers)
+                 cg_trim(*k, s->cgroup_path, true);
+ 
+-        hashmap_remove(s->manager->cgroups, s->cgroup_path);
++        hashmap_remove(s->manager->session_cgroups, s->cgroup_path);
+ 
+         free(s->cgroup_path);
+         s->cgroup_path = NULL;
+diff --git a/src/login/logind-user.c b/src/login/logind-user.c
+index 39e8f9f..f813aac 100644
+--- a/src/login/logind-user.c
++++ b/src/login/logind-user.c
+@@ -75,6 +75,8 @@ void user_free(User *u) {
+         while (u->sessions)
+                 session_free(u->sessions);
+ 
++        if (u->cgroup_path)
++                hashmap_remove(u->manager->user_cgroups, u->cgroup_path);
+         free(u->cgroup_path);
+ 
+         free(u->service);
+@@ -313,6 +315,8 @@ static int user_create_cgroup(User *u) {
+                         log_warning("Failed to create cgroup %s:%s: %s", *k, p, strerror(-r));
+         }
+ 
++        hashmap_put(u->manager->user_cgroups, u->cgroup_path, u);
++
+         return 0;
+ }
+ 
+@@ -417,6 +421,8 @@ static int user_terminate_cgroup(User *u) {
+         STRV_FOREACH(k, u->manager->controllers)
+                 cg_trim(*k, u->cgroup_path, true);
+ 
++        hashmap_remove(u->manager->user_cgroups, u->cgroup_path);
++
+         free(u->cgroup_path);
+         u->cgroup_path = NULL;
+ 
+diff --git a/src/login/logind.c b/src/login/logind.c
+index b2f6e65..c3f79df 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -58,12 +58,15 @@ Manager *manager_new(void) {
+         m->users = hashmap_new(trivial_hash_func, trivial_compare_func);
+         m->inhibitors = hashmap_new(string_hash_func, string_compare_func);
+ 
+-        m->cgroups = hashmap_new(string_hash_func, string_compare_func);
++        m->user_cgroups = hashmap_new(string_hash_func, string_compare_func);
++        m->session_cgroups = hashmap_new(string_hash_func, string_compare_func);
++
+         m->session_fds = hashmap_new(trivial_hash_func, trivial_compare_func);
+         m->inhibitor_fds = hashmap_new(trivial_hash_func, trivial_compare_func);
+ 
+         if (!m->devices || !m->seats || !m->sessions || !m->users || !m->inhibitors ||
+-            !m->cgroups || !m->session_fds || !m->inhibitor_fds) {
++            !m->user_cgroups || !m->session_cgroups ||
++            !m->session_fds || !m->inhibitor_fds) {
+                 manager_free(m);
+                 return NULL;
+         }
+@@ -119,7 +122,9 @@ void manager_free(Manager *m) {
+         hashmap_free(m->users);
+         hashmap_free(m->inhibitors);
+ 
+-        hashmap_free(m->cgroups);
++        hashmap_free(m->user_cgroups);
++        hashmap_free(m->session_cgroups);
++
+         hashmap_free(m->session_fds);
+         hashmap_free(m->inhibitor_fds);
+ 
+@@ -864,7 +869,7 @@ int manager_get_session_by_cgroup(Manager *m, const char *cgroup, Session **sess
+         assert(cgroup);
+         assert(session);
+ 
+-        s = hashmap_get(m->cgroups, cgroup);
++        s = hashmap_get(m->session_cgroups, cgroup);
+         if (s) {
+                 *session = s;
+                 return 1;
+@@ -888,7 +893,7 @@ int manager_get_session_by_cgroup(Manager *m, const char *cgroup, Session **sess
+ 
+                 *e = 0;
+ 
+-                s = hashmap_get(m->cgroups, p);
++                s = hashmap_get(m->session_cgroups, p);
+                 if (s) {
+                         free(p);
+                         *session = s;
+@@ -897,6 +902,47 @@ int manager_get_session_by_cgroup(Manager *m, const char *cgroup, Session **sess
+         }
+ }
+ 
++int manager_get_user_by_cgroup(Manager *m, const char *cgroup, User **user) {
++        User *u;
++        char *p;
++
++        assert(m);
++        assert(cgroup);
++        assert(user);
++
++        u = hashmap_get(m->user_cgroups, cgroup);
++        if (u) {
++                *user = u;
++                return 1;
++        }
++
++        p = strdup(cgroup);
++        if (!p) {
++                log_error("Out of memory.");
++                return -ENOMEM;
++        }
++
++        for (;;) {
++                char *e;
++
++                e = strrchr(p, '/');
++                if (!e || e == p) {
++                        free(p);
++                        *user = NULL;
++                        return 0;
++                }
++
++                *e = 0;
++
++                u = hashmap_get(m->user_cgroups, p);
++                if (u) {
++                        free(p);
++                        *user = u;
++                        return 1;
++                }
++        }
++}
++
+ int manager_get_session_by_pid(Manager *m, pid_t pid, Session **session) {
+         char *p;
+         int r;
+@@ -917,13 +963,16 @@ int manager_get_session_by_pid(Manager *m, pid_t pid, Session **session) {
+ 
+ void manager_cgroup_notify_empty(Manager *m, const char *cgroup) {
+         Session *s;
++        User *u;
+         int r;
+ 
+         r = manager_get_session_by_cgroup(m, cgroup, &s);
+-        if (r <= 0)
+-                return;
++        if (r > 0)
++                session_add_to_gc_queue(s);
+ 
+-        session_add_to_gc_queue(s);
++        r = manager_get_user_by_cgroup(m, cgroup, &u);
++        if (r > 0)
++                user_add_to_gc_queue(u);
+ }
+ 
+ static void manager_pipe_notify_eof(Manager *m, int fd) {
+diff --git a/src/login/logind.h b/src/login/logind.h
+index e03ef31..4e5cb01 100644
+--- a/src/login/logind.h
++++ b/src/login/logind.h
+@@ -78,7 +78,9 @@ struct Manager {
+         unsigned long session_counter;
+         unsigned long inhibit_counter;
+ 
+-        Hashmap *cgroups;
++        Hashmap *session_cgroups;
++        Hashmap *user_cgroups;
++
+         Hashmap *session_fds;
+         Hashmap *inhibitor_fds;
+ 
+@@ -132,6 +134,7 @@ void manager_gc(Manager *m, bool drop_not_started);
+ 
+ int manager_get_idle_hint(Manager *m, dual_timestamp *t);
+ 
++int manager_get_user_by_cgroup(Manager *m, const char *cgroup, User **user);
+ int manager_get_session_by_cgroup(Manager *m, const char *cgroup, Session **session);
+ int manager_get_session_by_pid(Manager *m, pid_t pid, Session **session);
+ 

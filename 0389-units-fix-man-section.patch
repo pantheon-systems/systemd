@@ -1,0 +1,30 @@
+From c0e80ae8b9f2f45f13cecfbb6387bf2ad9f545e4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 17:26:28 +0200
+Subject: [PATCH] units: fix man section (cherry picked from commit
+ 63cb20a28b3f5e858a306daf7e0657ccbb0ab163)
+
+Conflicts:
+	units/systemd-journald.service.in
+---
+ units/systemd-journald.service.in |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/units/systemd-journald.service.in b/units/systemd-journald.service.in
+index c72fd7b..e27db0c 100644
+--- a/units/systemd-journald.service.in
++++ b/units/systemd-journald.service.in
+@@ -7,11 +7,10 @@
+ 
+ [Unit]
+ Description=Journal Service
+-Documentation=man:systemd-journald.service(7) man:systemd-journald.conf(5)
++Documentation=man:systemd-journald.service(8) man:systemd-journald.conf(5)
+ DefaultDependencies=no
+ Requires=systemd-journald.socket
+-After=systemd-journald.socket
+-After=syslog.socket
++After=systemd-journald.socket syslog.socket
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-journald

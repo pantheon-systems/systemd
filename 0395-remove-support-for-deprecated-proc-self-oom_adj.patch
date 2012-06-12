@@ -1,0 +1,61 @@
+From b6570de4b8a1195a3f1e5a412909f9c3e454d250 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 4 Jun 2012 16:41:10 +0200
+Subject: [PATCH] remove support for deprecated /proc/self/oom_adj (cherry
+ picked from commit
+ 8600c525cb1420570e7670c963abd19c5696b683)
+
+---
+ src/core/dbus-execute.c |    8 --------
+ src/core/execute.c      |   19 +++----------------
+ 2 files changed, 3 insertions(+), 24 deletions(-)
+
+diff --git a/src/core/dbus-execute.c b/src/core/dbus-execute.c
+index 1812e61..49040d9 100644
+--- a/src/core/dbus-execute.c
++++ b/src/core/dbus-execute.c
+@@ -83,14 +83,6 @@ int bus_execute_append_oom_score_adjust(DBusMessageIter *i, const char *property
+                 if (read_one_line_file("/proc/self/oom_score_adj", &t) >= 0) {
+                         safe_atoi(t, &n);
+                         free(t);
+-                } else if (read_one_line_file("/proc/self/oom_adj", &t) >= 0) {
+-                        safe_atoi(t, &n);
+-                        free(t);
+-
+-                        if (n == OOM_ADJUST_MAX)
+-                                n = OOM_SCORE_ADJ_MAX;
+-                        else
+-                                n = (n * OOM_SCORE_ADJ_MAX) / -OOM_DISABLE;
+                 }
+         }
+ 
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 688ec4b..a5e857d 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1129,22 +1129,9 @@ int exec_spawn(ExecCommand *command,
+                         char_array_0(t);
+ 
+                         if (write_one_line_file("/proc/self/oom_score_adj", t) < 0) {
+-                                /* Compatibility with Linux <= 2.6.35 */
+-
+-                                int adj;
+-
+-                                adj = (context->oom_score_adjust * -OOM_DISABLE) / OOM_SCORE_ADJ_MAX;
+-                                adj = CLAMP(adj, OOM_DISABLE, OOM_ADJUST_MAX);
+-
+-                                snprintf(t, sizeof(t), "%i", adj);
+-                                char_array_0(t);
+-
+-                                if (write_one_line_file("/proc/self/oom_adj", t) < 0
+-                                    && errno != EACCES) {
+-                                        err = -errno;
+-                                        r = EXIT_OOM_ADJUST;
+-                                        goto fail_child;
+-                                }
++                                err = -errno;
++                                r = EXIT_OOM_ADJUST;
++                                goto fail_child;
+                         }
+                 }
+ 

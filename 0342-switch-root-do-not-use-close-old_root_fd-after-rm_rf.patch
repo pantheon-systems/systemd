@@ -1,0 +1,28 @@
+From 8a55b789b2d3ca92ee3f7e5869b8ad143db08dc3 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Tue, 22 May 2012 15:28:45 +0200
+Subject: [PATCH] switch-root: do not use close old_root_fd after
+ rm_rf_children()
+
+rm_rf_children() has already closed the fd with closedir().
+(cherry picked from commit b46178e5c2b95062b84257c0601c21c400089c09)
+---
+ src/core/switch-root.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/switch-root.c b/src/core/switch-root.c
+index ed0a31e..9832a52 100644
+--- a/src/core/switch-root.c
++++ b/src/core/switch-root.c
+@@ -111,8 +111,10 @@ int switch_root(const char *new_root) {
+ 
+                 if (fstat(old_root_fd, &rb) < 0)
+                         log_warning("Failed to stat old root directory, leaving: %m");
+-                else
++                else {
+                         rm_rf_children(old_root_fd, false, false, &rb);
++                        old_root_fd = -1;
++                }
+         }
+ 
+         r = 0;

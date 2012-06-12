@@ -1,0 +1,62 @@
+From cf7286226f558e27336639aa9fad8283c38b184c Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 12 Jun 2012 09:31:43 +0200
+Subject: [PATCH] logind: fix check for multiple sessions
+
+The "$action-multiple-sessions" polkit actions are defined as
+"$action while other users are logged in". To me this implies that the
+following sessions should not count:
+ - greeter sessions
+ - user sessions belonging to the same user as the one who's asking
+
+Not sure how to treat class SESSION_LOCK_SCREEN. I never have these.
+I just ignore every class that's not SESSION_USER.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=814424
+(cherry picked from commit 2154761fbbc931e3e3d83100fa42609c99cd2536)
+---
+ src/login/logind-dbus.c |   27 ++++++++++-----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 84fd785..719fad6 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -924,27 +924,20 @@ static int have_multiple_sessions(
+                 DBusMessage *message,
+                 DBusError *error) {
+ 
+-        Session *s;
++        Session *session;
++        Iterator i;
++        unsigned long ul;
+ 
+         assert(m);
+ 
+-        if (hashmap_size(m->sessions) > 1)
+-                return true;
+-
+-        /* Hmm, there's only one session, but let's make sure it
+-         * actually belongs to the user who is asking. If not, better
+-         * be safe than sorry. */
+-
+-        s = hashmap_first(m->sessions);
+-        if (s) {
+-                unsigned long ul;
+-
+-                ul = dbus_bus_get_unix_user(connection, dbus_message_get_sender(message), error);
+-                if (ul == (unsigned long) -1)
+-                        return -EIO;
++        ul = dbus_bus_get_unix_user(connection, dbus_message_get_sender(message), error);
++        if (ul == (unsigned long) -1)
++                return -EIO;
+ 
+-                return s->user->uid != ul;
+-        }
++        /* Check for other users' sessions. Greeter sessions do not count. */
++        HASHMAP_FOREACH(session, m->sessions, i)
++                if (session->class == SESSION_USER && session->user->uid != ul)
++                        return true;
+ 
+         return false;
+ }

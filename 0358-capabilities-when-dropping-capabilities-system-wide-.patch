@@ -1,0 +1,106 @@
+From 76e6ec63c9353cca9bc016bb3c60202c7e8a78cd Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 29 May 2012 23:33:38 +0200
+Subject: [PATCH] capabilities: when dropping capabilities system-wide also
+ drop them from usermode helpers
+
+This hooks things up with /proc/sys/kernel/usermodehelper/bset and
+/proc/sys/kernel/usermodehelper/inheritable.
+(cherry picked from commit 939b8f14dcd9312140d001b55b4e7a87173682ef)
+
+Conflicts:
+	TODO
+---
+ src/core/main.c         |    5 +++++
+ src/shared/capability.c |   51 +++++++++++++++++++++++++++++++++++++++++++++++
+ src/shared/capability.h |    3 ++-
+ 3 files changed, 58 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 4ebddab..ccf993d 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1497,6 +1497,11 @@ int main(int argc, char *argv[]) {
+                         log_error("Failed to drop capability bounding set: %s", strerror(-r));
+                         goto finish;
+                 }
++                r = capability_bounding_set_drop_usermode(arg_capability_bounding_set_drop);
++                if (r < 0) {
++                        log_error("Failed to drop capability bounding set of usermode helpers: %s", strerror(-r));
++                        goto finish;
++                }
+         }
+ 
+         r = manager_new(arg_running_as, &m);
+diff --git a/src/shared/capability.c b/src/shared/capability.c
+index b2bcfed..005e0e8 100644
+--- a/src/shared/capability.c
++++ b/src/shared/capability.c
+@@ -171,3 +171,54 @@ finish:
+ 
+         return r;
+ }
++
++static int drop_from_file(const char *fn, uint64_t drop) {
++        int r, k;
++        uint32_t hi, lo;
++        uint64_t current, after;
++        char *p;
++
++        r = read_one_line_file(fn, &p);
++        if (r < 0)
++                return r;
++
++        assert_cc(sizeof(hi) == sizeof(unsigned));
++        assert_cc(sizeof(lo) == sizeof(unsigned));
++
++        k = sscanf(p, "%u %u", &lo, &hi);
++        free(p);
++
++        if (k != 2)
++                return -EIO;
++
++        current = (uint64_t) lo | ((uint64_t) hi << 32ULL);
++        after = current & ~drop;
++
++        if (current == after)
++                return 0;
++
++        lo = (unsigned) (after & 0xFFFFFFFFULL);
++        hi = (unsigned) ((after >> 32ULL) & 0xFFFFFFFFULL);
++
++        if (asprintf(&p, "%u %u", lo, hi) < 0)
++                return -ENOMEM;
++
++        r = write_one_line_file(fn, p);
++        free(p);
++
++        return r;
++}
++
++int capability_bounding_set_drop_usermode(uint64_t drop) {
++        int r;
++
++        r = drop_from_file("/proc/sys/kernel/usermodehelper/inheritable", drop);
++        if (r < 0)
++                return r;
++
++        r = drop_from_file("/proc/sys/kernel/usermodehelper/bset", drop);
++        if (r < 0)
++                return r;
++
++        return r;
++}
+diff --git a/src/shared/capability.h b/src/shared/capability.h
+index 0daf4a6..682f8ae 100644
+--- a/src/shared/capability.h
++++ b/src/shared/capability.h
+@@ -27,6 +27,7 @@
+ 
+ unsigned long cap_last_cap(void);
+ int have_effective_cap(int value);
+-int capability_bounding_set_drop(uint64_t caps, bool right_now);
++int capability_bounding_set_drop(uint64_t drop, bool right_now);
++int capability_bounding_set_drop_usermode(uint64_t drop);
+ 
+ #endif

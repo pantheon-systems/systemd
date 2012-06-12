@@ -1,0 +1,150 @@
+From b8898251d34c23b526b220b00c9a723090bbd740 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 31 May 2012 13:17:26 +0200
+Subject: [PATCH] mkdir: provide all functions with and without selinux label
+ application (cherry picked from commit
+ c66e7f04997fb42b778703418097a5023fa17581)
+
+---
+ src/shared/label.c |    5 ++---
+ src/shared/label.h |    2 +-
+ src/shared/mkdir.c |   41 +++++++++++++++++++++++++++++++++--------
+ src/shared/mkdir.h |    5 ++++-
+ 4 files changed, 40 insertions(+), 13 deletions(-)
+
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 519fc7f..4a828b9 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -263,15 +263,14 @@ void label_free(const char *label) {
+ #endif
+ }
+ 
+-int label_mkdir(const char *path, mode_t mode) {
++int label_mkdir(const char *path, mode_t mode, bool apply) {
+ 
+         /* Creates a directory and labels it according to the SELinux policy */
+-
+ #ifdef HAVE_SELINUX
+         int r;
+         security_context_t fcon = NULL;
+ 
+-        if (!use_selinux() || !label_hnd)
++        if (!apply || !use_selinux() || !label_hnd)
+                 goto skipped;
+ 
+         if (path_is_absolute(path))
+diff --git a/src/shared/label.h b/src/shared/label.h
+index 6166bc3..fcf34d2 100644
+--- a/src/shared/label.h
++++ b/src/shared/label.h
+@@ -41,7 +41,7 @@ void label_free(const char *label);
+ 
+ int label_get_create_label_from_exe(const char *exe, char **label);
+ 
+-int label_mkdir(const char *path, mode_t mode);
++int label_mkdir(const char *path, mode_t mode, bool apply);
+ 
+ void label_retest_selinux(void);
+ 
+diff --git a/src/shared/mkdir.c b/src/shared/mkdir.c
+index b6268fc..d8c3275 100644
+--- a/src/shared/mkdir.c
++++ b/src/shared/mkdir.c
+@@ -32,13 +32,13 @@
+ #include "log.h"
+ 
+ int mkdir_label(const char *path, mode_t mode) {
+-        return label_mkdir(path, mode);
++        return label_mkdir(path, mode, true);
+ }
+ 
+-int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid) {
++static int makedir_safe(const char *path, mode_t mode, uid_t uid, gid_t gid, bool apply) {
+         struct stat st;
+ 
+-        if (label_mkdir(path, mode) >= 0)
++        if (label_mkdir(path, mode, apply) >= 0)
+                 if (chmod_and_chown(path, mode, uid, gid) < 0)
+                         return -errno;
+ 
+@@ -56,7 +56,15 @@ int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid) {
+         return 0;
+ }
+ 
+-int mkdir_parents_label(const char *path, mode_t mode) {
++int mkdir_safe(const char *path, mode_t mode, uid_t uid, gid_t gid) {
++        return makedir_safe(path, mode, uid, gid, false);
++}
++
++int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid) {
++        return makedir_safe(path, mode, uid, gid, true);
++}
++
++static int makedir_parents(const char *path, mode_t mode, bool apply) {
+         struct stat st;
+         const char *p, *e;
+ 
+@@ -92,7 +100,7 @@ int mkdir_parents_label(const char *path, mode_t mode) {
+                 if (!t)
+                         return -ENOMEM;
+ 
+-                r = label_mkdir(t, mode);
++                r = label_mkdir(t, mode, apply);
+                 free(t);
+ 
+                 if (r < 0 && errno != EEXIST)
+@@ -100,16 +108,33 @@ int mkdir_parents_label(const char *path, mode_t mode) {
+         }
+ }
+ 
+-int mkdir_p_label(const char *path, mode_t mode) {
++int mkdir_parents(const char *path, mode_t mode) {
++        return makedir_parents(path, mode, false);
++}
++
++int mkdir_parents_label(const char *path, mode_t mode) {
++        return makedir_parents(path, mode, true);
++}
++
++static int makedir_p(const char *path, mode_t mode, bool apply) {
+         int r;
+ 
+         /* Like mkdir -p */
+ 
+-        if ((r = mkdir_parents_label(path, mode)) < 0)
++        r = makedir_parents(path, mode, apply);
++        if (r < 0)
+                 return r;
+ 
+-        if (label_mkdir(path, mode) < 0 && errno != EEXIST)
++        if (label_mkdir(path, mode, apply) < 0 && errno != EEXIST)
+                 return -errno;
+ 
+         return 0;
+ }
++
++int mkdir_p(const char *path, mode_t mode) {
++        return makedir_p(path, mode, false);
++}
++
++int mkdir_p_label(const char *path, mode_t mode) {
++        return makedir_p(path, mode, true);
++}
+diff --git a/src/shared/mkdir.h b/src/shared/mkdir.h
+index 4391bc3..94ca701 100644
+--- a/src/shared/mkdir.h
++++ b/src/shared/mkdir.h
+@@ -22,8 +22,11 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
+-int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid);
+ int mkdir_label(const char *path, mode_t mode);
++int mkdir_safe(const char *path, mode_t mode, uid_t uid, gid_t gid);
++int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid);
++int mkdir_parents(const char *path, mode_t mode);
+ int mkdir_parents_label(const char *path, mode_t mode);
++int mkdir_p(const char *path, mode_t mode);
+ int mkdir_p_label(const char *path, mode_t mode);
+ #endif

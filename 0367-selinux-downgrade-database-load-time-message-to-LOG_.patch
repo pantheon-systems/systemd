@@ -1,0 +1,28 @@
+From 72015ed8686d3bfb7917401aea80e7b32d9b6d69 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 01:10:44 +0200
+Subject: [PATCH] selinux: downgrade database load time message to LOG_DEBUG
+ (cherry picked from commit
+ 107a2db901d93ffaba4a2fe34e6b28643b96574f)
+
+---
+ src/shared/label.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 3c35f08..519fc7f 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -90,9 +90,9 @@ int label_init(const char *prefix) {
+ 
+                 l = after_mallinfo.uordblks > before_mallinfo.uordblks ? after_mallinfo.uordblks - before_mallinfo.uordblks : 0;
+ 
+-                log_info("Successfully loaded SELinux database in %s, size on heap is %iK.",
+-                         format_timespan(timespan, sizeof(timespan), after_timestamp - before_timestamp),
+-                         (l+1023)/1024);
++                log_debug("Successfully loaded SELinux database in %s, size on heap is %iK.",
++                          format_timespan(timespan, sizeof(timespan), after_timestamp - before_timestamp),
++                          (l+1023)/1024);
+         }
+ #endif
+ 

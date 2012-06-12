@@ -1,0 +1,37 @@
+From edfd5fabfa7c8fde6a81dbf8c5085fa01edf86b7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 21:25:29 +0200
+Subject: [PATCH] missing: define MS_STRICTATIME if not defined already
+ (cherry picked from commit
+ 48ac500bb65f1f2eb09704f15104eeebb9330d47)
+
+---
+ src/core/mount-setup.c |    1 +
+ src/shared/missing.h   |    4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index d4f81cc..39049de 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -39,6 +39,7 @@
+ #include "strv.h"
+ #include "mkdir.h"
+ #include "path-util.h"
++#include "missing.h"
+ 
+ #ifndef TTY_GID
+ #define TTY_GID 5
+diff --git a/src/shared/missing.h b/src/shared/missing.h
+index 638d4d7..522c467 100644
+--- a/src/shared/missing.h
++++ b/src/shared/missing.h
+@@ -184,4 +184,8 @@ static inline pid_t gettid(void) {
+ #define SCM_SECURITY 0x03
+ #endif
+ 
++#ifndef MS_STRICTATIME
++#define MS_STRICTATIME (1<<24)
++#endif
++
+ #endif

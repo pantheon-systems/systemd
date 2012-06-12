@@ -1,0 +1,31 @@
+From 810be4366f21ee8d0b22139e91a243e101d45843 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 15:57:21 +0200
+Subject: [PATCH] logind: fix indentation (cherry picked from commit
+ d5a745df4da6265e32db667807b4f7214cac95f0)
+
+---
+ src/login/logind-dbus.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index b6f2204..84fd785 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -1082,11 +1082,11 @@ static int bus_manager_can_shutdown_or_sleep(
+ 
+                 if (r > 0)
+                         result = "yes";
+-                        else if (challenge)
+-                                result = "challenge";
+-                        else
+-                                result = "no";
+-                }
++                else if (challenge)
++                        result = "challenge";
++                else
++                        result = "no";
++        }
+ 
+         if (blocked) {
+                 r = verify_polkit(connection, message, action_ignore_inhibit, false, &challenge, error);

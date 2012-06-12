@@ -1,0 +1,252 @@
+From e6c7ceadb950adae8d702fc2ce2fb7fa672588da Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 00:14:07 +0200
+Subject: [PATCH] man: write man page for systemd-logind (cherry picked from
+ commit af3bccd6d87759f0b146bf5980bdd56144d70c7e)
+
+Conflicts:
+	Makefile.am
+	man/loginctl.xml
+	man/pam_systemd.xml
+	units/systemd-logind.service.in
+---
+ Makefile.am                     |    3 ++
+ man/loginctl.xml                |    3 +-
+ man/pam_systemd.xml             |   15 +++---
+ man/systemd-logind.conf.xml     |    3 +-
+ man/systemd-logind.service.xml  |   98 +++++++++++++++++++++++++++++++++++++++
+ units/systemd-logind.service.in |    2 +-
+ 6 files changed, 115 insertions(+), 9 deletions(-)
+ create mode 100644 man/systemd-logind.service.xml
+
+diff --git a/Makefile.am b/Makefile.am
+index f77dc10..9693a84 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2316,6 +2316,7 @@ nodist_udevrules_DATA += \
+ 	src/login/73-seat-late.rules
+ 
+ MANPAGES += \
++	man/systemd-logind.service.8 \
+ 	man/systemd-logind.conf.5 \
+ 	man/sd-login.7 \
+ 	man/loginctl.1 \
+@@ -2327,6 +2328,7 @@ MANPAGES += \
+ 	man/sd_get_seats.3
+ 
+ MANPAGES_ALIAS += \
++	man/systemd-logind.8 \
+ 	man/sd_login_monitor_unref.3 \
+ 	man/sd_login_monitor_flush.3 \
+ 	man/sd_login_monitor_get_fd.3 \
+@@ -2346,6 +2348,7 @@ MANPAGES_ALIAS += \
+ 	man/sd_get_sessions.3 \
+ 	man/sd_get_uids.3
+ 
++man/systemd-logind.8: man/systemd-logind.service.8
+ man/sd_login_monitor_unref.3: man/sd_login_monitor_new.3
+ man/sd_login_monitor_flush.3: man/sd_login_monitor_new.3
+ man/sd_login_monitor_get_fd.3: man/sd_login_monitor_new.3
+diff --git a/man/loginctl.xml b/man/loginctl.xml
+index 7cfb194..e0ab344 100644
+--- a/man/loginctl.xml
++++ b/man/loginctl.xml
+@@ -60,7 +60,7 @@
+                 <para><command>loginctl</command> may be used to
+                 introspect and control the state of the
+                 <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+-                login manager.</para>
++                login manager <citerefentry><refentrytitle>systemd-logind.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+         </refsect1>
+ 
+         <refsect1>
+@@ -459,6 +459,7 @@
+                 <para>
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-logind.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd-logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                 </para>
+         </refsect1>
+diff --git a/man/pam_systemd.xml b/man/pam_systemd.xml
+index 883b50b..e1d37b0 100644
+--- a/man/pam_systemd.xml
++++ b/man/pam_systemd.xml
+@@ -44,7 +44,7 @@
+ 
+         <refnamediv>
+                 <refname>pam_systemd</refname>
+-                <refpurpose>Register user sessions in the systemd control group hierarchy</refpurpose>
++                <refpurpose>Register user sessions in the systemd login manager</refpurpose>
+         </refnamediv>
+ 
+         <refsynopsisdiv>
+@@ -57,8 +57,9 @@
+                 <title>Description</title>
+ 
+                 <para><command>pam_systemd</command> registers user
+-                sessions in the systemd control group
+-                hierarchy.</para>
++                sessions in the systemd login manager
++                <citerefentry><refentrytitle>systemd-logind.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
++                and hence the systemd control group hierarchy.</para>
+ 
+                 <para>On login, this module ensures the following:</para>
+ 
+@@ -304,12 +305,14 @@ session    required     pam_systemd.so kill-session-processes=1</programlisting>
+         <refsect1>
+                 <title>See Also</title>
+                 <para>
++                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-logind.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>pam.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>pam.d</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>pam</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+-                        <citerefentry><refentrytitle>pam_loginuid</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+-                        <citerefentry><refentrytitle>systemd-logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+-                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
++                        <citerefentry><refentrytitle>pam_loginuid</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+                 </para>
+         </refsect1>
+ 
+diff --git a/man/systemd-logind.conf.xml b/man/systemd-logind.conf.xml
+index a765f44..2ca0078 100644
+--- a/man/systemd-logind.conf.xml
++++ b/man/systemd-logind.conf.xml
+@@ -54,7 +54,7 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-                <para>This files configures various parameters of the systemd login manager.</para>
++                <para>This files configures various parameters of the systemd login manager <citerefentry><refentrytitle>systemd-logind.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+ 
+         </refsect1>
+ 
+@@ -182,6 +182,7 @@
+                   <title>See Also</title>
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>systemd-logind.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                   </para>
+diff --git a/man/systemd-logind.service.xml b/man/systemd-logind.service.xml
+new file mode 100644
+index 0000000..98b31dd
+--- /dev/null
++++ b/man/systemd-logind.service.xml
+@@ -0,0 +1,98 @@
++<?xml version='1.0'?> <!--*-nxml-*-->
++<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
++        "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
++
++<!--
++  This file is part of systemd.
++
++  Copyright 2010 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++
++<refentry id="systemd-logind.service">
++
++        <refentryinfo>
++                <title>systemd-logind</title>
++                <productname>systemd</productname>
++
++                <authorgroup>
++                        <author>
++                                <contrib>Developer</contrib>
++                                <firstname>Lennart</firstname>
++                                <surname>Poettering</surname>
++                                <email>lennart@poettering.net</email>
++                        </author>
++                </authorgroup>
++        </refentryinfo>
++
++        <refmeta>
++                <refentrytitle>systemd-logind</refentrytitle>
++                <manvolnum>8</manvolnum>
++        </refmeta>
++
++        <refnamediv>
++                <refname>systemd-logind.service</refname>
++                <refname>systemd-logind</refname>
++                <refpurpose>systemd Login Manager</refpurpose>
++        </refnamediv>
++
++        <refsynopsisdiv>
++                <para><filename>sysytemd-logind.service</filename></para>
++                <para><filename>/usr/lib/systemd/systemd-logind</filename></para>
++        </refsynopsisdiv>
++
++        <refsect1>
++                <title>Description</title>
++
++                <para><filename>systemd-logind</filename> is a system
++                service that manages user logins. It is responsible
++                for: keeping track of users and sessions, their
++                processes and their idle state; creating control
++                groups for user processes; provide PolicyKit-based
++                access for users to operations such as system shutdown
++                or sleep; implementing a shutdown/sleep inhibition
++                logic for applications; handling of power/sleep
++                hardware keys; multi-seat management; session switch
++                management; device access management for users;
++                automatic spawning of text logins (gettys) and user
++                runtime directory management.
++                </para>
++
++                <para>User sessions are registered in logind via the
++                <citerefentry><refentrytitle>pam_systemd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                PAM module.</para>
++
++                <para>See
++                <citerefentry><refentrytitle>systemd-logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
++                for information about the configuration of this
++                service.</para>
++
++                <para>See <ulink
++                url="http://www.freedesktop.org/wiki/Software/systemd/multiseat">Multi-Seat
++                on Linux</ulink> for an introduction into basic
++                concepts of logind such as users, sessions and seats.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>See Also</title>
++                <para>
++                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>loginctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>logind.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>pam_systemd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                </para>
++        </refsect1>
++
++</refentry>
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index cf0aa07..c8ab974 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -7,8 +7,8 @@
+ 
+ [Unit]
+ Description=Login Service
++Documentation=man:systemd-logind.service(7) man:systemd-logind.conf(5)
+ Documentation=http://www.freedesktop.org/wiki/Software/systemd/multiseat
+-Documentation=man:systemd-logind.conf(5)
+ After=nss-user-lookup.target
+ 
+ [Service]

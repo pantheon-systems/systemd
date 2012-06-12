@@ -1,0 +1,34 @@
+From 3f7522db1fff2959171da18b3a3599916645bab7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 22 May 2012 19:26:13 +0200
+Subject: [PATCH] execute: use a much lower idle timeout that default time
+
+The idle timeout after all is for cosmetics only, hence avoid any
+substantial delays just for it.
+(cherry picked from commit e6a2674500dd4fa0b5eaa93ab77502ba14688c08)
+---
+ src/core/execute.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index bd6c781..67b792b 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -61,6 +61,8 @@
+ #include "loopback-setup.h"
+ #include "path-util.h"
+ 
++#define IDLE_TIMEOUT_USEC (1*USEC_PER_SEC)
++
+ /* This assumes there is a 'tty' group */
+ #define TTY_MODE 0620
+ 
+@@ -1065,7 +1067,7 @@ int exec_spawn(ExecCommand *command,
+                         if (idle_pipe[1] >= 0)
+                                 close_nointr_nofail(idle_pipe[1]);
+                         if (idle_pipe[0] >= 0) {
+-                                fd_wait_for_event(idle_pipe[0], POLLHUP, DEFAULT_TIMEOUT_USEC);
++                                fd_wait_for_event(idle_pipe[0], POLLHUP, IDLE_TIMEOUT_USEC);
+                                 close_nointr_nofail(idle_pipe[0]);
+                         }
+                 }

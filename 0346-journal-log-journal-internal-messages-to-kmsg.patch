@@ -1,0 +1,24 @@
+From bf326a68e6e332957e3c770d013d16528b01f170 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 22 May 2012 19:26:51 +0200
+Subject: [PATCH] journal: log journal internal messages to kmsg (cherry
+ picked from commit
+ 5ad661b6b05698f8cdb62c1191195b07c68db0f6)
+
+---
+ src/journal/journald.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 4d8e1ba..a097c72 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2774,7 +2774,7 @@ int main(int argc, char *argv[]) {
+                 return EXIT_FAILURE;
+         }
+ 
+-        log_set_target(LOG_TARGET_CONSOLE);
++        log_set_target(LOG_TARGET_KMSG);
+         log_set_facility(LOG_SYSLOG);
+         log_parse_environment();
+         log_open();

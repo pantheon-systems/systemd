@@ -1,0 +1,98 @@
+From b8eb35a32344948ab82138e8ecee471479ea0959 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 24 May 2012 02:22:35 +0200
+Subject: [PATCH] service: for Type=idle units consider START_PRE, START,
+ START_POST all as ACTIVE
+
+We want to avoid a deadlock when a service has ExecStartPre= programs
+that wait for the job queue to run empty because of Type=idle, but which
+themselves keep the queue non-empty because START_PRE was considered
+ACTIVATING and hence the job not complete. With this patch we alter the
+state translation table so that it is impossible ever to wait for
+Type=idle unit, hence removing the deadlock.
+(cherry picked from commit e056b01d8acea7fc06d52ef91d227d744faf5259)
+---
+ src/core/execute.c |    2 +-
+ src/core/service.c |   31 +++++++++++++++++++++++++++++--
+ 2 files changed, 30 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 67b792b..a2ef77c 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -61,7 +61,7 @@
+ #include "loopback-setup.h"
+ #include "path-util.h"
+ 
+-#define IDLE_TIMEOUT_USEC (1*USEC_PER_SEC)
++#define IDLE_TIMEOUT_USEC (5*USEC_PER_SEC)
+ 
+ /* This assumes there is a 'tty' group */
+ #define TTY_MODE 0620
+diff --git a/src/core/service.c b/src/core/service.c
+index 3abb729..53b0847 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -108,6 +108,26 @@ static const UnitActiveState state_translation_table[_SERVICE_STATE_MAX] = {
+         [SERVICE_AUTO_RESTART] = UNIT_ACTIVATING
+ };
+ 
++/* For Type=idle we never want to delay any other jobs, hence we
++ * consider idle jobs active as soon as we start working on them */
++static const UnitActiveState state_translation_table_idle[_SERVICE_STATE_MAX] = {
++        [SERVICE_DEAD] = UNIT_INACTIVE,
++        [SERVICE_START_PRE] = UNIT_ACTIVE,
++        [SERVICE_START] = UNIT_ACTIVE,
++        [SERVICE_START_POST] = UNIT_ACTIVE,
++        [SERVICE_RUNNING] = UNIT_ACTIVE,
++        [SERVICE_EXITED] = UNIT_ACTIVE,
++        [SERVICE_RELOAD] = UNIT_RELOADING,
++        [SERVICE_STOP] = UNIT_DEACTIVATING,
++        [SERVICE_STOP_SIGTERM] = UNIT_DEACTIVATING,
++        [SERVICE_STOP_SIGKILL] = UNIT_DEACTIVATING,
++        [SERVICE_STOP_POST] = UNIT_DEACTIVATING,
++        [SERVICE_FINAL_SIGTERM] = UNIT_DEACTIVATING,
++        [SERVICE_FINAL_SIGKILL] = UNIT_DEACTIVATING,
++        [SERVICE_FAILED] = UNIT_FAILED,
++        [SERVICE_AUTO_RESTART] = UNIT_ACTIVATING
++};
++
+ static void service_init(Unit *u) {
+         Service *s = SERVICE(u);
+         int i;
+@@ -1469,8 +1489,11 @@ static void service_notify_sockets_dead(Service *s, bool failed_permanent) {
+ 
+ static void service_set_state(Service *s, ServiceState state) {
+         ServiceState old_state;
++        const UnitActiveState *table;
+         assert(s);
+ 
++        table = s->type == SERVICE_IDLE ? state_translation_table_idle : state_translation_table;
++
+         old_state = s->state;
+         s->state = state;
+ 
+@@ -1553,7 +1576,7 @@ static void service_set_state(Service *s, ServiceState state) {
+         if (old_state != state)
+                 log_debug("%s changed %s -> %s", UNIT(s)->id, service_state_to_string(old_state), service_state_to_string(state));
+ 
+-        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], s->reload_result == SERVICE_SUCCESS);
++        unit_notify(UNIT(s), table[old_state], table[state], s->reload_result == SERVICE_SUCCESS);
+         s->reload_result = SERVICE_SUCCESS;
+ }
+ 
+@@ -2692,9 +2715,13 @@ static int service_deserialize_item(Unit *u, const char *key, const char *value,
+ }
+ 
+ static UnitActiveState service_active_state(Unit *u) {
++        const UnitActiveState *table;
++
+         assert(u);
+ 
+-        return state_translation_table[SERVICE(u)->state];
++        table = SERVICE(u)->type == SERVICE_IDLE ? state_translation_table_idle : state_translation_table;
++
++        return table[SERVICE(u)->state];
+ }
+ 
+ static const char *service_sub_state_to_string(Unit *u) {

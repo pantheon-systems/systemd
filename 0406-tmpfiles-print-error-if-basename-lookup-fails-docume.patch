@@ -1,0 +1,61 @@
+From 0e92caf541a07ec0ea47a42649f0dc660f84d77c Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 10 Jun 2012 19:21:50 +0200
+Subject: [PATCH] tmpfiles: print error if basename lookup fails; document it
+ in manpage (cherry picked from commit
+ ca2e894bdbd06b43800b57074be0e499a3539b0d)
+
+---
+ man/systemd-tmpfiles.xml |   10 +++++++---
+ src/tmpfiles/tmpfiles.c  |   10 +++++++++-
+ 2 files changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
+index 218840e..9888ba9 100644
+--- a/man/systemd-tmpfiles.xml
++++ b/man/systemd-tmpfiles.xml
+@@ -67,9 +67,13 @@
+ 
+                 <para>If invoked with no arguments, it applies all
+                 directives from all configuration files. If one or
+-                more absolute file names are passed on the command
+-                line only the directives in these files are
+-                applied.</para>
++                more file names are passed on the command line, only
++                the directives in these files are applied. If only
++                the basename of a configuration file is specified,
++                all configuration directories as specified in <citerefentry>
++                        <refentrytitle>tmpfiles.d</refentrytitle>
++                        <manvolnum>5</manvolnum>
++                </citerefentry> are searched for a matching file.</para>
+         </refsect1>
+ 
+         <refsect1>
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index 6f54962..36da1fa 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -1281,6 +1281,7 @@ static char *resolve_fragment(const char *fragment, const char **search_paths) {
+                 free(resolved_path);
+         }
+ 
++        errno = ENOENT;
+         return NULL;
+ }
+ 
+@@ -1316,7 +1317,14 @@ int main(int argc, char *argv[]) {
+                 int j;
+ 
+                 for (j = optind; j < argc; j++) {
+-                        char *fragment = resolve_fragment(argv[j], conf_file_dirs);
++                        char *fragment;
++
++                        fragment = resolve_fragment(argv[j], conf_file_dirs);
++                        if (!fragment) {
++                                log_error("Failed to find any: %s file: %m", argv[j]);
++                                r = EXIT_FAILURE;
++                                goto finish;
++                        }
+                         if (read_config_file(fragment, false) < 0)
+                                 r = EXIT_FAILURE;
+                         free(fragment);

@@ -1,0 +1,28 @@
+From 9f1da0958259de07716bd939e4f43556c89387c6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 23 May 2012 12:49:41 +0200
+Subject: [PATCH] journal: don't complain if SELinux userspace is available
+ but the kernel lacks it (cherry picked from commit
+ 1afd5be42f8f4105dd47c71ce968c9d5bf81e0a8)
+
+Conflicts:
+	TODO
+---
+ src/journal/journald.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 99fbd6d..de0c604 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1692,8 +1692,8 @@ static int stdout_stream_new(Server *s) {
+         }
+ 
+ #ifdef HAVE_SELINUX
+-        if (getpeercon(fd, &stream->security_context) < 0)
+-                log_error("Failed to determine peer security context.");
++        if (getpeercon(fd, &stream->security_context) < 0 && errno != ENOPROTOOPT)
++                log_error("Failed to determine peer security context: %m");
+ #endif
+ 
+         if (shutdown(fd, SHUT_WR) < 0) {

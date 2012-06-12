@@ -1,0 +1,80 @@
+From e223b6b8295b30a0c04216ae35111b3062097add Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 4 Jun 2012 19:48:32 +0200
+Subject: [PATCH] systemctl: rename "man" to "help" (cherry picked from commit
+ b43f208f78666fd27e274daa946ae57becd59dd6)
+
+---
+ man/systemctl.xml         |    2 +-
+ src/systemctl/systemctl.c |   17 +++++++++--------
+ 2 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 425bfd5..4bc16c4 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -634,7 +634,7 @@
+                                 output.</para></listitem>
+                         </varlistentry>
+                         <varlistentry>
+-                                <term><command>man [NAME...|PID...]</command></term>
++                                <term><command>help [NAME...|PID...]</command></term>
+ 
+                                 <listitem><para>Show manual pages for
+                                 one or more units, if available. If a
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 377a878..ed3dbab 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2449,7 +2449,7 @@ static void print_status_info(UnitStatusInfo *i) {
+                        arg_scope == UNIT_FILE_SYSTEM ? "--system" : "--user");
+ }
+ 
+-static void man_status_info(UnitStatusInfo *i) {
++static void show_unit_help(UnitStatusInfo *i) {
+         char **p;
+ 
+         assert(i);
+@@ -3015,8 +3015,8 @@ static int show_one(const char *verb, DBusConnection *bus, const char *path, boo
+         r = 0;
+ 
+         if (!show_properties) {
+-                if (streq(verb, "man"))
+-                        man_status_info(&info);
++                if (streq(verb, "help"))
++                        show_unit_help(&info);
+                 else
+                         print_status_info(&info);
+         }
+@@ -4280,7 +4280,7 @@ static int systemctl_help(void) {
+                "  status [NAME...|PID...]         Show runtime status of one or more units\n"
+                "  show [NAME...|JOB...]           Show properties of one or more\n"
+                "                                  units/jobs or the manager\n"
+-               "  man [NAME...|PID...]            Show manual for one or more units\n"
++               "  help [NAME...|PID...]            Show manual for one or more units\n"
+                "  reset-failed [NAME...]          Reset failed state for all, one, or more\n"
+                "                                  units\n"
+                "  load [NAME...]                  Load one or more units\n\n"
+@@ -5244,7 +5244,7 @@ static int systemctl_main(DBusConnection *bus, int argc, char *argv[], DBusError
+                 { "check",                 MORE,  2, check_unit        },
+                 { "show",                  MORE,  1, show              },
+                 { "status",                MORE,  2, show              },
+-                { "man",                   MORE,  2, show              },
++                { "help",                  MORE,  2, show              },
+                 { "dump",                  EQUAL, 1, dump              },
+                 { "dot",                   EQUAL, 1, dot               },
+                 { "snapshot",              LESS,  2, snapshot          },
+@@ -5289,9 +5289,10 @@ static int systemctl_main(DBusConnection *bus, int argc, char *argv[], DBusError
+                 /* Special rule: no arguments means "list-units" */
+                 i = 0;
+         else {
+-                if (streq(argv[optind], "help")) {
+-                        systemctl_help();
+-                        return 0;
++                if (streq(argv[optind], "help") && !argv[optind+1]) {
++                        log_error("This command expects one or more "
++                                  "unit names. Did you mean --help?");
++                        return -EINVAL;
+                 }
+ 
+                 for (i = 0; i < ELEMENTSOF(verbs); i++)

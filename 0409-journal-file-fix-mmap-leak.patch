@@ -1,0 +1,30 @@
+From 8c15fd59c8ad0e2ef87b8bc24d552114bacaa445 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 12 Jun 2012 16:45:09 +0200
+Subject: [PATCH] journal-file: fix mmap leak
+
+https://bugzilla.redhat.com/show_bug.cgi?id=831132
+(cherry picked from commit d384c7a8741aa5dda89c6eee63bfa3107181ee17)
+---
+ src/journal/journal-file.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 4fb416f..df4cbd5 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -67,9 +67,12 @@ void journal_file_close(JournalFile *f) {
+ 
+         assert(f);
+ 
+-        if (f->header && f->writable)
+-                f->header->state = STATE_OFFLINE;
++        if (f->header) {
++                if (f->writable)
++                        f->header->state = STATE_OFFLINE;
+ 
++                munmap(f->header, PAGE_ALIGN(sizeof(Header)));
++        }
+ 
+         for (t = 0; t < _WINDOW_MAX; t++)
+                 if (f->windows[t].ptr)

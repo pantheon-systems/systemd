@@ -1,0 +1,27 @@
+From fde5f969be73a71a8cb8bb6d1c5ee77082b2b731 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 30 May 2012 22:30:35 +0200
+Subject: [PATCH] journalctl: for now complain if more than one match is
+ provided since this is still broken (cherry picked from
+ commit ab4979d202e12d60bb2e31dee32fd3e79a4453fd)
+
+---
+ src/journal/sd-journal.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 6e5f4bb..6ed1e25 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -118,6 +118,11 @@ _public_ int sd_journal_add_match(sd_journal *j, const void *data, size_t size)
+         if (size <= 0)
+                 return -EINVAL;
+ 
++        /* FIXME: iterating with multiple matches is currently
++         * broken */
++        if (j->matches)
++                return -ENOTSUP;
++
+         le_hash = htole64(hash64(data, size));
+ 
+         LIST_FOREACH(matches, m, j->matches) {

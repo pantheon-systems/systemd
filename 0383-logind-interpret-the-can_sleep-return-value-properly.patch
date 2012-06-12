@@ -1,0 +1,29 @@
+From 009af3b4bacaa7325e895649232a73fa017c7d8f Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Thu, 31 May 2012 21:50:23 -0400
+Subject: [PATCH] logind: interpret the can_sleep return value properly
+
+can_sleep() returns a boolean, so a return value > 0 does not
+mean 'na'.
+(cherry picked from commit 398f7c881b90d2ca4edafcb60dba3822eb9f73eb)
+---
+ src/login/logind-dbus.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 61c4b30..b6f2204 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -1062,8 +1062,10 @@ static int bus_manager_can_shutdown_or_sleep(
+                 if (r < 0)
+                         return r;
+ 
+-                result = "na";
+-                goto finish;
++                if (r == 0) {
++                        result = "na";
++                        goto finish;
++                }
+         }
+ 
+         r = have_multiple_sessions(connection, m, message, error);

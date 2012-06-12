@@ -1,0 +1,47 @@
+From a2fe9e343fc4345026f6a3c9b4dd4db08539c653 Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Thu, 31 May 2012 20:07:12 -0400
+Subject: [PATCH] sleep: Don't call execute_directory() on a binary
+
+Probably a copy-paste error, SYSTEMD_SLEEP_BINARY_PATH should
+have been SYSTEMD_SLEEP_PATH.
+(cherry picked from commit ddcbc8737873ca1904562d7d3ca3de9946e2f889)
+---
+ Makefile.am       |    1 +
+ src/sleep/sleep.c |    4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index c283738..f77dc10 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -111,6 +111,7 @@ AM_CPPFLAGS = \
+ 	-DSYSTEM_GENERATOR_PATH=\"$(systemgeneratordir)\" \
+ 	-DUSER_GENERATOR_PATH=\"$(usergeneratordir)\" \
+ 	-DSYSTEM_SHUTDOWN_PATH=\"$(systemshutdowndir)\" \
++	-DSYSTEM_SLEEP_PATH=\"$(systemsleepdir)\" \
+ 	-DSYSTEMD_KBD_MODEL_MAP=\"$(pkgdatadir)/kbd-model-map\" \
+ 	-DX_SERVER=\"$(bindir)/X\" \
+ 	-DPOLKIT_AGENT_BINARY_PATH=\"$(bindir)/pkttyagent\" \
+diff --git a/src/sleep/sleep.c b/src/sleep/sleep.c
+index 941edc3..c86f69c 100644
+--- a/src/sleep/sleep.c
++++ b/src/sleep/sleep.c
+@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
+         arguments[1] = (char*) "pre";
+         arguments[2] = argv[1];
+         arguments[3] = NULL;
+-        execute_directory(SYSTEMD_SLEEP_BINARY_PATH, NULL, arguments);
++        execute_directory(SYSTEM_SLEEP_PATH, NULL, arguments);
+ 
+         if (streq(argv[1], "suspend"))
+                 log_info("Suspending system...");
+@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
+                 log_info("System thawed.");
+ 
+         arguments[1] = (char*) "post";
+-        execute_directory(SYSTEMD_SLEEP_BINARY_PATH, NULL, arguments);
++        execute_directory(SYSTEM_SLEEP_PATH, NULL, arguments);
+ 
+         fclose(f);
+ 

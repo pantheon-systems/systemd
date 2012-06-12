@@ -1,0 +1,97 @@
+From d100f1b0816ea412651275ccd2029f0a1117e887 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 19:47:52 +0200
+Subject: [PATCH] logind: add new user state 'closing' (cherry picked from
+ commit e96cd586c5195b73af74791280d8461510258b48)
+
+---
+ src/login/logind-user.c |   36 +++++++++++++++++++++++-------------
+ src/login/logind-user.h |    1 +
+ 2 files changed, 24 insertions(+), 13 deletions(-)
+
+diff --git a/src/login/logind-user.c b/src/login/logind-user.c
+index f813aac..fa12e1d 100644
+--- a/src/login/logind-user.c
++++ b/src/login/logind-user.c
+@@ -523,9 +523,21 @@ int user_get_idle_hint(User *u, dual_timestamp *t) {
+         return idle_hint;
+ }
+ 
++static int user_check_linger_file(User *u) {
++        char *p;
++        int r;
++
++        if (asprintf(&p, "/var/lib/systemd/linger/%s", u->name) < 0)
++                return -ENOMEM;
++
++        r = access(p, F_OK) >= 0;
++        free(p);
++
++        return r;
++}
++
+ int user_check_gc(User *u, bool drop_not_started) {
+         int r;
+-        char *p;
+ 
+         assert(u);
+ 
+@@ -535,13 +547,7 @@ int user_check_gc(User *u, bool drop_not_started) {
+         if (u->sessions)
+                 return 1;
+ 
+-        if (asprintf(&p, "/var/lib/systemd/linger/%s", u->name) < 0)
+-                return -ENOMEM;
+-
+-        r = access(p, F_OK) >= 0;
+-        free(p);
+-
+-        if (r > 0)
++        if (user_check_linger_file(u) > 0)
+                 return 1;
+ 
+         if (u->cgroup_path) {
+@@ -571,14 +577,17 @@ UserState user_get_state(User *u) {
+ 
+         assert(u);
+ 
+-        if (!u->sessions)
+-                return USER_LINGERING;
+-
+         LIST_FOREACH(sessions_by_user, i, u->sessions)
+                 if (session_is_active(i))
+                         return USER_ACTIVE;
+ 
+-        return USER_ONLINE;
++        if (u->sessions)
++                return USER_ONLINE;
++
++        if (user_check_linger_file(u) > 0)
++                return USER_LINGERING;
++
++        return USER_CLOSING;
+ }
+ 
+ int user_kill(User *u, int signo) {
+@@ -609,7 +618,8 @@ static const char* const user_state_table[_USER_STATE_MAX] = {
+         [USER_OFFLINE] = "offline",
+         [USER_LINGERING] = "lingering",
+         [USER_ONLINE] = "online",
+-        [USER_ACTIVE] = "active"
++        [USER_ACTIVE] = "active",
++        [USER_CLOSING] = "closing"
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(user_state, UserState);
+diff --git a/src/login/logind-user.h b/src/login/logind-user.h
+index db9a5f6..802f1ed 100644
+--- a/src/login/logind-user.h
++++ b/src/login/logind-user.h
+@@ -34,6 +34,7 @@ typedef enum UserState {
+         USER_LINGERING,
+         USER_ONLINE,
+         USER_ACTIVE,
++        USER_CLOSING,
+         _USER_STATE_MAX,
+         _USER_STATE_INVALID = -1
+ } UserState;

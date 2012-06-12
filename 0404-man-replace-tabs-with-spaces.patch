@@ -1,0 +1,342 @@
+From 6ce94dc4d58a50327d8ee863c0a20c0047bfeb9b Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 10 Jun 2012 18:32:11 +0200
+Subject: [PATCH] man: replace tabs with spaces (cherry picked from commit
+ 0e25e94ea72ca3db70484014280ddb709840f952)
+
+---
+ man/binfmt.d.xml                     |   12 ++++++------
+ man/journalctl.xml                   |    6 +++---
+ man/loginctl.xml                     |    6 +++---
+ man/modules-load.d.xml               |   32 ++++++++++++++++----------------
+ man/sysctl.d.xml                     |   22 +++++++++++-----------
+ man/systemctl.xml                    |   12 ++++++------
+ man/systemd-binfmt.service.xml       |    6 +++---
+ man/systemd-cgls.xml                 |   14 +++++++-------
+ man/systemd-delta.xml                |    6 +++---
+ man/systemd-modules-load.service.xml |    6 +++---
+ man/systemd-sysctl.service.xml       |   10 +++++-----
+ man/tmpfiles.d.xml                   |   20 ++++++++++----------
+ 12 files changed, 76 insertions(+), 76 deletions(-)
+
+diff --git a/man/binfmt.d.xml b/man/binfmt.d.xml
+index fedde88..6fc4a4d 100644
+--- a/man/binfmt.d.xml
++++ b/man/binfmt.d.xml
+@@ -55,15 +55,15 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para>At boot,
+-		<citerefentry><refentrytitle>systemd-binfmt.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+-		reads configuration files from the above directories
+-		to register in the kernel additional binary
+-		formats for executables.</para>
++                <para>At boot,
++                <citerefentry><refentrytitle>systemd-binfmt.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                reads configuration files from the above directories
++                to register in the kernel additional binary
++                formats for executables.</para>
+         </refsect1>
+ 
+         <refsect1>
+-		<title>Configuration Format</title>
++                <title>Configuration Format</title>
+ 
+                 <para>Each file contains a list of binfmt_misc kernel
+                 binary format rules. Consult <ulink
+diff --git a/man/journalctl.xml b/man/journalctl.xml
+index 5594672..9ad8ae1 100644
+--- a/man/journalctl.xml
++++ b/man/journalctl.xml
+@@ -110,9 +110,9 @@
+                         <varlistentry>
+                                 <term><option>--no-pager</option></term>
+ 
+-				<listitem><para>Do not pipe output into a
+-				pager.</para></listitem>
+-			</varlistentry>
++                                <listitem><para>Do not pipe output into a
++                                pager.</para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>--all</option></term>
+diff --git a/man/loginctl.xml b/man/loginctl.xml
+index e0ab344..c8191bb 100644
+--- a/man/loginctl.xml
++++ b/man/loginctl.xml
+@@ -115,9 +115,9 @@
+                         <varlistentry>
+                                 <term><option>--no-pager</option></term>
+ 
+-				<listitem><para>Do not pipe output into a
+-				pager.</para></listitem>
+-			</varlistentry>
++                                <listitem><para>Do not pipe output into a
++                                pager.</para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>--no-ask-password</option></term>
+diff --git a/man/modules-load.d.xml b/man/modules-load.d.xml
+index 9ae5020..5889b83 100644
+--- a/man/modules-load.d.xml
++++ b/man/modules-load.d.xml
+@@ -54,26 +54,26 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para><citerefentry><refentrytitle>systemd-modules-load.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+-		reads files from the above directories which contain
+-		kernel modules to load during boot in a static list.
+-		Each configuration file is named in the style of
+-		<filename>/etc/modules-load.d/&lt;program&gt;.conf</filename>. Note
+-		that it is usually a better idea to rely on the
+-		automatic module loading by PCI IDs, USB IDs, DMI IDs
+-		or similar triggers encoded in the kernel modules
+-		themselves instead of static configuration like
+-		this. In fact, most modern kernel modules are prepared
+-		for automatic loading already.</para>
++                <para><citerefentry><refentrytitle>systemd-modules-load.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                reads files from the above directories which contain
++                kernel modules to load during boot in a static list.
++                Each configuration file is named in the style of
++                <filename>/etc/modules-load.d/&lt;program&gt;.conf</filename>. Note
++                that it is usually a better idea to rely on the
++                automatic module loading by PCI IDs, USB IDs, DMI IDs
++                or similar triggers encoded in the kernel modules
++                themselves instead of static configuration like
++                this. In fact, most modern kernel modules are prepared
++                for automatic loading already.</para>
+         </refsect1>
+ 
+         <refsect1>
+-		<title>Configuration Format</title>
++                <title>Configuration Format</title>
+ 
+-		<para>The configuration files should simply contain a
+-		list of kernel module names to load, separated by
+-		newlines. Empty lines and lines whose first
+-		non-whitespace character is # or ; are ignored.</para>
++                <para>The configuration files should simply contain a
++                list of kernel module names to load, separated by
++                newlines. Empty lines and lines whose first
++                non-whitespace character is # or ; are ignored.</para>
+ 
+                 <para>Each configuration file shall be named in the
+                 style of <filename>&lt;program&gt;.conf</filename>.
+diff --git a/man/sysctl.d.xml b/man/sysctl.d.xml
+index 9423971..55de921 100644
+--- a/man/sysctl.d.xml
++++ b/man/sysctl.d.xml
+@@ -54,21 +54,21 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para>At boot,
+-		<citerefentry><refentrytitle>systemd-binfmt.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+-		reads configuration files from the above directories
+-		to configure
+-		<citerefentry><refentrytitle>sysctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+-		kernel parameters.</para>
++                <para>At boot,
++                <citerefentry><refentrytitle>systemd-binfmt.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                reads configuration files from the above directories
++                to configure
++                <citerefentry><refentrytitle>sysctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                kernel parameters.</para>
+         </refsect1>
+ 
+         <refsect1>
+-		<title>Configuration Format</title>
++                <title>Configuration Format</title>
+ 
+-		<para>The configuration files contain a list of
+-		variable assignments, separated by newlines. Empty
+-		lines and lines whose first non-whitespace character
+-		is # or ; are ignored.</para>
++                <para>The configuration files contain a list of
++                variable assignments, separated by newlines. Empty
++                lines and lines whose first non-whitespace character
++                is # or ; are ignored.</para>
+ 
+                 <para>Note that both / and . are accepted as label
+                 separators within sysctl variable
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 4bc16c4..7ed8f35 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -201,17 +201,17 @@
+                         <varlistentry>
+                                 <term><option>--no-legend</option></term>
+ 
+-				<listitem><para>Do not print a legend, i.e.
++                                <listitem><para>Do not print a legend, i.e.
+                                 the column headers and the footer with hints.
+-				</para></listitem>
+-			</varlistentry>
++                                </para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>--no-pager</option></term>
+ 
+-				<listitem><para>Do not pipe output into a
+-				pager.</para></listitem>
+-			</varlistentry>
++                                <listitem><para>Do not pipe output into a
++                                pager.</para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>--system</option></term>
+diff --git a/man/systemd-binfmt.service.xml b/man/systemd-binfmt.service.xml
+index 73e9836..7f2bb9a 100644
+--- a/man/systemd-binfmt.service.xml
++++ b/man/systemd-binfmt.service.xml
+@@ -54,9 +54,9 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para><filename>systemd-binfmt.service</filename> is
+-		an early-boot service that registers additional binary
+-		formats for executables in the kernel.</para>
++                <para><filename>systemd-binfmt.service</filename> is
++                an early-boot service that registers additional binary
++                formats for executables in the kernel.</para>
+ 
+                 <para>See
+                 <citerefentry><refentrytitle>binfmt.d</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+diff --git a/man/systemd-cgls.xml b/man/systemd-cgls.xml
+index 28a8783..13c10ab 100644
+--- a/man/systemd-cgls.xml
++++ b/man/systemd-cgls.xml
+@@ -98,17 +98,17 @@
+                         <varlistentry>
+                                 <term><option>--no-pager</option></term>
+ 
+-				<listitem><para>Do not pipe output into a
+-				pager.</para></listitem>
+-			</varlistentry>
++                                <listitem><para>Do not pipe output into a
++                                pager.</para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>--all</option></term>
+ 
+-				<listitem><para>Don't hide empty
+-				control groups in the
+-				outpout.</para></listitem>
+-			</varlistentry>
++                                <listitem><para>Don't hide empty
++                                control groups in the
++                                outpout.</para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>-k</option></term>
+diff --git a/man/systemd-delta.xml b/man/systemd-delta.xml
+index 523b590..9ded28b 100644
+--- a/man/systemd-delta.xml
++++ b/man/systemd-delta.xml
+@@ -95,9 +95,9 @@
+                         <varlistentry>
+                                 <term><option>--no-pager</option></term>
+ 
+-				<listitem><para>Do not pipe output into a
+-				pager.</para></listitem>
+-			</varlistentry>
++                                <listitem><para>Do not pipe output into a
++                                pager.</para></listitem>
++                        </varlistentry>
+ 
+                         <varlistentry>
+                                 <term><option>--type=</option></term>
+diff --git a/man/systemd-modules-load.service.xml b/man/systemd-modules-load.service.xml
+index 405ae4f..c92947f 100644
+--- a/man/systemd-modules-load.service.xml
++++ b/man/systemd-modules-load.service.xml
+@@ -54,9 +54,9 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para><filename>systemd-modules-load.service</filename>
+-		is an early-boot service that loads kernel modules
+-		from static configuration.</para>
++                <para><filename>systemd-modules-load.service</filename>
++                is an early-boot service that loads kernel modules
++                from static configuration.</para>
+ 
+                 <para>See
+                 <citerefentry><refentrytitle>modules-load.d</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+diff --git a/man/systemd-sysctl.service.xml b/man/systemd-sysctl.service.xml
+index 116fcd0..2ee6346 100644
+--- a/man/systemd-sysctl.service.xml
++++ b/man/systemd-sysctl.service.xml
+@@ -54,10 +54,10 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para><filename>systemd-sysctl.service</filename> is
+-		an early-boot service that configures
+-		<citerefentry><refentrytitle>sysctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+-		kernel parameters.</para>
++                <para><filename>systemd-sysctl.service</filename> is
++                an early-boot service that configures
++                <citerefentry><refentrytitle>sysctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                kernel parameters.</para>
+ 
+                 <para>See
+                 <citerefentry><refentrytitle>sysctl.d</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+@@ -70,7 +70,7 @@
+                 <para>
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>sysctl.d</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+-		        <citerefentry><refentrytitle>sysctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>sysctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>wine</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+                 </para>
+         </refsect1>
+diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
+index 0cf15ed..3b69968 100644
+--- a/man/tmpfiles.d.xml
++++ b/man/tmpfiles.d.xml
+@@ -55,16 +55,16 @@
+         <refsect1>
+                 <title>Description</title>
+ 
+-		<para><command>systemd-tmpfiles</command> uses the
+-		configuration files from the above directories to describe the
+-		creation, cleaning and removal of volatile and
+-		temporary files and directories which usually reside
+-		in directories such as <filename>/run</filename>
+-		or <filename>/tmp</filename>.</para>
++                <para><command>systemd-tmpfiles</command> uses the
++                configuration files from the above directories to describe the
++                creation, cleaning and removal of volatile and
++                temporary files and directories which usually reside
++                in directories such as <filename>/run</filename>
++                or <filename>/tmp</filename>.</para>
+         </refsect1>
+ 
+         <refsect1>
+-		<title>Configuration Format</title>
++                <title>Configuration Format</title>
+ 
+                 <para>Each configuration file shall be named in the
+                 style of <filename>&lt;program&gt;.conf</filename>.
+@@ -91,9 +91,9 @@
+                 <filename>/etc/tmpfiles.d/</filename> bearing the
+                 same file name.</para>
+ 
+-		<para>The configuration format is one line per path
+-		containing action, path, mode, ownership, age and argument
+-		fields:</para>
++                <para>The configuration format is one line per path
++                containing action, path, mode, ownership, age and argument
++                fields:</para>
+ 
+                 <programlisting>Type Path        Mode UID  GID  Age Argument
+ d    /run/user   0755 root root 10d -

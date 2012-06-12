@@ -1,0 +1,38 @@
+From e3dc6c3c2ede5ad5a255bdd104e4c6aa3fa10bfd Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 23 May 2012 03:50:53 +0200
+Subject: [PATCH] readahead: avoid activating the journal by accident, log
+ directly to kmsg (cherry picked from commit
+ e905f48fdc78fe3e4708aeb8515fc260eaf4eb6b)
+
+---
+ src/readahead/readahead-collect.c |    2 +-
+ src/readahead/readahead-replay.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
+index 66d08bb..46e5e2c 100644
+--- a/src/readahead/readahead-collect.c
++++ b/src/readahead/readahead-collect.c
+@@ -683,7 +683,7 @@ int main(int argc, char *argv[]) {
+         int r;
+         const char *root;
+ 
+-        log_set_target(LOG_TARGET_AUTO);
++        log_set_target(LOG_TARGET_SAFE);
+         log_parse_environment();
+         log_open();
+ 
+diff --git a/src/readahead/readahead-replay.c b/src/readahead/readahead-replay.c
+index 7636cd4..2b30549 100644
+--- a/src/readahead/readahead-replay.c
++++ b/src/readahead/readahead-replay.c
+@@ -360,7 +360,7 @@ int main(int argc, char*argv[]) {
+         int r;
+         const char *root;
+ 
+-        log_set_target(LOG_TARGET_AUTO);
++        log_set_target(LOG_TARGET_SAFE);
+         log_parse_environment();
+         log_open();
+ 

@@ -1,0 +1,27 @@
+From f13bab0afa748011b526280f0f9e5a1f508c282c Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 31 May 2012 11:58:06 +0200
+Subject: [PATCH] util: don't require libcap when building libsystemd-shared
+
+src/shared/util.c includes <sys/capability.h> but doesn't use anything
+defined there.  Since <sys/capability.h> is part of libcap, not libc,
+don't require it.
+
+Allows systemd-without-udevd to require fewer external libraries.
+(cherry picked from commit 051d68786bd5bfe87e7cc0c1d68ec4be83eb662a)
+---
+ src/shared/util.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index b26298b..035f01d 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -50,7 +50,6 @@
+ #include <linux/kd.h>
+ #include <dlfcn.h>
+ #include <sys/wait.h>
+-#include <sys/capability.h>
+ #include <sys/time.h>
+ #include <glob.h>
+ #include <grp.h>

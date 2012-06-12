@@ -1,0 +1,25 @@
+From 40eb4b8e44702676efe48928bbdb237301a11f86 Mon Sep 17 00:00:00 2001
+From: Malte Starostik <m-starostik@versanet.de>
+Date: Sun, 3 Jun 2012 21:39:21 +0200
+Subject: [PATCH] logind: punt duplicate definition of InhibitWhat
+
+Trivial fix for:
+  src/login/logind-inhibit.h:37:3: error: redefinition of typedef 'InhibitWhat'
+  src/login/logind-inhibit.h:26:26: note: previous declaration of 'InhibitWhat' was here
+(cherry picked from commit cabe5d25640914be1000d23bcdd29d2ffc6333de)
+---
+ src/login/logind-inhibit.h |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/login/logind-inhibit.h b/src/login/logind-inhibit.h
+index 4377f00..e72536f 100644
+--- a/src/login/logind-inhibit.h
++++ b/src/login/logind-inhibit.h
+@@ -23,7 +23,6 @@
+ ***/
+ 
+ typedef struct Inhibitor Inhibitor;
+-typedef enum InhibitWhat InhibitWhat;
+ 
+ #include "list.h"
+ #include "util.h"

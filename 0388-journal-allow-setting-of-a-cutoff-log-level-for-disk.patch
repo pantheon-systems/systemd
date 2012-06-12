@@ -1,0 +1,392 @@
+From 3ce4969dbc09cc3b647a9ef7212c15e55fa31f78 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 17:26:16 +0200
+Subject: [PATCH] journal: allow setting of a cutoff log level for disk
+ storage, syslog, kmsg, console forwarding (cherry picked
+ from commit 213ba152fdf7978773be5b8a72e040584765137f)
+
+---
+ man/systemd-journald.conf.xml     |   36 +++++++++++++++++++++++
+ src/core/load-fragment.c          |   55 -----------------------------------
+ src/core/load-fragment.h          |    2 --
+ src/journal/journald-gperf.gperf  |    4 +++
+ src/journal/journald.c            |   37 +++++++++++++++++++-----
+ src/journal/journald.h            |    5 ++++
+ src/journal/systemd-journald.conf |    4 +++
+ src/shared/conf-parser.c          |   57 +++++++++++++++++++++++++++++++++++++
+ src/shared/conf-parser.h          |    2 ++
+ 9 files changed, 138 insertions(+), 64 deletions(-)
+
+diff --git a/man/systemd-journald.conf.xml b/man/systemd-journald.conf.xml
+index add7a7b..100c458 100644
+--- a/man/systemd-journald.conf.xml
++++ b/man/systemd-journald.conf.xml
+@@ -225,6 +225,42 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>MaxLevelStore=</varname></term>
++                                <term><varname>MaxLevelSyslog=</varname></term>
++                                <term><varname>MaxLevelKMsg=</varname></term>
++                                <term><varname>MaxLevelConsole=</varname></term>
++
++                                <listitem><para>Controls the maximum
++                                log level of messages that are stored
++                                on disk, forwarded to syslog, kmsg or
++                                the console (if that is enabled, see
++                                above). As argument, takes one of
++                                <literal>emerg</literal>,
++                                <literal>alert</literal>,
++                                <literal>crit</literal>,
++                                <literal>err</literal>,
++                                <literal>warning</literal>,
++                                <literal>notice</literal>,
++                                <literal>info</literal>,
++                                <literal>debug</literal> or integer
++                                values in the range of 0..7 (corresponding
++                                to the same levels). Messages equal or below
++                                the log level specified are
++                                stored/forwarded, messages above are
++                                dropped. Defaults to
++                                <literal>debug</literal> for
++                                <varname>MaxLevelStore=</varname> and
++                                <varname>MaxLevelSyslog=</varname>, to
++                                ensure that the all messages are
++                                written to disk and forwarded to
++                                syslog. Defaults to
++                                <literal>notice</literal> for
++                                <varname>MaxLevelKMsg=</varname> and
++                                <literal>info</literal> for
++                                <varname>MaxLevelConsole=</varname>.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>TTYPath=</varname></term>
+ 
+                                 <listitem><para>Change the console TTY
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 99f388e..9bbb45e 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -637,61 +637,6 @@ int config_parse_socket_bindtodevice(
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_output, exec_output, ExecOutput, "Failed to parse output specifier");
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_input, exec_input, ExecInput, "Failed to parse input specifier");
+ 
+-int config_parse_facility(
+-                const char *filename,
+-                unsigned line,
+-                const char *section,
+-                const char *lvalue,
+-                int ltype,
+-                const char *rvalue,
+-                void *data,
+-                void *userdata) {
+-
+-
+-        int *o = data, x;
+-
+-        assert(filename);
+-        assert(lvalue);
+-        assert(rvalue);
+-        assert(data);
+-
+-        if ((x = log_facility_unshifted_from_string(rvalue)) < 0) {
+-                log_error("[%s:%u] Failed to parse log facility, ignoring: %s", filename, line, rvalue);
+-                return 0;
+-        }
+-
+-        *o = (x << 3) | LOG_PRI(*o);
+-
+-        return 0;
+-}
+-
+-int config_parse_level(
+-                const char *filename,
+-                unsigned line,
+-                const char *section,
+-                const char *lvalue,
+-                int ltype,
+-                const char *rvalue,
+-                void *data,
+-                void *userdata) {
+-
+-
+-        int *o = data, x;
+-
+-        assert(filename);
+-        assert(lvalue);
+-        assert(rvalue);
+-        assert(data);
+-
+-        if ((x = log_level_from_string(rvalue)) < 0) {
+-                log_error("[%s:%u] Failed to parse log level, ignoring: %s", filename, line, rvalue);
+-                return 0;
+-        }
+-
+-        *o = (*o & LOG_FACMASK) | x;
+-        return 0;
+-}
+-
+ int config_parse_exec_io_class(
+                 const char *filename,
+                 unsigned line,
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index cd29948..3166b18 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -47,8 +47,6 @@ int config_parse_service_restart(const char *filename, unsigned line, const char
+ int config_parse_socket_bindtodevice(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_output(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_input(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+-int config_parse_facility(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+-int config_parse_level(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec_io_class(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec_io_priority(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec_cpu_sched_policy(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+diff --git a/src/journal/journald-gperf.gperf b/src/journal/journald-gperf.gperf
+index 9c778fc..c9b0fbb 100644
+--- a/src/journal/journald-gperf.gperf
++++ b/src/journal/journald-gperf.gperf
+@@ -30,3 +30,7 @@ Journal.ForwardToKMsg,      config_parse_bool,      0, offsetof(Server, forward_
+ Journal.ForwardToConsole,   config_parse_bool,      0, offsetof(Server, forward_to_console)
+ Journal.ImportKernel,       config_parse_bool,      0, offsetof(Server, import_proc_kmsg)
+ Journal.TTYPath,            config_parse_path,      0, offsetof(Server, tty_path)
++Journal.MaxLevelStore,      config_parse_level,     0, offsetof(Server, max_level_store)
++Journal.MaxLevelSyslog,     config_parse_level,     0, offsetof(Server, max_level_syslog)
++Journal.MaxLevelKMsg,       config_parse_level,     0, offsetof(Server, max_level_kmsg)
++Journal.MaxLevelConsole,    config_parse_level,     0, offsetof(Server, max_level_console)
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 2838d8b..bd62999 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -720,6 +720,9 @@ static void dispatch_message(Server *s,
+         if (n == 0)
+                 return;
+ 
++        if (LOG_PRI(priority) > s->max_level_store)
++                return;
++
+         if (!ucred)
+                 goto finish;
+ 
+@@ -829,12 +832,15 @@ static void forward_syslog_iovec(Server *s, const struct iovec *iovec, unsigned
+         log_debug("Failed to forward syslog message: %m");
+ }
+ 
+-static void forward_syslog_raw(Server *s, const char *buffer, struct ucred *ucred, struct timeval *tv) {
++static void forward_syslog_raw(Server *s, int priority, const char *buffer, struct ucred *ucred, struct timeval *tv) {
+         struct iovec iovec;
+ 
+         assert(s);
+         assert(buffer);
+ 
++        if (LOG_PRI(priority) > s->max_level_syslog)
++                return;
++
+         IOVEC_SET_STRING(iovec, buffer);
+         forward_syslog_iovec(s, &iovec, 1, ucred, tv);
+ }
+@@ -852,6 +858,9 @@ static void forward_syslog(Server *s, int priority, const char *identifier, cons
+         assert(priority <= 999);
+         assert(message);
+ 
++        if (LOG_PRI(priority) > s->max_level_syslog)
++                return;
++
+         /* First: priority field */
+         snprintf(header_priority, sizeof(header_priority), "<%i>", priority);
+         char_array_0(header_priority);
+@@ -913,6 +922,9 @@ static void forward_kmsg(Server *s, int priority, const char *identifier, const
+         assert(priority <= 999);
+         assert(message);
+ 
++        if (LOG_PRI(priority) > s->max_level_kmsg)
++                return;
++
+         /* Never allow messages with kernel facility to be written to
+          * kmsg, regardless where the data comes from. */
+         priority = fixup_priority(priority);
+@@ -960,7 +972,7 @@ finish:
+         free(ident_buf);
+ }
+ 
+-static void forward_console(Server *s, const char *identifier, const char *message, struct ucred *ucred) {
++static void forward_console(Server *s, int priority, const char *identifier, const char *message, struct ucred *ucred) {
+         struct iovec iovec[4];
+         char header_pid[16];
+         int n = 0, fd;
+@@ -970,6 +982,9 @@ static void forward_console(Server *s, const char *identifier, const char *messa
+         assert(s);
+         assert(message);
+ 
++        if (LOG_PRI(priority) > s->max_level_console)
++                return;
++
+         /* First: identifier and PID */
+         if (ucred) {
+                 if (!identifier) {
+@@ -1066,14 +1081,17 @@ static void process_syslog_message(Server *s, const char *buf, struct ucred *ucr
+         unsigned n = 0;
+         int priority = LOG_USER | LOG_INFO;
+         char *identifier = NULL, *pid = NULL;
++        const char *orig;
+ 
+         assert(s);
+         assert(buf);
+ 
++        orig = buf;
++        parse_syslog_priority((char**) &buf, &priority);
++
+         if (s->forward_to_syslog)
+-                forward_syslog_raw(s, buf, ucred, tv);
++                forward_syslog_raw(s, priority, orig, ucred, tv);
+ 
+-        parse_syslog_priority((char**) &buf, &priority);
+         skip_syslog_date((char**) &buf);
+         read_identifier(&buf, &identifier, &pid);
+ 
+@@ -1081,7 +1099,7 @@ static void process_syslog_message(Server *s, const char *buf, struct ucred *ucr
+                 forward_kmsg(s, priority, identifier, buf, ucred);
+ 
+         if (s->forward_to_console)
+-                forward_console(s, identifier, buf, ucred);
++                forward_console(s, priority, identifier, buf, ucred);
+ 
+         IOVEC_SET_STRING(iovec[n++], "_TRANSPORT=syslog");
+ 
+@@ -1333,7 +1351,7 @@ static void process_native_message(
+                         forward_kmsg(s, priority, identifier, message, ucred);
+ 
+                 if (s->forward_to_console)
+-                        forward_console(s, identifier, message, ucred);
++                        forward_console(s, priority, identifier, message, ucred);
+         }
+ 
+         dispatch_message(s, iovec, n, m, ucred, tv, label, label_len, priority);
+@@ -1431,7 +1449,7 @@ static int stdout_stream_log(StdoutStream *s, const char *p) {
+                 forward_kmsg(s->server, priority, s->identifier, p, &s->ucred);
+ 
+         if (s->forward_to_console || s->server->forward_to_console)
+-                forward_console(s->server, s->identifier, p, &s->ucred);
++                forward_console(s->server, priority, s->identifier, p, &s->ucred);
+ 
+         IOVEC_SET_STRING(iovec[n++], "_TRANSPORT=stdout");
+ 
+@@ -2655,6 +2673,11 @@ static int server_init(Server *s) {
+         s->forward_to_syslog = true;
+         s->import_proc_kmsg = true;
+ 
++        s->max_level_store = LOG_DEBUG;
++        s->max_level_syslog = LOG_DEBUG;
++        s->max_level_kmsg = LOG_NOTICE;
++        s->max_level_console = LOG_INFO;
++
+         memset(&s->system_metrics, 0xFF, sizeof(s->system_metrics));
+         memset(&s->runtime_metrics, 0xFF, sizeof(s->runtime_metrics));
+ 
+diff --git a/src/journal/journald.h b/src/journal/journald.h
+index 6a2c4a9..aea15bb 100644
+--- a/src/journal/journald.h
++++ b/src/journal/journald.h
+@@ -81,6 +81,11 @@ typedef struct Server {
+         unsigned n_stdout_streams;
+ 
+         char *tty_path;
++
++        int max_level_store;
++        int max_level_syslog;
++        int max_level_kmsg;
++        int max_level_console;
+ } Server;
+ 
+ /* gperf lookup function */
+diff --git a/src/journal/systemd-journald.conf b/src/journal/systemd-journald.conf
+index 4d5f8fb..946ee97 100644
+--- a/src/journal/systemd-journald.conf
++++ b/src/journal/systemd-journald.conf
+@@ -24,3 +24,7 @@
+ #ForwardToConsole=no
+ #ImportKernel=yes
+ #TTYPath=/dev/console
++#MaxLevelStore=debug
++#MaxLevelSyslog=debug
++#MaxLevelKMsg=notice
++#MaxLevelConsole=info
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index 1b7e8d8..8582f6d 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -876,3 +876,60 @@ int config_parse_mode(
+         *m = (mode_t) l;
+         return 0;
+ }
++
++int config_parse_facility(
++                const char *filename,
++                unsigned line,
++                const char *section,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++
++        int *o = data, x;
++
++        assert(filename);
++        assert(lvalue);
++        assert(rvalue);
++        assert(data);
++
++        x = log_facility_unshifted_from_string(rvalue);
++        if (x < 0) {
++                log_error("[%s:%u] Failed to parse log facility, ignoring: %s", filename, line, rvalue);
++                return 0;
++        }
++
++        *o = (x << 3) | LOG_PRI(*o);
++
++        return 0;
++}
++
++int config_parse_level(
++                const char *filename,
++                unsigned line,
++                const char *section,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++
++        int *o = data, x;
++
++        assert(filename);
++        assert(lvalue);
++        assert(rvalue);
++        assert(data);
++
++        x = log_level_from_string(rvalue);
++        if (x < 0) {
++                log_error("[%s:%u] Failed to parse log level, ignoring: %s", filename, line, rvalue);
++                return 0;
++        }
++
++        *o = (*o & LOG_FACMASK) | x;
++        return 0;
++}
+diff --git a/src/shared/conf-parser.h b/src/shared/conf-parser.h
+index 4656f8b..81d6720 100644
+--- a/src/shared/conf-parser.h
++++ b/src/shared/conf-parser.h
+@@ -104,6 +104,8 @@ int config_parse_path_strv(const char *filename, unsigned line, const char *sect
+ int config_parse_usec(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_nsec(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_mode(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
++int config_parse_facility(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
++int config_parse_level(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ 
+ #define DEFINE_CONFIG_PARSE_ENUM(function,name,type,msg)                \
+         int function(                                                   \

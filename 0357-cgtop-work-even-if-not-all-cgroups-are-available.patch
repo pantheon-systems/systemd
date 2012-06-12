@@ -1,0 +1,45 @@
+From 15a0e7e31600299fa9ba076d58704116c95a8226 Mon Sep 17 00:00:00 2001
+From: Shawn Landden <shawnlandden@gmail.com>
+Date: Mon, 21 May 2012 22:54:41 -0700
+Subject: [PATCH] cgtop: work even if not all cgroups are available
+
+cgtop quits on startup if all the cgroup mounts it expects are not available.
+Just continue without nonexistant ones.
+(cherry picked from commit 63210a15e1efdbda3fb3abd9a6ae9961fd0ea153)
+---
+ src/cgtop/cgtop.c |   17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/src/cgtop/cgtop.c b/src/cgtop/cgtop.c
+index b8cf3b7..a44e59f 100644
+--- a/src/cgtop/cgtop.c
++++ b/src/cgtop/cgtop.c
+@@ -341,17 +341,22 @@ static int refresh(Hashmap *a, Hashmap *b, unsigned iteration) {
+ 
+         r = refresh_one("name=systemd", "/", a, b, iteration, 0);
+         if (r < 0)
+-                return r;
+-
++                if (r != -ENOENT)
++                    return r;
+         r = refresh_one("cpuacct", "/", a, b, iteration, 0);
+         if (r < 0)
+-                return r;
+-
++                if (r != -ENOENT)
++                    return r;
+         r = refresh_one("memory", "/", a, b, iteration, 0);
+         if (r < 0)
+-                return r;
++                if (r != -ENOENT)
++                    return r;
+ 
+-        return refresh_one("blkio", "/", a, b, iteration, 0);
++        r = refresh_one("blkio", "/", a, b, iteration, 0);
++        if (r < 0)
++                if (r != -ENOENT)
++                    return r;
++        return 0;
+ }
+ 
+ static int group_compare(const void*a, const void *b) {

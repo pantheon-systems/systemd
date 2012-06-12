@@ -1,0 +1,21 @@
+From 0441a435c7329143fd6b81dfa02cfcfb31194d66 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 7 Jun 2012 19:34:13 +0200
+Subject: [PATCH] systemd-debug-shell: add to POTFILES.skip (cherry picked
+ from commit 7a5498fe926eb41520c3e4b0e97ff8359ae37e9e)
+
+Conflicts:
+	units/.gitignore
+---
+ po/POTFILES.skip |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/po/POTFILES.skip b/po/POTFILES.skip
+index 5dc4a51..40584d4 100644
+--- a/po/POTFILES.skip
++++ b/po/POTFILES.skip
+@@ -17,3 +17,4 @@ src/core/org.freedesktop.systemd1.policy.in.in
+ src/timedate/timedated.c
+ units/systemd-readahead-done.service.in
+ units/user@.service.in
++units/systemd-debug-shell.service.in

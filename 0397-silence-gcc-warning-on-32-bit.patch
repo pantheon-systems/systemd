@@ -1,0 +1,23 @@
+From 406e1359b492c50cab48da841593decf50c9cb9b Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 4 Jun 2012 22:27:39 +0200
+Subject: [PATCH] silence gcc warning on 32 bit (cherry picked from commit
+ f96096dbbf0cc7335babf0386b8888431cd70728)
+
+---
+ src/core/execute.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index a5e857d..8f2d646 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1728,7 +1728,7 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+         }
+ 
+         if (c->timer_slack_nsec != (nsec_t) -1)
+-                fprintf(f, "%sTimerSlackNSec: %lu\n", prefix, c->timer_slack_nsec);
++                fprintf(f, "%sTimerSlackNSec: %lu\n", prefix, (unsigned long)c->timer_slack_nsec);
+ 
+         fprintf(f,
+                 "%sStandardInput: %s\n"

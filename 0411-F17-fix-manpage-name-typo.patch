@@ -1,0 +1,22 @@
+From dddb38a226a7c0bb408607bc136fd10aeba1d7bb Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 13 Jun 2012 00:56:15 +0200
+Subject: [PATCH] F17: fix manpage name typo
+
+---
+ src/journal/systemd-journald.conf |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/systemd-journald.conf b/src/journal/systemd-journald.conf
+index 946ee97..ed3dfd9 100644
+--- a/src/journal/systemd-journald.conf
++++ b/src/journal/systemd-journald.conf
+@@ -5,7 +5,7 @@
+ #  the Free Software Foundation; either version 2 of the License, or
+ #  (at your option) any later version.
+ #
+-# See system-journald.conf(5) for details
++# See systemd-journald.conf(5) for details
+ 
+ [Journal]
+ #Compress=yes

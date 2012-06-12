@@ -1,0 +1,25 @@
+From 7fe5a8d80274f07431596e28bda0ae542f8fa40f Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 4 Jun 2012 12:39:22 +0200
+Subject: [PATCH] systemd-detect-virt: fix "option '--quiet' requires an
+ argument"
+
+https://bugs.freedesktop.org/show_bug.cgi?id=50671
+(cherry picked from commit 8c32f0143b15e4c18142cce6703f66e26db69899)
+---
+ src/detect-virt/detect-virt.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/detect-virt/detect-virt.c b/src/detect-virt/detect-virt.c
+index 6f8187d..ec79655 100644
+--- a/src/detect-virt/detect-virt.c
++++ b/src/detect-virt/detect-virt.c
+@@ -61,7 +61,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "version",   no_argument,       NULL, ARG_VERSION   },
+                 { "container", no_argument,       NULL, 'c'           },
+                 { "vm",        optional_argument, NULL, 'v'           },
+-                { "quiet",     required_argument, NULL, 'q'           },
++                { "quiet",     no_argument,       NULL, 'q'           },
+                 { NULL,        0,                 NULL, 0             }
+         };
+ 

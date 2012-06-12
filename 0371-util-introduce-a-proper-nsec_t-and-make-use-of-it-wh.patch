@@ -1,0 +1,363 @@
+From d9674017a185997a3a518ad8ccfb8cad4a6d3af2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 04:27:03 +0200
+Subject: [PATCH] util: introduce a proper nsec_t and make use of it where
+ appropriate (cherry picked from commit
+ d88a251b125f6e9178b9ca9ea47ab7da3234cb58)
+
+---
+ man/systemd.exec.xml                  |   11 +++---
+ src/core/dbus-execute.c               |    2 +-
+ src/core/execute.c                    |    5 ++-
+ src/core/execute.h                    |    3 +-
+ src/core/load-fragment-gperf.gperf.m4 |    2 +-
+ src/core/load-fragment.c              |   30 +--------------
+ src/core/load-fragment.h              |    1 -
+ src/shared/conf-parser.c              |   25 ++++++++++++
+ src/shared/conf-parser.h              |    1 +
+ src/shared/util.c                     |   67 ++++++++++++++++++++++++++++++++-
+ src/shared/util.h                     |    8 ++++
+ 11 files changed, 113 insertions(+), 42 deletions(-)
+
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index 7d28545..09e9f0f 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -581,16 +581,17 @@
+                                 <term><varname>TimerSlackNSec=</varname></term>
+                                 <listitem><para>Sets the timer slack
+                                 in nanoseconds for the executed
+-                                processes. The timer slack controls the
+-                                accuracy of wake-ups triggered by
++                                processes. The timer slack controls
++                                the accuracy of wake-ups triggered by
+                                 timers. See
+                                 <citerefentry><refentrytitle>prctl</refentrytitle><manvolnum>2</manvolnum></citerefentry>
+                                 for more information. Note that in
+                                 contrast to most other time span
+                                 definitions this parameter takes an
+-                                integer value in nano-seconds and does
+-                                not understand any other
+-                                units.</para></listitem>
++                                integer value in nano-seconds if no
++                                unit is specified. The usual time
++                                units are understood
++                                too.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/src/core/dbus-execute.c b/src/core/dbus-execute.c
+index 1fd2b21..1812e61 100644
+--- a/src/core/dbus-execute.c
++++ b/src/core/dbus-execute.c
+@@ -216,7 +216,7 @@ int bus_execute_append_timer_slack_nsec(DBusMessageIter *i, const char *property
+         assert(property);
+         assert(c);
+ 
+-        if (c->timer_slack_nsec_set)
++        if (c->timer_slack_nsec != (nsec_t) -1)
+                 u = (uint64_t) c->timer_slack_nsec;
+         else
+                 u = (uint64_t) prctl(PR_GET_TIMERSLACK);
+diff --git a/src/core/execute.c b/src/core/execute.c
+index f93c9a4..688ec4b 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1183,7 +1183,7 @@ int exec_spawn(ExecCommand *command,
+                                 goto fail_child;
+                         }
+ 
+-                if (context->timer_slack_nsec_set)
++                if (context->timer_slack_nsec != (nsec_t) -1)
+                         if (prctl(PR_SET_TIMERSLACK, context->timer_slack_nsec) < 0) {
+                                 err = -errno;
+                                 r = EXIT_TIMERSLACK;
+@@ -1494,6 +1494,7 @@ void exec_context_init(ExecContext *c) {
+         c->send_sigkill = true;
+         c->control_group_persistent = -1;
+         c->ignore_sigpipe = true;
++        c->timer_slack_nsec = (nsec_t) -1;
+ }
+ 
+ void exec_context_done(ExecContext *c) {
+@@ -1739,7 +1740,7 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+                 fputs("\n", f);
+         }
+ 
+-        if (c->timer_slack_nsec_set)
++        if (c->timer_slack_nsec != (nsec_t) -1)
+                 fprintf(f, "%sTimerSlackNSec: %lu\n", prefix, c->timer_slack_nsec);
+ 
+         fprintf(f,
+diff --git a/src/core/execute.h b/src/core/execute.h
+index 755fc2a..c696913 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -118,7 +118,7 @@ struct ExecContext {
+         ExecOutput std_output;
+         ExecOutput std_error;
+ 
+-        unsigned long timer_slack_nsec;
++        nsec_t timer_slack_nsec;
+ 
+         char *tcpwrap_name;
+ 
+@@ -178,7 +178,6 @@ struct ExecContext {
+         bool nice_set:1;
+         bool ioprio_set:1;
+         bool cpu_sched_set:1;
+-        bool timer_slack_nsec_set:1;
+ };
+ 
+ int exec_spawn(ExecCommand *command,
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 9efc859..d32aae9 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -47,7 +47,7 @@ $1.SyslogLevelPrefix,            config_parse_bool,                  0,
+ $1.Capabilities,                 config_parse_exec_capabilities,     0,                             offsetof($1, exec_context)
+ $1.SecureBits,                   config_parse_exec_secure_bits,      0,                             offsetof($1, exec_context)
+ $1.CapabilityBoundingSet,        config_parse_bounding_set,          0,                             offsetof($1, exec_context.capability_bounding_set_drop)
+-$1.TimerSlackNSec,               config_parse_exec_timer_slack_nsec, 0,                             offsetof($1, exec_context)
++$1.TimerSlackNSec,               config_parse_nsec,                  0,                             offsetof($1, exec_context.timer_slack_nsec)
+ $1.LimitCPU,                     config_parse_limit,                 RLIMIT_CPU,                    offsetof($1, exec_context.rlimit)
+ $1.LimitFSIZE,                   config_parse_limit,                 RLIMIT_FSIZE,                  offsetof($1, exec_context.rlimit)
+ $1.LimitDATA,                    config_parse_limit,                 RLIMIT_DATA,                   offsetof($1, exec_context.rlimit)
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index bb27d95..99f388e 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -991,34 +991,6 @@ int config_parse_bounding_set(
+         return 0;
+ }
+ 
+-int config_parse_exec_timer_slack_nsec(
+-                const char *filename,
+-                unsigned line,
+-                const char *section,
+-                const char *lvalue,
+-                int ltype,
+-                const char *rvalue,
+-                void *data,
+-                void *userdata) {
+-
+-        ExecContext *c = data;
+-        unsigned long u;
+-
+-        assert(filename);
+-        assert(lvalue);
+-        assert(rvalue);
+-        assert(data);
+-
+-        if (safe_atolu(rvalue, &u) < 0) {
+-                log_error("[%s:%u] Failed to parse time slack value, ignoring: %s", filename, line, rvalue);
+-                return 0;
+-        }
+-
+-        c->timer_slack_nsec = u;
+-
+-        return 0;
+-}
+-
+ int config_parse_limit(
+                 const char *filename,
+                 unsigned line,
+@@ -2442,7 +2414,6 @@ void unit_dump_config_items(FILE *f) {
+                 { config_parse_exec_capabilities,     "CAPABILITIES" },
+                 { config_parse_exec_secure_bits,      "SECUREBITS" },
+                 { config_parse_bounding_set,          "BOUNDINGSET" },
+-                { config_parse_exec_timer_slack_nsec, "TIMERSLACK" },
+                 { config_parse_limit,                 "LIMIT" },
+                 { config_parse_unit_cgroup,           "CGROUP [...]" },
+                 { config_parse_unit_deps,             "UNIT [...]" },
+@@ -2461,6 +2432,7 @@ void unit_dump_config_items(FILE *f) {
+                 { config_parse_socket_bind,           "SOCKETBIND" },
+                 { config_parse_socket_bindtodevice,   "NETWORKINTERFACE" },
+                 { config_parse_usec,                  "SECONDS" },
++                { config_parse_nsec,                  "NANOSECONDS" },
+                 { config_parse_path_strv,             "PATH [...]" },
+                 { config_parse_unit_requires_mounts_for, "PATH [...]" },
+                 { config_parse_exec_mount_flags,      "MOUNTFLAG [...]" },
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index 7d73eec..cd29948 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -57,7 +57,6 @@ int config_parse_exec_cpu_affinity(const char *filename, unsigned line, const ch
+ int config_parse_exec_capabilities(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec_secure_bits(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_bounding_set(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+-int config_parse_exec_timer_slack_nsec(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_limit(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_unit_cgroup(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_sysv_priority(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index d77cd2b..1b7e8d8 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -817,6 +817,31 @@ int config_parse_usec(
+         return 0;
+ }
+ 
++int config_parse_nsec(
++                const char *filename,
++                unsigned line,
++                const char *section,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++        nsec_t *nsec = data;
++
++        assert(filename);
++        assert(lvalue);
++        assert(rvalue);
++        assert(data);
++
++        if (parse_nsec(rvalue, nsec) < 0) {
++                log_error("[%s:%u] Failed to parse time value, ignoring: %s", filename, line, rvalue);
++                return 0;
++        }
++
++        return 0;
++}
++
+ int config_parse_mode(
+                 const char *filename,
+                 unsigned line,
+diff --git a/src/shared/conf-parser.h b/src/shared/conf-parser.h
+index be7d708..4656f8b 100644
+--- a/src/shared/conf-parser.h
++++ b/src/shared/conf-parser.h
+@@ -102,6 +102,7 @@ int config_parse_path(const char *filename, unsigned line, const char *section,
+ int config_parse_strv(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_path_strv(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_usec(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
++int config_parse_nsec(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_mode(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ 
+ #define DEFINE_CONFIG_PARSE_ENUM(function,name,type,msg)                \
+diff --git a/src/shared/util.c b/src/shared/util.c
+index ae2f0fe..b26298b 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -2707,7 +2707,7 @@ int parse_usec(const char *t, usec_t *usec) {
+                 { "m", USEC_PER_MINUTE },
+                 { "usec", 1ULL },
+                 { "us", 1ULL },
+-                { "", USEC_PER_SEC },
++                { "", USEC_PER_SEC }, /* default is sec */
+         };
+ 
+         const char *p;
+@@ -2753,6 +2753,71 @@ int parse_usec(const char *t, usec_t *usec) {
+         return 0;
+ }
+ 
++int parse_nsec(const char *t, nsec_t *nsec) {
++        static const struct {
++                const char *suffix;
++                nsec_t nsec;
++        } table[] = {
++                { "sec", NSEC_PER_SEC },
++                { "s", NSEC_PER_SEC },
++                { "min", NSEC_PER_MINUTE },
++                { "hr", NSEC_PER_HOUR },
++                { "h", NSEC_PER_HOUR },
++                { "d", NSEC_PER_DAY },
++                { "w", NSEC_PER_WEEK },
++                { "msec", NSEC_PER_MSEC },
++                { "ms", NSEC_PER_MSEC },
++                { "m", NSEC_PER_MINUTE },
++                { "usec", NSEC_PER_USEC },
++                { "us", NSEC_PER_USEC },
++                { "nsec", 1ULL },
++                { "ns", 1ULL },
++                { "", 1ULL }, /* default is nsec */
++        };
++
++        const char *p;
++        nsec_t r = 0;
++
++        assert(t);
++        assert(nsec);
++
++        p = t;
++        do {
++                long long l;
++                char *e;
++                unsigned i;
++
++                errno = 0;
++                l = strtoll(p, &e, 10);
++
++                if (errno != 0)
++                        return -errno;
++
++                if (l < 0)
++                        return -ERANGE;
++
++                if (e == p)
++                        return -EINVAL;
++
++                e += strspn(e, WHITESPACE);
++
++                for (i = 0; i < ELEMENTSOF(table); i++)
++                        if (startswith(e, table[i].suffix)) {
++                                r += (nsec_t) l * table[i].nsec;
++                                p = e + strlen(table[i].suffix);
++                                break;
++                        }
++
++                if (i >= ELEMENTSOF(table))
++                        return -EINVAL;
++
++        } while (*p != 0);
++
++        *nsec = r;
++
++        return 0;
++}
++
+ int parse_bytes(const char *t, off_t *bytes) {
+         static const struct {
+                 const char *suffix;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 38574d9..05a7f98 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -39,6 +39,7 @@
+ #include "macro.h"
+ 
+ typedef uint64_t usec_t;
++typedef unsigned long nsec_t;
+ 
+ typedef struct dual_timestamp {
+         usec_t realtime;
+@@ -53,11 +54,17 @@ typedef struct dual_timestamp {
+ #define NSEC_PER_USEC 1000ULL
+ 
+ #define USEC_PER_MINUTE (60ULL*USEC_PER_SEC)
++#define NSEC_PER_MINUTE (60ULL*NSEC_PER_SEC)
+ #define USEC_PER_HOUR (60ULL*USEC_PER_MINUTE)
++#define NSEC_PER_HOUR (60ULL*NSEC_PER_MINUTE)
+ #define USEC_PER_DAY (24ULL*USEC_PER_HOUR)
++#define NSEC_PER_DAY (24ULL*NSEC_PER_HOUR)
+ #define USEC_PER_WEEK (7ULL*USEC_PER_DAY)
++#define NSEC_PER_WEEK (7ULL*NSEC_PER_DAY)
+ #define USEC_PER_MONTH (2629800ULL*USEC_PER_SEC)
++#define NSEC_PER_MONTH (2629800ULL*NSEC_PER_SEC)
+ #define USEC_PER_YEAR (31557600ULL*USEC_PER_SEC)
++#define NSEC_PER_YEAR (31557600ULL*NSEC_PER_SEC)
+ 
+ /* What is interpreted as whitespace? */
+ #define WHITESPACE " \t\n\r"
+@@ -139,6 +146,7 @@ void close_many(const int fds[], unsigned n_fd);
+ 
+ int parse_boolean(const char *v);
+ int parse_usec(const char *t, usec_t *usec);
++int parse_nsec(const char *t, nsec_t *nsec);
+ int parse_bytes(const char *t, off_t *bytes);
+ int parse_pid(const char *s, pid_t* ret_pid);
+ int parse_uid(const char *s, uid_t* ret_uid);

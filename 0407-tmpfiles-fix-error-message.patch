@@ -1,0 +1,23 @@
+From f71700e61e36e2263d13fa1499dbe5211101aa1d Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 10 Jun 2012 19:31:39 +0200
+Subject: [PATCH] tmpfiles: fix error message (cherry picked from commit
+ 94f7a71442bda7c43191979ea13cc97112745ce4)
+
+---
+ src/tmpfiles/tmpfiles.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index 36da1fa..dd9f159 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -1321,7 +1321,7 @@ int main(int argc, char *argv[]) {
+ 
+                         fragment = resolve_fragment(argv[j], conf_file_dirs);
+                         if (!fragment) {
+-                                log_error("Failed to find any: %s file: %m", argv[j]);
++                                log_error("Failed to find a %s file: %m", argv[j]);
+                                 r = EXIT_FAILURE;
+                                 goto finish;
+                         }

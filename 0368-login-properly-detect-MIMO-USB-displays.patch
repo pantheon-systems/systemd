@@ -1,0 +1,137 @@
+From 9dc49a6397b2060ffe6cb9f3b1b3c46479e5ea2f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 01:19:11 +0200
+Subject: [PATCH] login: properly detect MIMO USB displays
+
+MIMO USB displays use a generic VID/PID for the hub component. With a
+bit of trickery we can detect them by the VID/PID of the graphics
+component.
+(cherry picked from commit d7e1c95e0a22eb1ada8ad53dab3af5fec2af1d0c)
+
+Conflicts:
+	Makefile.am
+	TODO
+	src/login/.gitignore
+	src/login/71-seat.rules
+---
+ Makefile.am                |    6 +++---
+ src/login/71-seat.rules    |   25 ------------------------
+ src/login/71-seat.rules.in |   46 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 49 insertions(+), 28 deletions(-)
+ delete mode 100644 src/login/71-seat.rules
+ create mode 100644 src/login/71-seat.rules.in
+
+diff --git a/Makefile.am b/Makefile.am
+index 9649ec5..86adad0 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2286,10 +2286,8 @@ rootlibexec_PROGRAMS += \
+ dist_udevrules_DATA += \
+ 	src/login/70-uaccess.rules
+ 
+-dist_udevrules_DATA += \
+-	src/login/71-seat.rules
+-
+ nodist_udevrules_DATA += \
++	src/login/71-seat.rules \
+ 	src/login/73-seat-late.rules
+ 
+ MANPAGES += \
+@@ -2346,12 +2344,14 @@ EXTRA_DIST += \
+ 	src/login/logind-gperf.gperf \
+ 	src/login/libsystemd-login.pc.in \
+ 	src/login/libsystemd-login.sym \
++	src/login/71-seat.rules.in \
+ 	src/login/73-seat-late.rules.in \
+ 	units/systemd-logind.service.in \
+ 	units/systemd-user-sessions.service.in
+ 
+ CLEANFILES += \
+ 	src/login/logind-gperf.c \
++	src/login/71-seat.rules \
+ 	src/login/73-seat-late.rules
+ endif
+ # ------------------------------------------------------------------------------
+diff --git a/src/login/71-seat.rules b/src/login/71-seat.rules
+deleted file mode 100644
+index 04ccac7..0000000
+--- a/src/login/71-seat.rules
++++ /dev/null
+@@ -1,25 +0,0 @@
+-#  This file is part of systemd.
+-#
+-#  systemd is free software; you can redistribute it and/or modify it
+-#  under the terms of the GNU General Public License as published by
+-#  the Free Software Foundation; either version 2 of the License, or
+-#  (at your option) any later version.
+-
+-ACTION=="remove", GOTO="seat_end"
+-
+-TAG=="uaccess", SUBSYSTEM!="sound", TAG+="seat"
+-SUBSYSTEM=="sound", KERNEL=="card*", TAG+="seat"
+-SUBSYSTEM=="input", KERNEL=="input*", TAG+="seat"
+-SUBSYSTEM=="graphics", KERNEL=="fb[0-9]*", TAG+="seat"
+-SUBSYSTEM=="usb", ATTR{bDeviceClass}=="09", TAG+="seat"
+-
+-# 'Plugable' USB hub, sound, network, graphics adapter
+-SUBSYSTEM=="usb", ATTR{idVendor}=="2230", ATTR{idProduct}=="000[13]", ENV{ID_AUTOSEAT}="1"
+-
+-# Mimo 720, with integrated USB hub, displaylink graphics, and e2i touchscreen
+-SUBSYSTEM=="usb", ATTR{idVendor}=="058f", ATTR{idProduct}=="6254", ENV{ID_AUTOSEAT}="1"
+-
+-TAG=="seat", ENV{ID_PATH}=="", IMPORT{program}="path_id %p"
+-TAG=="seat", ENV{ID_FOR_SEAT}=="", ENV{ID_PATH_TAG}!="", ENV{ID_FOR_SEAT}="$env{SUBSYSTEM}-$env{ID_PATH_TAG}"
+-
+-LABEL="seat_end"
+diff --git a/src/login/71-seat.rules.in b/src/login/71-seat.rules.in
+new file mode 100644
+index 0000000..03005b6
+--- /dev/null
++++ b/src/login/71-seat.rules.in
+@@ -0,0 +1,46 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++ACTION=="remove", GOTO="seat_end"
++
++TAG=="uaccess", SUBSYSTEM!="sound", TAG+="seat"
++SUBSYSTEM=="sound", KERNEL=="card*", TAG+="seat"
++SUBSYSTEM=="input", KERNEL=="input*", TAG+="seat"
++SUBSYSTEM=="graphics", KERNEL=="fb[0-9]*", TAG+="seat"
++SUBSYSTEM=="usb", ATTR{bDeviceClass}=="09", TAG+="seat"
++
++# 'Plugable' USB hub, sound, network, graphics adapter
++SUBSYSTEM=="usb", ATTR{idVendor}=="2230", ATTR{idProduct}=="000[13]", ENV{ID_AUTOSEAT}="1"
++
++# Mimo 720, with integrated USB hub, displaylink graphics, and e2i
++# touchscreen. This device carries no proper VID/PID in the USB hub,
++# but it does carry good ID data in the graphics component, hence we
++# check it from the parent. There's a bit of a race here however,
++# given that the child devices might not exist yet at the time this
++# rule is executed. To work around this we'll trigger the parent from
++# the child if we notice that the parent wasn't recognized yet.
++
++# Match parent
++SUBSYSTEM=="usb", ATTR{idVendor}=="058f", ATTR{idProduct}=="6254", \
++                  ATTR{%k.2/idVendor}=="17e9", ATTR{%k.2/idProduct}=="401a", ATTR{%k.2/product}=="mimo inc", \
++                  ENV{ID_AUTOSEAT}="1", ENV{ID_AVOID_LOOP}="1"
++
++# Match child, look for parent's ID_AVOID_LOOP
++SUBSYSTEM=="usb", ATTR{idVendor}=="17e9", ATTR{idProduct}=="401a", ATTR{product}=="mimo inc", \
++                  ATTR{../idVendor}=="058f", ATTR{../idProduct}=="6254", \
++                  IMPORT{parent}="ID_AVOID_LOOP"
++
++# Match child, retrigger parent
++SUBSYSTEM=="usb", ATTR{idVendor}=="17e9", ATTR{idProduct}=="401a", ATTR{product}=="mimo inc", \
++                  ATTR{../idVendor}=="058f", ATTR{../idProduct}=="6254", \
++                  ENV{ID_AVOID_LOOP}=="", \
++                  RUN+="@bindir@/udevadm trigger --parent-match=%p/.."
++
++TAG=="seat", ENV{ID_PATH}=="", IMPORT{builtin}="path_id"
++TAG=="seat", ENV{ID_FOR_SEAT}=="", ENV{ID_PATH_TAG}!="", ENV{ID_FOR_SEAT}="$env{SUBSYSTEM}-$env{ID_PATH_TAG}"
++
++LABEL="seat_end"

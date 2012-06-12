@@ -1,0 +1,28 @@
+From 9ccd4722cc74bacde76215a19de81cebf3276ea5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 30 May 2012 22:46:07 +0200
+Subject: [PATCH] journal: don't allow adding invalid matches to the context
+ (cherry picked from commit
+ d94117a93c0a8431de5c765f21a97f6eb32580da)
+
+---
+ src/journal/sd-journal.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 6ed1e25..e80c6cb 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -115,7 +115,11 @@ _public_ int sd_journal_add_match(sd_journal *j, const void *data, size_t size)
+                 return -EINVAL;
+         if (!data)
+                 return -EINVAL;
+-        if (size <= 0)
++        if (size <= 1)
++                return -EINVAL;
++        if (!memchr(data, '=', size))
++                return -EINVAL;
++        if (*(char*) data == '=')
+                 return -EINVAL;
+ 
+         /* FIXME: iterating with multiple matches is currently

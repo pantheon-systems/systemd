@@ -1,0 +1,24 @@
+From b046fd6b4c9d6bc3dab2d2c78b426080bd4bf56d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 31 May 2012 01:26:06 +0200
+Subject: [PATCH] journald: properly handle if we have no PID in a kmsg line
+ (cherry picked from commit
+ 96ceff5645faeaf02438d78996b8bdba4ebf05bb)
+
+---
+ src/journal/journald.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 7cfa5c8..490153c 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1827,7 +1827,7 @@ static void proc_kmsg_line(Server *s, const char *p) {
+ 
+                 /* Avoid any messages we generated ourselves via
+                  * log_info() and friends. */
+-                if (is_us(pid))
++                if (pid && is_us(pid))
+                         goto finish;
+ 
+                 if (s->forward_to_syslog)

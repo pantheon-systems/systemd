@@ -1,0 +1,25 @@
+From 99b3092dfd14db40a4b01ff40e257a6f6dde5f17 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 23 May 2012 12:49:49 +0200
+Subject: [PATCH] units: fix file syntax (cherry picked from commit
+ 659635ab22a2dc43e3ffec9b60cacc242fd02f52)
+
+---
+ units/systemd-readahead-collect.service.in |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/units/systemd-readahead-collect.service.in b/units/systemd-readahead-collect.service.in
+index 3cc11f1..0bc3954 100644
+--- a/units/systemd-readahead-collect.service.in
++++ b/units/systemd-readahead-collect.service.in
+@@ -11,8 +11,8 @@ DefaultDependencies=no
+ Wants=systemd-readahead-done.timer
+ Conflicts=shutdown.target
+ Before=sysinit.target shutdown.target
+-ConditionFileExists=!/run/systemd/readahead/cancel
+-ConditionFileExists=!/run/systemd/readahead/done
++ConditionPathExists=!/run/systemd/readahead/cancel
++ConditionPathExists=!/run/systemd/readahead/done
+ ConditionVirtualization=no
+ 
+ [Service]

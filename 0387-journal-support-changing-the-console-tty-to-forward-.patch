@@ -1,0 +1,109 @@
+From f87a841a18ac9b1ecd39490a6547ea9bed3cfe8c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 1 Jun 2012 01:06:10 +0200
+Subject: [PATCH] journal: support changing the console tty to forward to
+ (cherry picked from commit
+ 0d9243f022d244632b1ab26cfc8b46794b7fc5d6)
+
+Conflicts:
+	TODO
+---
+ man/systemd-journald.conf.xml     |   10 ++++++++++
+ src/journal/journald-gperf.gperf  |    1 +
+ src/journal/journald.c            |   10 +++++++---
+ src/journal/journald.h            |    2 ++
+ src/journal/systemd-journald.conf |    1 +
+ 5 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/man/systemd-journald.conf.xml b/man/systemd-journald.conf.xml
+index b8a5749..add7a7b 100644
+--- a/man/systemd-journald.conf.xml
++++ b/man/systemd-journald.conf.xml
+@@ -225,6 +225,16 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>TTYPath=</varname></term>
++
++                                <listitem><para>Change the console TTY
++                                to use if
++                                <varname>ForwardToConsole=yes</varname>
++                                is used. Defaults to
++                                <filename>/dev/console</filename>.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>ImportKernel=</varname></term>
+ 
+                                 <listitem><para>Controls whether
+diff --git a/src/journal/journald-gperf.gperf b/src/journal/journald-gperf.gperf
+index a56f6d9..9c778fc 100644
+--- a/src/journal/journald-gperf.gperf
++++ b/src/journal/journald-gperf.gperf
+@@ -29,3 +29,4 @@ Journal.ForwardToSyslog,    config_parse_bool,      0, offsetof(Server, forward_
+ Journal.ForwardToKMsg,      config_parse_bool,      0, offsetof(Server, forward_to_kmsg)
+ Journal.ForwardToConsole,   config_parse_bool,      0, offsetof(Server, forward_to_console)
+ Journal.ImportKernel,       config_parse_bool,      0, offsetof(Server, import_proc_kmsg)
++Journal.TTYPath,            config_parse_path,      0, offsetof(Server, tty_path)
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 4679300..2838d8b 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -965,6 +965,7 @@ static void forward_console(Server *s, const char *identifier, const char *messa
+         char header_pid[16];
+         int n = 0, fd;
+         char *ident_buf = NULL;
++        const char *tty;
+ 
+         assert(s);
+         assert(message);
+@@ -992,14 +993,16 @@ static void forward_console(Server *s, const char *identifier, const char *messa
+         IOVEC_SET_STRING(iovec[n++], message);
+         IOVEC_SET_STRING(iovec[n++], "\n");
+ 
+-        fd = open_terminal("/dev/console", O_WRONLY|O_NOCTTY|O_CLOEXEC);
++        tty = s->tty_path ? s->tty_path : "/dev/console";
++
++        fd = open_terminal(tty, O_WRONLY|O_NOCTTY|O_CLOEXEC);
+         if (fd < 0) {
+-                log_debug("Failed to open /dev/console for logging: %s", strerror(errno));
++                log_debug("Failed to open %s for logging: %s", tty, strerror(errno));
+                 goto finish;
+         }
+ 
+         if (writev(fd, iovec, n) < 0)
+-                log_debug("Failed to write to /dev/console for logging: %s", strerror(errno));
++                log_debug("Failed to write to %s for logging: %s", tty, strerror(errno));
+ 
+         close_nointr_nofail(fd);
+ 
+@@ -2782,6 +2785,7 @@ static void server_done(Server *s) {
+                 journal_rate_limit_free(s->rate_limit);
+ 
+         free(s->buffer);
++        free(s->tty_path);
+ }
+ 
+ int main(int argc, char *argv[]) {
+diff --git a/src/journal/journald.h b/src/journal/journald.h
+index 7840fd5..6a2c4a9 100644
+--- a/src/journal/journald.h
++++ b/src/journal/journald.h
+@@ -79,6 +79,8 @@ typedef struct Server {
+ 
+         LIST_HEAD(StdoutStream, stdout_streams);
+         unsigned n_stdout_streams;
++
++        char *tty_path;
+ } Server;
+ 
+ /* gperf lookup function */
+diff --git a/src/journal/systemd-journald.conf b/src/journal/systemd-journald.conf
+index 710b0aa..4d5f8fb 100644
+--- a/src/journal/systemd-journald.conf
++++ b/src/journal/systemd-journald.conf
+@@ -23,3 +23,4 @@
+ #ForwardToKMsg=no
+ #ForwardToConsole=no
+ #ImportKernel=yes
++#TTYPath=/dev/console

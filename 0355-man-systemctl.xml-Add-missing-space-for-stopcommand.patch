@@ -1,0 +1,27 @@
+From 567c81e6bb183ea603600b43c89370e3154f07a0 Mon Sep 17 00:00:00 2001
+From: Paul Menzel <paulepanter@users.sourceforge.net>
+Date: Thu, 24 May 2012 22:20:39 +0200
+Subject: [PATCH] =?UTF-8?q?man/systemctl.xml:=20Add=20missing=20space=20for=20?=
+ =?UTF-8?q?=C2=BBstopcommand=C2=AB=20(cherry=20picked=20from=20commit=206a28?=
+ =?UTF-8?q?57e6896c58dea94ec8c7b25f262b44849bc3)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ man/systemctl.xml |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index c7eb91c..7ae5add 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -755,7 +755,7 @@
+                                 command does not implicitly stop the
+                                 units that is being disabled. If this
+                                 is desired an additional
+-                                <command>stop</command>command should
++                                <command>stop</command> command should
+                                 be executed afterwards.</para>
+ 
+                                 <para>This command will print the

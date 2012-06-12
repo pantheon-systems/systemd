@@ -1,0 +1,40 @@
+From b20704db01f0a290f4c04c3421111ab58288d2f9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 30 May 2012 15:04:39 +0200
+Subject: [PATCH] sleep: print nice messages right before and right after
+ system hibernate/sleep (cherry picked from commit
+ eb2672893108e14d50bd79b7fc714b75c5427c0b)
+
+Conflicts:
+	TODO
+---
+ src/sleep/sleep.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/sleep/sleep.c b/src/sleep/sleep.c
+index 7062dc2..941edc3 100644
+--- a/src/sleep/sleep.c
++++ b/src/sleep/sleep.c
+@@ -65,12 +65,22 @@ int main(int argc, char *argv[]) {
+         arguments[3] = NULL;
+         execute_directory(SYSTEMD_SLEEP_BINARY_PATH, NULL, arguments);
+ 
++        if (streq(argv[1], "suspend"))
++                log_info("Suspending system...");
++        else
++                log_info("Hibernating system...");
++
+         fputs(verb, f);
+         fputc('\n', f);
+         fflush(f);
+ 
+         r = ferror(f) ? -errno : 0;
+ 
++        if (streq(argv[1], "suspend"))
++                log_info("System resumed.");
++        else
++                log_info("System thawed.");
++
+         arguments[1] = (char*) "post";
+         execute_directory(SYSTEMD_SLEEP_BINARY_PATH, NULL, arguments);
+ 

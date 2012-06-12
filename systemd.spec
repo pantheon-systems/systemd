@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        12%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        13%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -398,6 +398,79 @@ Patch0335:      0335-service-actually-delay-auto-restart-if-another-job-i.patch
 Patch0336:      0336-service-fix-auto-restart-handling-in-service_stop.patch
 Patch0337:      0337-service-fix-auto-restart-handling-in-service_start.patch
 Patch0338:      0338-mount-use-the-same-fstab-extension-option-syntax-eve.patch
+Patch0339:      0339-main-properly-queue-default.target-after-switched-ro.patch
+Patch0340:      0340-journal-crash-when-filesystem-is-low-on-space.patch
+Patch0341:      0341-util-make-sure-to-fstatat-at-most-once-in-rm_rf_chil.patch
+Patch0342:      0342-switch-root-do-not-use-close-old_root_fd-after-rm_rf.patch
+Patch0343:      0343-logind-fix-write-out-of-user-state-file.patch
+Patch0344:      0344-main-only-fall-back-to-bin-sh-in-case-sbin-init-does.patch
+Patch0345:      0345-execute-use-a-much-lower-idle-timeout-that-default-t.patch
+Patch0346:      0346-journal-log-journal-internal-messages-to-kmsg.patch
+Patch0347:      0347-log-make-sure-generators-never-log-into-the-journal-.patch
+Patch0348:      0348-readahead-avoid-activating-the-journal-by-accident-l.patch
+Patch0349:      0349-readahead-avoid-running-of-readahead-services-if-rea.patch
+Patch0350:      0350-man-properly-document-FsckPassNo-for-mount-units.patch
+Patch0351:      0351-journal-don-t-complain-if-SELinux-userspace-is-avail.patch
+Patch0352:      0352-units-fix-file-syntax.patch
+Patch0353:      0353-service-for-Type-idle-units-consider-START_PRE-START.patch
+Patch0354:      0354-main-add-configuration-option-to-alter-capability-bo.patch
+Patch0355:      0355-man-systemctl.xml-Add-missing-space-for-stopcommand.patch
+Patch0356:      0356-bash-Reflect-new-name-of-loginctl-in-bash-completion.patch
+Patch0357:      0357-cgtop-work-even-if-not-all-cgroups-are-available.patch
+Patch0358:      0358-capabilities-when-dropping-capabilities-system-wide-.patch
+Patch0359:      0359-sleep-print-nice-messages-right-before-and-right-aft.patch
+Patch0360:      0360-journald-ignore-messages-read-from-proc-kmsg-that-we.patch
+Patch0361:      0361-build-sys-fix-built-with-disable-logind.patch
+Patch0362:      0362-journalctl-for-now-complain-if-more-than-one-match-i.patch
+Patch0363:      0363-journalctl-support-usr-bin-nginx-etc.patch
+Patch0364:      0364-journalctl-check-first-if-match-is-a-path-name.patch
+Patch0365:      0365-journal-don-t-allow-adding-invalid-matches-to-the-co.patch
+Patch0366:      0366-shutdown-Don-t-skip-bind-mounts-on-shutdown.patch
+Patch0367:      0367-selinux-downgrade-database-load-time-message-to-LOG_.patch
+Patch0368:      0368-login-properly-detect-MIMO-USB-displays.patch
+Patch0369:      0369-journald-properly-handle-if-we-have-no-PID-in-a-kmsg.patch
+Patch0370:      0370-systemctl-introduce-systemctl-man-to-show-man-page-f.patch
+Patch0371:      0371-util-introduce-a-proper-nsec_t-and-make-use-of-it-wh.patch
+Patch0372:      0372-main-allow-setting-of-timer-slack-for-PID-1.patch
+Patch0373:      0373-util-don-t-require-libcap-when-building-libsystemd-s.patch
+Patch0374:      0374-mkdir-append-_label-to-all-mkdir-calls-that-explicit.patch
+Patch0375:      0375-mkdir-provide-all-functions-with-and-without-selinux.patch
+Patch0376:      0376-units-add-Documentation-field-to-console-getty.servi.patch
+Patch0377:      0377-man-add-documentation-for-the-binfmt-modules-load-sy.patch
+Patch0378:      0378-main-Silence-gcc-warning.patch
+Patch0379:      0379-logind-properly-clean-up-user-cgroups-when-they-run-.patch
+Patch0380:      0380-logind-add-new-user-state-closing.patch
+Patch0381:      0381-build-sys-split-off-D-Bus-requires-from-selinux-conv.patch
+Patch0382:      0382-sleep-Don-t-call-execute_directory-on-a-binary.patch
+Patch0383:      0383-logind-interpret-the-can_sleep-return-value-properly.patch
+Patch0384:      0384-logind-fix-indentation.patch
+Patch0385:      0385-man-write-man-page-for-systemd-logind.patch
+Patch0386:      0386-man-document-systemd-journal.patch
+Patch0387:      0387-journal-support-changing-the-console-tty-to-forward-.patch
+Patch0388:      0388-journal-allow-setting-of-a-cutoff-log-level-for-disk.patch
+Patch0389:      0389-units-fix-man-section.patch
+Patch0390:      0390-fix-typo.patch
+Patch0391:      0391-missing-define-MS_STRICTATIME-if-not-defined-already.patch
+Patch0392:      0392-systemd-detect-virt-fix-option-quiet-requires-an-arg.patch
+Patch0393:      0393-logind-punt-duplicate-definition-of-InhibitWhat.patch
+Patch0394:      0394-unit-name-never-create-a-unit-name-with-a-leading.patch
+Patch0395:      0395-remove-support-for-deprecated-proc-self-oom_adj.patch
+Patch0396:      0396-systemctl-rename-man-to-help.patch
+Patch0397:      0397-silence-gcc-warning-on-32-bit.patch
+Patch0398:      0398-readahead-Add-tool-to-analyze-the-contents-of-the-pa.patch
+Patch0399:      0399-Revert-F17-units-do-not-use-Type-idle-yet.patch
+Patch0400:      0400-units-avoid-redundant-VT-clearing-by-agetty.patch
+Patch0401:      0401-units-add-systemd-debug-shell.service.patch
+Patch0402:      0402-systemd-debug-shell-add-to-POTFILES.skip.patch
+Patch0403:      0403-man-systemd-tmpfiles-document-proper-config-file-sta.patch
+Patch0404:      0404-man-replace-tabs-with-spaces.patch
+Patch0405:      0405-tmpfiles-allow-to-specify-basename-only-systemd-tmpf.patch
+Patch0406:      0406-tmpfiles-print-error-if-basename-lookup-fails-docume.patch
+Patch0407:      0407-tmpfiles-fix-error-message.patch
+Patch0408:      0408-logind-fix-check-for-multiple-sessions.patch
+Patch0409:      0409-journal-file-fix-mmap-leak.patch
+Patch0410:      0410-man-fix-sysytemd-typos.patch
+Patch0411:      0411-F17-fix-manpage-name-typo.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -694,6 +767,7 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-delta
 %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
+%{_bindir}/systemd-readahead-analyze
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
 %{_prefix}/lib/systemd/systemd-*
@@ -774,6 +848,15 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Jun 13 2012 Michal Schmidt <mschmidt@redhat.com> - 44-13
+- Patches from upstream
+- Fixes to journald, logind, tmpfiles
+- Documentation improvements, systemctl help
+- New config options for systemd, journal
+- Add systemd-readahead-analyze, systemd-debug-shell.service
+- Start using Type=idle
+- Fixes: #828007, #814424, #831132, #791098, #823815, fdo#50402, fdo#50671
+
 * Tue May 22 2012 Michal Schmidt <mschmidt@redhat.com> - 44-12
 - Fixes for auto-restart (#817968, fdo#45511)
 

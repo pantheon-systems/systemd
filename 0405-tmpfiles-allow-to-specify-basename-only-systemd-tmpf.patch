@@ -1,0 +1,94 @@
+From 3039988e1657bb5984abdab6c820f37cfb643aa2 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Fri, 8 Jun 2012 22:31:19 -0400
+Subject: [PATCH] tmpfiles: allow to specify basename only: systemd-tmpfiles
+ <program.conf>
+
+Allow passing of basename only, instead of the absolute path; letting
+systemd-tmpfiles perform a path lookup for the proper fragment path in
+the config directories.
+
+This allows distributions to call: systemd-tmpfiles <program.conf> on
+upgrade of a package, with respecting the possibly overriden (or even
+masked) tmpfile.
+(cherry picked from commit 9125670f9a3dc34adf16b87635b460b2e4099b78)
+---
+ src/tmpfiles/tmpfiles.c |   46 ++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 38 insertions(+), 8 deletions(-)
+
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index be45c71..6f54962 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -100,6 +100,14 @@ static bool arg_remove = false;
+ 
+ static const char *arg_prefix = NULL;
+ 
++static const char *conf_file_dirs[] = {
++        "/etc/tmpfiles.d",
++        "/run/tmpfiles.d",
++        "/usr/local/lib/tmpfiles.d",
++        "/usr/lib/tmpfiles.d",
++        NULL
++};
++
+ #define MAX_DEPTH 256
+ 
+ static bool needs_glob(ItemType t) {
+@@ -1253,6 +1261,29 @@ static int read_config_file(const char *fn, bool ignore_enoent) {
+         return r;
+ }
+ 
++static char *resolve_fragment(const char *fragment, const char **search_paths) {
++        const char **p;
++        char *resolved_path;
++
++        if (is_path(fragment))
++                return strdup(fragment);
++
++        STRV_FOREACH(p, search_paths) {
++                resolved_path = join(*p, "/", fragment, NULL);
++                if (resolved_path == NULL) {
++                        log_error("Out of memory");
++                        return NULL;
++                }
++
++                if (access(resolved_path, F_OK) == 0)
++                        return resolved_path;
++
++                free(resolved_path);
++        }
++
++        return NULL;
++}
++
+ int main(int argc, char *argv[]) {
+         int r;
+         Item *i;
+@@ -1284,19 +1315,18 @@ int main(int argc, char *argv[]) {
+         if (optind < argc) {
+                 int j;
+ 
+-                for (j = optind; j < argc; j++)
+-                        if (read_config_file(argv[j], false) < 0)
++                for (j = optind; j < argc; j++) {
++                        char *fragment = resolve_fragment(argv[j], conf_file_dirs);
++                        if (read_config_file(fragment, false) < 0)
+                                 r = EXIT_FAILURE;
++                        free(fragment);
++                }
+ 
+         } else {
+                 char **files, **f;
+ 
+-                r = conf_files_list(&files, ".conf",
+-                                    "/etc/tmpfiles.d",
+-                                    "/run/tmpfiles.d",
+-                                    "/usr/local/lib/tmpfiles.d",
+-                                    "/usr/lib/tmpfiles.d",
+-                                    NULL);
++                r = conf_files_list_strv(&files, ".conf",
++                                    (const char **)conf_file_dirs);
+                 if (r < 0) {
+                         log_error("Failed to enumerate tmpfiles.d files: %s", strerror(-r));
+                         r = EXIT_FAILURE;

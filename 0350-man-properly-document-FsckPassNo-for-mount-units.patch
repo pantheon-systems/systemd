@@ -1,0 +1,77 @@
+From 3afdec135ae68ea6249580f34f60fa040ada5910 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 23 May 2012 04:11:29 +0200
+Subject: [PATCH] man: properly document FsckPassNo= for mount units (cherry
+ picked from commit
+ 66b1a24790ccc3c60509e6f94890ed8c20a2fe9e)
+
+---
+ man/systemd.mount.xml                 |   13 +++++++++++++
+ man/systemd.service.xml               |    9 ---------
+ src/core/load-fragment-gperf.gperf.m4 |    2 +-
+ 3 files changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
+index a4e01fd..78cd652 100644
+--- a/man/systemd.mount.xml
++++ b/man/systemd.mount.xml
+@@ -257,6 +257,18 @@
+                                 value. Defaults to "yes".
+                                 </para></listitem>
+                         </varlistentry>
++
++                        <varlistentry>
++                                <term><varname>FsckPassNo=</varname></term>
++
++                                <listitem><para>The pass number for
++                                the file system checking service for
++                                this mount. See
++                                <citerefentry><refentrytitle>systemd.service</refentrytitle><manvolnum>5</manvolnum></citerefentry>
++                                for more information on this setting.
++                                </para></listitem>
++                        </varlistentry>
++
+                 </variablelist>
+         </refsect1>
+ 
+@@ -267,6 +279,7 @@
+                           <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.unit</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>systemd.service</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd.device</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+                   </para>
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 430971f..9a80dd7 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -824,15 +824,6 @@
+                                 <option>none</option>.</para></listitem>
+                         </varlistentry>
+ 
+-                        <varlistentry>
+-                                <term><varname>FsckPassNo=</varname></term>
+-
+-                                <listitem><para>If this is an file
+-                                system checking service specify the
+-                                pass number. This should not be used
+-                                for normal services.</para></listitem>
+-                        </varlistentry>
+-
+                 </variablelist>
+         </refsect1>
+ 
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 681f2e9..9c4a930 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -200,7 +200,7 @@ Mount.What,                      config_parse_string,                0,
+ Mount.Where,                     config_parse_path,                  0,                             offsetof(Mount, where)
+ Mount.Options,                   config_parse_string,                0,                             offsetof(Mount, parameters_fragment.options)
+ Mount.Type,                      config_parse_string,                0,                             offsetof(Mount, parameters_fragment.fstype)
+-Mount.FsckPassNo,                config_parse_int,                   0,                             offsetof(Mount, parameters_fragment.passno)
++Mount.FsckPassNo,                config_parse_fsck_passno,           0,                             offsetof(Mount, parameters_fragment.passno)
+ Mount.TimeoutSec,                config_parse_usec,                  0,                             offsetof(Mount, timeout_usec)
+ Mount.DirectoryMode,             config_parse_mode,                  0,                             offsetof(Mount, directory_mode)
+ EXEC_CONTEXT_CONFIG_ITEMS(Mount)m4_dnl

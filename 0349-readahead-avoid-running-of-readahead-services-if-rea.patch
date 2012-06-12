@@ -1,0 +1,52 @@
+From 49fe9ef9af86c84096976dcc75ad484abdee7814 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 23 May 2012 03:51:25 +0200
+Subject: [PATCH] readahead: avoid running of readahead services if readahead
+ is already done (cherry picked from commit
+ 08231e5142bff7ace79957835656672ac100031b)
+
+---
+ src/readahead/sd-readahead.c               |    3 ++-
+ units/systemd-readahead-collect.service.in |    2 ++
+ units/systemd-readahead-replay.service.in  |    1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/readahead/sd-readahead.c b/src/readahead/sd-readahead.c
+index a334066..d48cd76 100644
+--- a/src/readahead/sd-readahead.c
++++ b/src/readahead/sd-readahead.c
+@@ -57,7 +57,8 @@ static int touch(const char *path) {
+         mkdir("/run/systemd", 0755);
+         mkdir("/run/systemd/readahead", 0755);
+ 
+-        if ((fd = open(path, O_WRONLY|O_CREAT|O_CLOEXEC|O_NOCTTY, 0666)) < 0)
++        fd = open(path, O_WRONLY|O_CREAT|O_CLOEXEC|O_NOCTTY, 0666);
++        if (fd < 0)
+                 return -errno;
+ 
+         for (;;) {
+diff --git a/units/systemd-readahead-collect.service.in b/units/systemd-readahead-collect.service.in
+index ceef448..3cc11f1 100644
+--- a/units/systemd-readahead-collect.service.in
++++ b/units/systemd-readahead-collect.service.in
+@@ -11,6 +11,8 @@ DefaultDependencies=no
+ Wants=systemd-readahead-done.timer
+ Conflicts=shutdown.target
+ Before=sysinit.target shutdown.target
++ConditionFileExists=!/run/systemd/readahead/cancel
++ConditionFileExists=!/run/systemd/readahead/done
+ ConditionVirtualization=no
+ 
+ [Service]
+diff --git a/units/systemd-readahead-replay.service.in b/units/systemd-readahead-replay.service.in
+index f1e034b..bd91a61 100644
+--- a/units/systemd-readahead-replay.service.in
++++ b/units/systemd-readahead-replay.service.in
+@@ -10,6 +10,7 @@ Description=Replay Read-Ahead Data
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+ Before=sysinit.target shutdown.target
++ConditionPathExists=!/run/systemd/readahead/noreplay
+ ConditionPathExists=/.readahead
+ ConditionVirtualization=no
+ 

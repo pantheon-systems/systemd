@@ -1,0 +1,603 @@
+From 66b063007f58ac63b4f872fe1135cf56b0367051 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 31 May 2012 12:40:20 +0200
+Subject: [PATCH] mkdir: append _label to all mkdir() calls that explicitly
+ set the selinux context (cherry picked from commit
+ d2e54fae5ca7a0f71b5ac8b356a589ff0a09ea0a)
+
+Conflicts:
+	src/core/manager.c
+	src/fstab-generator/fstab-generator.c
+	src/libudev/libudev-device-private.c
+	src/test/test-udev.c
+	src/udev/udev-builtin-firmware.c
+	src/udev/udev-node.c
+	src/udev/udev-watch.c
+	src/udev/udevd.c
+---
+ src/core/automount.c                                |    4 ++--
+ src/core/dbus.c                                     |    2 +-
+ src/core/mount-setup.c                              |    6 +++---
+ src/core/mount.c                                    |    4 ++--
+ src/core/path.c                                     |    2 +-
+ src/core/shutdown.c                                 |    2 +-
+ src/core/socket.c                                   |    2 +-
+ src/cryptsetup/cryptsetup-generator.c               |    6 +++---
+ src/getty-generator/getty-generator.c               |    2 +-
+ src/journal/coredump.c                              |    2 +-
+ src/journal/journald.c                              |    2 +-
+ src/locale/localed.c                                |    2 +-
+ src/login/logind-dbus.c                             |    6 +++---
+ src/login/logind-inhibit.c                          |    4 ++--
+ src/login/logind-seat.c                             |    2 +-
+ src/login/logind-session.c                          |    4 ++--
+ src/login/logind-user.c                             |    6 +++---
+ src/login/multi-seat-x.c                            |    2 +-
+ src/nspawn/nspawn.c                                 |   10 +++++-----
+ src/random-seed/random-seed.c                       |    2 +-
+ src/rc-local-generator/rc-local-generator.c         |    2 +-
+ src/shared/ask-password-api.c                       |    2 +-
+ src/shared/cgroup-label.c                           |    2 +-
+ src/shared/install.c                                |    2 +-
+ src/shared/mkdir.c                                  |   12 ++++++++----
+ src/shared/mkdir.h                                  |    7 ++++---
+ src/shared/path-lookup.c                            |    2 +-
+ src/shared/socket-label.c                           |    2 +-
+ src/shutdownd/shutdownd.c                           |    2 +-
+ src/tmpfiles/tmpfiles.c                             |    2 +-
+ src/tty-ask-password-agent/tty-ask-password-agent.c |    4 ++--
+ 31 files changed, 58 insertions(+), 53 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index 398b484..be4e657 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -501,7 +501,7 @@ static void automount_enter_waiting(Automount *a) {
+         }
+ 
+         /* We knowingly ignore the results of this call */
+-        mkdir_p(a->where, 0555);
++        mkdir_p_label(a->where, 0555);
+ 
+         if (pipe2(p, O_NONBLOCK|O_CLOEXEC) < 0) {
+                 r = -errno;
+@@ -590,7 +590,7 @@ static void automount_enter_runnning(Automount *a) {
+                 return;
+         }
+ 
+-        mkdir_p(a->where, a->directory_mode);
++        mkdir_p_label(a->where, a->directory_mode);
+ 
+         /* Before we do anything, let's see if somebody is playing games with us? */
+         if (lstat(a->where, &st) < 0) {
+diff --git a/src/core/dbus.c b/src/core/dbus.c
+index 1cf93c5..d67a89c 100644
+--- a/src/core/dbus.c
++++ b/src/core/dbus.c
+@@ -1095,7 +1095,7 @@ static int bus_init_private(Manager *m) {
+                         goto fail;
+                 }
+ 
+-                mkdir_parents(p+10, 0755);
++                mkdir_parents_label(p+10, 0755);
+                 unlink(p+10);
+                 m->private_bus = dbus_server_listen(p, &error);
+                 free(p);
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index 3682547..d4f81cc 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -130,7 +130,7 @@ static int mount_one(const MountPoint *p, bool relabel) {
+ 
+         /* The access mode here doesn't really matter too much, since
+          * the mounted file system will take precedence anyway. */
+-        mkdir_p(p->where, 0755);
++        mkdir_p_label(p->where, 0755);
+ 
+         log_debug("Mounting %s to %s of type %s with options %s.",
+                   p->what,
+@@ -404,8 +404,8 @@ int mount_setup(bool loaded_policy) {
+         dev_setup();
+ 
+         /* Create a few directories we always want around */
+-        label_mkdir("/run/systemd", 0755);
+-        label_mkdir("/run/systemd/system", 0755);
++        mkdir_label("/run/systemd", 0755);
++        mkdir_label("/run/systemd/system", 0755);
+ 
+         return 0;
+ }
+diff --git a/src/core/mount.c b/src/core/mount.c
+index ffe1b2c..dcb6c5a 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -974,12 +974,12 @@ static void mount_enter_mounting(Mount *m) {
+         m->control_command_id = MOUNT_EXEC_MOUNT;
+         m->control_command = m->exec_command + MOUNT_EXEC_MOUNT;
+ 
+-        mkdir_p(m->where, m->directory_mode);
++        mkdir_p_label(m->where, m->directory_mode);
+ 
+         /* Create the source directory for bind-mounts if needed */
+         p = get_mount_parameters_configured(m);
+         if (p && mount_is_bind(p))
+-                mkdir_p(p->what, m->directory_mode);
++                mkdir_p_label(p->what, m->directory_mode);
+ 
+         if (m->from_fragment)
+                 r = exec_command_set(
+diff --git a/src/core/path.c b/src/core/path.c
+index 9155fee..e183a15 100644
+--- a/src/core/path.c
++++ b/src/core/path.c
+@@ -215,7 +215,7 @@ static void path_spec_mkdir(PathSpec *s, mode_t mode) {
+         if (s->type == PATH_EXISTS || s->type == PATH_EXISTS_GLOB)
+                 return;
+ 
+-        if ((r = mkdir_p(s->path, mode)) < 0)
++        if ((r = mkdir_p_label(s->path, mode)) < 0)
+                 log_warning("mkdir(%s) failed: %s", s->path, strerror(-r));
+ }
+ 
+diff --git a/src/core/shutdown.c b/src/core/shutdown.c
+index b4e1b69..4a2f309 100644
+--- a/src/core/shutdown.c
++++ b/src/core/shutdown.c
+@@ -238,7 +238,7 @@ static int prepare_new_root(void) {
+         }
+ 
+         NULSTR_FOREACH(dir, dirs)
+-                if (mkdir_p(dir, 0755) < 0 && errno != EEXIST) {
++                if (mkdir_p_label(dir, 0755) < 0 && errno != EEXIST) {
+                         log_error("Failed to mkdir %s: %m", dir);
+                         return -errno;
+                 }
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 5098391..eab2243 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -761,7 +761,7 @@ static int fifo_address_create(
+         assert(path);
+         assert(_fd);
+ 
+-        mkdir_parents(path, directory_mode);
++        mkdir_parents_label(path, directory_mode);
+ 
+         r = label_context_set(path, S_IFIFO);
+         if (r < 0)
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index 2e43f5e..e3e9a99 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -175,7 +175,7 @@ static int create_disk(
+                         goto fail;
+                 }
+ 
+-                mkdir_parents(to, 0755);
++                mkdir_parents_label(to, 0755);
+                 if (symlink(from, to) < 0) {
+                         log_error("Failed to create symlink '%s' to '%s': %m", from, to);
+                         r = -errno;
+@@ -193,7 +193,7 @@ static int create_disk(
+                         goto fail;
+                 }
+ 
+-                mkdir_parents(to, 0755);
++                mkdir_parents_label(to, 0755);
+                 if (symlink(from, to) < 0) {
+                         log_error("Failed to create symlink '%s' to '%s': %m", from, to);
+                         r = -errno;
+@@ -211,7 +211,7 @@ static int create_disk(
+                 goto fail;
+         }
+ 
+-        mkdir_parents(to, 0755);
++        mkdir_parents_label(to, 0755);
+         if (symlink(from, to) < 0) {
+                 log_error("Failed to create symlink '%s' to '%s': %m", from, to);
+                 r = -errno;
+diff --git a/src/getty-generator/getty-generator.c b/src/getty-generator/getty-generator.c
+index 6a27213..66b58a3 100644
+--- a/src/getty-generator/getty-generator.c
++++ b/src/getty-generator/getty-generator.c
+@@ -47,7 +47,7 @@ static int add_symlink(const char *fservice, const char *tservice) {
+                 goto finish;
+         }
+ 
+-        mkdir_parents(to, 0755);
++        mkdir_parents_label(to, 0755);
+ 
+         r = symlink(from, to);
+         if (r < 0) {
+diff --git a/src/journal/coredump.c b/src/journal/coredump.c
+index 069c340..53c5915 100644
+--- a/src/journal/coredump.c
++++ b/src/journal/coredump.c
+@@ -54,7 +54,7 @@ static int divert_coredump(void) {
+ 
+         log_info("Detected coredump of the journal daemon itself, diverting coredump to /var/lib/systemd/coredump/.");
+ 
+-        mkdir_p("/var/lib/systemd/coredump", 0755);
++        mkdir_p_label("/var/lib/systemd/coredump", 0755);
+ 
+         f = fopen("/var/lib/systemd/coredump/core.systemd-journald", "we");
+         if (!f) {
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 490153c..4679300 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1973,7 +1973,7 @@ static int system_journal_open(Server *s) {
+                         /* OK, we really need the runtime journal, so create
+                          * it if necessary. */
+ 
+-                        (void) mkdir_parents(fn, 0755);
++                        (void) mkdir_parents_label(fn, 0755);
+                         r = journal_file_open_reliably(fn, O_RDWR|O_CREAT, 0640, NULL, &s->runtime_journal);
+                         free(fn);
+ 
+diff --git a/src/locale/localed.c b/src/locale/localed.c
+index e6aaa5c..da46106 100644
+--- a/src/locale/localed.c
++++ b/src/locale/localed.c
+@@ -591,7 +591,7 @@ static int write_data_x11(void) {
+                 return 0;
+         }
+ 
+-        mkdir_parents("/etc/X11/xorg.conf.d", 0755);
++        mkdir_parents_label("/etc/X11/xorg.conf.d", 0755);
+ 
+         r = fopen_temporary("/etc/X11/xorg.conf.d/00-keyboard.conf", &f, &temp_path);
+         if (r < 0)
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 9b32464..61c4b30 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -868,7 +868,7 @@ static int attach_device(Manager *m, const char *seat, const char *sysfs) {
+                 goto finish;
+         }
+ 
+-        mkdir_p("/etc/udev/rules.d", 0755);
++        mkdir_p_label("/etc/udev/rules.d", 0755);
+         r = write_one_line_file_atomic(file, rule);
+         if (r < 0)
+                 goto finish;
+@@ -1834,9 +1834,9 @@ static DBusHandlerResult manager_message_handler(
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+-                mkdir_p("/var/lib/systemd", 0755);
++                mkdir_p_label("/var/lib/systemd", 0755);
+ 
+-                r = safe_mkdir("/var/lib/systemd/linger", 0755, 0, 0);
++                r = mkdir_safe_label("/var/lib/systemd/linger", 0755, 0, 0);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, &error, r);
+ 
+diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
+index 512fc07..721b38d 100644
+--- a/src/login/logind-inhibit.c
++++ b/src/login/logind-inhibit.c
+@@ -84,7 +84,7 @@ int inhibitor_save(Inhibitor *i) {
+ 
+         assert(i);
+ 
+-        r = safe_mkdir("/run/systemd/inhibit", 0755, 0, 0);
++        r = mkdir_safe_label("/run/systemd/inhibit", 0755, 0, 0);
+         if (r < 0)
+                 goto finish;
+ 
+@@ -272,7 +272,7 @@ int inhibitor_create_fifo(Inhibitor *i) {
+ 
+         /* Create FIFO */
+         if (!i->fifo_path) {
+-                r = safe_mkdir("/run/systemd/inhibit", 0755, 0, 0);
++                r = mkdir_safe_label("/run/systemd/inhibit", 0755, 0, 0);
+                 if (r < 0)
+                         return r;
+ 
+diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
+index b0dd5f9..2a4786c 100644
+--- a/src/login/logind-seat.c
++++ b/src/login/logind-seat.c
+@@ -91,7 +91,7 @@ int seat_save(Seat *s) {
+         if (!s->started)
+                 return 0;
+ 
+-        r = safe_mkdir("/run/systemd/seats", 0755, 0, 0);
++        r = mkdir_safe_label("/run/systemd/seats", 0755, 0, 0);
+         if (r < 0)
+                 goto finish;
+ 
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 60b5965..9bab7e8 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -116,7 +116,7 @@ int session_save(Session *s) {
+         if (!s->started)
+                 return 0;
+ 
+-        r = safe_mkdir("/run/systemd/sessions", 0755, 0, 0);
++        r = mkdir_safe_label("/run/systemd/sessions", 0755, 0, 0);
+         if (r < 0)
+                 goto finish;
+ 
+@@ -816,7 +816,7 @@ int session_create_fifo(Session *s) {
+ 
+         /* Create FIFO */
+         if (!s->fifo_path) {
+-                r = safe_mkdir("/run/systemd/sessions", 0755, 0, 0);
++                r = mkdir_safe_label("/run/systemd/sessions", 0755, 0, 0);
+                 if (r < 0)
+                         return r;
+ 
+diff --git a/src/login/logind-user.c b/src/login/logind-user.c
+index 741f0e4..39e8f9f 100644
+--- a/src/login/logind-user.c
++++ b/src/login/logind-user.c
+@@ -98,7 +98,7 @@ int user_save(User *u) {
+         if (!u->started)
+                 return 0;
+ 
+-        r = safe_mkdir("/run/systemd/users", 0755, 0, 0);
++        r = mkdir_safe_label("/run/systemd/users", 0755, 0, 0);
+         if (r < 0)
+                 goto finish;
+ 
+@@ -250,7 +250,7 @@ static int user_mkdir_runtime_path(User *u) {
+ 
+         assert(u);
+ 
+-        r = safe_mkdir("/run/user", 0755, 0, 0);
++        r = mkdir_safe_label("/run/user", 0755, 0, 0);
+         if (r < 0) {
+                 log_error("Failed to create /run/user: %s", strerror(-r));
+                 return r;
+@@ -266,7 +266,7 @@ static int user_mkdir_runtime_path(User *u) {
+         } else
+                 p = u->runtime_path;
+ 
+-        r = safe_mkdir(p, 0700, u->uid, u->gid);
++        r = mkdir_safe_label(p, 0700, u->uid, u->gid);
+         if (r < 0) {
+                 log_error("Failed to create runtime directory %s: %s", p, strerror(-r));
+                 free(p);
+diff --git a/src/login/multi-seat-x.c b/src/login/multi-seat-x.c
+index 9655446..b7b9a37 100644
+--- a/src/login/multi-seat-x.c
++++ b/src/login/multi-seat-x.c
+@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
+                 goto fail;
+         }
+ 
+-        r = safe_mkdir("/run/systemd/multi-session-x", 0755, 0, 0);
++        r = mkdir_safe_label("/run/systemd/multi-session-x", 0755, 0, 0);
+         if (r < 0) {
+                 log_error("Failed to create directory: %s", strerror(-r));
+                 goto fail;
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index ad60e30..681cc2f 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -222,7 +222,7 @@ static int mount_all(const char *dest) {
+                         continue;
+                 }
+ 
+-                mkdir_p(where, 0755);
++                mkdir_p_label(where, 0755);
+ 
+                 if (mount(mount_table[k].what,
+                           where,
+@@ -1035,13 +1035,13 @@ int main(int argc, char *argv[]) {
+                                 goto child_fail;
+                         }
+ 
+-                        if (mkdir_parents(home, 0775) < 0) {
+-                                log_error("mkdir_parents() failed: %m");
++                        if (mkdir_parents_label(home, 0775) < 0) {
++                                log_error("mkdir_parents_label() failed: %m");
+                                 goto child_fail;
+                         }
+ 
+-                        if (safe_mkdir(home, 0775, uid, gid) < 0) {
+-                                log_error("safe_mkdir() failed: %m");
++                        if (mkdir_safe_label(home, 0775, uid, gid) < 0) {
++                                log_error("mkdir_safe_label() failed: %m");
+                                 goto child_fail;
+                         }
+ 
+diff --git a/src/random-seed/random-seed.c b/src/random-seed/random-seed.c
+index c1022c7..f957506 100644
+--- a/src/random-seed/random-seed.c
++++ b/src/random-seed/random-seed.c
+@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
+                 goto finish;
+         }
+ 
+-        if (mkdir_parents(RANDOM_SEED, 0755) < 0) {
++        if (mkdir_parents_label(RANDOM_SEED, 0755) < 0) {
+                 log_error("Failed to create directories parents of %s: %m", RANDOM_SEED);
+                 goto finish;
+         }
+diff --git a/src/rc-local-generator/rc-local-generator.c b/src/rc-local-generator/rc-local-generator.c
+index 7add072..7eaa2c7 100644
+--- a/src/rc-local-generator/rc-local-generator.c
++++ b/src/rc-local-generator/rc-local-generator.c
+@@ -53,7 +53,7 @@ static int add_symlink(const char *service, const char *where) {
+                 goto finish;
+         }
+ 
+-        mkdir_parents(to, 0755);
++        mkdir_parents_label(to, 0755);
+ 
+         r = symlink(from, to);
+         if (r < 0) {
+diff --git a/src/shared/ask-password-api.c b/src/shared/ask-password-api.c
+index 4b50d28..e123914 100644
+--- a/src/shared/ask-password-api.c
++++ b/src/shared/ask-password-api.c
+@@ -324,7 +324,7 @@ int ask_password_agent(
+         sigset_add_many(&mask, SIGINT, SIGTERM, -1);
+         assert_se(sigprocmask(SIG_BLOCK, &mask, &oldmask) == 0);
+ 
+-        mkdir_p("/run/systemd/ask-password", 0755);
++        mkdir_p_label("/run/systemd/ask-password", 0755);
+ 
+         u = umask(0022);
+         fd = mkostemp(temp, O_CLOEXEC|O_CREAT|O_WRONLY);
+diff --git a/src/shared/cgroup-label.c b/src/shared/cgroup-label.c
+index 3f00664..574d7cd 100644
+--- a/src/shared/cgroup-label.c
++++ b/src/shared/cgroup-label.c
+@@ -47,7 +47,7 @@ int cg_create(const char *controller, const char *path) {
+         if (r < 0)
+                 return r;
+ 
+-        r = mkdir_parents(fs, 0755);
++        r = mkdir_parents_label(fs, 0755);
+ 
+         if (r >= 0) {
+                 if (mkdir(fs, 0755) >= 0)
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 54435b8..2104c30 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -1150,7 +1150,7 @@ static int create_symlink(
+         assert(old_path);
+         assert(new_path);
+ 
+-        mkdir_parents(new_path, 0755);
++        mkdir_parents_label(new_path, 0755);
+ 
+         if (symlink(old_path, new_path) >= 0) {
+                 add_file_change(changes, n_changes, UNIT_FILE_SYMLINK, new_path, old_path);
+diff --git a/src/shared/mkdir.c b/src/shared/mkdir.c
+index 3d65aec..b6268fc 100644
+--- a/src/shared/mkdir.c
++++ b/src/shared/mkdir.c
+@@ -31,7 +31,11 @@
+ #include "util.h"
+ #include "log.h"
+ 
+-int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid) {
++int mkdir_label(const char *path, mode_t mode) {
++        return label_mkdir(path, mode);
++}
++
++int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid) {
+         struct stat st;
+ 
+         if (label_mkdir(path, mode) >= 0)
+@@ -52,7 +56,7 @@ int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid) {
+         return 0;
+ }
+ 
+-int mkdir_parents(const char *path, mode_t mode) {
++int mkdir_parents_label(const char *path, mode_t mode) {
+         struct stat st;
+         const char *p, *e;
+ 
+@@ -96,12 +100,12 @@ int mkdir_parents(const char *path, mode_t mode) {
+         }
+ }
+ 
+-int mkdir_p(const char *path, mode_t mode) {
++int mkdir_p_label(const char *path, mode_t mode) {
+         int r;
+ 
+         /* Like mkdir -p */
+ 
+-        if ((r = mkdir_parents(path, mode)) < 0)
++        if ((r = mkdir_parents_label(path, mode)) < 0)
+                 return r;
+ 
+         if (label_mkdir(path, mode) < 0 && errno != EEXIST)
+diff --git a/src/shared/mkdir.h b/src/shared/mkdir.h
+index c006e7c..4391bc3 100644
+--- a/src/shared/mkdir.h
++++ b/src/shared/mkdir.h
+@@ -22,7 +22,8 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
+-int safe_mkdir(const char *path, mode_t mode, uid_t uid, gid_t gid);
+-int mkdir_parents(const char *path, mode_t mode);
+-int mkdir_p(const char *path, mode_t mode);
++int mkdir_safe_label(const char *path, mode_t mode, uid_t uid, gid_t gid);
++int mkdir_label(const char *path, mode_t mode);
++int mkdir_parents_label(const char *path, mode_t mode);
++int mkdir_p_label(const char *path, mode_t mode);
+ #endif
+diff --git a/src/shared/path-lookup.c b/src/shared/path-lookup.c
+index b5073ad..9d2900b 100644
+--- a/src/shared/path-lookup.c
++++ b/src/shared/path-lookup.c
+@@ -112,7 +112,7 @@ static char** user_dirs(void) {
+                  * then filter out this link, if it is actually is
+                  * one. */
+ 
+-                mkdir_parents(data_home, 0777);
++                mkdir_parents_label(data_home, 0777);
+                 (void) symlink("../../../.config/systemd/user", data_home);
+         }
+ 
+diff --git a/src/shared/socket-label.c b/src/shared/socket-label.c
+index 9ab07a9..0dc7b05 100644
+--- a/src/shared/socket-label.c
++++ b/src/shared/socket-label.c
+@@ -106,7 +106,7 @@ int socket_address_listen(
+                 mode_t old_mask;
+ 
+                 /* Create parents */
+-                mkdir_parents(a->sockaddr.un.sun_path, directory_mode);
++                mkdir_parents_label(a->sockaddr.un.sun_path, directory_mode);
+ 
+                 /* Enforce the right access mode for the socket*/
+                 old_mask = umask(~ socket_mode);
+diff --git a/src/shutdownd/shutdownd.c b/src/shutdownd/shutdownd.c
+index 9801b5e..0e4b21e 100644
+--- a/src/shutdownd/shutdownd.c
++++ b/src/shutdownd/shutdownd.c
+@@ -205,7 +205,7 @@ static int update_schedule_file(struct sd_shutdown_command *c) {
+ 
+         assert(c);
+ 
+-        r = safe_mkdir("/run/systemd/shutdown", 0755, 0, 0);
++        r = mkdir_safe_label("/run/systemd/shutdown", 0755, 0, 0);
+         if (r < 0) {
+                 log_error("Failed to create shutdown subdirectory: %s", strerror(-r));
+                 return r;
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index 86c32ca..be45c71 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -652,7 +652,7 @@ static int create_item(Item *i) {
+         case CREATE_DIRECTORY:
+ 
+                 u = umask(0);
+-                mkdir_parents(i->path, 0755);
++                mkdir_parents_label(i->path, 0755);
+                 r = mkdir(i->path, i->mode);
+                 umask(u);
+ 
+diff --git a/src/tty-ask-password-agent/tty-ask-password-agent.c b/src/tty-ask-password-agent/tty-ask-password-agent.c
+index f77bacd..06f5a5a 100644
+--- a/src/tty-ask-password-agent/tty-ask-password-agent.c
++++ b/src/tty-ask-password-agent/tty-ask-password-agent.c
+@@ -446,7 +446,7 @@ static int wall_tty_block(void) {
+         if (asprintf(&p, "/run/systemd/ask-password-block/%u:%u", major(devnr), minor(devnr)) < 0)
+                 return -ENOMEM;
+ 
+-        mkdir_parents(p, 0700);
++        mkdir_parents_label(p, 0700);
+         mkfifo(p, 0600);
+ 
+         fd = open(p, O_RDONLY|O_CLOEXEC|O_NONBLOCK|O_NOCTTY);
+@@ -570,7 +570,7 @@ static int watch_passwords(void) {
+ 
+         tty_block_fd = wall_tty_block();
+ 
+-        mkdir_p("/run/systemd/ask-password", 0755);
++        mkdir_p_label("/run/systemd/ask-password", 0755);
+ 
+         if ((notify = inotify_init1(IN_CLOEXEC)) < 0) {
+                 r = -errno;

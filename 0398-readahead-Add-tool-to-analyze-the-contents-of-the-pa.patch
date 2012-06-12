@@ -1,0 +1,252 @@
+From 86b3f6ff003335d7bc939ca68c11d996654c7f02 Mon Sep 17 00:00:00 2001
+From: Auke Kok <auke-jan.h.kok@intel.com>
+Date: Tue, 5 Jun 2012 13:32:20 -0700
+Subject: [PATCH] readahead: Add tool to analyze the contents of the pack
+ file. v3.
+
+This patch adds code to compile 'systemd-readahead-analyze' and install
+it into $bindir.
+
+Use this program to parse the contents of the readahead pack file, or
+an arbitrary pack file and display which files are listed in it, and
+how much of the files are requested to be readahead.
+
+This code is not new - it's partially taken from sreadahead (formerly
+maintained by Arjan van der Ven and me, and was originally written
+by me), and adapted with the right bits to parse the systemd
+readahead pack files, which are slightly different in format.
+
+v2 adds a common READAHEAD_PACK_FILE_VERSION used in all the code
+to provide a quick way to assure all these programs are always
+synchronized. v3 fixes the integer math.
+(cherry picked from commit cae544bcdb073134bcaa2031aeb1f1705030046e)
+---
+ Makefile.am                       |   10 ++-
+ src/readahead/readahead-analyze.c |  141 +++++++++++++++++++++++++++++++++++++
+ src/readahead/readahead-collect.c |    2 +-
+ src/readahead/readahead-common.h  |    2 +
+ src/readahead/readahead-replay.c  |    2 +-
+ 5 files changed, 154 insertions(+), 3 deletions(-)
+ create mode 100644 src/readahead/readahead-analyze.c
+
+diff --git a/Makefile.am b/Makefile.am
+index cb6d77d..05e420c 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1765,7 +1765,8 @@ systemd_readahead_collect_CFLAGS = \
+ 
+ systemd_readahead_replay_SOURCES = \
+ 	src/readahead/readahead-replay.c \
+-	src/readahead/readahead-common.c
++	src/readahead/readahead-common.c \
++	src/readahead/readahead-common.h
+ 
+ systemd_readahead_replay_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -1776,6 +1777,10 @@ systemd_readahead_replay_LDADD = \
+ 	libsystemd-daemon.la \
+ 	$(UDEV_LIBS)
+ 
++systemd_readahead_analyze_SOURCES = \
++	src/readahead/readahead-analyze.c \
++	src/readahead/readahead-common.h
++
+ pkginclude_HEADERS += \
+ 	src/systemd/sd-readahead.h
+ 
+@@ -1783,6 +1788,9 @@ rootlibexec_PROGRAMS += \
+ 	systemd-readahead-collect \
+ 	systemd-readahead-replay
+ 
++bin_PROGRAMS += \
++	systemd-readahead-analyze
++
+ dist_systemunit_DATA += \
+ 	units/systemd-readahead-done.timer
+ 
+diff --git a/src/readahead/readahead-analyze.c b/src/readahead/readahead-analyze.c
+new file mode 100644
+index 0000000..6ee3551
+--- /dev/null
++++ b/src/readahead/readahead-analyze.c
+@@ -0,0 +1,141 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Auke Kok <auke-jan.h.kok@intel.com>
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <unistd.h>
++#include <inttypes.h>
++#include <linux/limits.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <string.h>
++
++#include "readahead-common.h"
++
++
++int main(int argc, char *argv[])
++{
++        char line[1024];
++        char path[PATH_MAX];
++        FILE *pack;
++        int a;
++        int missing = 0;
++        off_t size;
++        long tsize = 0;
++        uint64_t inode;
++        uint32_t b;
++        uint32_t c;
++        struct stat st;
++        int pagesize = getpagesize();
++
++        if (argc != 2)
++                snprintf(path, PATH_MAX, "/.readahead");
++        else
++                snprintf(path, PATH_MAX, "%s", argv[1]);
++
++        pack = fopen(path, "r");
++        if (!pack) {
++                fprintf(stderr, "Pack file missing\n");
++                exit(EXIT_FAILURE);
++        }
++
++        if (!(fgets(line, sizeof(line), pack))) {
++                fprintf(stderr, "Pack file corrupt\n");
++                exit(EXIT_FAILURE);
++        }
++
++        if (!strstr(line, READAHEAD_PACK_FILE_VERSION)) {
++                fprintf(stderr, "Pack file version incompatible with this parser\n");
++                exit(EXIT_FAILURE);
++        }
++
++        if ((a = getc(pack)) == EOF) {
++                fprintf(stderr, "Pack file corrupt\n");
++                exit(EXIT_FAILURE);
++        }
++
++        fprintf(stdout, "   pct  sections     size: path\n");
++        fprintf(stdout, "   ===  ========     ====: ====\n");
++
++        while(true) {
++                int pages = 0;
++                int sections = 0;
++
++                if (!fgets(path, sizeof(path), pack))
++                        break; /* done */
++
++                path[strlen(path)-1] = 0;
++
++                if (fread(&inode, sizeof(inode), 1, pack) != 1) {
++                        fprintf(stderr, "Pack file corrupt\n");
++                        exit(EXIT_FAILURE);
++                }
++
++                while (true) {
++                        if (fread(&b, sizeof(b), 1, pack) != 1  ||
++                            fread(&c, sizeof(c), 1, pack) != 1) {
++                                fprintf(stderr, "Pack file corrupt\n");
++                                exit(EXIT_FAILURE);
++                        }
++                        if ((b == 0) && (c == 0))
++                                break;
++
++                        /* Uncomment this to get all the chunks separately
++                        fprintf(stdout, " %d: %d %d\n", sections, b, c);
++                         */
++
++                        pages += (c - b);
++                        sections++;
++                }
++
++                if (stat(path, &st) == 0) {
++                        if (sections == 0)
++                                size = st.st_size;
++                        else
++                                size = pages * pagesize;
++
++                        tsize += size;
++
++                        fprintf(stdout, "  %4d%% (%2d) %12ld: %s\n",
++                                sections ? (int)(size / st.st_size * 100.0) : 100,
++                                sections ? sections : 1,
++                                (unsigned long)size,
++                                path);
++                } else {
++                        fprintf(stdout, "  %4dp (%2d) %12s: %s (MISSING)\n",
++                                sections ? pages : -1,
++                                sections ? sections : 1,
++                                "???",
++                                path);
++                        missing++;
++                }
++
++        }
++
++        fprintf(stdout, "\nHOST:    %s", line);
++        fprintf(stdout, "TYPE:    %c\n", a);
++        fprintf(stdout, "MISSING: %d\n", missing);
++        fprintf(stdout, "TOTAL:   %ld\n", tsize);
++
++        exit(EXIT_SUCCESS);
++}
+diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
+index 46e5e2c..b8825a6 100644
+--- a/src/readahead/readahead-collect.c
++++ b/src/readahead/readahead-collect.c
+@@ -493,7 +493,7 @@ done:
+                 goto finish;
+         }
+ 
+-        fputs(CANONICAL_HOST ";VERSION=2\n", pack);
++        fputs(CANONICAL_HOST READAHEAD_PACK_FILE_VERSION, pack);
+         putc(on_ssd ? 'S' : 'R', pack);
+ 
+         if (on_ssd || on_btrfs) {
+diff --git a/src/readahead/readahead-common.h b/src/readahead/readahead-common.h
+index f0e12e3..1f7f331 100644
+--- a/src/readahead/readahead-common.h
++++ b/src/readahead/readahead-common.h
+@@ -29,6 +29,8 @@
+ 
+ #define READAHEAD_FILE_SIZE_MAX (10*1024*1024)
+ 
++#define READAHEAD_PACK_FILE_VERSION ";VERSION=2\n"
++
+ int file_verify(int fd, const char *fn, off_t file_size_max, struct stat *st);
+ 
+ int fs_on_ssd(const char *p);
+diff --git a/src/readahead/readahead-replay.c b/src/readahead/readahead-replay.c
+index 2b30549..4b36b98 100644
+--- a/src/readahead/readahead-replay.c
++++ b/src/readahead/readahead-replay.c
+@@ -183,7 +183,7 @@ static int replay(const char *root) {
+ 
+         char_array_0(line);
+ 
+-        if (!streq(line, CANONICAL_HOST ";VERSION=2\n")) {
++        if (!streq(line, CANONICAL_HOST READAHEAD_PACK_FILE_VERSION)) {
+                 log_debug("Pack file host or version type mismatch.");
+                 goto finish;
+         }
