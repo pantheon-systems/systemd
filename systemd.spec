@@ -1,9 +1,9 @@
-%global gitcommit a2368a3
+%global gitcommit e7aee75
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        185
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -484,6 +484,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Jun 14 2012 Michal Schmidt <mschmidt@redhat.com> - 185-6.gite7aee75
+- Update to current git
+
 * Wed Jun 06 2012 Kay Sievers - 185-5.gita2368a3
 - disable plymouth in configure, to drop the .wants/ symlinks
 
