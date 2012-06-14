@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        13%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        14%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -471,6 +471,14 @@ Patch0408:      0408-logind-fix-check-for-multiple-sessions.patch
 Patch0409:      0409-journal-file-fix-mmap-leak.patch
 Patch0410:      0410-man-fix-sysytemd-typos.patch
 Patch0411:      0411-F17-fix-manpage-name-typo.patch
+Patch0412:      0412-systemctl-will-print-warning-when-stopping-unit.patch
+Patch0413:      0413-systemctl-style-fixes-for-the-previous-patch.patch
+Patch0414:      0414-systemctl-remove-is_socket_listening.patch
+Patch0415:      0415-systemctl-fix-iteration-in-check_listening_sockets.patch
+Patch0416:      0416-systemctl-warn-about-all-active-triggers-not-just-so.patch
+Patch0417:      0417-unit-name-introduce-unit_dbus_path_from_name.patch
+Patch0418:      0418-tmpfiles-create-char-devices-with-correct-SELinux-co.patch
+Patch0419:      0419-systemctl-clearer-error-message-for-missing-install-.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -848,6 +856,11 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Thu Jun 14 2012 Michal Schmidt <mschmidt@redhat.com> - 44-14
+- tmpfiles: correct SELinux context for char devices (#824059)
+- systemctl: warn when stopping a triggerable unit (#714525)
+- systemctl: clearer error message for missing [Install] (#817033)
+
 * Wed Jun 13 2012 Michal Schmidt <mschmidt@redhat.com> - 44-13
 - Patches from upstream
 - Fixes to journald, logind, tmpfiles

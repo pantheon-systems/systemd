@@ -1,0 +1,180 @@
+From ca021b4c51c42a324124a5c99c94a95a4103feaa Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 13 Jun 2012 18:22:08 +0200
+Subject: [PATCH] unit-name: introduce unit_dbus_path_from_name()
+
+Use the same function in core and in systemctl.
+get_unit_path() in systemctl becomes unnecessary.
+(cherry picked from commit 48899192a7b28b6a338cc8ec18aa35ccd8867acb)
+---
+ src/core/unit.c           |   10 +-----
+ src/shared/unit-name.c    |   13 ++++++++
+ src/shared/unit-name.h    |    2 ++
+ src/systemctl/systemctl.c |   81 +++------------------------------------------
+ 4 files changed, 21 insertions(+), 85 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 15e86e9..b52ed42 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1831,20 +1831,12 @@ int set_unit_path(const char *p) {
+ }
+ 
+ char *unit_dbus_path(Unit *u) {
+-        char *p, *e;
+-
+         assert(u);
+ 
+         if (!u->id)
+                 return NULL;
+ 
+-        if (!(e = bus_path_escape(u->id)))
+-                return NULL;
+-
+-        p = strappend("/org/freedesktop/systemd1/unit/", e);
+-        free(e);
+-
+-        return p;
++        return unit_dbus_path_from_name(u->id);
+ }
+ 
+ int unit_add_cgroup(Unit *u, CGroupBonding *b) {
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index b74ab29..cbc9fc5 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -458,3 +458,16 @@ char *unit_name_path_unescape(const char *f) {
+ 
+         return e;
+ }
++
++char *unit_dbus_path_from_name(const char *name) {
++        char *e, *p;
++
++        e = bus_path_escape(name);
++        if (!e)
++                return NULL;
++
++        p = strappend("/org/freedesktop/systemd1/unit/", e);
++        free(e);
++
++        return p;
++}
+diff --git a/src/shared/unit-name.h b/src/shared/unit-name.h
+index e369910..116da11 100644
+--- a/src/shared/unit-name.h
++++ b/src/shared/unit-name.h
+@@ -54,4 +54,6 @@ char *unit_name_from_path(const char *path, const char *suffix);
+ char *unit_name_from_path_instance(const char *prefix, const char *path, const char *suffix);
+ char *unit_name_to_path(const char *name);
+ 
++char *unit_dbus_path_from_name(const char *name);
++
+ #endif
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 7426647..a3c3141 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -1480,75 +1480,6 @@ finish:
+         return r;
+ }
+ 
+-static int get_unit_path(
+-                DBusConnection *bus,
+-                const char *name,
+-                char **unit_path) {
+-
+-        DBusError error;
+-        DBusMessage *m = NULL, *reply = NULL;
+-        char *path;
+-        int r = 0;
+-
+-        assert(bus);
+-        assert(name);
+-        assert(unit_path);
+-
+-        dbus_error_init(&error);
+-
+-        m = dbus_message_new_method_call("org.freedesktop.systemd1",
+-                                         "/org/freedesktop/systemd1",
+-                                         "org.freedesktop.systemd1.Manager",
+-                                         "GetUnit");
+-        if (!m) {
+-                log_error("Could not allocate message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-
+-        if (!dbus_message_append_args(m,
+-                                      DBUS_TYPE_STRING, &name,
+-                                      DBUS_TYPE_INVALID)) {
+-                log_error("Could not append arguments to message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
+-
+-        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, &error);
+-        if (!reply) {
+-                if (streq(error.name, BUS_ERROR_NO_SUCH_UNIT))
+-                        r = -EINVAL;
+-                else {
+-                        log_error("Failed to issue method call: %s", bus_error_message(&error));
+-                        r = -EIO;
+-                }
+-                goto finish;
+-        }
+-
+-        if (!dbus_message_get_args(reply, &error,
+-                                   DBUS_TYPE_OBJECT_PATH, &path,
+-                                   DBUS_TYPE_INVALID)) {
+-                log_error("Failed to parse reply: %s", bus_error_message(&error));
+-                r = -EIO;
+-                goto finish;
+-        }
+-
+-        *unit_path = strdup(path);
+-        if (!(*unit_path)) {
+-               log_error("Failed to duplicate unit path");
+-               r = -ENOMEM;
+-        }
+-finish:
+-        if (m)
+-                dbus_message_unref(m);
+-        if (reply)
+-                dbus_message_unref(reply);
+-
+-        dbus_error_free(&error);
+-
+-        return r;
+-}
+-
+ static int check_one_unit(DBusConnection *bus, char *name, bool quiet) {
+         DBusMessage *m = NULL, *reply = NULL;
+         DBusError error;
+@@ -1681,8 +1612,11 @@ static void check_triggering_units(
+ 
+         dbus_error_init(&error);
+ 
+-        if (get_unit_path(bus, unit_name, &unit_path) < 0)
++        unit_path = unit_dbus_path_from_name(unit_name);
++        if (!unit_path) {
++                log_error("Could not allocate dbus path.");
+                 goto finish;
++        }
+ 
+         m = dbus_message_new_method_call("org.freedesktop.systemd1",
+                                          unit_path,
+@@ -3301,12 +3235,7 @@ static int show(DBusConnection *bus, char **args) {
+ 
+                         /* Interpret as unit name */
+ 
+-                        char *e, *p;
+-                        e = bus_path_escape(*name);
+-                        if (!e)
+-                                return -ENOMEM;
+-                        p = strappend("/org/freedesktop/systemd1/unit/", e);
+-                        free(e);
++                        char *p = unit_dbus_path_from_name(*name);
+                         if (!p)
+                                 return -ENOMEM;
+ 

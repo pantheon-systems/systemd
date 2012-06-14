@@ -1,0 +1,38 @@
+From 91ddddcc97fc5e3bf3702a55531a9a2c91232954 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 14 Jun 2012 16:01:19 +0200
+Subject: [PATCH] tmpfiles: create char devices with correct SELinux context
+
+https://bugzilla.redhat.com/show_bug.cgi?id=824059
+(cherry picked from commit e7aee75932e8a5bee54eefcc77f4702a3ea79db2)
+---
+ src/tmpfiles/tmpfiles.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index dd9f159..23b1ef8 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -744,10 +744,11 @@ static int create_item(Item *i) {
+ 
+         case CREATE_BLOCK_DEVICE:
+         case CREATE_CHAR_DEVICE: {
++                mode_t file_type = (i->type == CREATE_BLOCK_DEVICE ? S_IFBLK : S_IFCHR);
+ 
+                 u = umask(0);
+-                label_context_set(i->path, CREATE_BLOCK_DEVICE ? S_IFBLK : S_IFCHR);
+-                r = mknod(i->path, i->mode | (i->type == CREATE_BLOCK_DEVICE ? S_IFBLK : S_IFCHR), i->major_minor);
++                label_context_set(i->path, file_type);
++                r = mknod(i->path, i->mode | file_type, i->major_minor);
+                 e = errno;
+                 label_context_clear();
+                 umask(u);
+@@ -763,7 +764,7 @@ static int create_item(Item *i) {
+                         return -errno;
+                 }
+ 
+-                if (i->type == CREATE_BLOCK_DEVICE ? !S_ISBLK(st.st_mode) : !S_ISCHR(st.st_mode)) {
++                if ((st.st_mode & S_IFMT) != file_type) {
+                         log_error("%s is not a device node.", i->path);
+                         return -EEXIST;
+                 }

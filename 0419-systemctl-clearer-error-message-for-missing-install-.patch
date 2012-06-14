@@ -1,0 +1,31 @@
+From 496de7bd58f3078086c1008a496dc0d25a0ac6bb Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 14 Jun 2012 23:16:07 +0200
+Subject: [PATCH] systemctl: clearer error message for missing install
+ information
+
+Some users found it difficult to understand what systemctl was telling
+them.
+Instead of "install information" talk about "[Install] section", which
+is more likely to ring a bell. And suggest that it is intentional, so
+that users do not attempt to "correct" the unit files.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=817033
+(cherry picked from commit 34cdc274edd870ffc27d21cf82655a0114948748)
+---
+ src/systemctl/systemctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index a3c3141..4d26398 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -4205,7 +4205,7 @@ static int enable_unit(DBusConnection *bus, char **args) {
+         }
+ 
+         if (carries_install_info == 0)
+-                log_warning("Warning: unit files do not carry install information. No operation executed.");
++                log_warning("The unit files have no [Install] section. They are not meant to be enabled using systemctl.");
+ 
+ finish:
+         if (m)
