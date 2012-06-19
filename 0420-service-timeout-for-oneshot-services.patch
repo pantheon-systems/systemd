@@ -1,0 +1,141 @@
+From a9d76542130e6c0ce12a6276c8e9869cc1bd8e6f Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Thu, 14 Jun 2012 17:07:07 +0200
+Subject: [PATCH] service: timeout for oneshot services
+
+Add possibility to specify timeout for oneshot services.
+
+[ https://bugzilla.redhat.com/show_bug.cgi?id=761656
+  Added minor fixups. -- michich ]
+(cherry picked from commit 98709151f3e782eb508ba15e2a12c0b46003f061)
+---
+ man/systemd.service.xml               |    4 +++-
+ src/core/load-fragment-gperf.gperf.m4 |    2 +-
+ src/core/load-fragment.c              |   26 ++++++++++++++++++++++++++
+ src/core/load-fragment.h              |    1 +
+ src/core/service.c                    |    8 ++++++--
+ src/core/service.h                    |    1 +
+ 6 files changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 9a80dd7..dc14113 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -459,7 +459,9 @@
+                                 time span value such as "5min
+                                 20s". Pass 0 to disable the timeout
+                                 logic. Defaults to
+-                                90s.</para></listitem>
++                                90s, except when <varname>Type=oneshot</varname> is
++                                used in which case the timeout
++                                is disabled by default.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index d32aae9..50fba45 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -137,7 +137,7 @@ Service.ExecReload,              config_parse_exec,                  SERVICE_EXE
+ Service.ExecStop,                config_parse_exec,                  SERVICE_EXEC_STOP,             offsetof(Service, exec_command)
+ Service.ExecStopPost,            config_parse_exec,                  SERVICE_EXEC_STOP_POST,        offsetof(Service, exec_command)
+ Service.RestartSec,              config_parse_usec,                  0,                             offsetof(Service, restart_usec)
+-Service.TimeoutSec,              config_parse_usec,                  0,                             offsetof(Service, timeout_usec)
++Service.TimeoutSec,              config_parse_service_timeout,       0,                             offsetof(Service, timeout_usec)
+ Service.WatchdogSec,             config_parse_usec,                  0,                             offsetof(Service, watchdog_usec)
+ Service.StartLimitInterval,      config_parse_usec,                  0,                             offsetof(Service, start_limit.interval)
+ Service.StartLimitBurst,         config_parse_unsigned,              0,                             offsetof(Service, start_limit.burst)
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 9bbb45e..94d8a5b 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -1398,6 +1398,32 @@ int config_parse_service_sockets(
+         return 0;
+ }
+ 
++int config_parse_service_timeout(
++                const char *filename,
++                unsigned line,
++                const char *section,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++        Service *s = userdata;
++        int r;
++
++        assert(filename);
++        assert(lvalue);
++        assert(rvalue);
++        assert(s);
++
++        r = config_parse_usec(filename, line, section, lvalue, ltype, rvalue, data, userdata);
++
++        if (!r)
++                s->timeout_defined = true;
++
++        return r;
++}
++
+ int config_parse_unit_env_file(
+                 const char *filename,
+                 unsigned line,
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index 3166b18..c819e05 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -42,6 +42,7 @@ int config_parse_socket_bind(const char *filename, unsigned line, const char *se
+ int config_parse_exec_nice(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec_oom_score_adjust(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_exec(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
++int config_parse_service_timeout(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_service_type(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_service_restart(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_socket_bindtodevice(const char *filename, unsigned line, const char *section, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+diff --git a/src/core/service.c b/src/core/service.c
+index 53b0847..c5a6df6 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1245,6 +1245,10 @@ static int service_load(Unit *u) {
+                 if (s->type == _SERVICE_TYPE_INVALID)
+                         s->type = s->bus_name ? SERVICE_DBUS : SERVICE_SIMPLE;
+ 
++                /* Oneshot services have disabled timeout by default */
++                if (s->type == SERVICE_ONESHOT && !s->timeout_defined)
++                        s->timeout_usec = 0;
++
+                 service_fix_output(s);
+ 
+                 if ((r = unit_add_exec_dependencies(u, &s->exec_context)) < 0)
+@@ -2155,7 +2159,7 @@ static void service_enter_start(Service *s) {
+ 
+         r = service_spawn(s,
+                           c,
+-                          s->type == SERVICE_FORKING || s->type == SERVICE_DBUS || s->type == SERVICE_NOTIFY,
++                          s->type == SERVICE_FORKING || s->type == SERVICE_DBUS || s->type == SERVICE_NOTIFY || s->type == SERVICE_ONESHOT,
+                           true,
+                           true,
+                           true,
+@@ -2370,7 +2374,7 @@ static void service_run_next_main(Service *s) {
+ 
+         r = service_spawn(s,
+                           s->main_command,
+-                          false,
++                          true,
+                           true,
+                           true,
+                           true,
+diff --git a/src/core/service.h b/src/core/service.h
+index 8b92aa3..48f4dbb 100644
+--- a/src/core/service.h
++++ b/src/core/service.h
+@@ -164,6 +164,7 @@ struct Service {
+         bool bus_name_good:1;
+         bool forbid_restart:1;
+         bool got_socket_fd:1;
++        bool timeout_defined:1;
+ #ifdef HAVE_SYSV_COMPAT
+         bool sysv_has_lsb:1;
+         bool sysv_enabled:1;

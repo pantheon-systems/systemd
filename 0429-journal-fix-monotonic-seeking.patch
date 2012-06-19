@@ -1,0 +1,28 @@
+From 5cdbddf63621119eb40780f2e9143fe7a35b20a5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 9 Jun 2012 15:20:42 +0200
+Subject: [PATCH] journal: fix monotonic seeking (cherry picked from commit
+ 10b6f904cc58c5a725f123e17819516eca606a3e)
+
+---
+ src/journal/journal-file.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index d0a14c2..f2b5bc5 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -1400,11 +1400,11 @@ int journal_file_move_to_entry_by_monotonic(
+                 Object **ret,
+                 uint64_t *offset) {
+ 
+-        char t[8+32+1] = "_BOOT_ID=";
++        char t[9+32+1] = "_BOOT_ID=";
+         Object *o;
+         int r;
+ 
+-        sd_id128_to_string(boot_id, t + 8);
++        sd_id128_to_string(boot_id, t + 9);
+ 
+         r = journal_file_find_data_object(f, t, strlen(t), &o, NULL);
+         if (r < 0)

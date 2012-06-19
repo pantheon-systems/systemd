@@ -1,0 +1,24 @@
+From 07d340022efb397f3efebf03abc9137f1f94064f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 9 Jun 2012 10:30:44 +0200
+Subject: [PATCH] journal: correct list link up on hash collisions (cherry
+ picked from commit
+ 8db4213e7b38ebc54bfdc7215991cc23b9580e3a)
+
+---
+ src/journal/journal-file.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 8002480..f793d08 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -596,7 +596,7 @@ static int journal_file_link_data(JournalFile *f, Object *o, uint64_t offset, ui
+         o->data.n_entries = 0;
+ 
+         h = hash % (le64toh(f->header->data_hash_table_size) / sizeof(HashItem));
+-        p = le64toh(f->data_hash_table[h].head_hash_offset);
++        p = le64toh(f->data_hash_table[h].tail_hash_offset);
+         if (p == 0) {
+                 /* Only entry in the hash table is easy */
+                 f->data_hash_table[h].head_hash_offset = htole64(offset);

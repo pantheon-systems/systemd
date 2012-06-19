@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        14%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        15%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -479,6 +479,17 @@ Patch0416:      0416-systemctl-warn-about-all-active-triggers-not-just-so.patch
 Patch0417:      0417-unit-name-introduce-unit_dbus_path_from_name.patch
 Patch0418:      0418-tmpfiles-create-char-devices-with-correct-SELinux-co.patch
 Patch0419:      0419-systemctl-clearer-error-message-for-missing-install-.patch
+Patch0420:      0420-service-timeout-for-oneshot-services.patch
+Patch0421:      0421-logind-more-robust-handling-of-VT-less-systems.patch
+Patch0422:      0422-journal-replace-arena-offset-by-header-size.patch
+Patch0423:      0423-journal-add-basic-object-definition-for-signatures.patch
+Patch0424:      0424-journal-correct-list-link-up-on-hash-collisions.patch
+Patch0425:      0425-F17-fix-libsystemd-journal-symver-script.patch
+Patch0426:      0426-journal-expose-and-make-use-of-cutoff-times-of-journ.patch
+Patch0427:      0427-journal-fix-SD_JOURNAL_SYSTEM_ONLY-flag.patch
+Patch0428:      0428-journal-rotate-on-SIGUSR2.patch
+Patch0429:      0429-journal-fix-monotonic-seeking.patch
+Patch0430:      0430-systemd-return-error-when-asked-to-stop-unknown-unit.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -856,6 +867,12 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Jun 19 2012 Michal Schmidt <mschmidt@redhat.com> - 44-15
+- Apply timeouts to oneshot services (#761656)
+- Report error when stopping an unknown unit (#732874)
+- logind: more robust on VT-less systems (s390x) (#832210)
+- journal: various fixes, expose cutoff times
+
 * Thu Jun 14 2012 Michal Schmidt <mschmidt@redhat.com> - 44-14
 - tmpfiles: correct SELinux context for char devices (#824059)
 - systemctl: warn when stopping a triggerable unit (#714525)

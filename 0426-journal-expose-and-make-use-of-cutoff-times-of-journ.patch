@@ -1,0 +1,348 @@
+From 900913bf16345a172ae742683541efad16c412c6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 9 Jun 2012 10:32:38 +0200
+Subject: [PATCH] journal: expose and make use of cutoff times of journal
+
+This helps explaining when the log output of "systemctl status" is
+incomplete because the logs got rotated since the service was started.
+(cherry picked from commit 089842938dd0f4080084044bb9a1a3b00137926a)
+---
+ src/journal/journal-def.h          |    4 +-
+ src/journal/journal-file.c         |   72 ++++++++++++++++++++++++++++++++++
+ src/journal/journal-file.h         |    3 ++
+ src/journal/journalctl.c           |   20 ++++++++++
+ src/journal/libsystemd-journal.sym |    6 +++
+ src/journal/sd-journal.c           |   75 ++++++++++++++++++++++++++++++++++++
+ src/shared/logs-show.c             |   23 ++++++++++-
+ src/shared/logs-show.h             |    3 +-
+ src/systemctl/systemctl.c          |    2 +-
+ src/systemd/sd-journal.h           |    3 ++
+ 10 files changed, 206 insertions(+), 5 deletions(-)
+
+diff --git a/src/journal/journal-def.h b/src/journal/journal-def.h
+index 8d250b2..04483f2 100644
+--- a/src/journal/journal-def.h
++++ b/src/journal/journal-def.h
+@@ -160,8 +160,8 @@ _packed_ struct Header {
+         uint8_t state;
+         uint8_t reserved[7];
+         sd_id128_t file_id;
+-        sd_id128_t machine_id;
+-        sd_id128_t boot_id;
++        sd_id128_t machine_id; /* last writer */
++        sd_id128_t boot_id;    /* last writer */
+         sd_id128_t seqnum_id;
+         le64_t header_size;
+         le64_t arena_size;
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index f793d08..d0a14c2 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -183,6 +183,7 @@ static int journal_file_verify_header(JournalFile *f) {
+ 
+                 if (state == STATE_ONLINE)
+                         log_debug("Journal file %s is already online. Assuming unclean closing. Ignoring.", f->path);
++                        /* FIXME: immediately rotate */
+                 else if (state == STATE_ARCHIVED)
+                         return -ESHUTDOWN;
+                 else if (state != STATE_OFFLINE)
+@@ -2284,3 +2285,74 @@ void journal_default_metrics(JournalMetrics *m, int fd) {
+                  format_bytes(c, sizeof(c), m->min_size),
+                  format_bytes(d, sizeof(d), m->keep_free));
+ }
++
++int journal_file_get_cutoff_realtime_usec(JournalFile *f, usec_t *from, usec_t *to) {
++        Object *o;
++        int r;
++
++        assert(f);
++        assert(from || to);
++
++        if (from) {
++                r = journal_file_next_entry(f, NULL, 0, DIRECTION_DOWN, &o, NULL);
++                if (r <= 0)
++                        return r;
++
++                *from = le64toh(o->entry.realtime);
++        }
++
++        if (to) {
++                r = journal_file_next_entry(f, NULL, 0, DIRECTION_UP, &o, NULL);
++                if (r <= 0)
++                        return r;
++
++                *to = le64toh(o->entry.realtime);
++        }
++
++        return 1;
++}
++
++int journal_file_get_cutoff_monotonic_usec(JournalFile *f, sd_id128_t boot_id, usec_t *from, usec_t *to) {
++        char t[9+32+1] = "_BOOT_ID=";
++        Object *o;
++        uint64_t p;
++        int r;
++
++        assert(f);
++        assert(from || to);
++
++        sd_id128_to_string(boot_id, t + 9);
++
++        r = journal_file_find_data_object(f, t, strlen(t), &o, &p);
++        if (r <= 0)
++                return r;
++
++        if (le64toh(o->data.n_entries) <= 0)
++                return 0;
++
++        if (from) {
++                r = journal_file_move_to_object(f, OBJECT_ENTRY, le64toh(o->data.entry_offset), &o);
++                if (r < 0)
++                        return r;
++
++                *from = le64toh(o->entry.monotonic);
++        }
++
++        if (to) {
++                r = journal_file_move_to_object(f, OBJECT_DATA, p, &o);
++                if (r < 0)
++                        return r;
++
++                r = generic_array_get_plus_one(f,
++                                               le64toh(o->data.entry_offset),
++                                               le64toh(o->data.entry_array_offset),
++                                               le64toh(o->data.n_entries)-1,
++                                               &o, NULL);
++                if (r <= 0)
++                        return r;
++
++                *to = le64toh(o->entry.monotonic);
++        }
++
++        return 1;
++}
+diff --git a/src/journal/journal-file.h b/src/journal/journal-file.h
+index 57d66ca..fdb7604 100644
+--- a/src/journal/journal-file.h
++++ b/src/journal/journal-file.h
+@@ -125,4 +125,7 @@ void journal_file_post_change(JournalFile *f);
+ 
+ void journal_default_metrics(JournalMetrics *m, int fd);
+ 
++int journal_file_get_cutoff_realtime_usec(JournalFile *f, usec_t *from, usec_t *to);
++int journal_file_get_cutoff_monotonic_usec(JournalFile *f, sd_id128_t boot, usec_t *from, usec_t *to);
++
+ #endif
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 53f0160..3f6e78f 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -281,6 +281,26 @@ int main(int argc, char *argv[]) {
+                 goto finish;
+         }
+ 
++        if (!arg_quiet) {
++                usec_t start, end;
++                char start_buf[FORMAT_TIMESTAMP_MAX], end_buf[FORMAT_TIMESTAMP_MAX];
++
++                r = sd_journal_get_cutoff_realtime_usec(j, &start, &end);
++                if (r < 0) {
++                        log_error("Failed to get cutoff: %s", strerror(-r));
++                        goto finish;
++                }
++
++                if (r > 0) {
++                        if (arg_follow)
++                                printf("Logs begin at %s.\n", format_timestamp(start_buf, sizeof(start_buf), start));
++                        else
++                                printf("Logs begin at %s, end at %s.\n",
++                                       format_timestamp(start_buf, sizeof(start_buf), start),
++                                       format_timestamp(end_buf, sizeof(end_buf), end));
++                }
++        }
++
+         if (arg_lines >= 0) {
+                 r = sd_journal_seek_tail(j);
+                 if (r < 0) {
+diff --git a/src/journal/libsystemd-journal.sym b/src/journal/libsystemd-journal.sym
+index b5b4f81..9059c79 100644
+--- a/src/journal/libsystemd-journal.sym
++++ b/src/journal/libsystemd-journal.sym
+@@ -54,3 +54,9 @@ global:
+ 
+ LIBSYSTEMD_JOURNAL_183 {
+ } LIBSYSTEMD_JOURNAL_45;
++
++LIBSYSTEMD_JOURNAL_184 {
++global:
++        sd_journal_get_cutoff_realtime_usec;
++        sd_journal_get_cutoff_monotonic_usec;
++} LIBSYSTEMD_JOURNAL_183;
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index e80c6cb..9fc7090 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -1620,6 +1620,81 @@ _public_ int sd_journal_process(sd_journal *j) {
+         }
+ }
+ 
++_public_ int sd_journal_get_cutoff_realtime_usec(sd_journal *j, uint64_t *from, uint64_t *to) {
++        Iterator i;
++        JournalFile *f;
++        bool first = true;
++        int r;
++
++        if (!j)
++                return -EINVAL;
++        if (!from && !to)
++                return -EINVAL;
++
++        HASHMAP_FOREACH(f, j->files, i) {
++                usec_t fr, t;
++
++                r = journal_file_get_cutoff_realtime_usec(f, &fr, &t);
++                if (r < 0)
++                        return r;
++                if (r == 0)
++                        continue;
++
++                if (first) {
++                        if (from)
++                                *from = fr;
++                        if (to)
++                                *to = t;
++                        first = false;
++                } else {
++                        if (from)
++                                *from = MIN(fr, *from);
++                        if (to)
++                                *to = MIN(t, *to);
++                }
++        }
++
++        return first ? 0 : 1;
++}
++
++_public_ int sd_journal_get_cutoff_monotonic_usec(sd_journal *j, sd_id128_t boot_id, uint64_t *from, uint64_t *to) {
++        Iterator i;
++        JournalFile *f;
++        bool first = true;
++        int r;
++
++        if (!j)
++                return -EINVAL;
++        if (!from && !to)
++                return -EINVAL;
++
++        HASHMAP_FOREACH(f, j->files, i) {
++                usec_t fr, t;
++
++                r = journal_file_get_cutoff_monotonic_usec(f, boot_id, &fr, &t);
++                if (r < 0)
++                        return r;
++                if (r == 0)
++                        continue;
++
++                if (first) {
++                        if (from)
++                                *from = fr;
++                        if (to)
++                                *to = t;
++                        first = false;
++                } else {
++                        if (from)
++                                *from = MIN(fr, *from);
++                        if (to)
++                                *to = MIN(t, *to);
++                }
++        }
++
++        return first ? 0 : 1;
++}
++
++
+ /* _public_ int sd_journal_query_unique(sd_journal *j, const char *field) { */
+ /*         if (!j) */
+ /*                 return -EINVAL; */
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index 95df3bb..c4731a2 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -551,7 +551,8 @@ int show_journal_by_unit(
+                 usec_t not_before,
+                 unsigned how_many,
+                 bool show_all,
+-                bool follow) {
++                bool follow,
++                bool warn_cutoff) {
+ 
+         char *m = NULL;
+         sd_journal *j = NULL;
+@@ -639,6 +640,26 @@ int show_journal_by_unit(
+                                 goto finish;
+                 }
+ 
++                if (warn_cutoff && line < how_many && not_before > 0) {
++                        sd_id128_t boot_id;
++                        usec_t cutoff;
++
++                        /* Check whether the cutoff line is too early */
++
++                        r = sd_id128_get_boot(&boot_id);
++                        if (r < 0)
++                                goto finish;
++
++                        r = sd_journal_get_cutoff_monotonic_usec(j, boot_id, &cutoff, NULL);
++                        if (r < 0)
++                                goto finish;
++
++                        if (not_before < cutoff)
++                                printf("Warning: Journal has been rotated since unit was started. Log output is incomplete or unavailable.\n");
++
++                        warn_cutoff = false;
++                }
++
+                 if (!follow)
+                         break;
+ 
+diff --git a/src/shared/logs-show.h b/src/shared/logs-show.h
+index db9c7e3..d7bbb31 100644
+--- a/src/shared/logs-show.h
++++ b/src/shared/logs-show.h
+@@ -48,7 +48,8 @@ int show_journal_by_unit(
+                 usec_t not_before,
+                 unsigned how_many,
+                 bool show_all,
+-                bool follow);
++                bool follow,
++                bool warn_cutoff);
+ 
+ const char* output_mode_to_string(OutputMode m);
+ OutputMode output_mode_from_string(const char *s);
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 4d26398..2cc016e 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2545,7 +2545,7 @@ static void print_status_info(UnitStatusInfo *i) {
+ 
+         if (i->id && arg_transport != TRANSPORT_SSH) {
+                 printf("\n");
+-                show_journal_by_unit(i->id, arg_output, 0, i->inactive_exit_timestamp_monotonic, arg_lines, arg_all, arg_follow);
++                show_journal_by_unit(i->id, arg_output, 0, i->inactive_exit_timestamp_monotonic, arg_lines, arg_all, arg_follow, !arg_quiet);
+         }
+ 
+         if (i->need_daemon_reload)
+diff --git a/src/systemd/sd-journal.h b/src/systemd/sd-journal.h
+index f27e461..ded1bac 100644
+--- a/src/systemd/sd-journal.h
++++ b/src/systemd/sd-journal.h
+@@ -97,6 +97,9 @@ int sd_journal_seek_cursor(sd_journal *j, const char *cursor);
+ 
+ int sd_journal_get_cursor(sd_journal *j, char **cursor);
+ 
++int sd_journal_get_cutoff_realtime_usec(sd_journal *j, uint64_t *from, uint64_t *to);
++int sd_journal_get_cutoff_monotonic_usec(sd_journal *j, const sd_id128_t boot_id, uint64_t *from, uint64_t *to);
++
+ /* int sd_journal_query_unique(sd_journal *j, const char *field);      /\* missing *\/ */
+ /* int sd_journal_enumerate_unique(sd_journal *j, const void **data, size_t *l); /\* missing *\/ */
+ /* void sd_journal_restart_unique(sd_journal *j);                      /\* missing *\/ */

@@ -1,0 +1,120 @@
+From 59b659288539442db922fa1909607cb0a8ba0bed Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 9 Jun 2012 15:04:14 +0200
+Subject: [PATCH] journal: rotate on SIGUSR2 (cherry picked from commit
+ ba6b3039531a70466dd955c6faa9bf521b3dfbac)
+
+---
+ TODO                             |    6 ------
+ man/systemd-journald.service.xml |   33 +++++++++++++++++++++++++++++++++
+ src/journal/journald.c           |   11 +++++++++--
+ 3 files changed, 42 insertions(+), 8 deletions(-)
+
+diff --git a/TODO b/TODO
+index 5dfaf3d..7127b53 100644
+--- a/TODO
++++ b/TODO
+@@ -87,8 +87,6 @@ Features:
+ 
+ * figure out whether we should leave dbus around during shutdown
+ 
+-* add interface to allow immediate rotation of the journal, and even flushing.
+-
+ * dbus: in fedora, make the machine a symlink to /etc/machine-id
+ 
+ * journald: reuse XZ context
+@@ -123,14 +121,10 @@ Features:
+ 
+ * systemctl status: show coredumps
+ 
+-* systemctl status: show whether journal was rotated since service started
+-
+ * save coredump in Windows/Mozilla minidump format
+ 
+ * support crash reporting operation modes (https://live.gnome.org/GnomeOS/Design/Whiteboards/ProblemReporting)
+ 
+-* journal: allow per-entry control on /var vs. /run (think incognito browser mode)
+-
+ * clean up session cgroups that remain after logout (think sshd), but eventually run empty
+ 
+ * support "systemctl stop foobar@.service" to stop all units matching a certain template
+diff --git a/man/systemd-journald.service.xml b/man/systemd-journald.service.xml
+index 5d39c50..8ee0cf4 100644
+--- a/man/systemd-journald.service.xml
++++ b/man/systemd-journald.service.xml
+@@ -98,6 +98,39 @@
+         </refsect1>
+ 
+         <refsect1>
++                <title>Signals</title>
++
++                <variablelist>
++                        <varlistentry>
++                                <term>SIGUSR1</term>
++
++                                <listitem><para>Request that journal
++                                data from <filename>/run/</filename>
++                                is flushed to
++                                <filename>/var/</filename> in order to
++                                make it persistent (if this is
++                                enabled). This may be used after
++                                <filename>/var/</filename> is mounted,
++                                but is generally not required since
++                                the first journal write when
++                                <filename>/var/</filename> becomes
++                                writable triggers the flushing
++                                anyway.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term>SIGUSR2</term>
++
++                                <listitem><para>Request immediate
++                                rotation of the journal
++                                files.</para></listitem>
++                        </varlistentry>
++                </variablelist>
++        </refsect1>
++
++
++
++        <refsect1>
+                 <title>See Also</title>
+                 <para>
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index bd62999..3fca09f 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2143,6 +2143,7 @@ static int server_flush_proc_kmsg(Server *s) {
+ 
+ static int process_event(Server *s, struct epoll_event *ev) {
+         assert(s);
++        assert(ev);
+ 
+         if (ev->data.fd == s->signal_fd) {
+                 struct signalfd_siginfo sfsi;
+@@ -2167,7 +2168,13 @@ static int process_event(Server *s, struct epoll_event *ev) {
+ 
+                 if (sfsi.ssi_signo == SIGUSR1) {
+                         server_flush_to_var(s);
+-                        return 0;
++                        return 1;
++                }
++
++                if (sfsi.ssi_signo == SIGUSR2) {
++                        server_rotate(s);
++                        server_vacuum(s);
++                        return 1;
+                 }
+ 
+                 log_debug("Received SIG%s", signal_to_string(sfsi.ssi_signo));
+@@ -2558,7 +2565,7 @@ static int open_signalfd(Server *s) {
+         assert(s);
+ 
+         assert_se(sigemptyset(&mask) == 0);
+-        sigset_add_many(&mask, SIGINT, SIGTERM, SIGUSR1, -1);
++        sigset_add_many(&mask, SIGINT, SIGTERM, SIGUSR1, SIGUSR2, -1);
+         assert_se(sigprocmask(SIG_SETMASK, &mask, NULL) == 0);
+ 
+         s->signal_fd = signalfd(-1, &mask, SFD_NONBLOCK|SFD_CLOEXEC);

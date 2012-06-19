@@ -1,0 +1,31 @@
+From fca20756b10d091170409e7c665367e6ac8101a9 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 15 Jun 2012 22:22:24 +0200
+Subject: [PATCH] logind: more robust handling of VT-less systems
+
+Restore the check that was removed in commit 74afee9c. Its removal
+caused a regression on some s390x systems where for whatever reason the
+device node /dev/tty0 exists and makes the preceding access() check
+pass.
+(cherry picked from commit cdc564d27f71f82457e96e9b237564fc6e8e84c9)
+---
+ src/login/logind.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/login/logind.c b/src/login/logind.c
+index c3f79df..0fcf48c 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -1092,6 +1092,12 @@ static int manager_connect_console(Manager *m) {
+ 
+         m->console_active_fd = open("/sys/class/tty/tty0/active", O_RDONLY|O_NOCTTY|O_CLOEXEC);
+         if (m->console_active_fd < 0) {
++
++                /* On some systems the device node /dev/tty0 may exist
++                 * even though /sys/class/tty/tty0 does not. */
++                if (errno == ENOENT)
++                        return 0;
++
+                 log_error("Failed to open /sys/class/tty/tty0/active: %m");
+                 return -errno;
+         }

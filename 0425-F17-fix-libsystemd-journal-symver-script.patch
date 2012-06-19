@@ -1,0 +1,23 @@
+From 86d38d5c7e4644a19b686cedb0d006a427f80431 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 19 Jun 2012 17:18:16 +0200
+Subject: [PATCH] F17: fix libsystemd-journal symver script
+
+Upstream has no LIBSYSTEMD_JOURNAL_45, because it got renamed to
+LIBSYSTEMD_JOURNAL_183. Rather than renaming it in F17 too, provide
+both.
+---
+ src/journal/libsystemd-journal.sym |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/journal/libsystemd-journal.sym b/src/journal/libsystemd-journal.sym
+index cd434ae..b5b4f81 100644
+--- a/src/journal/libsystemd-journal.sym
++++ b/src/journal/libsystemd-journal.sym
+@@ -51,3 +51,6 @@ global:
+         sd_journal_send_with_location;
+         sd_journal_sendv_with_location;
+ } LIBSYSTEMD_JOURNAL_38;
++
++LIBSYSTEMD_JOURNAL_183 {
++} LIBSYSTEMD_JOURNAL_45;

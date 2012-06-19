@@ -1,0 +1,24 @@
+From 7ee5322c274ecd7199165c4e2070186577f8498e Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 9 Jun 2012 15:03:22 +0200
+Subject: [PATCH] journal: fix SD_JOURNAL_SYSTEM_ONLY flag (cherry picked from
+ commit 38a6db16dc6f3ac6e6f497c90e51fb9904d785ba)
+
+---
+ src/journal/sd-journal.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 9fc7090..a91e94c 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -943,7 +943,8 @@ static int add_file(sd_journal *j, const char *prefix, const char *dir, const ch
+         assert(filename);
+ 
+         if ((j->flags & SD_JOURNAL_SYSTEM_ONLY) &&
+-            !startswith(filename, "system.journal"))
++            !(streq(filename, "system.journal") ||
++             (startswith(filename, "system@") && endswith(filename, ".journal"))))
+                 return 0;
+ 
+         if (dir)

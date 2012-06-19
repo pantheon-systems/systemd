@@ -1,0 +1,30 @@
+From ef5fc8087d3b22bd826167a59305b3e8e15f8d68 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Tue, 19 Jun 2012 10:00:54 +0200
+Subject: [PATCH] systemd: return error when asked to stop unknown unit
+
+Command systemctl stop foo.service, will print error message, when
+foo.service is unknown to systemd, i.e. there is no unit file loaded for
+this service.
+https://bugzilla.redhat.com/show_bug.cgi?id=732874
+(cherry picked from commit 9722ef2565fdddd64deaa99d7665ca0fdafed1a5)
+---
+ src/core/dbus-manager.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index aaaeec4..a610a6b 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -1594,6 +1594,11 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                                 job_type = JOB_RELOAD;
+                 }
+ 
++                if (job_type == JOB_STOP && u->load_state == UNIT_ERROR && unit_active_state(u) == UNIT_INACTIVE) {
++                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s not loaded.", name);
++                        return bus_send_error_reply(connection, message, &error, -EPERM);
++                }
++
+                 if ((job_type == JOB_START && u->refuse_manual_start) ||
+                     (job_type == JOB_STOP && u->refuse_manual_stop) ||
+                     ((job_type == JOB_RESTART || job_type == JOB_TRY_RESTART) &&
