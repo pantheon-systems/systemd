@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        15%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        16%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -510,6 +510,9 @@ Provides:       systemd-units = %{version}-%{release}
 Obsoletes:      systemd < 38-5
 # old nfs-server.service forked daemons from ExecStartPre/Post:
 Conflicts:      nfs-utils < 1:1.2.6
+# usage of 'systemctl stop' on a non-existent unit in ExecStartPre:
+Conflicts:      rsyslog < 5.8.10-2
+Conflicts:      syslog-ng < 3.2.5-15
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -867,6 +870,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Wed Jun 20 2012 Michal Schmidt <mschmidt@redhat.com> - 44-16
+- Add conflicts with syslog units that do unprotected 'systemctl stop' on
+  a non-existent unit in their ExecStartPre.
+
 * Tue Jun 19 2012 Michal Schmidt <mschmidt@redhat.com> - 44-15
 - Apply timeouts to oneshot services (#761656)
 - Report error when stopping an unknown unit (#732874)
