@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        185
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -75,6 +75,8 @@ Provides:       udev = %{version}
 Obsoletes:      udev < 183
 Conflicts:      dracut < 019
 Conflicts:      plymouth < 0.8.5.1
+Obsoletes:      systemd < 185-4
+Conflicts:      systemd < 185-4
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -90,6 +92,8 @@ work as a drop-in replacement for sysvinit.
 Group:          System Environment/Base
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
+Obsoletes:      systemd < 185-4
+Conflicts:      systemd < 185-4
 
 %description libs
 Libraries for systemd and udev. systemd PAM module.
@@ -484,6 +488,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Jun 22 2012 Nils Philippsen <nils@redhat.com> - 185-7.gite7aee75
+- add obsoletes/conflicts so multilib systemd -> systemd-libs updates work
+
 * Thu Jun 14 2012 Michal Schmidt <mschmidt@redhat.com> - 185-6.gite7aee75
 - Update to current git
 
