@@ -1,0 +1,81 @@
+From 3ba2cfc41e04cbb1cfeb2c081b54c874ebaddec4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Jun 2012 16:31:06 +0200
+Subject: [PATCH] man: document new sd_session_get_state() call (cherry picked
+ from commit 7ea9cb91207f49965bc23bfdac9d5475940bea51)
+
+---
+ man/sd_session_is_active.xml |   26 ++++++++++++++++++++++++++
+ man/sd_uid_get_state.xml     |    8 ++++++--
+ 2 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/man/sd_session_is_active.xml b/man/sd_session_is_active.xml
+index afdeed5..0665617 100644
+--- a/man/sd_session_is_active.xml
++++ b/man/sd_session_is_active.xml
+@@ -44,6 +44,7 @@
+ 
+         <refnamediv>
+                 <refname>sd_session_is_active</refname>
++                <refname>sd_session_get_state</refname>
+                 <refname>sd_session_get_uid</refname>
+                 <refname>sd_session_get_seat</refname>
+                 <refname>sd_session_get_service</refname>
+@@ -63,6 +64,12 @@
+                         </funcprototype>
+ 
+                         <funcprototype>
++                                <funcdef>int <function>sd_session_get_state</function></funcdef>
++                                <paramdef>const char* <parameter>session</parameter></paramdef>
++                                <paramdef>char** <parameter>state</parameter></paramdef>
++                        </funcprototype>
++
++                        <funcprototype>
+                                 <funcdef>int <function>sd_session_get_uid</function></funcdef>
+                                 <paramdef>const char* <parameter>session</parameter></paramdef>
+                                 <paramdef>uid_t* <parameter>uid</parameter></paramdef>
+@@ -109,6 +116,25 @@
+                 (i.e. currently in the foreground and available for
+                 user input) or not.</para>
+ 
++                <para><function>sd_session_get_state()</function> may
++                be used to determine the state of the session
++                identified by the specified session identifier. The
++                following states are currently known:
++                <literal>online</literal> (session logged in, but
++                session not active, i.e. not in the foreground),
++                <literal>active</literal> (session logged in and
++                active, i.e. in the foreground),
++                <literal>closing</literal> (session nominally logged
++                out, but some processes belonging to it are still
++                around). In the future additional states might be
++                defined, client code should be written to be robust in
++                regards to additional state strings being
++                returned. This function is a more generic version of
++                <function>sd_session_is_active()</function>. The returned
++                string needs to be freed with the libc
++                <citerefentry><refentrytitle>free</refentrytitle><manvolnum>3</manvolnum></citerefentry>
++                call after use.</para>
++
+                 <para><function>sd_session_get_uid()</function> may be
+                 used to determine the user identifier of the Unix user the session
+                 identified by the specified session identifier belongs
+diff --git a/man/sd_uid_get_state.xml b/man/sd_uid_get_state.xml
+index 9249021..0f5643c 100644
+--- a/man/sd_uid_get_state.xml
++++ b/man/sd_uid_get_state.xml
+@@ -93,8 +93,12 @@
+                 at all), <literal>lingering</literal> (user not logged
+                 in, but some user services running),
+                 <literal>online</literal> (user logged in, but not
+-                active), <literal>active</literal> (user logged in on
+-                an active seat). In the future additional states might
++                active, i.e. has no session in the foreground),
++                <literal>active</literal> (user logged in, and has at
++                least one active session, i.e. one session in the
++                foreground), <literal>closing</literal> (user not
++                logged in, and not lingering, but some processes are
++                still around). In the future additional states might
+                 be defined, client code should be written to be robust
+                 in regards to additional state strings being
+                 returned. The returned string needs to be freed with

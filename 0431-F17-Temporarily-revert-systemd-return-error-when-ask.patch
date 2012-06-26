@@ -1,0 +1,29 @@
+From 3b8e5d0e1ecaeb51b1b5f349e2f70acb1d8c4e9c Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 26 Jun 2012 12:08:12 +0200
+Subject: [PATCH] F17: Temporarily revert "systemd: return error when asked to
+ stop unknown unit"
+
+This reverts commit ef5fc8087d3b22bd826167a59305b3e8e15f8d68.
+I will return this later after the necessary rsyslog and syslog-ng
+updates are in stable.
+---
+ src/core/dbus-manager.c |    5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index a610a6b..aaaeec4 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -1594,11 +1594,6 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                                 job_type = JOB_RELOAD;
+                 }
+ 
+-                if (job_type == JOB_STOP && u->load_state == UNIT_ERROR && unit_active_state(u) == UNIT_INACTIVE) {
+-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s not loaded.", name);
+-                        return bus_send_error_reply(connection, message, &error, -EPERM);
+-                }
+-
+                 if ((job_type == JOB_START && u->refuse_manual_start) ||
+                     (job_type == JOB_STOP && u->refuse_manual_stop) ||
+                     ((job_type == JOB_RESTART || job_type == JOB_TRY_RESTART) &&

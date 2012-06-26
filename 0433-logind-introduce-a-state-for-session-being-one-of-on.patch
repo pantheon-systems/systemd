@@ -1,0 +1,325 @@
+From 14c8069bcc228db3e92132d6baa5edaf3387d83b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Jun 2012 16:14:53 +0200
+Subject: [PATCH] logind: introduce a state for session, being one of online,
+ active, closing
+
+online = logged in
+active = logged in and session is in the fg
+closing = nominally logged out but some left-over processes still around
+
+Related to:
+
+https://bugzilla.gnome.org/show_bug.cgi?id=677556
+(cherry picked from commit 0604381b9dbef4cc498b5a77311e1da99c1430b8)
+
+Conflicts:
+	TODO
+---
+ src/login/libsystemd-login.sym  |    5 +++++
+ src/login/loginctl.c            |   10 +++++-----
+ src/login/logind-session-dbus.c |   22 ++++++++++++++++++++--
+ src/login/logind-session.c      |   22 ++++++++++++++++++++++
+ src/login/logind-session.h      |   13 +++++++++++++
+ src/login/logind-user.h         |   10 +++++-----
+ src/login/sd-login.c            |   24 ++++++++++++++++++++++++
+ src/login/test-login.c          |    5 +++++
+ src/systemd/sd-login.h          |    9 +++++++--
+ 9 files changed, 106 insertions(+), 14 deletions(-)
+
+diff --git a/src/login/libsystemd-login.sym b/src/login/libsystemd-login.sym
+index a5e6c1e..e43ee17 100644
+--- a/src/login/libsystemd-login.sym
++++ b/src/login/libsystemd-login.sym
+@@ -46,3 +46,8 @@ global:
+         sd_session_get_class;
+         sd_session_get_display;
+ } LIBSYSTEMD_LOGIN_38;
++
++LIBSYSTEMD_LOGIN_186 {
++global:
++        sd_session_get_state;
++} LIBSYSTEMD_LOGIN_43;
+diff --git a/src/login/loginctl.c b/src/login/loginctl.c
+index a494447..9a43685 100644
+--- a/src/login/loginctl.c
++++ b/src/login/loginctl.c
+@@ -364,7 +364,7 @@ typedef struct SessionStatusInfo {
+         pid_t leader;
+         const char *type;
+         const char *class;
+-        bool active;
++        const char *state;
+ } SessionStatusInfo;
+ 
+ typedef struct UserStatusInfo {
+@@ -458,8 +458,8 @@ static void print_session_status_info(SessionStatusInfo *i) {
+         } else if (i->class)
+                 printf("\t   Class: %s\n", i->class);
+ 
+-
+-        printf("\t  Active: %s\n", yes_no(i->active));
++        if (i->state)
++                printf("\t   State: %s\n", i->state);
+ 
+         if (i->default_control_group) {
+                 unsigned c;
+@@ -597,6 +597,8 @@ static int status_property_session(const char *name, DBusMessageIter *iter, Sess
+                                 i->type = s;
+                         else if (streq(name, "Class"))
+                                 i->class = s;
++                        else if (streq(name, "State"))
++                                i->state = s;
+                 }
+                 break;
+         }
+@@ -621,8 +623,6 @@ static int status_property_session(const char *name, DBusMessageIter *iter, Sess
+ 
+                 if (streq(name, "Remote"))
+                         i->remote = b;
+-                else if (streq(name, "Active"))
+-                        i->active = b;
+ 
+                 break;
+         }
+diff --git a/src/login/logind-session-dbus.c b/src/login/logind-session-dbus.c
+index e9fd5a3..c1704d1 100644
+--- a/src/login/logind-session-dbus.c
++++ b/src/login/logind-session-dbus.c
+@@ -53,12 +53,13 @@
+         "  <property name=\"Remote\" type=\"b\" access=\"read\"/>\n"    \
+         "  <property name=\"RemoteHost\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"RemoteUser\" type=\"s\" access=\"read\"/>\n" \
+-        "  <property name=\"Service\" type=\"s\" access=\"read\"/>\n" \
++        "  <property name=\"Service\" type=\"s\" access=\"read\"/>\n"   \
+         "  <property name=\"Leader\" type=\"u\" access=\"read\"/>\n"    \
+         "  <property name=\"Audit\" type=\"u\" access=\"read\"/>\n"     \
+         "  <property name=\"Type\" type=\"s\" access=\"read\"/>\n"      \
+-        "  <property name=\"Class\" type=\"s\" access=\"read\"/>\n"      \
++        "  <property name=\"Class\" type=\"s\" access=\"read\"/>\n"     \
+         "  <property name=\"Active\" type=\"b\" access=\"read\"/>\n"    \
++        "  <property name=\"State\" type=\"s\" access=\"read\"/>\n"     \
+         "  <property name=\"Controllers\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"ResetControllers\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"KillProcesses\" type=\"b\" access=\"read\"/>\n" \
+@@ -219,6 +220,22 @@ static int bus_session_append_default_cgroup(DBusMessageIter *i, const char *pro
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_session_append_type, session_type, SessionType);
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_session_append_class, session_class, SessionClass);
+ 
++static int bus_session_append_state(DBusMessageIter *i, const char *property, void *data) {
++        Session *s = data;
++        const char *state;
++
++        assert(i);
++        assert(property);
++        assert(s);
++
++        state = session_state_to_string(session_get_state(s));
++
++        if (!dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &state))
++                return -ENOMEM;
++
++        return 0;
++}
++
+ static int get_session_for_path(Manager *m, const char *path, Session **_s) {
+         Session *s;
+         char *id;
+@@ -262,6 +279,7 @@ static const BusProperty bus_login_session_properties[] = {
+         { "Type",                   bus_session_append_type,            "s", offsetof(Session, type)                },
+         { "Class",                  bus_session_append_class,           "s", offsetof(Session, class)               },
+         { "Active",                 bus_session_append_active,          "b", 0 },
++        { "State",                  bus_session_append_state,           "s", 0 },
+         { "Controllers",            bus_property_append_strv,          "as", offsetof(Session, controllers),        true },
+         { "ResetControllers",       bus_property_append_strv,          "as", offsetof(Session, reset_controllers),  true },
+         { "KillProcesses",          bus_property_append_bool,           "b", offsetof(Session, kill_processes)      },
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 49e1e5c..1945041 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -133,11 +133,13 @@ int session_save(Session *s) {
+                 "UID=%lu\n"
+                 "USER=%s\n"
+                 "ACTIVE=%i\n"
++                "STATE=%s\n"
+                 "REMOTE=%i\n"
+                 "KILL_PROCESSES=%i\n",
+                 (unsigned long) s->user->uid,
+                 s->user->name,
+                 session_is_active(s),
++                session_state_to_string(session_get_state(s)),
+                 s->remote,
+                 s->kill_processes);
+ 
+@@ -913,6 +915,18 @@ void session_add_to_gc_queue(Session *s) {
+         s->in_gc_queue = true;
+ }
+ 
++SessionState session_get_state(Session *s) {
++        assert(s);
++
++        if (s->fifo_fd < 0)
++                return SESSION_CLOSING;
++
++        if (session_is_active(s))
++                return SESSION_ACTIVE;
++
++        return SESSION_ONLINE;
++}
++
+ int session_kill(Session *s, KillWho who, int signo) {
+         int r = 0;
+         Set *pid_set = NULL;
+@@ -954,6 +968,14 @@ int session_kill(Session *s, KillWho who, int signo) {
+         return r;
+ }
+ 
++static const char* const session_state_table[_SESSION_TYPE_MAX] = {
++        [SESSION_ONLINE] = "online",
++        [SESSION_ACTIVE] = "active",
++        [SESSION_CLOSING] = "closing"
++};
++
++DEFINE_STRING_TABLE_LOOKUP(session_state, SessionState);
++
+ static const char* const session_type_table[_SESSION_TYPE_MAX] = {
+         [SESSION_TTY] = "tty",
+         [SESSION_X11] = "x11",
+diff --git a/src/login/logind-session.h b/src/login/logind-session.h
+index d0b8c87..77a12af 100644
+--- a/src/login/logind-session.h
++++ b/src/login/logind-session.h
+@@ -30,6 +30,14 @@ typedef struct Session Session;
+ #include "logind-seat.h"
+ #include "logind-user.h"
+ 
++typedef enum SessionState {
++        SESSION_ONLINE,   /* Logged in */
++        SESSION_ACTIVE,   /* Logged in and in the fg */
++        SESSION_CLOSING,  /* Logged out, but processes still remain */
++        _SESSION_STATE_MAX,
++        _SESSION_STATE_INVALID = -1
++} SessionState;
++
+ typedef enum SessionType {
+         SESSION_UNSPECIFIED,
+         SESSION_TTY,
+@@ -118,12 +126,17 @@ int session_kill(Session *s, KillWho who, int signo);
+ 
+ char *session_bus_path(Session *s);
+ 
++SessionState session_get_state(Session *u);
++
+ extern const DBusObjectPathVTable bus_session_vtable;
+ 
+ int session_send_signal(Session *s, bool new_session);
+ int session_send_changed(Session *s, const char *properties);
+ int session_send_lock(Session *s, bool lock);
+ 
++const char* session_state_to_string(SessionState t);
++SessionState session_state_from_string(const char *s);
++
+ const char* session_type_to_string(SessionType t);
+ SessionType session_type_from_string(const char *s);
+ 
+diff --git a/src/login/logind-user.h b/src/login/logind-user.h
+index 802f1ed..23e409c 100644
+--- a/src/login/logind-user.h
++++ b/src/login/logind-user.h
+@@ -30,11 +30,11 @@ typedef struct User User;
+ #include "logind-session.h"
+ 
+ typedef enum UserState {
+-        USER_OFFLINE,
+-        USER_LINGERING,
+-        USER_ONLINE,
+-        USER_ACTIVE,
+-        USER_CLOSING,
++        USER_OFFLINE,    /* Not logged in at all */
++        USER_LINGERING,  /* Lingering has been enabled by the admin for this user */
++        USER_ONLINE,     /* User logged in */
++        USER_ACTIVE,     /* User logged in and has a session in the fg */
++        USER_CLOSING,    /* User logged out, but processes still remain and lingering is not enabled */
+         _USER_STATE_MAX,
+         _USER_STATE_INVALID = -1
+ } UserState;
+diff --git a/src/login/sd-login.c b/src/login/sd-login.c
+index a17c1d4..2effe7d 100644
+--- a/src/login/sd-login.c
++++ b/src/login/sd-login.c
+@@ -317,6 +317,30 @@ _public_ int sd_session_is_active(const char *session) {
+         return r;
+ }
+ 
++_public_ int sd_session_get_state(const char *session, char **state) {
++        char *p, *s = NULL;
++        int r;
++
++        if (!state)
++                return -EINVAL;
++
++        r = file_of_session(session, &p);
++        if (r < 0)
++                return r;
++
++        r = parse_env_file(p, NEWLINE, "STATE", &s, NULL);
++        free(p);
++
++        if (r < 0) {
++                free(s);
++                return r;
++        } else if (!s)
++                return -EIO;
++
++        *state = s;
++        return 0;
++}
++
+ _public_ int sd_session_get_uid(const char *session, uid_t *uid) {
+         int r;
+         char *p, *s = NULL;
+diff --git a/src/login/test-login.c b/src/login/test-login.c
+index dd84042..2e0e257 100644
+--- a/src/login/test-login.c
++++ b/src/login/test-login.c
+@@ -71,6 +71,11 @@ int main(int argc, char* argv[]) {
+         assert_se(r >= 0);
+         printf("active = %s\n", yes_no(r));
+ 
++        r = sd_session_get_state(session, &state);
++        assert_se(r >= 0);
++        printf("state = %s\n", state);
++        free(state);
++
+         assert_se(sd_session_get_uid(session, &u) >= 0);
+         printf("uid = %lu\n", (unsigned long) u);
+         assert_se(u == u2);
+diff --git a/src/systemd/sd-login.h b/src/systemd/sd-login.h
+index 315700e..1d5b657 100644
+--- a/src/systemd/sd-login.h
++++ b/src/systemd/sd-login.h
+@@ -63,7 +63,7 @@ int sd_pid_get_owner_uid(pid_t pid, uid_t *uid);
+  * error for non-service processes. */
+ int sd_pid_get_unit(pid_t, char **unit);
+ 
+-/* Get state from uid. Possible states: offline, lingering, online, active */
++/* Get state from uid. Possible states: offline, lingering, online, active, closing */
+ int sd_uid_get_state(uid_t uid, char**state);
+ 
+ /* Return 1 if uid has session on seat. If require_active is true will
+@@ -80,9 +80,14 @@ int sd_uid_get_sessions(uid_t uid, int require_active, char ***sessions);
+  * just return number of seats.*/
+ int sd_uid_get_seats(uid_t uid, int require_active, char ***seats);
+ 
+-/* Return 1 if the session is a active */
++/* Return 1 if the session is a active. */
+ int sd_session_is_active(const char *session);
+ 
++/* Get state from session. Possible states: online, active, closing
++ * (This function is a more generic version of
++ * sd_session_is_active().) */
++int sd_session_get_state(const char *sessio, char **state);
++
+ /* Determine user id of session */
+ int sd_session_get_uid(const char *session, uid_t *uid);
+ 

@@ -1,0 +1,203 @@
+From 85b034c691e7a827488c61bdae5d5da9d52ac72a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Jun 2012 16:52:54 +0200
+Subject: [PATCH] login: wrap CanTTY and CanGraphical seat attributes in
+ libsystemd-login (cherry picked from commit
+ 20747498c68575646fae88f4dd270fab219a25a6)
+
+---
+ man/sd_seat_get_active.xml     |   31 +++++++++++++++++++++++++++----
+ man/sd_session_is_active.xml   |   16 ++++++++++++----
+ src/login/libsystemd-login.sym |    2 ++
+ src/login/sd-login.c           |   16 ++++++++++++++--
+ src/login/test-login.c         |    8 ++++++++
+ src/systemd/sd-login.h         |    6 ++++++
+ 6 files changed, 69 insertions(+), 10 deletions(-)
+
+diff --git a/man/sd_seat_get_active.xml b/man/sd_seat_get_active.xml
+index acc6ee4..e63cf13 100644
+--- a/man/sd_seat_get_active.xml
++++ b/man/sd_seat_get_active.xml
+@@ -72,6 +72,16 @@
+                                 <funcdef>int <function>sd_seat_can_multi_session</function></funcdef>
+                                 <paramdef>const char* <parameter>seat</parameter></paramdef>
+                         </funcprototype>
++
++                        <funcprototype>
++                                <funcdef>int <function>sd_seat_can_tty</function></funcdef>
++                                <paramdef>const char* <parameter>seat</parameter></paramdef>
++                        </funcprototype>
++
++                        <funcprototype>
++                                <funcdef>int <function>sd_seat_can_graphical</function></funcdef>
++                                <paramdef>const char* <parameter>seat</parameter></paramdef>
++                        </funcprototype>
+                 </funcsynopsis>
+         </refsynopsisdiv>
+ 
+@@ -111,6 +121,15 @@
+                 sessions in parallel (whith only one being active at a
+                 time).</para>
+ 
++                <para><function>sd_seat_can_tty()</function> may be
++                used to determine whether a specific seat provides TTY
++                functionality, i.e. is useful as a text console.</para>
++
++                <para><function>sd_seat_can_graphical()</function> may
++                be used to determine whether a specific seat provides
++                graphics functionality, i.e. is useful as a graphics
++                display.</para>
++
+                 <para>If the <literal>seat</literal> parameter of any
+                 of these functions is passed as NULL the operation is
+                 executed for the seat of the session of the calling
+@@ -126,8 +145,10 @@
+                 <function>sd_seat_get_sessions()</function> returns
+                 the number of entries in the session identifier
+                 array. If the test succeeds
+-                <function>sd_seat_can_multi_session</function> returns
+-                a positive integer, if it fails 0. On failure, these
++                <function>sd_seat_can_multi_session</function>,
++                <function>sd_seat_can_tty</function> and
++                <function>sd_seat_can_graphical</function> return a
++                positive integer, if it fails 0. On failure, these
+                 calls return a negative errno-style error code.</para>
+         </refsect1>
+ 
+@@ -135,8 +156,10 @@
+                 <title>Notes</title>
+ 
+                 <para>The <function>sd_seat_get_active()</function>,
+-                <function>sd_seat_get_sessions()</function>, and
+-                <function>sd_seat_can_multi_session()</function> interfaces
++                <function>sd_seat_get_sessions()</function>,
++                <function>sd_seat_can_multi_session()</function>,
++                <function>sd_seat_can_tty()</function> and
++                <function>sd_seat_can_grapical()</function> interfaces
+                 are available as shared library, which can be compiled
+                 and linked to with the
+                 <literal>libsystemd-login</literal>
+diff --git a/man/sd_session_is_active.xml b/man/sd_session_is_active.xml
+index 0665617..b6e0d2b 100644
+--- a/man/sd_session_is_active.xml
++++ b/man/sd_session_is_active.xml
+@@ -198,9 +198,13 @@
+                 <para>If the test succeeds
+                 <function>sd_session_is_active()</function> returns a
+                 positive integer, if it fails 0.  On success
++                <function>sd_session_get_state()</function>,
+                 <function>sd_session_get_uid()</function>,
+-                <function>sd_session_get_service()</function> and
+-                <function>sd_session_get_seat()</function> return 0 or
++                <function>sd_session_get_seat()</function>,
++                <function>sd_session_get_service()</function>,
++                <function>sd_session_get_type()</function>,
++                <function>sd_session_get_class()</function> and
++                <function>sd_session_get_display()</function> return 0 or
+                 a positive integer. On failure, these calls return a
+                 negative errno-style error code.</para>
+         </refsect1>
+@@ -209,9 +213,13 @@
+                 <title>Notes</title>
+ 
+                 <para>The <function>sd_session_is_active()</function>,
++                <function>sd_session_get_state()</function>,
+                 <function>sd_session_get_uid()</function>,
+-                <function>sd_session_get_service()</function> and
+-                <function>sd_session_get_seat()</function> interfaces
++                <function>sd_session_get_seat()</function>,
++                <function>sd_session_get_service()</function>,
++                <function>sd_session_get_type()</function>,
++                <function>sd_session_get_class()</function> and
++                <function>sd_session_get_display()</function> interfaces
+                 are available as shared library, which can be compiled
+                 and linked to with the
+                 <literal>libsystemd-login</literal>
+diff --git a/src/login/libsystemd-login.sym b/src/login/libsystemd-login.sym
+index e43ee17..11bdc00 100644
+--- a/src/login/libsystemd-login.sym
++++ b/src/login/libsystemd-login.sym
+@@ -50,4 +50,6 @@ global:
+ LIBSYSTEMD_LOGIN_186 {
+ global:
+         sd_session_get_state;
++        sd_seat_can_tty;
++        sd_seat_can_graphical;
+ } LIBSYSTEMD_LOGIN_43;
+diff --git a/src/login/sd-login.c b/src/login/sd-login.c
+index 2effe7d..d47a49c 100644
+--- a/src/login/sd-login.c
++++ b/src/login/sd-login.c
+@@ -583,7 +583,7 @@ _public_ int sd_seat_get_sessions(const char *seat, char ***sessions, uid_t **ui
+         return r;
+ }
+ 
+-_public_ int sd_seat_can_multi_session(const char *seat) {
++static int seat_get_can(const char *seat, const char *variable) {
+         char *p, *s = NULL;
+         int r;
+ 
+@@ -592,7 +592,7 @@ _public_ int sd_seat_can_multi_session(const char *seat) {
+                 return r;
+ 
+         r = parse_env_file(p, NEWLINE,
+-                           "CAN_MULTI_SESSION", &s,
++                           variable, &s,
+                            NULL);
+         free(p);
+ 
+@@ -610,6 +610,18 @@ _public_ int sd_seat_can_multi_session(const char *seat) {
+         return r;
+ }
+ 
++_public_ int sd_seat_can_multi_session(const char *seat) {
++        return seat_get_can(seat, "CAN_MULTI_SESSION");
++}
++
++_public_ int sd_seat_can_tty(const char *seat) {
++        return seat_get_can(seat, "CAN_TTY");
++}
++
++_public_ int sd_seat_can_graphical(const char *seat) {
++        return seat_get_can(seat, "CAN_GRAPHICAL");
++}
++
+ _public_ int sd_get_seats(char ***seats) {
+         return get_files_in_directory("/run/systemd/seats/", seats);
+ }
+diff --git a/src/login/test-login.c b/src/login/test-login.c
+index 2e0e257..5325aeb 100644
+--- a/src/login/test-login.c
++++ b/src/login/test-login.c
+@@ -99,6 +99,14 @@ int main(int argc, char* argv[]) {
+         assert_se(r >= 0);
+         printf("can do multi session = %s\n", yes_no(r));
+ 
++        r = sd_seat_can_tty(seat);
++        assert_se(r >= 0);
++        printf("can do tty = %s\n", yes_no(r));
++
++        r = sd_seat_can_graphical(seat);
++        assert_se(r >= 0);
++        printf("can do graphical = %s\n", yes_no(r));
++
+         assert_se(sd_uid_get_state(u, &state) >= 0);
+         printf("state = %s\n", state);
+ 
+diff --git a/src/systemd/sd-login.h b/src/systemd/sd-login.h
+index 1d5b657..a06f506 100644
+--- a/src/systemd/sd-login.h
++++ b/src/systemd/sd-login.h
+@@ -117,6 +117,12 @@ int sd_seat_get_sessions(const char *seat, char ***sessions, uid_t **uid, unsign
+ /* Return whether the seat is multi-session capable */
+ int sd_seat_can_multi_session(const char *seat);
+ 
++/* Return whether the seat is TTY capable, i.e. suitable for showing console UIs */
++int sd_seat_can_tty(const char *seat);
++
++/* Return whether the seat is graphics capable, i.e. suitable for showing graphical UIs */
++int sd_seat_can_graphical(const char *seat);
++
+ /* Get all seats, store in *seats. Returns the number of seats. If
+  * seats is NULL only returns number of seats. */
+ int sd_get_seats(char ***seats);

@@ -1,0 +1,58 @@
+From 00da183d99c9a310266e8eb5ed4b9b3ef87e484f Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 26 Jun 2012 11:42:52 +0200
+Subject: [PATCH] service: pass via FAILED/DEAD before going to AUTO_RESTART
+
+With misconfigured mysql, which uses Restart=always, the following two
+messages would loop indefinitely and the "systemctl start" would never
+finish:
+  Job pending for unit, delaying automatic restart.
+  mysqld.service holdoff time over, scheduling restart.
+
+In service_enter_dead() always set the state to SERVICE_FAILED/DEAD first
+before setting SERVICE_AUTO_RESTART. This is to allow running jobs to
+complete. OnFailure will be also triggered at this point, so there's no
+need to do it again from service_stop() (where it was added in commit
+f0c7b229).
+
+Note that OnFailure units should better trigger only after giving up
+auto-restarting, but that's for another patch to solve.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=832039
+(cherry picked from commit 0c7f15b3a95c3596a4756de5c44eb1fdcd0034fc)
+---
+ src/core/service.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 55a20e0..ef37a5a 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1889,6 +1889,8 @@ static void service_enter_dead(Service *s, ServiceResult f, bool allow_restart)
+         if (f != SERVICE_SUCCESS)
+                 s->result = f;
+ 
++        service_set_state(s, s->result != SERVICE_SUCCESS ? SERVICE_FAILED : SERVICE_DEAD);
++
+         if (allow_restart &&
+             !s->forbid_restart &&
+             (s->restart == SERVICE_RESTART_ALWAYS ||
+@@ -1902,8 +1904,7 @@ static void service_enter_dead(Service *s, ServiceResult f, bool allow_restart)
+                         goto fail;
+ 
+                 service_set_state(s, SERVICE_AUTO_RESTART);
+-        } else
+-                service_set_state(s, s->result != SERVICE_SUCCESS ? SERVICE_FAILED : SERVICE_DEAD);
++        }
+ 
+         s->forbid_restart = false;
+ 
+@@ -2510,7 +2511,7 @@ static int service_stop(Unit *u) {
+ 
+         /* A restart will be scheduled or is in progress. */
+         if (s->state == SERVICE_AUTO_RESTART) {
+-                service_enter_dead(s, SERVICE_SUCCESS, false);
++                service_set_state(s, SERVICE_DEAD);
+                 return 0;
+         }
+ 

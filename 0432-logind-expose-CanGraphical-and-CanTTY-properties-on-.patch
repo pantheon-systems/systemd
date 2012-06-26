@@ -1,0 +1,204 @@
+From 9a18fda4aeb84be192be8744c793d1b9e627bd9a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Jun 2012 13:48:01 +0200
+Subject: [PATCH] logind: expose CanGraphical and CanTTY properties on seat
+ objects
+
+Since we boot so fast now that gdm might get started before the
+graphics drivers are properly loaded and probed we might end up
+announcing seat0 to gdm before it has graphics capabilities. Which will
+cause gdm/X11 cause to fail later on.
+
+To fix this race, let's expose CanGraphical and CanTTY fields on all
+seats, which clarify whether a seat is suitable for gdm resp, suitable
+for text logins. gdm then needs to watch CanGraphical and spawn X11 on
+it only if it is true.
+
+This way:
+
+USB graphics seats will expose CanGraphical=yes, CanTTY=no
+
+Machines with no graphics drivers at all, but a text console:
+CanGraphical=no, CanTTY=yes
+
+Machines with CONFIG_VT turned off: CanGraphical=yes, CanTTY=no
+
+And the most important case: seat0 where the graphics driver has not
+been probed yet boot up with CanGraphical=no, CanTTY=yes first, which
+then changes to CanGraphical=yes as soon as the probing is complete.
+(cherry picked from commit f1a8e221ecacea23883df57951e291a910463948)
+
+Conflicts:
+	TODO
+---
+ src/login/logind-device.c    |   16 +++++++++++++---
+ src/login/logind-seat-dbus.c |   40 ++++++++++++++++++++++++++++++++++++++--
+ src/login/logind-seat.c      |   20 ++++++++++++++++++--
+ src/login/logind-seat.h      |    3 +++
+ 4 files changed, 72 insertions(+), 7 deletions(-)
+
+diff --git a/src/login/logind-device.c b/src/login/logind-device.c
+index bbd370f..66b5c52 100644
+--- a/src/login/logind-device.c
++++ b/src/login/logind-device.c
+@@ -65,22 +65,32 @@ void device_free(Device *d) {
+ }
+ 
+ void device_detach(Device *d) {
++        Seat *s;
+         assert(d);
+ 
+-        if (d->seat)
+-                LIST_REMOVE(Device, devices, d->seat->devices, d);
++        if (!d->seat)
++                return;
+ 
+-        seat_add_to_gc_queue(d->seat);
++        s = d->seat;
++        LIST_REMOVE(Device, devices, d->seat->devices, d);
+         d->seat = NULL;
++
++        seat_add_to_gc_queue(s);
++        seat_send_changed(s, "CanGraphical\0");
+ }
+ 
+ void device_attach(Device *d, Seat *s) {
+         assert(d);
+         assert(s);
+ 
++        if (d->seat == s)
++                return;
++
+         if (d->seat)
+                 device_detach(d);
+ 
+         d->seat = s;
+         LIST_PREPEND(Device, devices, s->devices, d);
++
++        seat_send_changed(s, "CanGraphical\0");
+ }
+diff --git a/src/login/logind-seat-dbus.c b/src/login/logind-seat-dbus.c
+index 95ef5ff..2d4bce6 100644
+--- a/src/login/logind-seat-dbus.c
++++ b/src/login/logind-seat-dbus.c
+@@ -36,6 +36,8 @@
+         "  <property name=\"Id\" type=\"s\" access=\"read\"/>\n"        \
+         "  <property name=\"ActiveSession\" type=\"so\" access=\"read\"/>\n" \
+         "  <property name=\"CanMultiSession\" type=\"b\" access=\"read\"/>\n" \
++        "  <property name=\"CanTTY\" type=\"b\" access=\"read\"/>\n" \
++        "  <property name=\"CanGraphical\" type=\"b\" access=\"read\"/>\n" \
+         "  <property name=\"Sessions\" type=\"a(so)\" access=\"read\"/>\n" \
+         "  <property name=\"IdleHint\" type=\"b\" access=\"read\"/>\n"  \
+         "  <property name=\"IdleSinceHint\" type=\"t\" access=\"read\"/>\n" \
+@@ -133,7 +135,7 @@ static int bus_seat_append_sessions(DBusMessageIter *i, const char *property, vo
+         return 0;
+ }
+ 
+-static int bus_seat_append_multi_session(DBusMessageIter *i, const char *property, void *data) {
++static int bus_seat_append_can_multi_session(DBusMessageIter *i, const char *property, void *data) {
+         Seat *s = data;
+         dbus_bool_t b;
+ 
+@@ -149,6 +151,38 @@ static int bus_seat_append_multi_session(DBusMessageIter *i, const char *propert
+         return 0;
+ }
+ 
++static int bus_seat_append_can_tty(DBusMessageIter *i, const char *property, void *data) {
++        Seat *s = data;
++        dbus_bool_t b;
++
++        assert(i);
++        assert(property);
++        assert(s);
++
++        b = seat_can_tty(s);
++
++        if (!dbus_message_iter_append_basic(i, DBUS_TYPE_BOOLEAN, &b))
++                return -ENOMEM;
++
++        return 0;
++}
++
++static int bus_seat_append_can_graphical(DBusMessageIter *i, const char *property, void *data) {
++        Seat *s = data;
++        dbus_bool_t b;
++
++        assert(i);
++        assert(property);
++        assert(s);
++
++        b = seat_can_graphical(s);
++
++        if (!dbus_message_iter_append_basic(i, DBUS_TYPE_BOOLEAN, &b))
++                return -ENOMEM;
++
++        return 0;
++}
++
+ static int bus_seat_append_idle_hint(DBusMessageIter *i, const char *property, void *data) {
+         Seat *s = data;
+         dbus_bool_t b;
+@@ -210,7 +244,9 @@ static int get_seat_for_path(Manager *m, const char *path, Seat **_s) {
+ static const BusProperty bus_login_seat_properties[] = {
+         { "Id",                     bus_property_append_string,      "s", offsetof(Seat, id), true },
+         { "ActiveSession",          bus_seat_append_active,       "(so)", 0 },
+-        { "CanMultiSession",        bus_seat_append_multi_session,   "b", 0 },
++        { "CanMultiSession",        bus_seat_append_can_multi_session, "b", 0 },
++        { "CanTTY",                 bus_seat_append_can_tty,         "b", 0 },
++        { "CanGraphical",           bus_seat_append_can_graphical,   "b", 0 },
+         { "Sessions",               bus_seat_append_sessions,    "a(so)", 0 },
+         { "IdleHint",               bus_seat_append_idle_hint,       "b", 0 },
+         { "IdleSinceHint",          bus_seat_append_idle_hint_since, "t", 0 },
+diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
+index 2a4786c..402c4e6 100644
+--- a/src/login/logind-seat.c
++++ b/src/login/logind-seat.c
+@@ -104,9 +104,13 @@ int seat_save(Seat *s) {
+         fprintf(f,
+                 "# This is private data. Do not parse.\n"
+                 "IS_VTCONSOLE=%i\n"
+-                "CAN_MULTI_SESSION=%i\n",
++                "CAN_MULTI_SESSION=%i\n"
++                "CAN_TTY=%i\n"
++                "CAN_GRAPHICAL=%i\n",
+                 seat_is_vtconsole(s),
+-                seat_can_multi_session(s));
++                seat_can_multi_session(s),
++                seat_can_tty(s),
++                seat_can_graphical(s));
+ 
+         if (s->active) {
+                 assert(s->active->user);
+@@ -427,6 +431,18 @@ bool seat_can_multi_session(Seat *s) {
+         return s->manager->console_active_fd >= 0;
+ }
+ 
++bool seat_can_tty(Seat *s) {
++        assert(s);
++
++        return seat_is_vtconsole(s);
++}
++
++bool seat_can_graphical(Seat *s) {
++        assert(s);
++
++        return !!s->devices;
++}
++
+ int seat_get_idle_hint(Seat *s, dual_timestamp *t) {
+         Session *session;
+         bool idle_hint = true;
+diff --git a/src/login/logind-seat.h b/src/login/logind-seat.h
+index 3b2c7f0..445d5de 100644
+--- a/src/login/logind-seat.h
++++ b/src/login/logind-seat.h
+@@ -63,6 +63,9 @@ int seat_attach_session(Seat *s, Session *session);
+ 
+ bool seat_is_vtconsole(Seat *s);
+ bool seat_can_multi_session(Seat *s);
++bool seat_can_tty(Seat *s);
++bool seat_can_graphical(Seat *s);
++
+ int seat_get_idle_hint(Seat *s, dual_timestamp *t);
+ 
+ int seat_start(Seat *s);

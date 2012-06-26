@@ -1,0 +1,25 @@
+From e716eded2648e024a109511b8fa0bb5fd49ae2b2 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 26 Jun 2012 11:32:30 +0200
+Subject: [PATCH] service: fix incorrect argument
+
+The last argument to service_enter_dead() is bool allow_restart, not
+a service result.
+(cherry picked from commit e201a0384da94f57f65c951a97d8ddaf990d6240)
+---
+ src/core/service.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index c5a6df6..55a20e0 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -3228,7 +3228,7 @@ static void service_cgroup_notify_event(Unit *u) {
+         case SERVICE_FINAL_SIGTERM:
+         case SERVICE_FINAL_SIGKILL:
+                 if (main_pid_good(s) <= 0 && !control_pid_good(s))
+-                        service_enter_dead(s, SERVICE_SUCCESS, SERVICE_SUCCESS);
++                        service_enter_dead(s, SERVICE_SUCCESS, true);
+ 
+                 break;
+ 

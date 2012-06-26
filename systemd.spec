@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        16%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        17%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -490,6 +490,14 @@ Patch0427:      0427-journal-fix-SD_JOURNAL_SYSTEM_ONLY-flag.patch
 Patch0428:      0428-journal-rotate-on-SIGUSR2.patch
 Patch0429:      0429-journal-fix-monotonic-seeking.patch
 Patch0430:      0430-systemd-return-error-when-asked-to-stop-unknown-unit.patch
+Patch0431:      0431-F17-Temporarily-revert-systemd-return-error-when-ask.patch
+Patch0432:      0432-logind-expose-CanGraphical-and-CanTTY-properties-on-.patch
+Patch0433:      0433-logind-introduce-a-state-for-session-being-one-of-on.patch
+Patch0434:      0434-man-document-new-sd_session_get_state-call.patch
+Patch0435:      0435-login-wrap-CanTTY-and-CanGraphical-seat-attributes-i.patch
+Patch0436:      0436-preset-don-t-look-for-preset-files-in-lib-unless-usr.patch
+Patch0437:      0437-service-fix-incorrect-argument.patch
+Patch0438:      0438-service-pass-via-FAILED-DEAD-before-going-to-AUTO_RE.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -511,8 +519,8 @@ Obsoletes:      systemd < 38-5
 # old nfs-server.service forked daemons from ExecStartPre/Post:
 Conflicts:      nfs-utils < 1:1.2.6
 # usage of 'systemctl stop' on a non-existent unit in ExecStartPre:
-Conflicts:      rsyslog < 5.8.10-2
-Conflicts:      syslog-ng < 3.2.5-15
+#Conflicts:      rsyslog < 5.8.10-2
+#Conflicts:      syslog-ng < 3.2.5-15
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -653,6 +661,11 @@ sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/sys
 ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
 ln -s journalctl %{buildroot}%{_bindir}/systemd-journalctl
 ln -s systemctl %{buildroot}%{_bindir}/systemd-systemctl
+
+# Short-term workaround for bz#834118 - s390(x) have no VTs
+%ifarch s390 s390x
+find %{buildroot}%{_prefix}/lib -name '*vconsole*' -delete
+%endif
 
 %post
 /sbin/ldconfig
@@ -870,6 +883,12 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Jun 26 2012 Michal Schmidt <mschmidt@redhat.com> - 44-17
+- Temporarily revert patch for #732874 until the syslog units are fixed.
+- logind improvements (CanTTY, CanGraphical, 'closing' session state).
+- Fix for auto-restart (#832039).
+- Don't ship systemd-vconsole-setup on S390(x) (workaround for #834118).
+
 * Wed Jun 20 2012 Michal Schmidt <mschmidt@redhat.com> - 44-16
 - Add conflicts with syslog units that do unprotected 'systemctl stop' on
   a non-existent unit in their ExecStartPre.
