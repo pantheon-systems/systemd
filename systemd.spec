@@ -73,7 +73,7 @@ Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 019
+Conflicts:      dracut < 020
 Conflicts:      plymouth < 0.8.5.1
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
@@ -92,6 +92,7 @@ work as a drop-in replacement for sysvinit.
 Group:          System Environment/Base
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
+Obsoletes:      libudev < 183
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 
