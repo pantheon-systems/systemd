@@ -1,9 +1,9 @@
-%global gitcommit e7aee75
+#global gitcommit e7aee75
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        185
-Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        186
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -49,8 +49,9 @@ Source0:        %{name}-git%{gitcommit}.tar.xz
 %else
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
 %endif
-# Adds support for the %%{_unitdir} macro
-Source1:        macros.systemd
+# Fedora's default preset policy
+Source1:        99-default.preset
+# Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
@@ -206,6 +207,7 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
 
 # Make sure the user generators dir exists too
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
 
 # Create new-style configuration files so that we can ghost-own them
@@ -218,9 +220,17 @@ touch %{buildroot}%{_sysconfdir}/timezone
 mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
-# Install RPM macros file for systemd
-mkdir -p %{buildroot}%{_sysconfdir}/rpm/
-install -m 0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/rpm/
+# Install Fedora default preset policy
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
+install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+
+# Make sure the shutdown/sleep drop-in dirs exist
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
+
+# Make sure the NTP units dir exists
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
 
 # Install SysV conversion tool for systemd
 install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
@@ -238,9 +248,6 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
 rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
-
-# Let rsyslog read from /proc/kmsg for now
-sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/journald.conf
 
 %pre
 getent group cdrom >/dev/null || /usr/sbin/groupadd -g 11 cdrom || :
@@ -330,14 +337,21 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %dir %{_sysconfdir}/modules-load.d
 %dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/bash_completion.d
+%dir %{_sysconfdir}/udev
+%dir %{_sysconfdir}/udev/rules.d
 %dir %{_prefix}/lib/systemd
 %dir %{_prefix}/lib/systemd/system-generators
 %dir %{_prefix}/lib/systemd/user-generators
+%dir %{_prefix}/lib/systemd/system-preset
+%dir %{_prefix}/lib/systemd/user-preset
 %dir %{_prefix}/lib/systemd/system-shutdown
+%dir %{_prefix}/lib/systemd/system-sleep
 %dir %{_prefix}/lib/tmpfiles.d
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
+%dir %{_prefix}/lib/firmware
+%dir %{_prefix}/lib/firmware/updates
 %dir %{_datadir}/systemd
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
@@ -349,15 +363,11 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %config(noreplace) %{_sysconfdir}/systemd/logind.conf
 %config(noreplace) %{_sysconfdir}/systemd/journald.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
-%dir %{_sysconfdir}/udev/
-%dir %{_sysconfdir}/udev/rules.d/
+%config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
+%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
-%{_prefix}/lib/tmpfiles.d/systemd.conf
-%{_prefix}/lib/tmpfiles.d/x11.conf
-%{_prefix}/lib/tmpfiles.d/legacy.conf
-%{_prefix}/lib/tmpfiles.d/tmp.conf
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
@@ -365,8 +375,6 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
-%config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
-%{_prefix}/lib/systemd/systemd
 %{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
@@ -385,8 +393,8 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-delta
 %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
-%{_bindir}/systemd-readahead-analyze
 %{_bindir}/udevadm
+%{_prefix}/lib/systemd/systemd
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
 %{_prefix}/lib/systemd/systemd-*
@@ -396,6 +404,11 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
 %{_prefix}/lib/systemd/system-generators/systemd-fstab-generator
 %{_prefix}/lib/systemd/system-generators/systemd-system-update-generator
+%{_prefix}/lib/tmpfiles.d/systemd.conf
+%{_prefix}/lib/tmpfiles.d/x11.conf
+%{_prefix}/lib/tmpfiles.d/legacy.conf
+%{_prefix}/lib/tmpfiles.d/tmp.conf
+%{_prefix}/lib/systemd/system-preset/99-default.preset
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -426,9 +439,6 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
-%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
-%dir %{_prefix}/lib/firmware
-%dir %{_prefix}/lib/firmware/updates
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -489,6 +499,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Jul  3 2012 Lennart Poettering <lpoetter@redhat.com> - 186-1
+- New upstream release
+
 * Fri Jun 22 2012 Nils Philippsen <nils@redhat.com> - 185-7.gite7aee75
 - add obsoletes/conflicts so multilib systemd -> systemd-libs updates work
 

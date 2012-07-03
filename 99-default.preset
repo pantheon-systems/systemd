@@ -1,0 +1,2 @@
+# Enforce Fedora's disable-by-default policy
+disable *
