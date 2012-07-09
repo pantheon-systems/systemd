@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        186
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -74,7 +74,7 @@ Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 020
+Conflicts:      dracut < 020-57
 Conflicts:      plymouth < 0.8.5.1
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
@@ -499,6 +499,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Jul 09 2012 Harald Hoyer <harald@redhat.com> 186-2
+- fixed dracut conflict version
+
 * Tue Jul  3 2012 Lennart Poettering <lpoetter@redhat.com> - 186-1
 - New upstream release
 
