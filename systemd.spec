@@ -2,8 +2,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        186
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        187
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -466,7 +466,6 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_includedir}/systemd/sd-journal.h
 %{_includedir}/systemd/sd-id128.h
 %{_includedir}/systemd/sd-messages.h
-%{_includedir}/systemd/sd-readahead.h
 %{_includedir}/systemd/sd-shutdown.h
 %{_includedir}/libudev.h
 %{_libdir}/pkgconfig/libsystemd-daemon.pc
@@ -499,6 +498,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Jul 19 2012 Lennart Poettering <lpoetter@redhat.com> - 187-1
+- New upstream release
+
 * Mon Jul 09 2012 Harald Hoyer <harald@redhat.com> 186-2
 - fixed dracut conflict version
 
