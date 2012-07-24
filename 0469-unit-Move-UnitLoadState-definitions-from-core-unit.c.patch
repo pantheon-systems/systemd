@@ -1,0 +1,132 @@
+From 67ae2881a1903c95666410678d8ceb5fa0be0eb0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 10 Jul 2012 17:18:09 +0200
+Subject: [PATCH] unit: Move UnitLoadState definitions from core/unit.c to
+ shared/unit-name.c
+
+This makes it possible to use them from systemctl without linking
+against the core.
+(cherry picked from commit f69614f811b133ececad4394e88f9549a017bd4e)
+---
+ src/core/unit.c        | 10 ----------
+ src/core/unit.h        | 14 --------------
+ src/shared/unit-name.c | 10 ++++++++++
+ src/shared/unit-name.h | 14 ++++++++++++++
+ 4 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index f5ced75..a956172 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2734,16 +2734,6 @@ int unit_add_mount_links(Unit *u) {
+         return 0;
+ }
+ 
+-static const char* const unit_load_state_table[_UNIT_LOAD_STATE_MAX] = {
+-        [UNIT_STUB] = "stub",
+-        [UNIT_LOADED] = "loaded",
+-        [UNIT_ERROR] = "error",
+-        [UNIT_MERGED] = "merged",
+-        [UNIT_MASKED] = "masked"
+-};
+-
+-DEFINE_STRING_TABLE_LOOKUP(unit_load_state, UnitLoadState);
+-
+ static const char* const unit_active_state_table[_UNIT_ACTIVE_STATE_MAX] = {
+         [UNIT_ACTIVE] = "active",
+         [UNIT_RELOADING] = "reloading",
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 64f4cb9..797751d 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -28,7 +28,6 @@
+ typedef struct Unit Unit;
+ typedef struct UnitVTable UnitVTable;
+ typedef enum UnitType UnitType;
+-typedef enum UnitLoadState UnitLoadState;
+ typedef enum UnitActiveState UnitActiveState;
+ typedef enum UnitDependency UnitDependency;
+ typedef struct UnitRef UnitRef;
+@@ -43,16 +42,6 @@ typedef struct UnitStatusMessageFormats UnitStatusMessageFormats;
+ #include "install.h"
+ #include "unit-name.h"
+ 
+-enum UnitLoadState {
+-        UNIT_STUB,
+-        UNIT_LOADED,
+-        UNIT_ERROR,
+-        UNIT_MERGED,
+-        UNIT_MASKED,
+-        _UNIT_LOAD_STATE_MAX,
+-        _UNIT_LOAD_STATE_INVALID = -1
+-};
+-
+ enum UnitActiveState {
+         UNIT_ACTIVE,
+         UNIT_RELOADING,
+@@ -550,9 +539,6 @@ void unit_ref_unset(UnitRef *ref);
+ int unit_add_one_mount_link(Unit *u, Mount *m);
+ int unit_add_mount_links(Unit *u);
+ 
+-const char *unit_load_state_to_string(UnitLoadState i);
+-UnitLoadState unit_load_state_from_string(const char *s);
+-
+ const char *unit_active_state_to_string(UnitActiveState i);
+ UnitActiveState unit_active_state_from_string(const char *s);
+ 
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index d26340e..dd15119 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -48,6 +48,16 @@ static const char* const unit_type_table[_UNIT_TYPE_MAX] = {
+ 
+ DEFINE_STRING_TABLE_LOOKUP(unit_type, UnitType);
+ 
++static const char* const unit_load_state_table[_UNIT_LOAD_STATE_MAX] = {
++        [UNIT_STUB] = "stub",
++        [UNIT_LOADED] = "loaded",
++        [UNIT_ERROR] = "error",
++        [UNIT_MERGED] = "merged",
++        [UNIT_MASKED] = "masked"
++};
++
++DEFINE_STRING_TABLE_LOOKUP(unit_load_state, UnitLoadState);
++
+ bool unit_name_is_valid(const char *n, bool template_ok) {
+         const char *e, *i, *at;
+ 
+diff --git a/src/shared/unit-name.h b/src/shared/unit-name.h
+index 80efa00..f23d2cd 100644
+--- a/src/shared/unit-name.h
++++ b/src/shared/unit-name.h
+@@ -27,6 +27,7 @@
+ #define UNIT_NAME_MAX 256
+ 
+ typedef enum UnitType UnitType;
++typedef enum UnitLoadState UnitLoadState;
+ 
+ enum UnitType {
+         UNIT_SERVICE = 0,
+@@ -43,9 +44,22 @@ enum UnitType {
+         _UNIT_TYPE_INVALID = -1
+ };
+ 
++enum UnitLoadState {
++        UNIT_STUB,
++        UNIT_LOADED,
++        UNIT_ERROR,
++        UNIT_MERGED,
++        UNIT_MASKED,
++        _UNIT_LOAD_STATE_MAX,
++        _UNIT_LOAD_STATE_INVALID = -1
++};
++
+ const char *unit_type_to_string(UnitType i);
+ UnitType unit_type_from_string(const char *s);
+ 
++const char *unit_load_state_to_string(UnitLoadState i);
++UnitLoadState unit_load_state_from_string(const char *s);
++
+ int unit_name_to_instance(const char *n, char **instance);
+ char* unit_name_to_prefix(const char *n);
+ char* unit_name_to_prefix_and_instance(const char *n);

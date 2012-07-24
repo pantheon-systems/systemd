@@ -1,0 +1,35 @@
+From 77d1d0d23adcba7af92f3237acec257bd7a5ad13 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 19 Jul 2012 02:03:22 +0200
+Subject: [PATCH] journald: don't choke on journal files with no cutoff date
+ (cherry picked from commit
+ 9f8d29834ba97052403e50ec9b358c0470fa4ceb)
+
+Conflicts:
+	TODO
+---
+ src/journal/sd-journal.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index f28542f..c67069a 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -1665,6 +1665,8 @@ _public_ int sd_journal_get_cutoff_realtime_usec(sd_journal *j, uint64_t *from,
+                 usec_t fr, t;
+ 
+                 r = journal_file_get_cutoff_realtime_usec(f, &fr, &t);
++                if (r == -ENOENT)
++                        continue;
+                 if (r < 0)
+                         return r;
+                 if (r == 0)
+@@ -1702,6 +1704,8 @@ _public_ int sd_journal_get_cutoff_monotonic_usec(sd_journal *j, sd_id128_t boot
+                 usec_t fr, t;
+ 
+                 r = journal_file_get_cutoff_monotonic_usec(f, boot_id, &fr, &t);
++                if (r == -ENOENT)
++                        continue;
+                 if (r < 0)
+                         return r;
+                 if (r == 0)

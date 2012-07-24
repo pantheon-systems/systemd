@@ -1,0 +1,43 @@
+From b4ca0b30c1bc0d3d02a7b3e6d11cd5eb99b7f20d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 4 Jul 2012 00:37:12 +0200
+Subject: [PATCH] man: document Restart= a bit more (cherry picked from commit
+ 5389fedd99dacee6811057c8e49a6cb96ba6a52e)
+
+---
+ man/systemd.service.xml | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 0c9b964..c615db1 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -516,18 +516,20 @@
+                                 <option>on-failure</option> it will be
+                                 restarted only when it exited with an
+                                 exit code not equalling 0, when
+-                                terminated by a signal, when an
+-                                operation times out or when the
++                                terminated by a signal (including on
++                                core dump), when an operation (such as
++                                service reload) times out or when the
+                                 configured watchdog timeout is
+                                 triggered. If set to
+                                 <option>on-abort</option> it will be
+                                 restarted only if it exits due to
+-                                reception of an uncaught signal. If
+-                                set to <option>always</option> the
+-                                service will be restarted regardless
+-                                whether it exited cleanly or not,
+-                                got terminated abnormally by a
+-                                signal or hit a timeout.</para></listitem>
++                                reception of an uncaught signal
++                                (including on core dump). If set to
++                                <option>always</option> the service
++                                will be restarted regardless whether
++                                it exited cleanly or not, got
++                                terminated abnormally by a signal or
++                                hit a timeout.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>

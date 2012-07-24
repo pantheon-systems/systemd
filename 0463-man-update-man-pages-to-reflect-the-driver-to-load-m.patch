@@ -1,0 +1,49 @@
+From f343eb4c8d56e0813397f55b07ad63929429de8b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 4 Jul 2012 01:12:25 +0200
+Subject: [PATCH] man: update man pages to reflect the driver= to
+ load-modules= rename (cherry picked from commit
+ 627e4bb29fa7223ae8ea97a46a9581627eb24ee6)
+
+Conflicts:
+	man/kernel-command-line.xml
+---
+ man/systemd-modules-load.service.xml | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/man/systemd-modules-load.service.xml b/man/systemd-modules-load.service.xml
+index 16c6a65..e5f10a7 100644
+--- a/man/systemd-modules-load.service.xml
++++ b/man/systemd-modules-load.service.xml
+@@ -62,6 +62,31 @@
+                 <citerefentry><refentrytitle>modules-load.d</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                 for information about the configuration of this
+                 service.</para>
++
++        </refsect1>
++
++        <refsect1>
++                <title>Kernel Command Line</title>
++
++                <para><filename>systemd-modules-load.service</filename> understands
++                the following kernel command line parameters:</para>
++
++                <variablelist>
++
++                        <varlistentry>
++                                <term><varname>modules-load=</varname></term>
++                                <term><varname>rd.modules-load=</varname></term>
++
++                                <listitem><para>Takes a comma
++                                separated list of kernel modules to
++                                statically load during early boot. The
++                                option prefixed with
++                                <literal>rd.</literal> is read by the
++                                initial RAM disk
++                                only.</para></listitem>
++                        </varlistentry>
++
++                </variablelist>
+         </refsect1>
+ 
+         <refsect1>

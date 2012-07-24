@@ -1,0 +1,252 @@
+From 6dbfad1789b3f9745fe782e122fffd06aff7d763 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 16:09:36 +0200
+Subject: [PATCH] load-fragment: a few modernizations (cherry picked from
+ commit 9946996cda11a18b44d82344676e5a0e96339408)
+
+Conflicts:
+	TODO
+---
+ src/core/load-fragment.c | 51 +++++++++++++++++++++++++++++-------------------
+ src/shared/hashmap.c     | 15 +++++++++-----
+ src/shared/hashmap.h     |  2 ++
+ src/shared/set.c         |  4 ++++
+ src/shared/set.h         |  2 ++
+ 5 files changed, 49 insertions(+), 25 deletions(-)
+
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 94d8a5b..2003e1d 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -2090,21 +2090,24 @@ static int open_follow(char **filename, FILE **_f, Set *names, char **_final) {
+                 }
+ 
+                 /* Try to open the file name, but don't if its a symlink */
+-                if ((fd = open(*filename, O_RDONLY|O_CLOEXEC|O_NOCTTY|O_NOFOLLOW)) >= 0)
++                fd = open(*filename, O_RDONLY|O_CLOEXEC|O_NOCTTY|O_NOFOLLOW);
++                if (fd >= 0)
+                         break;
+ 
+                 if (errno != ELOOP)
+                         return -errno;
+ 
+                 /* Hmm, so this is a symlink. Let's read the name, and follow it manually */
+-                if ((r = readlink_and_make_absolute(*filename, &target)) < 0)
++                r = readlink_and_make_absolute(*filename, &target);
++                if (r < 0)
+                         return r;
+ 
+                 free(*filename);
+                 *filename = target;
+         }
+ 
+-        if (!(f = fdopen(fd, "re"))) {
++        f = fdopen(fd, "re");
++        if (!f) {
+                 r = -errno;
+                 close_nointr_nofail(fd);
+                 return r;
+@@ -2128,7 +2131,8 @@ static int merge_by_names(Unit **u, Set *names, const char *id) {
+ 
+                 /* First try to merge in the other name into our
+                  * unit */
+-                if ((r = unit_merge_by_name(*u, k)) < 0) {
++                r = unit_merge_by_name(*u, k);
++                if (r < 0) {
+                         Unit *other;
+ 
+                         /* Hmm, we couldn't merge the other unit into
+@@ -2138,11 +2142,13 @@ static int merge_by_names(Unit **u, Set *names, const char *id) {
+                         other = manager_get_unit((*u)->manager, k);
+                         free(k);
+ 
+-                        if (other)
+-                                if ((r = unit_merge(other, *u)) >= 0) {
++                        if (other) {
++                                r = unit_merge(other, *u);
++                                if (r >= 0) {
+                                         *u = other;
+                                         return merge_by_names(u, names, NULL);
+                                 }
++                        }
+ 
+                         return r;
+                 }
+@@ -2173,12 +2179,14 @@ static int load_from_path(Unit *u, const char *path) {
+ 
+         if (path_is_absolute(path)) {
+ 
+-                if (!(filename = strdup(path))) {
++                filename = strdup(path);
++                if (!filename) {
+                         r = -ENOMEM;
+                         goto finish;
+                 }
+ 
+-                if ((r = open_follow(&filename, &f, symlink_names, &id)) < 0) {
++                r = open_follow(&filename, &f, symlink_names, &id);
++                if (r < 0) {
+                         free(filename);
+                         filename = NULL;
+ 
+@@ -2194,7 +2202,8 @@ static int load_from_path(Unit *u, const char *path) {
+                         /* Instead of opening the path right away, we manually
+                          * follow all symlinks and add their name to our unit
+                          * name set while doing so */
+-                        if (!(filename = path_make_absolute(path, *p))) {
++                        filename = path_make_absolute(path, *p);
++                        if (!filename) {
+                                 r = -ENOMEM;
+                                 goto finish;
+                         }
+@@ -2206,8 +2215,6 @@ static int load_from_path(Unit *u, const char *path) {
+                                 r = open_follow(&filename, &f, symlink_names, &id);
+ 
+                         if (r < 0) {
+-                                char *sn;
+-
+                                 free(filename);
+                                 filename = NULL;
+ 
+@@ -2215,9 +2222,7 @@ static int load_from_path(Unit *u, const char *path) {
+                                         goto finish;
+ 
+                                 /* Empty the symlink names for the next run */
+-                                while ((sn = set_steal_first(symlink_names)))
+-                                        free(sn);
+-
++                                set_clear_free(symlink_names);
+                                 continue;
+                         }
+ 
+@@ -2232,7 +2237,8 @@ static int load_from_path(Unit *u, const char *path) {
+         }
+ 
+         merged = u;
+-        if ((r = merge_by_names(&merged, symlink_names, id)) < 0)
++        r = merge_by_names(&merged, symlink_names, id);
++        if (r < 0)
+                 goto finish;
+ 
+         if (merged != u) {
+@@ -2288,7 +2294,8 @@ int unit_load_fragment(Unit *u) {
+         /* First, try to find the unit under its id. We always look
+          * for unit files in the default directories, to make it easy
+          * to override things by placing things in /etc/systemd/system */
+-        if ((r = load_from_path(u, u->id)) < 0)
++        r = load_from_path(u, u->id);
++        if (r < 0)
+                 return r;
+ 
+         /* Try to find an alias we can load this with */
+@@ -2298,7 +2305,8 @@ int unit_load_fragment(Unit *u) {
+                         if (t == u->id)
+                                 continue;
+ 
+-                        if ((r = load_from_path(u, t)) < 0)
++                        r = load_from_path(u, t);
++                        if (r < 0)
+                                 return r;
+ 
+                         if (u->load_state != UNIT_STUB)
+@@ -2308,7 +2316,8 @@ int unit_load_fragment(Unit *u) {
+         /* And now, try looking for it under the suggested (originally linked) path */
+         if (u->load_state == UNIT_STUB && u->fragment_path) {
+ 
+-                if ((r = load_from_path(u, u->fragment_path)) < 0)
++                r = load_from_path(u, u->fragment_path);
++                if (r < 0)
+                         return r;
+ 
+                 if (u->load_state == UNIT_STUB) {
+@@ -2324,7 +2333,8 @@ int unit_load_fragment(Unit *u) {
+         if (u->load_state == UNIT_STUB && u->instance) {
+                 char *k;
+ 
+-                if (!(k = unit_name_template(u->id)))
++                k = unit_name_template(u->id);
++                if (!k)
+                         return -ENOMEM;
+ 
+                 r = load_from_path(u, k);
+@@ -2339,7 +2349,8 @@ int unit_load_fragment(Unit *u) {
+                                 if (t == u->id)
+                                         continue;
+ 
+-                                if (!(k = unit_name_template(t)))
++                                k = unit_name_template(t);
++                                if (!k)
+                                         return -ENOMEM;
+ 
+                                 r = load_from_path(u, k);
+diff --git a/src/shared/hashmap.c b/src/shared/hashmap.c
+index 6928118..c6b6580 100644
+--- a/src/shared/hashmap.c
++++ b/src/shared/hashmap.c
+@@ -277,11 +277,7 @@ void hashmap_free(Hashmap*h) {
+ }
+ 
+ void hashmap_free_free(Hashmap *h) {
+-        void *p;
+-
+-        while ((p = hashmap_steal_first(h)))
+-                free(p);
+-
++        hashmap_clear_free(h);
+         hashmap_free(h);
+ }
+ 
+@@ -293,6 +289,15 @@ void hashmap_clear(Hashmap *h) {
+                 remove_entry(h, h->iterate_list_head);
+ }
+ 
++void hashmap_clear_free(Hashmap *h) {
++        void *p;
++
++        assert(h);
++
++        while ((p = hashmap_steal_first(h)))
++                free(p);
++}
++
+ static struct hashmap_entry *hash_scan(Hashmap *h, unsigned hash, const void *key) {
+         struct hashmap_entry *e;
+         assert(h);
+diff --git a/src/shared/hashmap.h b/src/shared/hashmap.h
+index ab4363a..d72e150 100644
+--- a/src/shared/hashmap.h
++++ b/src/shared/hashmap.h
+@@ -71,6 +71,8 @@ void *hashmap_iterate_backwards(Hashmap *h, Iterator *i, const void **key);
+ void *hashmap_iterate_skip(Hashmap *h, const void *key, Iterator *i);
+ 
+ void hashmap_clear(Hashmap *h);
++void hashmap_clear_free(Hashmap *h);
++
+ void *hashmap_steal_first(Hashmap *h);
+ void *hashmap_steal_first_key(Hashmap *h);
+ void* hashmap_first(Hashmap *h);
+diff --git a/src/shared/set.c b/src/shared/set.c
+index 097b9d3..43c9659 100644
+--- a/src/shared/set.c
++++ b/src/shared/set.c
+@@ -116,3 +116,7 @@ Set* set_copy(Set *s) {
+ void set_clear(Set *s) {
+         hashmap_clear(MAKE_HASHMAP(s));
+ }
++
++void set_clear_free(Set *s) {
++        hashmap_clear_free(MAKE_HASHMAP(s));
++}
+diff --git a/src/shared/set.h b/src/shared/set.h
+index 885780c..706ef55 100644
+--- a/src/shared/set.h
++++ b/src/shared/set.h
+@@ -56,6 +56,8 @@ void *set_iterate_backwards(Set *s, Iterator *i);
+ void *set_iterate_skip(Set *s, void *value, Iterator *i);
+ 
+ void set_clear(Set *s);
++void set_clear_free(Set *s);
++
+ void *set_steal_first(Set *s);
+ void* set_first(Set *s);
+ void* set_last(Set *s);

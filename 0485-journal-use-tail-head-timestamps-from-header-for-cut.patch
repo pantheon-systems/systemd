@@ -1,0 +1,49 @@
+From 586624bd6dd1ce1e55d68ceb820754790c8ab975 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Jul 2012 19:28:05 +0200
+Subject: [PATCH] journal: use tail/head timestamps from header for cutoff
+ logic
+
+We have them, they are faster to use them, so use them...
+(cherry picked from commit 162566a4a12c35e1e86e35ced1748354f7ec935e)
+---
+ src/journal/journal-file.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 8319bc3..f1b1c6f 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -2291,26 +2291,21 @@ void journal_default_metrics(JournalMetrics *m, int fd) {
+ }
+ 
+ int journal_file_get_cutoff_realtime_usec(JournalFile *f, usec_t *from, usec_t *to) {
+-        Object *o;
+-        int r;
+-
+         assert(f);
+         assert(from || to);
+ 
+         if (from) {
+-                r = journal_file_next_entry(f, NULL, 0, DIRECTION_DOWN, &o, NULL);
+-                if (r <= 0)
+-                        return r;
++                if (f->header->head_entry_realtime == 0)
++                        return -ENOENT;
+ 
+-                *from = le64toh(o->entry.realtime);
++                *from = le64toh(f->header->head_entry_realtime);
+         }
+ 
+         if (to) {
+-                r = journal_file_next_entry(f, NULL, 0, DIRECTION_UP, &o, NULL);
+-                if (r <= 0)
+-                        return r;
++                if (f->header->tail_entry_realtime == 0)
++                        return -ENOENT;
+ 
+-                *to = le64toh(o->entry.realtime);
++                *to = le64toh(f->header->tail_entry_realtime);
+         }
+ 
+         return 1;

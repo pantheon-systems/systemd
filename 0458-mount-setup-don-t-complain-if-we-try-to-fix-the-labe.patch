@@ -1,0 +1,119 @@
+From 34182f35c1febab018108f82f841d46e409936ee Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 16:25:50 +0200
+Subject: [PATCH] mount-setup: don't complain if we try to fix the label of a
+ dir beneath a mount but can't due to EROFS (cherry picked
+ from commit c9bc07646100855ff8193e1e62c52b77327e264d)
+
+Conflicts:
+	src/udev/udev-node.c
+---
+ src/core/automount.c    | 2 +-
+ src/core/mount-setup.c  | 8 ++++----
+ src/shared/label.c      | 5 ++++-
+ src/shared/label.h      | 2 +-
+ src/tmpfiles/tmpfiles.c | 2 +-
+ 5 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index be4e657..a206960 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -316,7 +316,7 @@ static int open_dev_autofs(Manager *m) {
+         if (m->dev_autofs_fd >= 0)
+                 return m->dev_autofs_fd;
+ 
+-        label_fix("/dev/autofs", false);
++        label_fix("/dev/autofs", false, false);
+ 
+         if ((m->dev_autofs_fd = open("/dev/autofs", O_CLOEXEC|O_RDONLY)) < 0) {
+                 log_error("Failed to open /dev/autofs: %s", strerror(errno));
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index 39049de..8c0d7f5 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -121,7 +121,7 @@ static int mount_one(const MountPoint *p, bool relabel) {
+ 
+         /* Relabel first, just in case */
+         if (relabel)
+-                label_fix(p->where, true);
++                label_fix(p->where, true, true);
+ 
+         if ((r = path_is_mount_point(p->where, true)) < 0)
+                 return r;
+@@ -150,7 +150,7 @@ static int mount_one(const MountPoint *p, bool relabel) {
+ 
+         /* Relabel again, since we now mounted something fresh here */
+         if (relabel)
+-                label_fix(p->where, false);
++                label_fix(p->where, false, false);
+ 
+         return 1;
+ }
+@@ -347,7 +347,7 @@ static int nftw_cb(
+         if (_unlikely_(ftwbuf->level == 0))
+                 return FTW_CONTINUE;
+ 
+-        label_fix(fpath, true);
++        label_fix(fpath, false, false);
+ 
+         /* /run/initramfs is static data and big, no need to
+          * dynamically relabel its contents at boot... */
+@@ -391,7 +391,7 @@ int mount_setup(bool loaded_policy) {
+ 
+                 /* Explicitly relabel these */
+                 NULSTR_FOREACH(j, relabel)
+-                        label_fix(j, true);
++                        label_fix(j, true, false);
+ 
+                 after_relabel = now(CLOCK_MONOTONIC);
+ 
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 4a828b9..a47df51 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -99,7 +99,7 @@ int label_init(const char *prefix) {
+         return r;
+ }
+ 
+-int label_fix(const char *path, bool ignore_enoent) {
++int label_fix(const char *path, bool ignore_enoent, bool ignore_erofs) {
+         int r = 0;
+ 
+ #ifdef HAVE_SELINUX
+@@ -132,6 +132,9 @@ int label_fix(const char *path, bool ignore_enoent) {
+                 if (ignore_enoent && errno == ENOENT)
+                         return 0;
+ 
++                if (ignore_erofs && errno == EROFS)
++                        return 0;
++
+                 log_full(security_getenforce() == 1 ? LOG_ERR : LOG_DEBUG,
+                          "Unable to fix label of %s: %m", path);
+                 r = security_getenforce() == 1 ? -errno : 0;
+diff --git a/src/shared/label.h b/src/shared/label.h
+index fcf34d2..b94187e 100644
+--- a/src/shared/label.h
++++ b/src/shared/label.h
+@@ -29,7 +29,7 @@
+ int label_init(const char *prefix);
+ void label_finish(void);
+ 
+-int label_fix(const char *path, bool ignore_enoent);
++int label_fix(const char *path, bool ignore_enoent, bool ignore_erofs);
+ 
+ int label_socket_set(const char *label);
+ void label_socket_clear(void);
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index 23b1ef8..a9a60c7 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -451,7 +451,7 @@ static int item_set_perms(Item *i, const char *path) {
+                         return -errno;
+                 }
+ 
+-        return label_fix(path, false);
++        return label_fix(path, false, false);
+ }
+ 
+ static int recursive_relabel_children(Item *i, const char *path) {

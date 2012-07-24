@@ -1,0 +1,31 @@
+From 878d4be69c4dfea7b7f0472d2ab8e90567a69321 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 25 Jul 2012 01:45:16 +0200
+Subject: [PATCH] modules-load: fix kernel cmdline parsing (cherry picked from
+ commit b2fc39a6838f08e6050b681e0c93f95bc6176786)
+
+---
+ src/modules-load/modules-load.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/modules-load/modules-load.c b/src/modules-load/modules-load.c
+index 5c91a92..e228fcf 100644
+--- a/src/modules-load/modules-load.c
++++ b/src/modules-load/modules-load.c
+@@ -92,14 +92,14 @@ static int parse_proc_cmdline(void) {
+ 
+                 if (startswith(word, "modules-load=")) {
+ 
+-                        r = add_modules(word + 7);
++                        r = add_modules(word + 13);
+                         if (r < 0)
+                                 goto finish;
+ 
+                 } else if (startswith(word, "rd.modules-load=")) {
+ 
+                         if (in_initrd()) {
+-                                r = add_modules(word + 10);
++                                r = add_modules(word + 16);
+                                 if (r < 0)
+                                         goto finish;
+                         }

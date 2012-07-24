@@ -1,0 +1,28 @@
+From 6ac88d47f19cf4c22433084c590db41903d17610 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 25 Jul 2012 08:48:50 +0200
+Subject: [PATCH] units: add the modules-load cmdline parameters to the unit
+ conditions
+
+For 'modules-load=' and 'rd.modules-load=' to be effective,
+systemd-modules-load.service must be started. It is currently
+conditional on the existence of config files. Add the presence of the
+cmdline parameters to the triggering conditions.
+(cherry picked from commit 22cfbae09d7791c52901c53b240e28c63eee93d4)
+---
+ units/systemd-modules-load.service.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/units/systemd-modules-load.service.in b/units/systemd-modules-load.service.in
+index 90d1fe0..248b5d1 100644
+--- a/units/systemd-modules-load.service.in
++++ b/units/systemd-modules-load.service.in
+@@ -18,6 +18,8 @@ ConditionDirectoryNotEmpty=|/usr/lib/modules-load.d
+ ConditionDirectoryNotEmpty=|/usr/local/lib/modules-load.d
+ ConditionDirectoryNotEmpty=|/etc/modules-load.d
+ ConditionDirectoryNotEmpty=|/run/modules-load.d
++ConditionKernelCommandLine=|modules-load
++ConditionKernelCommandLine=|rd.modules-load
+ 
+ [Service]
+ Type=oneshot

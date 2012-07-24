@@ -1,0 +1,20 @@
+From ab8a1ee403831f40b815802a0062439d6cb90557 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 2 Jul 2012 11:43:02 +0200
+Subject: [PATCH] timedate: fix ntp-units comment (cherry picked from commit
+ 2b2e9df87641f95cb5e3f0d1b69f6e71e53c6f94)
+
+---
+ src/timedate/ntp-units | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/timedate/ntp-units b/src/timedate/ntp-units
+index 6fdef44..2a46f66 100644
+--- a/src/timedate/ntp-units
++++ b/src/timedate/ntp-units
+@@ -1,4 +1,4 @@
+-# NTP ervice implementations, in order for preference
++# NTP service implementations, in order of preference
+ 
+ chronyd.service
+ ntpd.service

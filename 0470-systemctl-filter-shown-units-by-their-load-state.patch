@@ -1,0 +1,103 @@
+From ef0716a041bcccaa3fdb7372b8de78a134bc0164 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 10 Jul 2012 18:03:03 +0200
+Subject: [PATCH] systemctl: filter shown units by their load state
+
+E.g. systemctl --all -t masked gives the list of masked units.
+
+The -t/--type option is reused. This is possible because unit types
+and unit load states are called differently, so it is possible to
+distinguish what the user meant. Using the same option also means that
+the interface is user for the user: less options to remember.
+(cherry picked from commit c147dc42f8b3383a3ced69aaa75e21df4fe75a96)
+---
+ man/systemctl.xml         | 28 ++++++++++++++++++++--------
+ src/systemctl/systemctl.c | 21 ++++++++++++++-------
+ 2 files changed, 34 insertions(+), 15 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 7ed8f35..9808f41 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -88,14 +88,26 @@
+                                 <term><option>--type=</option></term>
+                                 <term><option>-t</option></term>
+ 
+-                                <listitem><para>When listing units,
+-                                limit display to certain unit
+-                                types. If not specified units of all
+-                                types will be shown. The argument
+-                                should be a unit type name such as
+-                                <option>service</option>,
+-                                <option>socket</option> and
+-                                similar.</para></listitem>
++                                <listitem><para>The argument should
++                                be a unit type name such as
++                                <option>service</option> and
++                                <option>socket</option>,
++                                or a unit load state such as
++                                <option>loaded</option> and
++                                <option>masked</option>.
++                                </para>
++
++                                <para>If the argument is a unit type,
++                                when listing units, limit display to
++                                certain unit types. If not specified
++                                units of all types will be shown.</para>
++
++                                <para>If the argument is a unit load state,
++                                when listing units, limit display to
++                                certain unit types. If not specified
++                                units of in all load states will be
++                                shown.</para>
++                                </listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index bfc65a0..05bf3dd 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -65,6 +65,7 @@
+ #include "path-util.h"
+ 
+ static const char *arg_type = NULL;
++static const char *arg_load_state = NULL;
+ static char **arg_property = NULL;
+ static bool arg_all = false;
+ static const char *arg_job_mode = "replace";
+@@ -337,7 +338,9 @@ static bool output_show_unit(const struct unit_info *u) {
+ 
+         return (!arg_type || ((dot = strrchr(u->id, '.')) &&
+                               streq(dot+1, arg_type))) &&
+-                (arg_all || !(streq(u->active_state, "inactive") || u->following[0]) || u->job_id > 0);
++                (!arg_load_state || streq(u->load_state, arg_load_state)) &&
++                (arg_all || !(streq(u->active_state, "inactive")
++                              || u->following[0]) || u->job_id > 0);
+ }
+ 
+ static void output_units_list(const struct unit_info *unit_infos, unsigned c) {
+@@ -4579,13 +4582,17 @@ static int systemctl_parse_argv(int argc, char *argv[]) {
+                         return 0;
+ 
+                 case 't':
+-                        if (unit_type_from_string(optarg) < 0) {
+-                                log_error("Invalid unit type '%s'.", optarg);
+-                                return -EINVAL;
++                        if (unit_type_from_string(optarg) >= 0) {
++                                arg_type = optarg;
++                                break;
+                         }
+-                        arg_type = optarg;
+-                        break;
+-
++                        if (unit_load_state_from_string(optarg) >= 0) {
++                                arg_load_state = optarg;
++                                break;
++                        }
++                        log_error("Unkown unit type or load state '%s'.",
++                                  optarg);
++                        return -EINVAL;
+                 case 'p': {
+                         char **l;
+ 

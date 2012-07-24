@@ -1,0 +1,27 @@
+From ae647b0d7727b0bb2c5d38f33439a02ed71b88c3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 23 Jul 2012 18:26:31 +0200
+Subject: [PATCH] systemctl: use color specification understood by dot
+
+grey66 is aproximately equal to dark grey. Not understanding dark grey is really
+a bug in dot, but trivial to work around.
+
+Closes https://bugs.freedesktop.org/show_bug.cgi?id=45706
+(cherry picked from commit 81cf1c43c9a24834433bb5c1f0dc6eb3c1c5b44f)
+---
+ src/systemctl/systemctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 05bf3dd..465832b 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -784,7 +784,7 @@ static int dot_one_property(const char *name, const char *prop, DBusMessageIter
+                 "RequiresOverridable",   "[color=\"black\"]",
+                 "Requisite",             "[color=\"darkblue\"]",
+                 "RequisiteOverridable",  "[color=\"darkblue\"]",
+-                "Wants",                 "[color=\"darkgrey\"]",
++                "Wants",                 "[color=\"grey66\"]",
+                 "Conflicts",             "[color=\"red\"]",
+                 "ConflictedBy",          "[color=\"red\"]",
+                 "After",                 "[color=\"green\"]"

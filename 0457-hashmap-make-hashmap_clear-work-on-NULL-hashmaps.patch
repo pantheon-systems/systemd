@@ -1,0 +1,35 @@
+From 8dbd5c4b323537f4e463b5dce094329535fa0d4c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 16:15:57 +0200
+Subject: [PATCH] hashmap: make hashmap_clear() work on NULL hashmaps (cherry
+ picked from commit
+ 61b1477c8107e9b7143be9acf6bf678fa9d0674d)
+
+---
+ src/shared/hashmap.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/hashmap.c b/src/shared/hashmap.c
+index c6b6580..0562211 100644
+--- a/src/shared/hashmap.c
++++ b/src/shared/hashmap.c
+@@ -277,6 +277,9 @@ void hashmap_free(Hashmap*h) {
+ }
+ 
+ void hashmap_free_free(Hashmap *h) {
++        if (!h)
++                return;
++
+         hashmap_clear_free(h);
+         hashmap_free(h);
+ }
+@@ -292,7 +295,8 @@ void hashmap_clear(Hashmap *h) {
+ void hashmap_clear_free(Hashmap *h) {
+         void *p;
+ 
+-        assert(h);
++        if (!h)
++                return;
+ 
+         while ((p = hashmap_steal_first(h)))
+                 free(p);

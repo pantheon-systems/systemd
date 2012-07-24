@@ -1,0 +1,26 @@
+From 7e7df514a0883ee0f1e6dcbf5d4d8c98c050ff9d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 12:23:33 +0200
+Subject: [PATCH] journald: handle /proc/kmsg reads returning 0 more nicely
+ (cherry picked from commit
+ 4c2ecfafd746411b07b8de10b91f5fd26fdd9cb3)
+
+---
+ src/journal/journald.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 3fca09f..6d8b4b7 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2104,6 +2104,10 @@ static int server_read_proc_kmsg(Server *s) {
+         assert(s->proc_kmsg_fd >= 0);
+ 
+         l = read(s->proc_kmsg_fd, s->proc_kmsg_buffer + s->proc_kmsg_length, sizeof(s->proc_kmsg_buffer) - 1 - s->proc_kmsg_length);
++        if (l == 0) /* the kernel is stupid and in some race
++                     * conditions returns 0 in the middle of the
++                     * stream. */
++                return 0;
+         if (l < 0) {
+ 
+                 if (errno == EAGAIN || errno == EINTR)

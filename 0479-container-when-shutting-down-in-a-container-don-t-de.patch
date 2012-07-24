@@ -1,0 +1,24 @@
+From a9d76cf65661b91a58f2d0274bfb8f67e902c396 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Jul 2012 14:42:25 +0200
+Subject: [PATCH] container: when shutting down in a container don't detach
+ loop devices
+
+We don't do device handling in containers, hence no loop devices either.
+(cherry picked from commit 910212e738e5ecdc0ceebfcc5009d688415eaefc)
+---
+ src/core/shutdown.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/core/shutdown.c b/src/core/shutdown.c
+index 4a2f309..5ba3bc2 100644
+--- a/src/core/shutdown.c
++++ b/src/core/shutdown.c
+@@ -359,6 +359,7 @@ int main(int argc, char *argv[]) {
+         if (in_container) {
+                 need_swapoff = false;
+                 need_dm_detach = false;
++                need_loop_detach = false;
+         }
+ 
+         /* Unmount all mountpoints, swaps, and loopback devices */

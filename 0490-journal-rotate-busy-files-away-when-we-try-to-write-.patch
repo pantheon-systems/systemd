@@ -1,0 +1,35 @@
+From 4c60d7172718ce2ff4887febd677f50c3f8997e9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 19 Jul 2012 03:21:04 +0200
+Subject: [PATCH] journal: rotate busy files away when we try to write to them
+ (cherry picked from commit
+ a1a1898f7190a25a579556826379f7486f87459b)
+
+---
+ src/journal/journal-file.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 6dca9f1..8390ea2 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -1911,7 +1911,9 @@ int journal_file_open_reliably(
+         if (r != -EBADMSG && /* corrupted */
+             r != -ENODATA && /* truncated */
+             r != -EHOSTDOWN && /* other machine */
+-            r != -EPROTONOSUPPORT) /* incompatible feature */
++            r != -EPROTONOSUPPORT && /* incompatible feature */
++            r != -EBUSY && /* unclean shutdown */
++            r != -ESHUTDOWN /* already archived */)
+                 return r;
+ 
+         if ((flags & O_ACCMODE) == O_RDONLY)
+@@ -1934,7 +1936,7 @@ int journal_file_open_reliably(
+         if (r < 0)
+                 return -errno;
+ 
+-        log_warning("File %s corrupted, renaming and replacing.", fname);
++        log_warning("File %s corrupted or uncleanly shut down, renaming and replacing.", fname);
+ 
+         return journal_file_open(fname, flags, mode, template, ret);
+ }

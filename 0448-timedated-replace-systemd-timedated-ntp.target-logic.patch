@@ -1,0 +1,521 @@
+From 3fdadd7ffeab01c973e99114c14f4423884a4227 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sun, 1 Jul 2012 17:37:21 +0200
+Subject: [PATCH] timedated: replace systemd-timedated-ntp.target logic with
+ simpler scheme
+
+The previous systemd-timedated-ntp.target was suffering by the problem
+that NTP implementations enabled via the machanism could not be disabled
+the obvious way on the "systemctl disable" command line. Replace
+systemd-timedated-ntp.target by a list of implementations we try in
+turn. The list is encoded in $pkgdatadir/ntp-units.
+(cherry picked from commit ac7019f33f1618f5b69ed44a8623e2596f1e3856)
+
+Conflicts:
+	Makefile.am
+---
+ Makefile.am                        |  10 +-
+ src/timedate/ntp-units             |   4 +
+ src/timedate/timedated.c           | 321 ++++++++++++++++++++++++-------------
+ units/systemd-timedated-ntp.target |  18 ---
+ 4 files changed, 220 insertions(+), 133 deletions(-)
+ create mode 100644 src/timedate/ntp-units
+ delete mode 100644 units/systemd-timedated-ntp.target
+
+diff --git a/Makefile.am b/Makefile.am
+index 8e387a1..329a2d9 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -79,6 +79,7 @@ pkgconfiglib_DATA =
+ polkitpolicy_in_files =
+ dist_udevrules_DATA =
+ dist_pkgsysconf_DATA =
++dist_pkgdata_DATA =
+ dist_dbuspolicy_DATA =
+ dbusinterface_DATA =
+ dist_dbussystemservice_DATA =
+@@ -113,6 +114,7 @@ AM_CPPFLAGS = \
+ 	-DSYSTEM_SHUTDOWN_PATH=\"$(systemshutdowndir)\" \
+ 	-DSYSTEM_SLEEP_PATH=\"$(systemsleepdir)\" \
+ 	-DSYSTEMD_KBD_MODEL_MAP=\"$(pkgdatadir)/kbd-model-map\" \
++	-DSYSTEMD_NTP_UNITS=\"$(pkgdatadir)/ntp-units\" \
+ 	-DX_SERVER=\"$(bindir)/X\" \
+ 	-DPOLKIT_AGENT_BINARY_PATH=\"$(bindir)/pkttyagent\" \
+ 	-I $(top_srcdir)/src \
+@@ -291,8 +293,7 @@ dist_systemunit_DATA = \
+ 	units/quotaon.service \
+ 	units/systemd-ask-password-wall.path \
+ 	units/systemd-ask-password-console.path \
+-	units/syslog.target \
+-	units/systemd-timedated-ntp.target
++	units/syslog.target
+ 
+ nodist_systemunit_DATA = \
+ 	units/getty@.service \
+@@ -2005,7 +2006,7 @@ INSTALL_DATA_HOOKS += \
+ EXTRA_DIST += \
+ 	units/systemd-localed.service.in
+ 
+-dist_pkgdata_DATA = \
++dist_pkgdata_DATA += \
+ 	src/locale/kbd-model-map
+ 
+ dist_noinst_SCRIPT = \
+@@ -2061,6 +2062,9 @@ timedated-install-data-hook:
+ INSTALL_DATA_HOOKS += \
+ 	timedated-install-data-hook
+ 
++dist_pkgdata_DATA += \
++	src/timedate/ntp-units
++
+ EXTRA_DIST += \
+ 	units/systemd-timedated.service.in
+ endif
+diff --git a/src/timedate/ntp-units b/src/timedate/ntp-units
+new file mode 100644
+index 0000000..6fdef44
+--- /dev/null
++++ b/src/timedate/ntp-units
+@@ -0,0 +1,4 @@
++# NTP ervice implementations, in order for preference
++
++chronyd.service
++ntpd.service
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index b008f15..8be45d3 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -303,62 +303,112 @@ static int write_data_local_rtc(void) {
+         return r;
+ }
+ 
++static char** get_ntp_services(void) {
++        char **r = NULL;
++        FILE *f;
++
++        f = fopen(SYSTEMD_NTP_UNITS, "re");
++        if (!f)
++                return NULL;
++
++        for (;;) {
++                char line[PATH_MAX], *l, **q;
++
++                if (!fgets(line, sizeof(line), f)) {
++
++                        if (ferror(f))
++                                log_error("Failed to read NTP units file: %m");
++
++                        break;
++                }
++
++                l = strstrip(line);
++                if (l[0] == 0 || l[0] == '#')
++                        continue;
++
++
++                q = strv_append(r, l);
++                if (!q) {
++                        log_error("Out of memory");
++                        break;
++                }
++
++                strv_free(r);
++                r = q;
++        }
++
++        fclose(f);
++
++        return r;
++}
++
+ static int read_ntp(DBusConnection *bus) {
+         DBusMessage *m = NULL, *reply = NULL;
+-        const char *name = "systemd-timedated-ntp.target", *s;
+         DBusError error;
+         int r;
++        char **i, **l;
+ 
+         assert(bus);
+ 
+         dbus_error_init(&error);
+ 
+-        m = dbus_message_new_method_call(
+-                        "org.freedesktop.systemd1",
+-                        "/org/freedesktop/systemd1",
+-                        "org.freedesktop.systemd1.Manager",
+-                        "GetUnitFileState");
+-
+-        if (!m) {
+-                log_error("Out of memory");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++        l = get_ntp_services();
++        STRV_FOREACH(i, l) {
++                const char *s;
++
++                if (m)
++                        dbus_message_unref(m);
++                m = dbus_message_new_method_call(
++                                "org.freedesktop.systemd1",
++                                "/org/freedesktop/systemd1",
++                                "org.freedesktop.systemd1.Manager",
++                                "GetUnitFileState");
++                if (!m) {
++                        log_error("Out of memory");
++                        r = -ENOMEM;
++                        goto finish;
++                }
+ 
+-        if (!dbus_message_append_args(m,
+-                                      DBUS_TYPE_STRING, &name,
+-                                      DBUS_TYPE_INVALID)) {
+-                log_error("Could not append arguments to message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++                if (!dbus_message_append_args(m,
++                                              DBUS_TYPE_STRING, i,
++                                              DBUS_TYPE_INVALID)) {
++                        log_error("Could not append arguments to message.");
++                        r = -ENOMEM;
++                        goto finish;
++                }
+ 
+-        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, &error);
+-        if (!reply) {
++                if (reply)
++                        dbus_message_unref(reply);
++                reply = dbus_connection_send_with_reply_and_block(bus, m, -1, &error);
++                if (!reply) {
++                        if (streq(error.name, "org.freedesktop.DBus.Error.FileNotFound")) {
++                                /* This implementation does not exist, try next one */
++                                dbus_error_free(&error);
++                                continue;
++                        }
+ 
+-                if (streq(error.name, "org.freedesktop.DBus.Error.FileNotFound")) {
+-                        /* NTP is not installed. */
+-                        tz.use_ntp = false;
+-                        r = 0;
++                        log_error("Failed to issue method call: %s", bus_error_message(&error));
++                        r = -EIO;
+                         goto finish;
+                 }
+ 
+-                log_error("Failed to issue method call: %s", bus_error_message(&error));
+-                r = -EIO;
+-                goto finish;
+-        }
++                if (!dbus_message_get_args(reply, &error,
++                                           DBUS_TYPE_STRING, &s,
++                                           DBUS_TYPE_INVALID)) {
++                        log_error("Failed to parse reply: %s", bus_error_message(&error));
++                        r = -EIO;
++                        goto finish;
++                }
+ 
+-        if (!dbus_message_get_args(reply, &error,
+-                                   DBUS_TYPE_STRING, &s,
+-                                   DBUS_TYPE_INVALID)) {
+-                log_error("Failed to parse reply: %s", bus_error_message(&error));
+-                r = -EIO;
++                tz.use_ntp =
++                        streq(s, "enabled") ||
++                        streq(s, "enabled-runtime");
++                r = 0;
+                 goto finish;
+         }
+ 
+-        tz.use_ntp =
+-                streq(s, "enabled") ||
+-                streq(s, "enabled-runtime");
++        /* NTP is not installed. */
++        tz.use_ntp = 0;
+         r = 0;
+ 
+ finish:
+@@ -368,6 +418,8 @@ finish:
+         if (reply)
+                 dbus_message_unref(reply);
+ 
++        strv_free(l);
++
+         dbus_error_free(&error);
+ 
+         return r;
+@@ -375,40 +427,60 @@ finish:
+ 
+ static int start_ntp(DBusConnection *bus, DBusError *error) {
+         DBusMessage *m = NULL, *reply = NULL;
+-        const char *name = "systemd-timedated-ntp.target", *mode = "replace";
++        const char *mode = "replace";
++        char **i, **l;
+         int r;
+ 
+         assert(bus);
+         assert(error);
+ 
+-        m = dbus_message_new_method_call(
+-                        "org.freedesktop.systemd1",
+-                        "/org/freedesktop/systemd1",
+-                        "org.freedesktop.systemd1.Manager",
+-                        tz.use_ntp ? "StartUnit" : "StopUnit");
+-        if (!m) {
+-                log_error("Could not allocate message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++        l = get_ntp_services();
++        STRV_FOREACH(i, l) {
++                if (m)
++                        dbus_message_unref(m);
++                m = dbus_message_new_method_call(
++                                "org.freedesktop.systemd1",
++                                "/org/freedesktop/systemd1",
++                                "org.freedesktop.systemd1.Manager",
++                                tz.use_ntp ? "StartUnit" : "StopUnit");
++                if (!m) {
++                        log_error("Could not allocate message.");
++                        r = -ENOMEM;
++                        goto finish;
++                }
+ 
+-        if (!dbus_message_append_args(m,
+-                                      DBUS_TYPE_STRING, &name,
+-                                      DBUS_TYPE_STRING, &mode,
+-                                      DBUS_TYPE_INVALID)) {
+-                log_error("Could not append arguments to message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++                if (!dbus_message_append_args(m,
++                                              DBUS_TYPE_STRING, i,
++                                              DBUS_TYPE_STRING, &mode,
++                                              DBUS_TYPE_INVALID)) {
++                        log_error("Could not append arguments to message.");
++                        r = -ENOMEM;
++                        goto finish;
++                }
++
++                if (reply)
++                        dbus_message_unref(reply);
++                reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
++                if (!reply) {
++                        if (streq(error->name, "org.freedesktop.DBus.Error.FileNotFound") ||
++                            streq(error->name, "org.freedesktop.systemd1.LoadFailed") ||
++                            streq(error->name, "org.freedesktop.systemd1.NoSuchUnit")) {
++                                /* This implementation does not exist, try next one */
++                                dbus_error_free(error);
++                                continue;
++                        }
++
++                        log_error("Failed to issue method call: %s", bus_error_message(error));
++                        r = -EIO;
++                        goto finish;
++                }
+ 
+-        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
+-        if (!reply) {
+-                log_error("Failed to issue method call: %s", bus_error_message(error));
+-                r = -EIO;
++                r = 0;
+                 goto finish;
+         }
+ 
+-        r = 0;
++        /* No implementaiton available... */
++        r = -ENOENT;
+ 
+ finish:
+         if (m)
+@@ -417,82 +489,105 @@ finish:
+         if (reply)
+                 dbus_message_unref(reply);
+ 
++        strv_free(l);
++
+         return r;
+ }
+ 
+ static int enable_ntp(DBusConnection *bus, DBusError *error) {
+         DBusMessage *m = NULL, *reply = NULL;
+-        const char * const names[] = { "systemd-timedated-ntp.target", NULL };
+         int r;
+         DBusMessageIter iter;
+         dbus_bool_t f = FALSE, t = TRUE;
++        char **i, **l;
+ 
+         assert(bus);
+         assert(error);
+ 
+-        m = dbus_message_new_method_call(
+-                        "org.freedesktop.systemd1",
+-                        "/org/freedesktop/systemd1",
+-                        "org.freedesktop.systemd1.Manager",
+-                        tz.use_ntp ? "EnableUnitFiles" : "DisableUnitFiles");
++        l = get_ntp_services();
++        STRV_FOREACH(i, l) {
++                char* k[2];
++
++                if (m)
++                        dbus_message_unref(m);
++                m = dbus_message_new_method_call(
++                                "org.freedesktop.systemd1",
++                                "/org/freedesktop/systemd1",
++                                "org.freedesktop.systemd1.Manager",
++                                tz.use_ntp ? "EnableUnitFiles" : "DisableUnitFiles");
++                if (!m) {
++                        log_error("Could not allocate message.");
++                        r = -ENOMEM;
++                        goto finish;
++                }
+ 
+-        if (!m) {
+-                log_error("Could not allocate message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++                dbus_message_iter_init_append(m, &iter);
+ 
+-        dbus_message_iter_init_append(m, &iter);
++                k[0] = *i;
++                k[1] = NULL;
+ 
+-        r = bus_append_strv_iter(&iter, (char**) names);
+-        if (r < 0) {
+-                log_error("Failed to append unit files.");
+-                goto finish;
+-        }
+-        /* send runtime bool */
+-        if (!dbus_message_iter_append_basic(&iter, DBUS_TYPE_BOOLEAN, &f)) {
+-                log_error("Failed to append runtime boolean.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++                r = bus_append_strv_iter(&iter, k);
++                if (r < 0) {
++                        log_error("Failed to append unit files.");
++                        goto finish;
++                }
+ 
+-        if (tz.use_ntp) {
+-                /* send force bool */
+-                if (!dbus_message_iter_append_basic(&iter, DBUS_TYPE_BOOLEAN, &t)) {
+-                        log_error("Failed to append force boolean.");
++                /* send runtime bool */
++                if (!dbus_message_iter_append_basic(&iter, DBUS_TYPE_BOOLEAN, &f)) {
++                        log_error("Failed to append runtime boolean.");
+                         r = -ENOMEM;
+                         goto finish;
+                 }
+-        }
+ 
+-        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
+-        if (!reply) {
+-                log_error("Failed to issue method call: %s", bus_error_message(error));
+-                r = -EIO;
+-                goto finish;
+-        }
++                if (tz.use_ntp) {
++                        /* send force bool */
++                        if (!dbus_message_iter_append_basic(&iter, DBUS_TYPE_BOOLEAN, &t)) {
++                                log_error("Failed to append force boolean.");
++                                r = -ENOMEM;
++                                goto finish;
++                        }
++                }
+ 
+-        dbus_message_unref(m);
+-        m = dbus_message_new_method_call(
+-                        "org.freedesktop.systemd1",
+-                        "/org/freedesktop/systemd1",
+-                        "org.freedesktop.systemd1.Manager",
+-                        "Reload");
+-        if (!m) {
+-                log_error("Could not allocate message.");
+-                r = -ENOMEM;
+-                goto finish;
+-        }
++                if (reply)
++                        dbus_message_unref(reply);
++                reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
++                if (!reply) {
++                        if (streq(error->name, "org.freedesktop.DBus.Error.FileNotFound")) {
++                                /* This implementation does not exist, try next one */
++                                dbus_error_free(error);
++                                continue;
++                        }
+ 
+-        dbus_message_unref(reply);
+-        reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
+-        if (!reply) {
+-                log_error("Failed to issue method call: %s", bus_error_message(error));
+-                r = -EIO;
++                        log_error("Failed to issue method call: %s", bus_error_message(error));
++                        r = -EIO;
++                        goto finish;
++                }
++
++                dbus_message_unref(m);
++                m = dbus_message_new_method_call(
++                                "org.freedesktop.systemd1",
++                                "/org/freedesktop/systemd1",
++                                "org.freedesktop.systemd1.Manager",
++                                "Reload");
++                if (!m) {
++                        log_error("Could not allocate message.");
++                        r = -ENOMEM;
++                        goto finish;
++                }
++
++                dbus_message_unref(reply);
++                reply = dbus_connection_send_with_reply_and_block(bus, m, -1, error);
++                if (!reply) {
++                        log_error("Failed to issue method call: %s", bus_error_message(error));
++                        r = -EIO;
++                        goto finish;
++                }
++
++                r = 0;
+                 goto finish;
+         }
+ 
+-        r = 0;
++        r = -ENOENT;
+ 
+ finish:
+         if (m)
+@@ -501,6 +596,8 @@ finish:
+         if (reply)
+                 dbus_message_unref(reply);
+ 
++        strv_free(l);
++
+         return r;
+ }
+ 
+diff --git a/units/systemd-timedated-ntp.target b/units/systemd-timedated-ntp.target
+deleted file mode 100644
+index 0837004..0000000
+--- a/units/systemd-timedated-ntp.target
++++ /dev/null
+@@ -1,18 +0,0 @@
+-#  This file is part of systemd.
+-#
+-#  systemd is free software; you can redistribute it and/or modify it
+-#  under the terms of the GNU Lesser General Public License as published by
+-#  the Free Software Foundation; either version 2.1 of the License, or
+-#  (at your option) any later version.
+-
+-# This target is enabled/disabled via the timedated mechanism when the
+-# user asks for it via the UI. NTP implementations should hook
+-# themselves into this target via .wants/ symlinks, and then add
+-# BindTo= on this target so that they are stopped when it goes away.
+-
+-[Unit]
+-Description=Network Time Protocol
+-Documentation=http://www.freedesktop.org/wiki/Software/systemd/timedated
+-
+-[Install]
+-WantedBy=multi-user.target

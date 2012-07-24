@@ -1,0 +1,26 @@
+From fcc04610a51c425594eab00494215f7714653fdd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 22 Jul 2012 15:24:25 +0200
+Subject: [PATCH] logind: fix operation precedence mix-up
+
+Since + has higher precedence than ?:, and u+b is unlikely to be exactly zero,
+the timestamp would usually be set to IDLE_THRESHOLD_USEC. Fix it by
+returning either 'last activity', or 'last activity+IDLE_THRESHOLD_USEC'.
+(cherry picked from commit 17804d7f0a4002d4f0b8f1dc6e25fcca9381c13e)
+---
+ src/login/logind-session.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 1945041..e4a7473 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -769,7 +769,7 @@ int session_get_idle_hint(Session *s, dual_timestamp *t) {
+         b = u + IDLE_THRESHOLD_USEC < n;
+ 
+         if (t)
+-                dual_timestamp_from_realtime(t, u + b ? IDLE_THRESHOLD_USEC : 0);
++                dual_timestamp_from_realtime(t, u + b*IDLE_THRESHOLD_USEC);
+ 
+         return b;
+ 

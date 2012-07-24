@@ -1,0 +1,25 @@
+From 37dd56156fe6194a4cda6920a323d1cecd1fbdf0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 17 Jul 2012 00:55:02 +0200
+Subject: [PATCH] journal: actually set archived files to archived state
+ (cherry picked from commit
+ cd96b3b86abb4a88cac2722bdfb6e5d4413f6831)
+
+---
+ src/journal/journal-file.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index f1b1c6f..6dca9f1 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -68,7 +68,8 @@ void journal_file_close(JournalFile *f) {
+         assert(f);
+ 
+         if (f->header) {
+-                if (f->writable)
++                /* Mark the file offline. Don't override the archived state if it already is set */
++                if (f->writable && f->header->state == STATE_ONLINE)
+                         f->header->state = STATE_OFFLINE;
+ 
+                 munmap(f->header, PAGE_ALIGN(sizeof(Header)));

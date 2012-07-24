@@ -1,0 +1,23 @@
+From 94c4ab25cc50ec4df0322cfda1fd51e769f4e474 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 28 Jun 2012 00:12:47 +0200
+Subject: [PATCH] modules-load: fix return value (cherry picked from commit
+ 8f9c0b4cc17dc0eb24e420f9bd6f8c9534b5dd84)
+
+---
+ src/modules-load/modules-load.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/modules-load/modules-load.c b/src/modules-load/modules-load.c
+index c5692b2..027fe1e 100644
+--- a/src/modules-load/modules-load.c
++++ b/src/modules-load/modules-load.c
+@@ -131,7 +131,7 @@ static int load_module(struct kmod_ctx *ctx, const char *m) {
+ 
+         if (!modlist) {
+                 log_error("Failed to find module '%s'", m);
+-                return r;
++                return -ENOENT;
+         }
+ 
+         kmod_list_foreach(itr, modlist) {

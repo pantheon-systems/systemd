@@ -1,0 +1,65 @@
+From e98c2da71e9e884a421d3e42a11416a9224c1820 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 4 Jul 2012 00:23:42 +0200
+Subject: [PATCH] service: flush the start counter in "systemctl reset-failed"
+ (cherry picked from commit
+ 451b34cc1d74960ee0262eef970a6346ec814f31)
+
+---
+ man/systemd.service.xml | 10 +++++++++-
+ src/core/service.c      |  2 ++
+ src/shared/ratelimit.h  |  7 +++++++
+ 3 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 60d8361..0c9b964 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -799,7 +799,15 @@
+                                 however they may still be restarted
+                                 manually at a later point from which
+                                 point on the restart logic is again
+-                                activated.</para></listitem>
++                                activated. Note that
++                                <command>systemctl
++                                reset-failed</command> will cause the
++                                restart rate counter for a service to
++                                be flushed, which is useful if the
++                                administrator wants to manually start
++                                a service and the start limit
++                                interferes with
++                                that.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/src/core/service.c b/src/core/service.c
+index ef37a5a..534e77e 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -3656,6 +3656,8 @@ static void service_reset_failed(Unit *u) {
+ 
+         s->result = SERVICE_SUCCESS;
+         s->reload_result = SERVICE_SUCCESS;
++
++        RATELIMIT_RESET(s->start_limit);
+ }
+ 
+ static bool service_need_daemon_reload(Unit *u) {
+diff --git a/src/shared/ratelimit.h b/src/shared/ratelimit.h
+index a6443e7..2c89955 100644
+--- a/src/shared/ratelimit.h
++++ b/src/shared/ratelimit.h
+@@ -48,6 +48,13 @@ typedef struct RateLimit {
+                 _r->begin = 0;                           \
+         } while (false)
+ 
++#define RATELIMIT_RESET(v)                               \
++        do {                                             \
++                RateLimit *_r = &(v);                    \
++                _r->num = 0;                             \
++                _r->begin = 0;                           \
++        } while (false)
++
+ bool ratelimit_test(RateLimit *r);
+ 
+ #endif

@@ -1,0 +1,57 @@
+From b814268a88e42b29612b1573cc03d7d30ce885ed Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 2 Jul 2012 14:33:04 +0200
+Subject: [PATCH] units: rename systemd-debug-shell.service to
+ debug-shell.service
+
+The systemd- prefix for services should be reserved only for services
+that invoke our own code rather than generic, external code.
+(cherry picked from commit d1f9edafe7b832c507931640f32069d001916b0e)
+
+Conflicts:
+	Makefile.am
+	NEWS
+	units/.gitignore
+---
+ Makefile.am                                                      | 4 ++--
+ po/POTFILES.skip                                                 | 2 +-
+ units/{systemd-debug-shell.service.in => debug-shell.service.in} | 0
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+ rename units/{systemd-debug-shell.service.in => debug-shell.service.in} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 329a2d9..46cfe80 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -322,7 +322,7 @@ nodist_systemunit_DATA = \
+ 	units/rescue.service \
+ 	units/suspend.service \
+ 	units/user@.service \
+-	units/systemd-debug-shell.service
++	units/debug-shell.service
+ 
+ dist_userunit_DATA = \
+ 	units/user/default.target \
+@@ -357,7 +357,7 @@ EXTRA_DIST += \
+ 	units/fsck@.service.in \
+ 	units/fsck-root.service.in \
+ 	units/user@.service.in \
+-	units/systemd-debug-shell.service.in \
++	units/debug-shell.service.in \
+ 	units/hibernate.service.in \
+ 	units/suspend.service.in \
+ 	introspect.awk \
+diff --git a/po/POTFILES.skip b/po/POTFILES.skip
+index 40584d4..52a9be8 100644
+--- a/po/POTFILES.skip
++++ b/po/POTFILES.skip
+@@ -17,4 +17,4 @@ src/core/org.freedesktop.systemd1.policy.in.in
+ src/timedate/timedated.c
+ units/systemd-readahead-done.service.in
+ units/user@.service.in
+-units/systemd-debug-shell.service.in
++units/debug-shell.service.in
+diff --git a/units/systemd-debug-shell.service.in b/units/debug-shell.service.in
+similarity index 100%
+rename from units/systemd-debug-shell.service.in
+rename to units/debug-shell.service.in

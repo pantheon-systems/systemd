@@ -1,0 +1,308 @@
+From dd979786d9b8d62221b1664f8767ee07adbe0ae4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Jul 2012 23:34:40 +0200
+Subject: [PATCH] unit: rename BindTo= to BindsTo=
+
+all other dependencies are in 3rd person. Change BindTo= accordingly to
+BindsTo=.
+
+Of course, the dependency is widely used, hence we parse the old name
+too for compatibility.
+(cherry picked from commit 7f2cddae09fd2579ae24434df577bb5e5a157d86)
+
+Conflicts:
+	TODO
+	units/hibernate.target
+	units/serial-getty@.service.m4
+	units/suspend.target
+---
+ man/systemd.unit.xml                  |  6 +++---
+ src/core/dbus-unit.c                  |  6 +++---
+ src/core/dbus-unit.h                  |  6 +++---
+ src/core/load-fragment-gperf.gperf.m4 |  9 ++++++---
+ src/core/service.c                    |  2 +-
+ src/core/target.c                     |  2 +-
+ src/core/transaction.c                |  4 ++--
+ src/core/unit.c                       | 20 ++++++++++----------
+ src/core/unit.h                       |  8 ++++----
+ src/cryptsetup/cryptsetup-generator.c |  2 +-
+ units/fsck@.service.in                |  2 +-
+ 11 files changed, 35 insertions(+), 32 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index c4a8f9a..698cbe3 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -410,7 +410,7 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
+-                                <term><varname>BindTo=</varname></term>
++                                <term><varname>BindsTo=</varname></term>
+ 
+                                 <listitem><para>Configures requirement
+                                 dependencies, very similar in style to
+@@ -527,8 +527,8 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
+-                                <term><varname>PropagateReloadTo=</varname></term>
+-                                <term><varname>PropagateReloadFrom=</varname></term>
++                                <term><varname>PropagatesReloadTo=</varname></term>
++                                <term><varname>ReloadPropagatedFrom=</varname></term>
+ 
+                                 <listitem><para>Lists one or more
+                                 units where reload requests on the
+diff --git a/src/core/dbus-unit.c b/src/core/dbus-unit.c
+index 23c6fa7..a7c5fa8 100644
+--- a/src/core/dbus-unit.c
++++ b/src/core/dbus-unit.c
+@@ -793,7 +793,7 @@ const BusProperty bus_unit_properties[] = {
+         { "Requisite",            bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUISITE]),               true },
+         { "RequisiteOverridable", bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUISITE_OVERRIDABLE]),   true },
+         { "Wants",                bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_WANTS]),                   true },
+-        { "BindTo",               bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_BIND_TO]),                 true },
++        { "BindsTo",              bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_BINDS_TO]),                true },
+         { "RequiredBy",           bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUIRED_BY]),             true },
+         { "RequiredByOverridable",bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUIRED_BY_OVERRIDABLE]), true },
+         { "WantedBy",             bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_WANTED_BY]),               true },
+@@ -805,8 +805,8 @@ const BusProperty bus_unit_properties[] = {
+         { "OnFailure",            bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_ON_FAILURE]),              true },
+         { "Triggers",             bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_TRIGGERS]),                true },
+         { "TriggeredBy",          bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_TRIGGERED_BY]),            true },
+-        { "PropagateReloadTo",    bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_PROPAGATE_RELOAD_TO]),     true },
+-        { "PropagateReloadFrom",  bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_PROPAGATE_RELOAD_FROM]),   true },
++        { "PropagatesReloadTo",   bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_PROPAGATES_RELOAD_TO]),    true },
++        { "ReloadPropagatedFrom", bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_RELOAD_PROPAGATED_FROM]),  true },
+         { "RequiresMountsFor",    bus_property_append_strv,          "as", offsetof(Unit, requires_mounts_for),                        true },
+         { "Documentation",        bus_property_append_strv,          "as", offsetof(Unit, documentation),                              true },
+         { "Description",          bus_unit_append_description,        "s", 0 },
+diff --git a/src/core/dbus-unit.h b/src/core/dbus-unit.h
+index 0caecfe..e1ba769 100644
+--- a/src/core/dbus-unit.h
++++ b/src/core/dbus-unit.h
+@@ -71,7 +71,7 @@
+         "  <property name=\"Requisite\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"RequisiteOverridable\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"Wants\" type=\"as\" access=\"read\"/>\n"    \
+-        "  <property name=\"BindTo\" type=\"as\" access=\"read\"/>\n"    \
++        "  <property name=\"BindsTo\" type=\"as\" access=\"read\"/>\n"    \
+         "  <property name=\"RequiredBy\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"RequiredByOverridable\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"WantedBy\" type=\"as\" access=\"read\"/>\n" \
+@@ -83,8 +83,8 @@
+         "  <property name=\"OnFailure\" type=\"as\" access=\"read\"/>\n"    \
+         "  <property name=\"Triggers\" type=\"as\" access=\"read\"/>\n"    \
+         "  <property name=\"TriggeredBy\" type=\"as\" access=\"read\"/>\n"    \
+-        "  <property name=\"PropagateReloadTo\" type=\"as\" access=\"read\"/>\n" \
+-        "  <property name=\"PropagateReloadFrom\" type=\"as\" access=\"read\"/>\n" \
++        "  <property name=\"PropagatesReloadTo\" type=\"as\" access=\"read\"/>\n" \
++        "  <property name=\"ReloadPropagatedFrom\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"RequiresMountsFor\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"Description\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"Documentation\" type=\"as\" access=\"read\"/>\n" \
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 50fba45..e6d0db3 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -98,13 +98,16 @@ Unit.RequiresOverridable,        config_parse_unit_deps,             UNIT_REQUIR
+ Unit.Requisite,                  config_parse_unit_deps,             UNIT_REQUISITE,                0
+ Unit.RequisiteOverridable,       config_parse_unit_deps,             UNIT_REQUISITE_OVERRIDABLE,    0
+ Unit.Wants,                      config_parse_unit_deps,             UNIT_WANTS,                    0
+-Unit.BindTo,                     config_parse_unit_deps,             UNIT_BIND_TO,                  0
++Unit.BindsTo,                    config_parse_unit_deps,             UNIT_BINDS_TO,                 0
++Unit.BindTo,                     config_parse_unit_deps,             UNIT_BINDS_TO,                 0
+ Unit.Conflicts,                  config_parse_unit_deps,             UNIT_CONFLICTS,                0
+ Unit.Before,                     config_parse_unit_deps,             UNIT_BEFORE,                   0
+ Unit.After,                      config_parse_unit_deps,             UNIT_AFTER,                    0
+ Unit.OnFailure,                  config_parse_unit_deps,             UNIT_ON_FAILURE,               0
+-Unit.PropagateReloadTo,          config_parse_unit_deps,             UNIT_PROPAGATE_RELOAD_TO,      0
+-Unit.PropagateReloadFrom,        config_parse_unit_deps,             UNIT_PROPAGATE_RELOAD_FROM,    0
++Unit.PropagatesReloadTo,         config_parse_unit_deps,             UNIT_PROPAGATES_RELOAD_TO,     0
++Unit.PropagateReloadTo,          config_parse_unit_deps,             UNIT_PROPAGATES_RELOAD_TO,     0
++Unit.ReloadPropagatedFrom,       config_parse_unit_deps,             UNIT_RELOAD_PROPAGATED_FROM,   0
++Unit.PropagateReloadFrom,        config_parse_unit_deps,             UNIT_RELOAD_PROPAGATED_FROM,   0
+ Unit.RequiresMountsFor,          config_parse_unit_requires_mounts_for, 0,                          offsetof(Unit, requires_mounts_for)
+ Unit.StopWhenUnneeded,           config_parse_bool,                  0,                             offsetof(Unit, stop_when_unneeded)
+ Unit.RefuseManualStart,          config_parse_bool,                  0,                             offsetof(Unit, refuse_manual_start)
+diff --git a/src/core/service.c b/src/core/service.c
+index fba35c5..01623bd 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2465,7 +2465,7 @@ static int service_start(Unit *u) {
+                 return 0;
+ 
+         /* A service that will be restarted must be stopped first to
+-         * trigger BindTo and/or OnFailure dependencies. If a user
++         * trigger BindsTo and/or OnFailure dependencies. If a user
+          * does not want to wait for the holdoff time to elapse, the
+          * service should be manually restarted, not started. */
+         if (s->state == SERVICE_AUTO_RESTART) {
+diff --git a/src/core/target.c b/src/core/target.c
+index d4490d7..d1625a1 100644
+--- a/src/core/target.c
++++ b/src/core/target.c
+@@ -59,7 +59,7 @@ static int target_add_default_dependencies(Target *t) {
+                 UNIT_REQUISITE,
+                 UNIT_REQUISITE_OVERRIDABLE,
+                 UNIT_WANTS,
+-                UNIT_BIND_TO
++                UNIT_BINDS_TO
+         };
+ 
+         Iterator i;
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 44fdc06..a1cf706 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -893,7 +893,7 @@ int transaction_add_job_and_dependencies(
+                                 }
+                         }
+ 
+-                        SET_FOREACH(dep, ret->unit->dependencies[UNIT_BIND_TO], i) {
++                        SET_FOREACH(dep, ret->unit->dependencies[UNIT_BINDS_TO], i) {
+                                 r = transaction_add_job_and_dependencies(tr, JOB_START, dep, ret, true, override, false, false, ignore_order, e);
+                                 if (r < 0) {
+                                         if (r != -EBADR)
+@@ -998,7 +998,7 @@ int transaction_add_job_and_dependencies(
+ 
+                 if (type == JOB_RELOAD) {
+ 
+-                        SET_FOREACH(dep, ret->unit->dependencies[UNIT_PROPAGATE_RELOAD_TO], i) {
++                        SET_FOREACH(dep, ret->unit->dependencies[UNIT_PROPAGATES_RELOAD_TO], i) {
+                                 r = transaction_add_job_and_dependencies(tr, JOB_RELOAD, dep, ret, false, override, false, false, ignore_order, e);
+                                 if (r < 0) {
+                                         log_warning("Cannot add dependency reload job for unit %s, ignoring: %s", dep->id, bus_error(e, r));
+diff --git a/src/core/unit.c b/src/core/unit.c
+index a956172..ca3892c 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1140,7 +1140,7 @@ static void retroactively_start_dependencies(Unit *u) {
+                     !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(other)))
+                         manager_add_job(u->manager, JOB_START, other, JOB_REPLACE, true, NULL, NULL);
+ 
+-        SET_FOREACH(other, u->dependencies[UNIT_BIND_TO], i)
++        SET_FOREACH(other, u->dependencies[UNIT_BINDS_TO], i)
+                 if (!set_get(u->dependencies[UNIT_AFTER], other) &&
+                     !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(other)))
+                         manager_add_job(u->manager, JOB_START, other, JOB_REPLACE, true, NULL, NULL);
+@@ -1205,7 +1205,7 @@ static void check_unneeded_dependencies(Unit *u) {
+         SET_FOREACH(other, u->dependencies[UNIT_REQUISITE_OVERRIDABLE], i)
+                 if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
+                         unit_check_unneeded(other);
+-        SET_FOREACH(other, u->dependencies[UNIT_BIND_TO], i)
++        SET_FOREACH(other, u->dependencies[UNIT_BINDS_TO], i)
+                 if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
+                         unit_check_unneeded(other);
+ }
+@@ -1591,11 +1591,11 @@ int unit_add_dependency(Unit *u, UnitDependency d, Unit *other, bool add_referen
+                 [UNIT_WANTS] = UNIT_WANTED_BY,
+                 [UNIT_REQUISITE] = UNIT_REQUIRED_BY,
+                 [UNIT_REQUISITE_OVERRIDABLE] = UNIT_REQUIRED_BY_OVERRIDABLE,
+-                [UNIT_BIND_TO] = UNIT_BOUND_BY,
++                [UNIT_BINDS_TO] = UNIT_BOUND_BY,
+                 [UNIT_REQUIRED_BY] = _UNIT_DEPENDENCY_INVALID,
+                 [UNIT_REQUIRED_BY_OVERRIDABLE] = _UNIT_DEPENDENCY_INVALID,
+                 [UNIT_WANTED_BY] = _UNIT_DEPENDENCY_INVALID,
+-                [UNIT_BOUND_BY] = UNIT_BIND_TO,
++                [UNIT_BOUND_BY] = UNIT_BINDS_TO,
+                 [UNIT_CONFLICTS] = UNIT_CONFLICTED_BY,
+                 [UNIT_CONFLICTED_BY] = UNIT_CONFLICTS,
+                 [UNIT_BEFORE] = UNIT_AFTER,
+@@ -1605,8 +1605,8 @@ int unit_add_dependency(Unit *u, UnitDependency d, Unit *other, bool add_referen
+                 [UNIT_REFERENCED_BY] = UNIT_REFERENCES,
+                 [UNIT_TRIGGERS] = UNIT_TRIGGERED_BY,
+                 [UNIT_TRIGGERED_BY] = UNIT_TRIGGERS,
+-                [UNIT_PROPAGATE_RELOAD_TO] = UNIT_PROPAGATE_RELOAD_FROM,
+-                [UNIT_PROPAGATE_RELOAD_FROM] = UNIT_PROPAGATE_RELOAD_TO
++                [UNIT_PROPAGATES_RELOAD_TO] = UNIT_RELOAD_PROPAGATED_FROM,
++                [UNIT_RELOAD_PROPAGATED_FROM] = UNIT_PROPAGATES_RELOAD_TO
+         };
+         int r, q = 0, v = 0, w = 0;
+ 
+@@ -2514,7 +2514,7 @@ int unit_add_node_link(Unit *u, const char *what, bool wants) {
+         if (r < 0)
+                 return r;
+ 
+-        if ((r = unit_add_two_dependencies(u, UNIT_AFTER, UNIT_BIND_TO, device, true)) < 0)
++        if ((r = unit_add_two_dependencies(u, UNIT_AFTER, UNIT_BINDS_TO, device, true)) < 0)
+                 return r;
+ 
+         if (wants)
+@@ -2753,7 +2753,7 @@ static const char* const unit_dependency_table[_UNIT_DEPENDENCY_MAX] = {
+         [UNIT_REQUISITE_OVERRIDABLE] = "RequisiteOverridable",
+         [UNIT_REQUIRED_BY] = "RequiredBy",
+         [UNIT_REQUIRED_BY_OVERRIDABLE] = "RequiredByOverridable",
+-        [UNIT_BIND_TO] = "BindTo",
++        [UNIT_BINDS_TO] = "BindsTo",
+         [UNIT_WANTED_BY] = "WantedBy",
+         [UNIT_CONFLICTS] = "Conflicts",
+         [UNIT_CONFLICTED_BY] = "ConflictedBy",
+@@ -2765,8 +2765,8 @@ static const char* const unit_dependency_table[_UNIT_DEPENDENCY_MAX] = {
+         [UNIT_ON_FAILURE] = "OnFailure",
+         [UNIT_TRIGGERS] = "Triggers",
+         [UNIT_TRIGGERED_BY] = "TriggeredBy",
+-        [UNIT_PROPAGATE_RELOAD_TO] = "PropagateReloadTo",
+-        [UNIT_PROPAGATE_RELOAD_FROM] = "PropagateReloadFrom"
++        [UNIT_PROPAGATES_RELOAD_TO] = "PropagatesReloadTo",
++        [UNIT_RELOAD_PROPAGATED_FROM] = "ReloadPropagatedFrom"
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(unit_dependency, UnitDependency);
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 797751d..ed31c62 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -76,13 +76,13 @@ enum UnitDependency {
+         UNIT_REQUISITE,
+         UNIT_REQUISITE_OVERRIDABLE,
+         UNIT_WANTS,
+-        UNIT_BIND_TO,
++        UNIT_BINDS_TO,
+ 
+         /* Inverse of the above */
+         UNIT_REQUIRED_BY,             /* inverse of 'requires' and 'requisite' is 'required_by' */
+         UNIT_REQUIRED_BY_OVERRIDABLE, /* inverse of 'requires_overridable' and 'requisite_overridable' is 'soft_required_by' */
+         UNIT_WANTED_BY,               /* inverse of 'wants' */
+-        UNIT_BOUND_BY,                /* inverse of 'bind_to' */
++        UNIT_BOUND_BY,                /* inverse of 'binds_to' */
+ 
+         /* Negative dependencies */
+         UNIT_CONFLICTS,               /* inverse of 'conflicts' is 'conflicted_by' */
+@@ -100,8 +100,8 @@ enum UnitDependency {
+         UNIT_TRIGGERED_BY,
+ 
+         /* Propagate reloads */
+-        UNIT_PROPAGATE_RELOAD_TO,
+-        UNIT_PROPAGATE_RELOAD_FROM,
++        UNIT_PROPAGATES_RELOAD_TO,
++        UNIT_RELOAD_PROPAGATED_FROM,
+ 
+         /* Reference information for GC logic */
+         UNIT_REFERENCES,              /* Inverse of 'references' is 'referenced_by' */
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index e3e9a99..4c1d04c 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -116,7 +116,7 @@ static int create_disk(
+                 "Description=Cryptography Setup for %%I\n"
+                 "Conflicts=umount.target\n"
+                 "DefaultDependencies=no\n"
+-                "BindTo=%s dev-mapper-%%i.device\n"
++                "BindsTo=%s dev-mapper-%%i.device\n"
+                 "After=systemd-readahead-collect.service systemd-readahead-replay.service %s\n"
+                 "Before=umount.target\n",
+                 d, d);
+diff --git a/units/fsck@.service.in b/units/fsck@.service.in
+index c06684b..20d1046 100644
+--- a/units/fsck@.service.in
++++ b/units/fsck@.service.in
+@@ -8,7 +8,7 @@
+ [Unit]
+ Description=File System Check on %f
+ DefaultDependencies=no
+-BindTo=%i.device
++BindsTo=%i.device
+ After=systemd-readahead-collect.service systemd-readahead-replay.service %i.device
+ Before=shutdown.target
+ 

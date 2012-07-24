@@ -1,0 +1,28 @@
+From fa77059d5191170784358468443f9c6355d69527 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 24 Jul 2012 18:58:24 +0200
+Subject: [PATCH] F17: restore device units for /dev/ttyX
+
+This re-adds the udev rule that got removed in "getty: VC devices are
+always available, we don't need to wait until they show up" (commit
+88e995fd720a93460e7c3f38ac24512e6d96b3e8)
+
+Anaconda in F17 still needs it.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=841822
+---
+ src/99-systemd.rules.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/99-systemd.rules.in b/src/99-systemd.rules.in
+index ff92ebf..ea305b1 100644
+--- a/src/99-systemd.rules.in
++++ b/src/99-systemd.rules.in
+@@ -7,6 +7,7 @@
+ 
+ ACTION=="remove", GOTO="systemd_end"
+ 
++SUBSYSTEM=="tty", KERNEL=="tty[0-9]|tty1[0-2]", TAG+="systemd"
+ SUBSYSTEM=="tty", KERNEL=="tty[a-zA-Z]*|hvc*|xvc*|hvsi*", TAG+="systemd"
+ 
+ KERNEL=="vport*", TAG+="systemd"

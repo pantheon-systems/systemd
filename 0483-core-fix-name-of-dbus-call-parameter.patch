@@ -1,0 +1,23 @@
+From 887583863532db70806b4bf95230ed8799d0f314 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Jul 2012 19:11:27 +0200
+Subject: [PATCH] core: fix name of dbus call parameter (cherry picked from
+ commit e616d1c6745f6a6df5a49a3957bd06aa8bd4648b)
+
+---
+ src/core/dbus-manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 62dc2c9..d8d2073 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -144,7 +144,7 @@
+         "   <arg name=\"set\" type=\"as\" direction=\"in\"/>\n"         \
+         "  </method>\n"                                                 \
+         "  <method name=\"ListUnitFiles\">\n"                            \
+-        "   <arg name=\"changes\" type=\"a(ss)\" direction=\"out\"/>\n" \
++        "   <arg name=\"files\" type=\"a(ss)\" direction=\"out\"/>\n" \
+         "  </method>\n"                                                 \
+         "  <method name=\"GetUnitFileState\">\n"                        \
+         "   <arg name=\"file\" type=\"s\" direction=\"in\"/>\n"         \

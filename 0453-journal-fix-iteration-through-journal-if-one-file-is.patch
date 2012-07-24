@@ -1,0 +1,31 @@
+From c6baa21ca17e380ff64a2f62504cb3b6ca8679b5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 11:58:16 +0200
+Subject: [PATCH] journal: fix iteration through journal if one file is
+ corrupt (cherry picked from commit
+ e590af2666d2a958d355f9957e77ec967bb16011)
+
+Conflicts:
+	TODO
+---
+ src/journal/sd-journal.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index a91e94c..5f701db 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -670,9 +670,10 @@ static int real_journal_next(sd_journal *j, direction_t direction) {
+                 bool found;
+ 
+                 r = next_beyond_location(j, f, direction, &o, &p);
+-                if (r < 0)
+-                        return r;
+-                else if (r == 0)
++                if (r < 0) {
++                        log_debug("Can't iterate through %s, ignoring: %s", f->path, strerror(-r));
++                        continue;
++                } else if (r == 0)
+                         continue;
+ 
+                 if (!new_current)

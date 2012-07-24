@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        17%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        18%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -498,6 +498,67 @@ Patch0435:      0435-login-wrap-CanTTY-and-CanGraphical-seat-attributes-i.patch
 Patch0436:      0436-preset-don-t-look-for-preset-files-in-lib-unless-usr.patch
 Patch0437:      0437-service-fix-incorrect-argument.patch
 Patch0438:      0438-service-pass-via-FAILED-DEAD-before-going-to-AUTO_RE.patch
+Patch0439:      0439-core-make-systemd.confirm_spawn-1-actually-work.patch
+Patch0440:      0440-modules-load-parse-driver-rd.driver-kernel-command-l.patch
+Patch0441:      0441-modules-load-don-t-fail-on-builtin-modules-better-pr.patch
+Patch0442:      0442-modules-load-fix-return-value.patch
+Patch0443:      0443-modules-load-use-correct-va_list-logging-function.patch
+Patch0444:      0444-mount-split-adding-of-extras-from-mount_load.patch
+Patch0445:      0445-mount-load-only-if-we-there-s-mountinfo-or-fragment.patch
+Patch0446:      0446-remount-fs-also-remount-usr-according-to-fstab.patch
+Patch0447:      0447-manager-serialize-deserialize-job-counters-across-re.patch
+Patch0448:      0448-timedated-replace-systemd-timedated-ntp.target-logic.patch
+Patch0449:      0449-timedate-fix-ntp-units-comment.patch
+Patch0450:      0450-units-rename-systemd-debug-shell.service-to-debug-sh.patch
+Patch0451:      0451-modules-load-rename-kernel-command-line-option-to-rd.patch
+Patch0452:      0452-timedated-replace-ntp-units-file-with-an-ntp-units.d.patch
+Patch0453:      0453-journal-fix-iteration-through-journal-if-one-file-is.patch
+Patch0454:      0454-journald-handle-proc-kmsg-reads-returning-0-more-nic.patch
+Patch0455:      0455-timedate-uniq-ify-ntp-units-list.patch
+Patch0456:      0456-load-fragment-a-few-modernizations.patch
+Patch0457:      0457-hashmap-make-hashmap_clear-work-on-NULL-hashmaps.patch
+Patch0458:      0458-mount-setup-don-t-complain-if-we-try-to-fix-the-labe.patch
+Patch0459:      0459-man-explain-StartLimitRate-in-conjunction-with-Resta.patch
+Patch0460:      0460-man-clarify-that-StartLimitInterval-also-applies-to-.patch
+Patch0461:      0461-service-flush-the-start-counter-in-systemctl-reset-f.patch
+Patch0462:      0462-man-document-Restart-a-bit-more.patch
+Patch0463:      0463-man-update-man-pages-to-reflect-the-driver-to-load-m.patch
+Patch0464:      0464-paranoia-refuse-rm_rf.patch
+Patch0465:      0465-unit-Move-UnitType-definitions-from-core-unit.c-to-s.patch
+Patch0466:      0466-systemctl-check-the-argument-to-t-for-invalid-values.patch
+Patch0467:      0467-unit-name-remove-unit_name_is_valid_no_type-and-move.patch
+Patch0468:      0468-unit-get-rid-of-UnitVTable.suffix-which-is-now-unuse.patch
+Patch0469:      0469-unit-Move-UnitLoadState-definitions-from-core-unit.c.patch
+Patch0470:      0470-systemctl-filter-shown-units-by-their-load-state.patch
+Patch0471:      0471-mount-fix-for-complex-automounts.patch
+Patch0472:      0472-util-add-extra-safety-check-to-in_initrd.patch
+Patch0473:      0473-journal-fix-interleaving-of-files-with-different-tim.patch
+Patch0474:      0474-journal-fix-bisection-logic-for-first-entry.patch
+Patch0475:      0475-journal-fix-bad-memory-access.patch
+Patch0476:      0476-journal-fix-seeking-by-realtime-seqnum.patch
+Patch0477:      0477-journal-check-fields-we-search-for-more-carefully.patch
+Patch0478:      0478-util-temporarily-ignore-SIGHUP-while-we-are-issuing-.patch
+Patch0479:      0479-container-when-shutting-down-in-a-container-don-t-de.patch
+Patch0480:      0480-unit-rename-BindTo-to-BindsTo.patch
+Patch0481:      0481-journal-align-byte-buffer-that-gets-cased-to-an-obje.patch
+Patch0482:      0482-aquire_terminal-fix-uninitialized-variable.patch
+Patch0483:      0483-core-fix-name-of-dbus-call-parameter.patch
+Patch0484:      0484-journald-don-t-enforce-monotonicity-of-realtime-cloc.patch
+Patch0485:      0485-journal-use-tail-head-timestamps-from-header-for-cut.patch
+Patch0486:      0486-journal-actually-set-archived-files-to-archived-stat.patch
+Patch0487:      0487-service-make-start-jobs-wait-not-fail-when-an-automa.patch
+Patch0488:      0488-service-don-t-print-a-warning-if-we-are-in-autoresta.patch
+Patch0489:      0489-journald-don-t-choke-on-journal-files-with-no-cutoff.patch
+Patch0490:      0490-journal-rotate-busy-files-away-when-we-try-to-write-.patch
+Patch0491:      0491-journalctl-fix-assertion-failure-in-ellipsize_mem.patch
+Patch0492:      0492-logind-fix-operation-precedence-mix-up.patch
+Patch0493:      0493-systemctl-use-color-specification-understood-by-dot.patch
+Patch0494:      0494-rules-avoid-mounting-raid-devices-too-early.patch
+Patch0495:      0495-conf-files-continue-searching-if-one-dir-fails.patch
+Patch0496:      0496-F17-restore-device-units-for-dev-ttyX.patch
+Patch0497:      0497-systemd-return-error-when-asked-to-stop-unknown-unit.patch
+Patch0498:      0498-modules-load-fix-kernel-cmdline-parsing.patch
+Patch0499:      0499-units-add-the-modules-load-cmdline-parameters-to-the.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -519,8 +580,8 @@ Obsoletes:      systemd < 38-5
 # old nfs-server.service forked daemons from ExecStartPre/Post:
 Conflicts:      nfs-utils < 1:1.2.6
 # usage of 'systemctl stop' on a non-existent unit in ExecStartPre:
-#Conflicts:      rsyslog < 5.8.10-2
-#Conflicts:      syslog-ng < 3.2.5-15
+Conflicts:      rsyslog < 5.8.10-2
+Conflicts:      syslog-ng < 3.2.5-15
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -883,6 +944,17 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Jul 24 2012 Michal Schmidt <mschmidt@redhat.com> - 44-18
+- Backports from upstream:
+- rework the handling of ntp services in timedated (#821813)
+- rename systemd-debug-shell.service to debug-shell.service
+- support modules-load= boot parameter
+- "systemctl reset-failed" now resets the start rate limit
+- systemctl can filter by load state
+- parse BindsTo=
+- bring back error reporting when stopping unknown units (#732874)
+- many bugfixes (#817760, #835848, #767561, #839736, #841822, ...)
+
 * Tue Jun 26 2012 Michal Schmidt <mschmidt@redhat.com> - 44-17
 - Temporarily revert patch for #732874 until the syslog units are fixed.
 - logind improvements (CanTTY, CanGraphical, 'closing' session state).

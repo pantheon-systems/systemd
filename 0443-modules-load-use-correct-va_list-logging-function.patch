@@ -1,0 +1,38 @@
+From 5462d08fb00a39de0e76cd132e9d0fc4535b06c0 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 28 Jun 2012 00:50:46 +0200
+Subject: [PATCH] modules-load: use correct va_list logging function (cherry
+ picked from commit
+ e62abb626806140a4cd9abc928d23c661a7b9a33)
+
+---
+ src/core/kmod-setup.c           | 2 +-
+ src/modules-load/modules-load.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/kmod-setup.c b/src/core/kmod-setup.c
+index debf871..2fd69c5 100644
+--- a/src/core/kmod-setup.c
++++ b/src/core/kmod-setup.c
+@@ -41,7 +41,7 @@ static const char * const kmod_table[] = {
+ static void systemd_kmod_log(void *data, int priority, const char *file, int line,
+                              const char *fn, const char *format, va_list args)
+ {
+-        log_meta(priority, file, line, fn, format, args);
++        log_metav(priority, file, line, fn, format, args);
+ }
+ #pragma GCC diagnostic pop
+ 
+diff --git a/src/modules-load/modules-load.c b/src/modules-load/modules-load.c
+index 027fe1e..057aa6e 100644
+--- a/src/modules-load/modules-load.c
++++ b/src/modules-load/modules-load.c
+@@ -41,7 +41,7 @@ static char **arg_proc_cmdline_modules = NULL;
+ static void systemd_kmod_log(void *data, int priority, const char *file, int line,
+                              const char *fn, const char *format, va_list args)
+ {
+-        log_meta(priority, file, line, fn, format, args);
++        log_metav(priority, file, line, fn, format, args);
+ }
+ #pragma GCC diagnostic pop
+ 

@@ -1,0 +1,23 @@
+From 69698109a923fe399c7d54e8e8588652e71dada7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Jul 2012 17:36:24 +0200
+Subject: [PATCH] journal: fix bad memory access (cherry picked from commit
+ ecf68b1d3833c2ee3156a813ad42cf155dc4ace4)
+
+---
+ src/journal/journal-file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index e4d9c65..9619f27 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -1300,7 +1300,7 @@ static int generic_array_bisect_plus_one(JournalFile *f,
+ 
+         r = generic_array_bisect(f, first, n-1, needle, test_object, direction, ret, offset, idx);
+ 
+-        if (r > 0)
++        if (r > 0 && idx)
+                 (*idx) ++;
+ 
+         return r;

@@ -1,0 +1,28 @@
+From bf22cf2cd442c9e445e71bfcb08aa6ece9c88771 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 16 Jul 2012 19:26:54 +0200
+Subject: [PATCH] journald: don't enforce monotonicity of realtime clocks when
+ copying entries
+
+After all the point of the realtime clock (in contrast to the monotonic
+clock) is that it does not have to be strictly monotonic, hence don't
+enforce this when flushing the journal from /run to /var.
+(cherry picked from commit 74d29da52409ab149738ea76824679d29598e0ac)
+---
+ src/journal/journal-file.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 405059c..8319bc3 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -2157,9 +2157,6 @@ int journal_file_copy_entry(JournalFile *from, JournalFile *to, Object *o, uint6
+             ts.monotonic < le64toh(to->header->tail_entry_monotonic))
+                 return -EINVAL;
+ 
+-        if (ts.realtime < le64toh(to->header->tail_entry_realtime))
+-                return -EINVAL;
+-
+         n = journal_file_entry_n_items(o);
+         items = alloca(sizeof(EntryItem) * n);
+ 

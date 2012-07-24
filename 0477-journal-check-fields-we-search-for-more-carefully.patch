@@ -1,0 +1,59 @@
+From ac26b5ba9da74fe6b92a4d8e53fe8b3479431146 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Jul 2012 00:10:37 +0200
+Subject: [PATCH] journal: check fields we search for more carefully (cherry
+ picked from commit
+ 362a3f8122e070589a4d61f7752b990090c75432)
+
+---
+ src/journal/sd-journal.c | 30 +++++++++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 3ce792b..cb0ea32 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -1335,6 +1335,34 @@ _public_ int sd_journal_get_monotonic_usec(sd_journal *j, uint64_t *ret, sd_id12
+         return 0;
+ }
+ 
++static bool field_is_valid(const char *field) {
++        const char *p;
++
++        assert(field);
++
++        if (isempty(field))
++                return false;
++
++        if (startswith(field, "__"))
++                return false;
++
++        for (p = field; *p; p++) {
++
++                if (*p == '_')
++                        continue;
++
++                if (*p >= 'A' && *p <= 'Z')
++                        continue;
++
++                if (*p >= '0' && *p <= '9')
++                        continue;
++
++                return false;
++        }
++
++        return true;
++}
++
+ _public_ int sd_journal_get_data(sd_journal *j, const char *field, const void **data, size_t *size) {
+         JournalFile *f;
+         uint64_t i, n;
+@@ -1351,7 +1379,7 @@ _public_ int sd_journal_get_data(sd_journal *j, const char *field, const void **
+         if (!size)
+                 return -EINVAL;
+ 
+-        if (isempty(field) || strchr(field, '='))
++        if (!field_is_valid(field))
+                 return -EINVAL;
+ 
+         f = j->current_file;

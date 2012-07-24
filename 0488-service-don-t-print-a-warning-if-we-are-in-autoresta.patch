@@ -1,0 +1,32 @@
+From fc474f834982fe43cb2c6fd3ac190b5e226e6a82 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 18 Jul 2012 02:42:43 +0200
+Subject: [PATCH] service: don't print a warning if we are in autorestart
+ state, and can't start a unit just yet (cherry picked from
+ commit d4943dc7559dff51d4d3bb737232b9328d6726e1)
+
+---
+ src/core/service.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index aa37d89..2e38d13 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2473,11 +2473,12 @@ static int service_start(Unit *u) {
+         /* A service that will be restarted must be stopped first to
+          * trigger BindsTo and/or OnFailure dependencies. If a user
+          * does not want to wait for the holdoff time to elapse, the
+-         * service should be manually restarted, not started. */
+-        if (s->state == SERVICE_AUTO_RESTART) {
+-                log_warning("%s automatic restart is pending, must be stopped before issuing start request.", UNIT(s)->id);
++         * service should be manually restarted, not started. We
++         * simply return EAGAIN here, so that any start jobs stay
++         * queued, and assume that the auto restart timer will
++         * eventually trigger the restart. */
++        if (s->state == SERVICE_AUTO_RESTART)
+                 return -EAGAIN;
+-        }
+ 
+         assert(s->state == SERVICE_DEAD || s->state == SERVICE_FAILED);
+ 

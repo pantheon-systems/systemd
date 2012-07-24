@@ -1,0 +1,34 @@
+From 8ca2fb3d8b15094e267686b4be66fb870eeda83e Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 4 Jul 2012 00:07:33 +0200
+Subject: [PATCH] man: explain StartLimitRate= in conjunction with Restart= a
+ bit better (cherry picked from commit
+ f1c8f75b38def5b2e21a83b245c5392563fba7ef)
+
+Conflicts:
+	TODO
+---
+ man/systemd.service.xml | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index dc14113..cca26f4 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -787,7 +787,15 @@
+                                 are allowed (defaults to 5). These
+                                 configuration options are particularly
+                                 useful in conjunction with
+-                                <varname>Restart=</varname>.</para></listitem>
++                                <varname>Restart=</varname>. Note that
++                                units which are configured for
++                                <varname>Restart=</varname> and which
++                                reach the start limit are not
++                                attempted to be restarted anymore,
++                                however they may still be restarted
++                                manually at a later point from which
++                                point on the restart logic is again
++                                activated.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>

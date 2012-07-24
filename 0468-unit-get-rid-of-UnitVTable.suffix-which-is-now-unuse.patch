@@ -1,0 +1,154 @@
+From 6f2bb5037843638fdd08e84769ee312da9d37595 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 10 Jul 2012 17:04:42 +0200
+Subject: [PATCH] unit: get rid of UnitVTable.suffix, which is now unused
+ (cherry picked from commit
+ bcbe497e5a73d889e8799f8a3680c303afede347)
+
+---
+ src/core/automount.c | 1 -
+ src/core/device.c    | 1 -
+ src/core/mount.c     | 1 -
+ src/core/path.c      | 1 -
+ src/core/service.c   | 1 -
+ src/core/snapshot.c  | 1 -
+ src/core/socket.c    | 1 -
+ src/core/swap.c      | 1 -
+ src/core/target.c    | 1 -
+ src/core/timer.c     | 1 -
+ src/core/unit.h      | 2 --
+ 11 files changed, 12 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index a206960..27ca887 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -848,7 +848,6 @@ static const char* const automount_result_table[_AUTOMOUNT_RESULT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(automount_result, AutomountResult);
+ 
+ const UnitVTable automount_vtable = {
+-        .suffix = ".automount",
+         .object_size = sizeof(Automount),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/device.c b/src/core/device.c
+index ff51e36..a56b06b 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -585,7 +585,6 @@ static const char* const device_state_table[_DEVICE_STATE_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(device_state, DeviceState);
+ 
+ const UnitVTable device_vtable = {
+-        .suffix = ".device",
+         .object_size = sizeof(Device),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/mount.c b/src/core/mount.c
+index dce7094..e1251b2 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1953,7 +1953,6 @@ static const char* const mount_result_table[_MOUNT_RESULT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(mount_result, MountResult);
+ 
+ const UnitVTable mount_vtable = {
+-        .suffix = ".mount",
+         .object_size = sizeof(Mount),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/path.c b/src/core/path.c
+index e183a15..2a9b026 100644
+--- a/src/core/path.c
++++ b/src/core/path.c
+@@ -738,7 +738,6 @@ static const char* const path_result_table[_PATH_RESULT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(path_result, PathResult);
+ 
+ const UnitVTable path_vtable = {
+-        .suffix = ".path",
+         .object_size = sizeof(Path),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/service.c b/src/core/service.c
+index 534e77e..fba35c5 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -3822,7 +3822,6 @@ static const char* const start_limit_action_table[_SERVICE_START_LIMIT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(start_limit_action, StartLimitAction);
+ 
+ const UnitVTable service_vtable = {
+-        .suffix = ".service",
+         .object_size = sizeof(Service),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/snapshot.c b/src/core/snapshot.c
+index 82ec510..f80fadb 100644
+--- a/src/core/snapshot.c
++++ b/src/core/snapshot.c
+@@ -281,7 +281,6 @@ static const char* const snapshot_state_table[_SNAPSHOT_STATE_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(snapshot_state, SnapshotState);
+ 
+ const UnitVTable snapshot_vtable = {
+-        .suffix = ".snapshot",
+         .object_size = sizeof(Snapshot),
+ 
+         .no_alias = true,
+diff --git a/src/core/socket.c b/src/core/socket.c
+index eab2243..1196e64 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -2184,7 +2184,6 @@ static const char* const socket_result_table[_SOCKET_RESULT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(socket_result, SocketResult);
+ 
+ const UnitVTable socket_vtable = {
+-        .suffix = ".socket",
+         .object_size = sizeof(Socket),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 7bfe117..e1186fb 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -1371,7 +1371,6 @@ static const char* const swap_result_table[_SWAP_RESULT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(swap_result, SwapResult);
+ 
+ const UnitVTable swap_vtable = {
+-        .suffix = ".swap",
+         .object_size = sizeof(Swap),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/target.c b/src/core/target.c
+index e285f0e..d4490d7 100644
+--- a/src/core/target.c
++++ b/src/core/target.c
+@@ -198,7 +198,6 @@ static const char* const target_state_table[_TARGET_STATE_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(target_state, TargetState);
+ 
+ const UnitVTable target_vtable = {
+-        .suffix = ".target",
+         .object_size = sizeof(Target),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/timer.c b/src/core/timer.c
+index e318fee..56a6949 100644
+--- a/src/core/timer.c
++++ b/src/core/timer.c
+@@ -486,7 +486,6 @@ static const char* const timer_result_table[_TIMER_RESULT_MAX] = {
+ DEFINE_STRING_TABLE_LOOKUP(timer_result, TimerResult);
+ 
+ const UnitVTable timer_vtable = {
+-        .suffix = ".timer",
+         .object_size = sizeof(Timer),
+         .sections =
+                 "Unit\0"
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 267a03e..64f4cb9 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -272,8 +272,6 @@ struct UnitStatusMessageFormats {
+ #include "path.h"
+ 
+ struct UnitVTable {
+-        const char *suffix;
+-
+         /* How much memory does an object of this unit type need */
+         size_t object_size;
+ 

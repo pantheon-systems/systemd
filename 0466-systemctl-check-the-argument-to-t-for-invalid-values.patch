@@ -1,0 +1,27 @@
+From 33f70281d768c5a42972510512c8c0967d757bb7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 6 Jun 2012 16:56:19 +0200
+Subject: [PATCH] systemctl: check the argument to -t for invalid values
+
+Systemctl accepted anything as the argument for -t, and simply said '0
+units found'. It is better to catch this user error early.
+(cherry picked from commit 6d97280899a766ad7b4a6b07cc803709a08b364b)
+---
+ src/systemctl/systemctl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 2cc016e..bfc65a0 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -4579,6 +4579,10 @@ static int systemctl_parse_argv(int argc, char *argv[]) {
+                         return 0;
+ 
+                 case 't':
++                        if (unit_type_from_string(optarg) < 0) {
++                                log_error("Invalid unit type '%s'.", optarg);
++                                return -EINVAL;
++                        }
+                         arg_type = optarg;
+                         break;
+ 

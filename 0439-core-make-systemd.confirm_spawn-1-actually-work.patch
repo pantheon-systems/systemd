@@ -1,0 +1,506 @@
+From 238f097df7bad6d530c59588eff693b26befd52b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 26 Jun 2012 12:16:18 +0200
+Subject: [PATCH] core: make systemd.confirm_spawn=1 actually work
+
+This adds a timeout if the TTY cannot be acquired and makes sure we
+always output the question to the console, never to the TTY of the
+respective service.
+(cherry picked from commit af6da548aa14c57da7f17b3a1f2211efdb811d19)
+
+Conflicts:
+	TODO
+	src/core/execute.c
+---
+ src/core/execute.c                                 | 195 ++++++++++-----------
+ src/core/main.c                                    |   2 +-
+ src/core/manager.c                                 |   3 +
+ src/shared/def.h                                   |   1 +
+ src/shared/util.c                                  |  58 ++++--
+ src/shared/util.h                                  |   2 +-
+ .../tty-ask-password-agent.c                       |   2 +-
+ 7 files changed, 148 insertions(+), 115 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 8f2d646..8a04fe6 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -291,7 +291,8 @@ static int setup_input(const ExecContext *context, int socket_fd, bool apply_tty
+                                      tty_path(context),
+                                      i == EXEC_INPUT_TTY_FAIL,
+                                      i == EXEC_INPUT_TTY_FORCE,
+-                                     false)) < 0)
++                                     false,
++                                     (usec_t) -1)) < 0)
+                         return fd;
+ 
+                 if (fd != STDIN_FILENO) {
+@@ -442,47 +443,45 @@ static int chown_terminal(int fd, uid_t uid) {
+         return 0;
+ }
+ 
+-static int setup_confirm_stdio(const ExecContext *context,
+-                               int *_saved_stdin,
++static int setup_confirm_stdio(int *_saved_stdin,
+                                int *_saved_stdout) {
+         int fd = -1, saved_stdin, saved_stdout = -1, r;
+ 
+-        assert(context);
+         assert(_saved_stdin);
+         assert(_saved_stdout);
+ 
+-        /* This returns positive EXIT_xxx return values instead of
+-         * negative errno style values! */
+-
+-        if ((saved_stdin = fcntl(STDIN_FILENO, F_DUPFD, 3)) < 0)
+-                return EXIT_STDIN;
++        saved_stdin = fcntl(STDIN_FILENO, F_DUPFD, 3);
++        if (saved_stdin < 0)
++                return -errno;
+ 
+-        if ((saved_stdout = fcntl(STDOUT_FILENO, F_DUPFD, 3)) < 0) {
+-                r = EXIT_STDOUT;
++        saved_stdout = fcntl(STDOUT_FILENO, F_DUPFD, 3);
++        if (saved_stdout < 0) {
++                r = errno;
+                 goto fail;
+         }
+ 
+-        if ((fd = acquire_terminal(
+-                             tty_path(context),
+-                             context->std_input == EXEC_INPUT_TTY_FAIL,
+-                             context->std_input == EXEC_INPUT_TTY_FORCE,
+-                             false)) < 0) {
+-                r = EXIT_STDIN;
++        fd = acquire_terminal(
++                        "/dev/console",
++                        false,
++                        false,
++                        false,
++                        DEFAULT_CONFIRM_USEC);
++        if (fd < 0) {
++                r = fd;
+                 goto fail;
+         }
+ 
+-        if (chown_terminal(fd, getuid()) < 0) {
+-                r = EXIT_STDIN;
++        r = chown_terminal(fd, getuid());
++        if (r < 0)
+                 goto fail;
+-        }
+ 
+         if (dup2(fd, STDIN_FILENO) < 0) {
+-                r = EXIT_STDIN;
++                r = -errno;
+                 goto fail;
+         }
+ 
+         if (dup2(fd, STDOUT_FILENO) < 0) {
+-                r = EXIT_STDOUT;
++                r = -errno;
+                 goto fail;
+         }
+ 
+@@ -507,48 +506,70 @@ fail:
+         return r;
+ }
+ 
+-static int restore_confirm_stdio(const ExecContext *context,
+-                                 int *saved_stdin,
+-                                 int *saved_stdout,
+-                                 bool *keep_stdin,
+-                                 bool *keep_stdout) {
++static int write_confirm_message(const char *format, ...) {
++        int fd;
++        va_list ap;
+ 
+-        assert(context);
+-        assert(saved_stdin);
+-        assert(*saved_stdin >= 0);
+-        assert(saved_stdout);
+-        assert(*saved_stdout >= 0);
++        assert(format);
+ 
+-        /* This returns positive EXIT_xxx return values instead of
+-         * negative errno style values! */
++        fd = open_terminal("/dev/console", O_WRONLY|O_NOCTTY|O_CLOEXEC);
++        if (fd < 0)
++                return fd;
+ 
+-        if (is_terminal_input(context->std_input)) {
++        va_start(ap, format);
++        vdprintf(fd, format, ap);
++        va_end(ap);
+ 
+-                /* The service wants terminal input. */
++        close_nointr_nofail(fd);
+ 
+-                *keep_stdin = true;
+-                *keep_stdout =
+-                        context->std_output == EXEC_OUTPUT_INHERIT ||
+-                        context->std_output == EXEC_OUTPUT_TTY;
++        return 0;
++}
+ 
+-        } else {
+-                /* If the service doesn't want a controlling terminal,
+-                 * then we need to get rid entirely of what we have
+-                 * already. */
++static int restore_confirm_stdio(int *saved_stdin,
++                                 int *saved_stdout) {
+ 
+-                if (release_terminal() < 0)
+-                        return EXIT_STDIN;
++        int r = 0;
+ 
++        assert(saved_stdin);
++        assert(saved_stdout);
++
++        release_terminal();
++
++        if (*saved_stdin >= 0)
+                 if (dup2(*saved_stdin, STDIN_FILENO) < 0)
+-                        return EXIT_STDIN;
++                        r = -errno;
+ 
++        if (*saved_stdout >= 0)
+                 if (dup2(*saved_stdout, STDOUT_FILENO) < 0)
+-                        return EXIT_STDOUT;
++                        r = -errno;
+ 
+-                *keep_stdout = *keep_stdin = false;
+-        }
++        if (*saved_stdin >= 0)
++                close_nointr_nofail(*saved_stdin);
+ 
+-        return 0;
++        if (*saved_stdout >= 0)
++                close_nointr_nofail(*saved_stdout);
++
++        return r;
++}
++
++static int ask_for_confirmation(char *response, char **argv) {
++        int saved_stdout = -1, saved_stdin = -1, r;
++        char *line;
++
++        r = setup_confirm_stdio(&saved_stdin, &saved_stdout);
++        if (r < 0)
++                return r;
++
++        line = exec_command_line(argv);
++        if (!line)
++                return -ENOMEM;
++
++        r = ask(response, "yns", "Execute %s? [Yes, No, Skip] ", line);
++        free(line);
++
++        restore_confirm_stdio(&saved_stdin, &saved_stdout);
++
++        return r;
+ }
+ 
+ static int enforce_groups(const ExecContext *context, const char *username, gid_t gid) {
+@@ -949,7 +970,8 @@ int exec_spawn(ExecCommand *command,
+         if (!argv)
+                 argv = command->argv;
+ 
+-        if (!(line = exec_command_line(argv))) {
++        line = exec_command_line(argv);
++        if (!line) {
+                 r = -ENOMEM;
+                 goto fail_parent;
+         }
+@@ -976,8 +998,7 @@ int exec_spawn(ExecCommand *command,
+                 gid_t gid = (gid_t) -1;
+                 char **our_env = NULL, **pam_env = NULL, **final_env = NULL, **final_argv = NULL;
+                 unsigned n_env = 0;
+-                int saved_stdout = -1, saved_stdin = -1;
+-                bool keep_stdout = false, keep_stdin = false, set_access = false;
++                bool set_access = false;
+ 
+                 /* child */
+ 
+@@ -1047,44 +1068,24 @@ int exec_spawn(ExecCommand *command,
+ 
+                 exec_context_tty_reset(context);
+ 
+-                /* We skip the confirmation step if we shall not apply the TTY */
+-                if (confirm_spawn &&
+-                    (!is_terminal_input(context->std_input) || apply_tty_stdin)) {
++                if (confirm_spawn) {
+                         char response;
+ 
+-                        /* Set up terminal for the question */
+-                        if ((r = setup_confirm_stdio(context,
+-                                                     &saved_stdin, &saved_stdout))) {
+-                                err = -errno;
+-                                goto fail_child;
+-                        }
+-
+-                        /* Now ask the question. */
+-                        if (!(line = exec_command_line(argv))) {
+-                                err = -ENOMEM;
+-                                r = EXIT_MEMORY;
+-                                goto fail_child;
+-                        }
+-
+-                        r = ask(&response, "yns", "Execute %s? [Yes, No, Skip] ", line);
+-                        free(line);
+-
+-                        if (r < 0 || response == 'n') {
++                        err = ask_for_confirmation(&response, argv);
++                        if (err == -ETIMEDOUT)
++                                write_confirm_message("Confirmation question timed out, assuming positive response.\n");
++                        else if (err < 0)
++                                write_confirm_message("Couldn't ask confirmation question, assuming positive response: %s\n", strerror(-err));
++                        else if (response == 's') {
++                                write_confirm_message("Skipping execution.\n");
+                                 err = -ECANCELED;
+                                 r = EXIT_CONFIRM;
+                                 goto fail_child;
+-                        } else if (response == 's') {
++                        } else if (response == 'n') {
++                                write_confirm_message("Failing execution.\n");
+                                 err = r = 0;
+                                 goto fail_child;
+                         }
+-
+-                        /* Release terminal for the question */
+-                        if ((r = restore_confirm_stdio(context,
+-                                                       &saved_stdin, &saved_stdout,
+-                                                       &keep_stdin, &keep_stdout))) {
+-                                err = -errno;
+-                                goto fail_child;
+-                        }
+                 }
+ 
+                 /* If a socket is connected to STDIN/STDOUT/STDERR, we
+@@ -1092,20 +1093,16 @@ int exec_spawn(ExecCommand *command,
+                 if (socket_fd >= 0)
+                         fd_nonblock(socket_fd, false);
+ 
+-                if (!keep_stdin) {
+-                        err = setup_input(context, socket_fd, apply_tty_stdin);
+-                        if (err < 0) {
+-                                r = EXIT_STDIN;
+-                                goto fail_child;
+-                        }
++                err = setup_input(context, socket_fd, apply_tty_stdin);
++                if (err < 0) {
++                        r = EXIT_STDIN;
++                        goto fail_child;
+                 }
+ 
+-                if (!keep_stdout) {
+-                        err = setup_output(context, socket_fd, path_get_file_name(command->path), apply_tty_stdin);
+-                        if (err < 0) {
+-                                r = EXIT_STDOUT;
+-                                goto fail_child;
+-                        }
++                err = setup_output(context, socket_fd, path_get_file_name(command->path), apply_tty_stdin);
++                if (err < 0) {
++                        r = EXIT_STDOUT;
++                        goto fail_child;
+                 }
+ 
+                 err = setup_error(context, socket_fd, path_get_file_name(command->path), apply_tty_stdin);
+@@ -1436,12 +1433,6 @@ int exec_spawn(ExecCommand *command,
+                 strv_free(files_env);
+                 strv_free(final_argv);
+ 
+-                if (saved_stdin >= 0)
+-                        close_nointr_nofail(saved_stdin);
+-
+-                if (saved_stdout >= 0)
+-                        close_nointr_nofail(saved_stdout);
+-
+                 _exit(r);
+         }
+ 
+diff --git a/src/core/main.c b/src/core/main.c
+index 2e79ca5..ecb17d4 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -174,7 +174,7 @@ _noreturn_ static void crash(int sig) {
+                 else if (pid == 0) {
+                         int fd, r;
+ 
+-                        if ((fd = acquire_terminal("/dev/console", false, true, true)) < 0)
++                        if ((fd = acquire_terminal("/dev/console", false, true, true, (usec_t) -1)) < 0)
+                                 log_error("Failed to acquire terminal: %s", strerror(-fd));
+                         else if ((r = make_stdio(fd)) < 0)
+                                 log_error("Failed to duplicate terminal fd: %s", strerror(-r));
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 8af3241..118da72 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -1986,6 +1986,9 @@ void manager_check_finished(Manager *m) {
+         /* Notify Type=idle units that we are done now */
+         close_pipe(m->idle_pipe);
+ 
++        /* Turn off confirm spawn now */
++        m->confirm_spawn = false;
++
+         if (dual_timestamp_is_set(&m->finish_timestamp))
+                 return;
+ 
+diff --git a/src/shared/def.h b/src/shared/def.h
+index 20aaa7c..b8e57db 100644
+--- a/src/shared/def.h
++++ b/src/shared/def.h
+@@ -26,6 +26,7 @@
+ 
+ #define DEFAULT_TIMEOUT_USEC (90*USEC_PER_SEC)
+ #define DEFAULT_RESTART_USEC (100*USEC_PER_MSEC)
++#define DEFAULT_CONFIRM_USEC (30*USEC_PER_SEC)
+ 
+ #define DEFAULT_EXIT_USEC (5*USEC_PER_MINUTE)
+ 
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 035f01d..ae5456e 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -2305,12 +2305,14 @@ int open_terminal(const char *name, int mode) {
+          */
+ 
+         for (;;) {
+-                if ((fd = open(name, mode)) >= 0)
++                fd = open(name, mode);
++                if (fd >= 0)
+                         break;
+ 
+                 if (errno != EIO)
+                         return -errno;
+ 
++                /* Max 1s in total */
+                 if (c >= 20)
+                         return -errno;
+ 
+@@ -2321,7 +2323,8 @@ int open_terminal(const char *name, int mode) {
+         if (fd < 0)
+                 return -errno;
+ 
+-        if ((r = isatty(fd)) < 0) {
++        r = isatty(fd);
++        if (r < 0) {
+                 close_nointr_nofail(fd);
+                 return -errno;
+         }
+@@ -2373,8 +2376,15 @@ int flush_fd(int fd) {
+         }
+ }
+ 
+-int acquire_terminal(const char *name, bool fail, bool force, bool ignore_tiocstty_eperm) {
++int acquire_terminal(
++                const char *name,
++                bool fail,
++                bool force,
++                bool ignore_tiocstty_eperm,
++                usec_t timeout) {
++
+         int fd = -1, notify = -1, r, wd = -1;
++        usec_t ts = 0;
+ 
+         assert(name);
+ 
+@@ -2391,27 +2401,35 @@ int acquire_terminal(const char *name, bool fail, bool force, bool ignore_tiocst
+          * on the same tty as an untrusted user this should not be a
+          * problem. (Which he probably should not do anyway.) */
+ 
++        if (timeout != (usec_t) -1)
++                ts = now(CLOCK_MONOTONIC);
++
+         if (!fail && !force) {
+-                if ((notify = inotify_init1(IN_CLOEXEC)) < 0) {
++                notify = inotify_init1(IN_CLOEXEC | (timeout != (usec_t) -1 ? IN_NONBLOCK : 0));
++                if (notify < 0) {
+                         r = -errno;
+                         goto fail;
+                 }
+ 
+-                if ((wd = inotify_add_watch(notify, name, IN_CLOSE)) < 0) {
++                wd = inotify_add_watch(notify, name, IN_CLOSE);
++                if (wd < 0) {
+                         r = -errno;
+                         goto fail;
+                 }
+         }
+ 
+         for (;;) {
+-                if (notify >= 0)
+-                        if ((r = flush_fd(notify)) < 0)
++                if (notify >= 0) {
++                        r = flush_fd(notify);
++                        if (r < 0)
+                                 goto fail;
++                }
+ 
+                 /* We pass here O_NOCTTY only so that we can check the return
+                  * value TIOCSCTTY and have a reliable way to figure out if we
+                  * successfully became the controlling process of the tty */
+-                if ((fd = open_terminal(name, O_RDWR|O_NOCTTY|O_CLOEXEC)) < 0)
++                fd = open_terminal(name, O_RDWR|O_NOCTTY|O_CLOEXEC);
++                if (fd < 0)
+                         return fd;
+ 
+                 /* First, try to get the tty */
+@@ -2440,9 +2458,29 @@ int acquire_terminal(const char *name, bool fail, bool force, bool ignore_tiocst
+                         ssize_t l;
+                         struct inotify_event *e;
+ 
+-                        if ((l = read(notify, inotify_buffer, sizeof(inotify_buffer))) < 0) {
++                        if (timeout != (usec_t) -1) {
++                                usec_t n;
++
++                                n = now(CLOCK_MONOTONIC);
++                                if (ts + timeout < n) {
++                                        r = -ETIMEDOUT;
++                                        goto fail;
++                                }
++
++                                r = fd_wait_for_event(fd, POLLIN, ts + timeout - n);
++                                if (r < 0)
++                                        goto fail;
++
++                                if (r == 0) {
++                                        r = -ETIMEDOUT;
++                                        goto fail;
++                                }
++                        }
++
++                        l = read(notify, inotify_buffer, sizeof(inotify_buffer));
++                        if (l < 0) {
+ 
+-                                if (errno == EINTR)
++                                if (errno == EINTR || errno == EAGAIN)
+                                         continue;
+ 
+                                 r = -errno;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 1bc1a75..66022ed 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -321,7 +321,7 @@ int reset_terminal_fd(int fd, bool switch_to_text);
+ int reset_terminal(const char *name);
+ 
+ int open_terminal(const char *name, int mode);
+-int acquire_terminal(const char *name, bool fail, bool force, bool ignore_tiocstty_eperm);
++int acquire_terminal(const char *name, bool fail, bool force, bool ignore_tiocstty_eperm, usec_t timeout);
+ int release_terminal(void);
+ 
+ int flush_fd(int fd);
+diff --git a/src/tty-ask-password-agent/tty-ask-password-agent.c b/src/tty-ask-password-agent/tty-ask-password-agent.c
+index 06f5a5a..77c2429 100644
+--- a/src/tty-ask-password-agent/tty-ask-password-agent.c
++++ b/src/tty-ask-password-agent/tty-ask-password-agent.c
+@@ -368,7 +368,7 @@ static int parse_password(const char *filename, char **wall) {
+                         char *password;
+ 
+                         if (arg_console)
+-                                if ((tty_fd = acquire_terminal("/dev/console", false, false, false)) < 0) {
++                                if ((tty_fd = acquire_terminal("/dev/console", false, false, false, (usec_t) -1)) < 0) {
+                                         r = tty_fd;
+                                         goto finish;
+                                 }

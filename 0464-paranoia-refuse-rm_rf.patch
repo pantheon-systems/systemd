@@ -1,0 +1,47 @@
+From 1a84d7217adfb41463f746a7e7d3af825fe66a15 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 9 Jul 2012 17:30:22 +0200
+Subject: [PATCH] paranoia: refuse rm_rf("/") (cherry picked from commit
+ 461b1822321d6be0d7fd8be29bf3b4993ebd1b85)
+
+Conflicts:
+	TODO
+---
+ src/journal/journald.c | 2 +-
+ src/shared/util.c      | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 6d8b4b7..3b50cd8 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -2018,7 +2018,6 @@ static int system_journal_open(Server *s) {
+ }
+ 
+ static int server_flush_to_var(Server *s) {
+-        char path[] = "/run/log/journal/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+         Object *o = NULL;
+         int r;
+         sd_id128_t machine;
+@@ -2091,6 +2090,7 @@ finish:
+         s->runtime_journal = NULL;
+ 
+         if (r >= 0) {
++                char path[] = "/run/log/journal/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                 sd_id128_to_string(machine, path + 17);
+                 rm_rf(path, false, true, false);
+         }
+diff --git a/src/shared/util.c b/src/shared/util.c
+index ae5456e..1b2fa15 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -3339,6 +3339,9 @@ int rm_rf(const char *path, bool only_dirs, bool delete_root, bool honour_sticky
+ 
+         assert(path);
+ 
++        /* Be paranoid */
++        assert(!streq(path, "/"));
++
+         fd = open(path, O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NOATIME);
+         if (fd < 0) {
+ 

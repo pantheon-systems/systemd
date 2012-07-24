@@ -1,0 +1,47 @@
+From be24188f2506cb6fc30cd029ab6c89394a36aa26 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 29 Jun 2012 16:14:01 +0200
+Subject: [PATCH] remount-fs: also remount /usr according to fstab (cherry
+ picked from commit
+ b4efdf97203ddf781c17f77be84cc61516a077d2)
+
+Conflicts:
+	TODO
+	man/systemd-remount-fs.service.xml
+---
+ src/core/dbus-manager.c     | 4 +++-
+ src/remount-fs/remount-fs.c | 5 +++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index aaaeec4..62dc2c9 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -114,7 +114,9 @@
+         "  </method>\n"                                                 \
+         "  <method name=\"Subscribe\"/>\n"                              \
+         "  <method name=\"Unsubscribe\"/>\n"                            \
+-        "  <method name=\"Dump\"/>\n"                                   \
++        "  <method name=\"Dump\">\n"                                    \
++        "   <arg name=\"dump\" type=\"s\" direction=\"out\"/>\n"        \
++        "  </method>\n"                                                 \
+         "  <method name=\"CreateSnapshot\">\n"                          \
+         "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+         "   <arg name=\"cleanup\" type=\"b\" direction=\"in\"/>\n"      \
+diff --git a/src/remount-fs/remount-fs.c b/src/remount-fs/remount-fs.c
+index 8c7227c..99fe8f6 100644
+--- a/src/remount-fs/remount-fs.c
++++ b/src/remount-fs/remount-fs.c
+@@ -79,9 +79,10 @@ int main(int argc, char *argv[]) {
+                 int k;
+                 char *s;
+ 
+-                /* Remount the root fs and all API VFS */
++                /* Remount the root fs, /usr and all API VFS */
+                 if (!mount_point_is_api(me->mnt_dir) &&
+-                    !path_equal(me->mnt_dir, "/"))
++                    !path_equal(me->mnt_dir, "/") &&
++                    !path_equal(me->mnt_dir, "/usr"))
+                         continue;
+ 
+                 log_debug("Remounting %s", me->mnt_dir);

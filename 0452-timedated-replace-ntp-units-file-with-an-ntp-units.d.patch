@@ -1,0 +1,141 @@
+From 7ec9c50ae6e3329926dcae48c661910043701f5a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 02:00:05 +0200
+Subject: [PATCH] timedated: replace ntp-units file with an ntp-units.d
+ drop-in dir
+
+To be considered by timedated for NTP a package simply has to drop in
+/usr/lib/systemd/ntp-units.d/foobar.list and write one or more unit
+names into it. The first one listed is the one that is enabled.
+(cherry picked from commit b32d167503b0d98f6b612fda768f92f3aad0ad0c)
+
+Conflicts:
+	Makefile.am
+---
+ Makefile.am              |  4 ----
+ src/timedate/ntp-units   |  4 ----
+ src/timedate/timedated.c | 59 ++++++++++++++++++++++++++++++------------------
+ 3 files changed, 37 insertions(+), 30 deletions(-)
+ delete mode 100644 src/timedate/ntp-units
+
+diff --git a/Makefile.am b/Makefile.am
+index 46cfe80..d051b39 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -114,7 +114,6 @@ AM_CPPFLAGS = \
+ 	-DSYSTEM_SHUTDOWN_PATH=\"$(systemshutdowndir)\" \
+ 	-DSYSTEM_SLEEP_PATH=\"$(systemsleepdir)\" \
+ 	-DSYSTEMD_KBD_MODEL_MAP=\"$(pkgdatadir)/kbd-model-map\" \
+-	-DSYSTEMD_NTP_UNITS=\"$(pkgdatadir)/ntp-units\" \
+ 	-DX_SERVER=\"$(bindir)/X\" \
+ 	-DPOLKIT_AGENT_BINARY_PATH=\"$(bindir)/pkttyagent\" \
+ 	-I $(top_srcdir)/src \
+@@ -2062,9 +2061,6 @@ timedated-install-data-hook:
+ INSTALL_DATA_HOOKS += \
+ 	timedated-install-data-hook
+ 
+-dist_pkgdata_DATA += \
+-	src/timedate/ntp-units
+-
+ EXTRA_DIST += \
+ 	units/systemd-timedated.service.in
+ endif
+diff --git a/src/timedate/ntp-units b/src/timedate/ntp-units
+deleted file mode 100644
+index 2a46f66..0000000
+--- a/src/timedate/ntp-units
++++ /dev/null
+@@ -1,4 +0,0 @@
+-# NTP service implementations, in order of preference
+-
+-chronyd.service
+-ntpd.service
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index 8be45d3..1dcf509 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -31,6 +31,7 @@
+ #include "polkit.h"
+ #include "def.h"
+ #include "hwclock.h"
++#include "conf-files.h"
+ 
+ #define NULL_ADJTIME_UTC "0.0 0 0\n0\nUTC\n"
+ #define NULL_ADJTIME_LOCAL "0.0 0 0\n0\nLOCAL\n"
+@@ -304,40 +305,54 @@ static int write_data_local_rtc(void) {
+ }
+ 
+ static char** get_ntp_services(void) {
+-        char **r = NULL;
+-        FILE *f;
+-
+-        f = fopen(SYSTEMD_NTP_UNITS, "re");
+-        if (!f)
++        char **r = NULL, **files, **i;
++        int k;
++
++        k = conf_files_list(&files, ".list",
++                            "/etc/systemd/ntp-units.d",
++                            "/run/systemd/ntp-units.d",
++                            "/usr/local/lib/systemd/ntp-units.d",
++                            "/usr/lib/systemd/ntp-units.d",
++                            NULL);
++        if (k < 0)
+                 return NULL;
+ 
+-        for (;;) {
+-                char line[PATH_MAX], *l, **q;
++        STRV_FOREACH(i, files) {
++                FILE *f;
+ 
+-                if (!fgets(line, sizeof(line), f)) {
++                f = fopen(*i, "re");
++                if (!f)
++                        continue;
+ 
+-                        if (ferror(f))
+-                                log_error("Failed to read NTP units file: %m");
++                for (;;) {
++                        char line[PATH_MAX], *l, **q;
+ 
+-                        break;
+-                }
++                        if (!fgets(line, sizeof(line), f)) {
+ 
+-                l = strstrip(line);
+-                if (l[0] == 0 || l[0] == '#')
+-                        continue;
++                                if (ferror(f))
++                                        log_error("Failed to read NTP units file: %m");
+ 
++                                break;
++                        }
+ 
+-                q = strv_append(r, l);
+-                if (!q) {
+-                        log_error("Out of memory");
+-                        break;
++                        l = strstrip(line);
++                        if (l[0] == 0 || l[0] == '#')
++                                continue;
++
++                        q = strv_append(r, l);
++                        if (!q) {
++                                log_error("Out of memory");
++                                break;
++                        }
++
++                        strv_free(r);
++                        r = q;
+                 }
+ 
+-                strv_free(r);
+-                r = q;
++                fclose(f);
+         }
+ 
+-        fclose(f);
++        strv_free(files);
+ 
+         return r;
+ }

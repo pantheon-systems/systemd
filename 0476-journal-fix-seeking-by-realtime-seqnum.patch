@@ -1,0 +1,38 @@
+From 5c1085195b541c1bbfcfc4c454443c3f4f56a7b0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Jul 2012 17:36:51 +0200
+Subject: [PATCH] journal: fix seeking by realtime/seqnum (cherry picked from
+ commit 91a31dde6e92c0d4c42abadf970083f6faba87ec)
+
+---
+ src/journal/journal-file.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 9619f27..405059c 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -1611,8 +1611,10 @@ int journal_file_move_to_entry_by_seqnum_for_data(
+         Object *d;
+         int r;
+ 
++        assert(f);
++
+         r = journal_file_move_to_object(f, OBJECT_DATA, data_offset, &d);
+-        if (r <= 0)
++        if (r < 0)
+                 return r;
+ 
+         return generic_array_bisect_plus_one(f,
+@@ -1635,8 +1637,10 @@ int journal_file_move_to_entry_by_realtime_for_data(
+         Object *d;
+         int r;
+ 
++        assert(f);
++
+         r = journal_file_move_to_object(f, OBJECT_DATA, data_offset, &d);
+-        if (r <= 0)
++        if (r < 0)
+                 return r;
+ 
+         return generic_array_bisect_plus_one(f,

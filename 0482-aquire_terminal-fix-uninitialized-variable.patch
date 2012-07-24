@@ -1,0 +1,24 @@
+From 47db6a2b8a6a191b6f3a110c56120f01f6ca5f25 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 15 Jul 2012 15:34:22 +0200
+Subject: [PATCH] aquire_terminal(): fix uninitialized variable
+
+./src/shared/util.c:2457:45: warning: 'r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+(cherry picked from commit 4a0ff4780d4e5e3927f1cf574e05979ddeef8ae1)
+---
+ src/shared/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 88f5759..9dc64a0 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -2385,7 +2385,7 @@ int acquire_terminal(
+                 bool ignore_tiocstty_eperm,
+                 usec_t timeout) {
+ 
+-        int fd = -1, notify = -1, r, wd = -1;
++        int fd = -1, notify = -1, r = 0, wd = -1;
+         usec_t ts = 0;
+         struct sigaction sa_old, sa_new;
+ 

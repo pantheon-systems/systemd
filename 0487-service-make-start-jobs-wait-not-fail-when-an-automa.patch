@@ -1,0 +1,57 @@
+From a0b1b56577550fd105919d478518b958d42270c8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 18 Jul 2012 02:28:08 +0200
+Subject: [PATCH] service: make start jobs wait, not fail, when an automatic
+ restart is queued
+
+When an automatic restart is already queued, then make subsequent start
+jobs wait until the restart can be handled (i.e. after the holdhoff
+time), instead of simply fail.
+(cherry picked from commit a8bb2e6503fa2a4ed608aa958480d27a696f5146)
+
+Conflicts:
+	TODO
+---
+ src/core/service.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 01623bd..aa37d89 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2255,10 +2255,12 @@ static void service_enter_restart(Service *s) {
+         assert(s);
+         dbus_error_init(&error);
+ 
+-        if (UNIT(s)->job) {
+-                log_info("Job pending for unit, delaying automatic restart.");
++        if (UNIT(s)->job && UNIT(s)->job->type == JOB_STOP) {
++                /* Don't restart things if we are going down anyway */
++                log_info("Stop job pending for unit, delaying automatic restart.");
+ 
+-                if ((r = unit_watch_timer(UNIT(s), s->restart_usec, &s->timer_watch)) < 0)
++                r = unit_watch_timer(UNIT(s), s->restart_usec, &s->timer_watch);
++                if (r < 0)
+                         goto fail;
+ 
+                 return;
+@@ -2272,6 +2274,10 @@ static void service_enter_restart(Service *s) {
+         if (r < 0)
+                 goto fail;
+ 
++        /* Note that we stay in the SERVICE_AUTO_RESTART state here,
++         * it will be canceled as part of the service_stop() call that
++         * is executed as part of JOB_RESTART. */
++
+         log_debug("%s scheduled restart job.", UNIT(s)->id);
+         return;
+ 
+@@ -2470,7 +2476,7 @@ static int service_start(Unit *u) {
+          * service should be manually restarted, not started. */
+         if (s->state == SERVICE_AUTO_RESTART) {
+                 log_warning("%s automatic restart is pending, must be stopped before issuing start request.", UNIT(s)->id);
+-                return -ECANCELED;
++                return -EAGAIN;
+         }
+ 
+         assert(s->state == SERVICE_DEAD || s->state == SERVICE_FAILED);

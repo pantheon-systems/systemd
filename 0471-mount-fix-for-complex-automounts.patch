@@ -1,0 +1,32 @@
+From 11e58cda077eaa8f4b122623fd7eedfd945816ed Mon Sep 17 00:00:00 2001
+From: Malte Starostik <m-starostik@versanet.de>
+Date: Tue, 5 Jun 2012 21:10:28 +0200
+Subject: [PATCH] mount: fix for complex automounts
+
+If accessing an automount point triggers more changes to
+/proc/self/mountinfo than just to add the directly wanted mount, these
+changes can lead to spurious -ENODEV notifications on the automount unit
+causing the request to fail when in fact the mount will be setup right
+afterwards.
+(cherry picked from commit 36fcd77e02cedf300e2f45f2449e7e091ef5a7ab)
+---
+ src/core/mount.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index e1251b2..d939e21 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -745,8 +745,10 @@ static void mount_set_state(Mount *m, MountState state) {
+                  state == MOUNT_REMOUNTING_SIGKILL ||
+                  state == MOUNT_UNMOUNTING_SIGTERM ||
+                  state == MOUNT_UNMOUNTING_SIGKILL ||
+-                 state == MOUNT_FAILED)
+-                mount_notify_automount(m, -ENODEV);
++                 state == MOUNT_FAILED) {
++		if (state != old_state)
++			mount_notify_automount(m, -ENODEV);
++	}
+ 
+         if (state != old_state)
+                 log_debug("%s changed %s -> %s",

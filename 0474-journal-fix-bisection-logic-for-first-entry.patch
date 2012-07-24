@@ -1,0 +1,37 @@
+From 4b05d08b2711f08d14f575ea74042239691a2aa9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Jul 2012 17:36:04 +0200
+Subject: [PATCH] journal: fix bisection logic for first entry (cherry picked
+ from commit a536e2613f278970b1ab11788caf1a9a51e1a103)
+
+---
+ src/journal/journal-file.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index f2b5bc5..e4d9c65 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -1275,7 +1275,11 @@ static int generic_array_bisect_plus_one(JournalFile *f,
+         r = test_object(f, extra, needle);
+         if (r < 0)
+                 return r;
+-        else if (r == TEST_FOUND) {
++
++        if (r == TEST_FOUND)
++                r = direction == DIRECTION_DOWN ? TEST_RIGHT : TEST_LEFT;
++
++        if (r == TEST_RIGHT) {
+                 Object *o;
+ 
+                 r = journal_file_move_to_object(f, OBJECT_ENTRY, extra, &o);
+@@ -1292,8 +1296,7 @@ static int generic_array_bisect_plus_one(JournalFile *f,
+                         *idx = 0;
+ 
+                 return 1;
+-        } else if (r == TEST_RIGHT)
+-                return 0;
++        }
+ 
+         r = generic_array_bisect(f, first, n-1, needle, test_object, direction, ret, offset, idx);
+ 

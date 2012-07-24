@@ -1,0 +1,43 @@
+From 448833f14fdd64135cf815e30020f06b46a6e57d Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Sun, 15 Jul 2012 14:58:29 +0200
+Subject: [PATCH] journal: align byte-buffer that gets cased to an object
+
+On Sun, Jul 15, 2012 at 2:00 PM, Koen Kooi <koen@dominion.thruhere.net> wrote:
+> | src/journal/sd-journal.c: In function 'sd_journal_process':
+> | src/journal/sd-journal.c:1891:21: warning: cast increases required alignment of target type [-Wcast-align]
+> | src/journal/sd-journal.c:1900:29: warning: cast increases required alignment of target type [-Wcast-align]
+(cherry picked from commit 19d1e4eeb6501b77ba34a29e6a632fcf775fccd5)
+
+Conflicts:
+	src/journal/sd-journal.c
+---
+ src/journal/sd-journal.c | 2 +-
+ src/shared/macro.h       | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index cb0ea32..f28542f 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -1618,7 +1618,7 @@ static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
+ }
+ 
+ _public_ int sd_journal_process(sd_journal *j) {
+-        uint8_t buffer[sizeof(struct inotify_event) + FILENAME_MAX];
++        uint8_t buffer[sizeof(struct inotify_event) + FILENAME_MAX] _alignas_(struct inotify_event);
+ 
+         if (!j)
+                 return -EINVAL;
+diff --git a/src/shared/macro.h b/src/shared/macro.h
+index 2c23af4..2572a96 100644
+--- a/src/shared/macro.h
++++ b/src/shared/macro.h
+@@ -45,6 +45,7 @@
+ #define _hidden_ __attribute__ ((visibility("hidden")))
+ #define _weakref_(x) __attribute__((weakref(#x)))
+ #define _introspect_(x) __attribute__((section("introspect." x)))
++#define _alignas_(x) __attribute__((aligned(__alignof(x))))
+ 
+ #define XSTRINGIFY(x) #x
+ #define STRINGIFY(x) XSTRINGIFY(x)

@@ -1,0 +1,99 @@
+From 1b1e7326a8fbda839223328452ec06569c06d444 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 6 Jun 2012 16:56:18 +0200
+Subject: [PATCH] unit: Move UnitType definitions from core/unit.c to
+ shared/unit-name.c
+
+This makes it possible to use them from systemctl without linking
+against the core. A string->enum lookup table is added.
+(cherry picked from commit 0a9f8ed00c8f323d5bf24a9a11149a9342c0e1aa)
+---
+ src/core/unit.h        | 16 +---------------
+ src/shared/unit-name.c | 15 +++++++++++++++
+ src/shared/unit-name.h | 20 ++++++++++++++++++++
+ 3 files changed, 36 insertions(+), 15 deletions(-)
+
+diff --git a/src/core/unit.h b/src/core/unit.h
+index e198d07..c994107 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -41,21 +41,7 @@ typedef struct UnitStatusMessageFormats UnitStatusMessageFormats;
+ #include "execute.h"
+ #include "condition.h"
+ #include "install.h"
+-
+-enum UnitType {
+-        UNIT_SERVICE = 0,
+-        UNIT_SOCKET,
+-        UNIT_TARGET,
+-        UNIT_DEVICE,
+-        UNIT_MOUNT,
+-        UNIT_AUTOMOUNT,
+-        UNIT_SNAPSHOT,
+-        UNIT_TIMER,
+-        UNIT_SWAP,
+-        UNIT_PATH,
+-        _UNIT_TYPE_MAX,
+-        _UNIT_TYPE_INVALID = -1
+-};
++#include "unit-name.h"
+ 
+ enum UnitLoadState {
+         UNIT_STUB,
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index cbc9fc5..b962634 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -33,6 +33,21 @@
+         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"            \
+         ":-_.\\"
+ 
++static const char* const unit_type_table[_UNIT_TYPE_MAX] = {
++        [UNIT_SERVICE] = "service",
++        [UNIT_SOCKET] = "socket",
++        [UNIT_TARGET] = "target",
++        [UNIT_DEVICE] = "device",
++        [UNIT_MOUNT] = "mount",
++        [UNIT_AUTOMOUNT] = "automount",
++        [UNIT_SNAPSHOT] = "snapshot",
++        [UNIT_TIMER] = "timer",
++        [UNIT_SWAP] = "swap",
++        [UNIT_PATH] = "path",
++};
++
++DEFINE_STRING_TABLE_LOOKUP(unit_type, UnitType);
++
+ bool unit_name_is_valid_no_type(const char *n, bool template_ok) {
+         const char *e, *i, *at;
+ 
+diff --git a/src/shared/unit-name.h b/src/shared/unit-name.h
+index 116da11..6bfba24 100644
+--- a/src/shared/unit-name.h
++++ b/src/shared/unit-name.h
+@@ -26,6 +26,26 @@
+ 
+ #define UNIT_NAME_MAX 256
+ 
++typedef enum UnitType UnitType;
++
++enum UnitType {
++        UNIT_SERVICE = 0,
++        UNIT_SOCKET,
++        UNIT_TARGET,
++        UNIT_DEVICE,
++        UNIT_MOUNT,
++        UNIT_AUTOMOUNT,
++        UNIT_SNAPSHOT,
++        UNIT_TIMER,
++        UNIT_SWAP,
++        UNIT_PATH,
++        _UNIT_TYPE_MAX,
++        _UNIT_TYPE_INVALID = -1
++};
++
++const char *unit_type_to_string(UnitType i);
++UnitType unit_type_from_string(const char *s);
++
+ int unit_name_to_instance(const char *n, char **instance);
+ char* unit_name_to_prefix(const char *n);
+ char* unit_name_to_prefix_and_instance(const char *n);

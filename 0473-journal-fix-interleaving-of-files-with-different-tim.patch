@@ -1,0 +1,33 @@
+From eea885a68a2fcb0c6f9f04df883d2115f194f1b6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 12 Jul 2012 17:35:04 +0200
+Subject: [PATCH] journal: fix interleaving of files with different time
+ sources (cherry picked from commit
+ c4aff78b2dffc1405396bff2458e479d0a19d93b)
+
+---
+ src/journal/sd-journal.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 5f701db..3ce792b 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -239,7 +239,7 @@ static int compare_order(JournalFile *af, Object *ao,
+ 
+         /* Otherwise compare UTC time */
+         a = le64toh(ao->entry.realtime);
+-        b = le64toh(ao->entry.realtime);
++        b = le64toh(bo->entry.realtime);
+ 
+         if (a < b)
+                 return -1;
+@@ -248,7 +248,7 @@ static int compare_order(JournalFile *af, Object *ao,
+ 
+         /* Finally, compare by contents */
+         a = le64toh(ao->entry.xor_hash);
+-        b = le64toh(ao->entry.xor_hash);
++        b = le64toh(bo->entry.xor_hash);
+ 
+         if (a < b)
+                 return -1;

@@ -1,0 +1,33 @@
+From 7414c148f2d2daa8940de53f7975aace596f59b9 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 2 Jul 2012 15:05:26 +0200
+Subject: [PATCH] modules load: rename kernel command line option to
+ (rd.)modules-load= (cherry picked from commit
+ 91ac74250149a29122b2291c5393dec4592430d4)
+
+Conflicts:
+	NEWS
+---
+ src/modules-load/modules-load.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/modules-load/modules-load.c b/src/modules-load/modules-load.c
+index 057aa6e..5c91a92 100644
+--- a/src/modules-load/modules-load.c
++++ b/src/modules-load/modules-load.c
+@@ -90,13 +90,13 @@ static int parse_proc_cmdline(void) {
+                         goto finish;
+                 }
+ 
+-                if (startswith(word, "driver=")) {
++                if (startswith(word, "modules-load=")) {
+ 
+                         r = add_modules(word + 7);
+                         if (r < 0)
+                                 goto finish;
+ 
+-                } else if (startswith(word, "rd.driver=")) {
++                } else if (startswith(word, "rd.modules-load=")) {
+ 
+                         if (in_initrd()) {
+                                 r = add_modules(word + 10);

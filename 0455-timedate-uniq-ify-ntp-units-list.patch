@@ -1,0 +1,25 @@
+From 4e9e1d80dda7c6a786d576de515327edba5942b9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jul 2012 15:37:04 +0200
+Subject: [PATCH] timedate: uniq'ify ntp units list (cherry picked from commit
+ f6c13ce47ebee287f8b6a965ca5ca022a9f26e2c)
+
+Conflicts:
+	NEWS
+---
+ src/timedate/timedated.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index 1dcf509..e391e03 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -354,7 +354,7 @@ static char** get_ntp_services(void) {
+ 
+         strv_free(files);
+ 
+-        return r;
++        return strv_uniq(r);
+ }
+ 
+ static int read_ntp(DBusConnection *bus) {
