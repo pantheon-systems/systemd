@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        187
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -261,7 +261,6 @@ systemctl stop systemd-udev.service systemd-udev-control.socket systemd-udev-ker
 /usr/bin/mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
 
 %post
-/sbin/ldconfig
 /usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
@@ -296,7 +295,6 @@ else
 fi
 
 %postun
-/sbin/ldconfig
 if [ $1 -ge 1 ] ; then
         /bin/systemctl daemon-reload > /dev/null 2>&1 || :
         /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
@@ -323,6 +321,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
         remote-fs.target \
         systemd-readahead-replay.service \
         systemd-readahead-collect.service
+
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
 
 %post -n libgudev1 -p /sbin/ldconfig
 %postun -n libgudev1 -p /sbin/ldconfig
@@ -498,6 +499,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Jul 25 2012 Kalev Lember <kalevlember@gmail.com> - 187-2
+- Run ldconfig for the new -libs subpackage
+
 * Thu Jul 19 2012 Lennart Poettering <lpoetter@redhat.com> - 187-1
 - New upstream release
 
