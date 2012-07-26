@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        18%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        20%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -559,6 +559,75 @@ Patch0496:      0496-F17-restore-device-units-for-dev-ttyX.patch
 Patch0497:      0497-systemd-return-error-when-asked-to-stop-unknown-unit.patch
 Patch0498:      0498-modules-load-fix-kernel-cmdline-parsing.patch
 Patch0499:      0499-units-add-the-modules-load-cmdline-parameters-to-the.patch
+Patch0500:      0500-F17-fix-fstab-mounts.patch
+Patch0501:      0501-Revert-timedate-uniq-ify-ntp-units-list.patch
+Patch0502:      0502-Revert-timedated-replace-ntp-units-file-with-an-ntp-.patch
+Patch0503:      0503-Revert-timedate-fix-ntp-units-comment.patch
+Patch0504:      0504-Revert-timedated-replace-systemd-timedated-ntp.targe.patch
+Patch0505:      0505-systemd-added-new-dependency-PartOf.patch
+Patch0506:      0506-man-rewrite-the-description-of-PartOf.patch
+Patch0507:      0507-dbus-unit-expose-PartOf-ConsistsOf-properties.patch
+Patch0508:      0508-unit-make-the-table-of-inverse-deps-symmetric.patch
+Patch0509:      0509-unit-add-missing-deps-in-unit_dependency_table.patch
+Patch0510:      0510-systemd-enable-disable-instances-of-template.patch
+Patch0511:      0511-logs-show-fix-OOM-path.patch
+Patch0512:      0512-systemctl-automatically-turn-paths-and-unescaped-uni.patch
+Patch0513:      0513-cryptsetup-fix-escaping-when-generating-cryptsetup-u.patch
+Patch0514:      0514-systemctl-append-.service-to-unit-names-lacking-suff.patch
+Patch0515:      0515-rules-99-systemd.rules.in-ENV-SYSTEMD_READY-0-for-in.patch
+Patch0516:      0516-99-systemd.rules.in-ignore-nbd-in-the-add-uevent.patch
+Patch0517:      0517-automount-print-mount-point-in-debug-message.patch
+Patch0518:      0518-journald-fixed-memory-leak.patch
+Patch0519:      0519-logs-show-fix-off-by-one-error.patch
+Patch0520:      0520-shutdown-allow-to-specify-broadcast-message-when-can.patch
+Patch0521:      0521-sysctl-apply-configuration-at-once.patch
+Patch0522:      0522-systemd-introduced-new-timeout-types.patch
+Patch0523:      0523-fix-a-couple-of-issues-found-with-llvm-analyze.patch
+Patch0524:      0524-shared-utf8-mark-char-as-const.patch
+Patch0525:      0525-shared-util-refactor-fstab_node_to_udev_node.patch
+Patch0526:      0526-shared-util-add-fstab-support-for-partuuid-partlabel.patch
+Patch0527:      0527-login-check-return-of-parse_pid-and-parse_uid.patch
+Patch0528:      0528-unit-don-t-allow-units-to-be-gc-ed-that-still-are-re.patch
+Patch0529:      0529-unit-add-new-ConditionHost-condition-type.patch
+Patch0530:      0530-condition-add-ConditionFileNotEmpty.patch
+Patch0531:      0531-unit-name-rework-unit_name_replace_instance-function.patch
+Patch0532:      0532-pam-Add-session-class-to-the-debug-log.patch
+Patch0533:      0533-tmpfiles-support-globbing-for-w-option.patch
+Patch0534:      0534-systemctl-direct-the-user-to-list-unit-files-from-th.patch
+Patch0535:      0535-tmpfiles-plug-file-descriptor-leak.patch
+Patch0536:      0536-update-utmp-Don-t-error-out-on-runlevel-updates-if-u.patch
+Patch0537:      0537-install-append-.service-when-enable-disable.-is-call.patch
+Patch0538:      0538-systemctl-minor-coding-style-fixes.patch
+Patch0539:      0539-socket-prevent-signed-integer-overflow.patch
+Patch0540:      0540-tmpfiles-use-write-2-for-the-w-action.patch
+Patch0541:      0541-service-don-t-hit-an-assert-if-a-service-unit-change.patch
+Patch0542:      0542-hwclock-always-set-the-kernel-s-timezone.patch
+Patch0543:      0543-conf-parser-don-t-unescape-parsed-configuration-stri.patch
+Patch0544:      0544-log-avoid-function-loop.patch
+Patch0545:      0545-target-imply-default-ordering-for-PartsOf-deps-as-we.patch
+Patch0546:      0546-unit-fix-f-resolving.patch
+Patch0547:      0547-mount-notify-the-user-if-we-over-mount-a-non-empty-d.patch
+Patch0548:      0548-automount-also-whine-if-an-automount-directory-is-no.patch
+Patch0549:      0549-mount-reword-directory-empty-warning-a-bit.patch
+Patch0550:      0550-timedated-unregister-the-right-bus-service.patch
+Patch0551:      0551-util-make-sure-heap-allocators-fail-when-array-alloc.patch
+Patch0552:      0552-util-define-union-dirent_storage-and-make-use-of-it-.patch
+Patch0553:      0553-util-overflow-hardening.patch
+Patch0554:      0554-util-fix-overflow-checks.patch
+Patch0555:      0555-shared-call-va_end-in-all-cases.patch
+Patch0556:      0556-cgtop-missing.patch
+Patch0557:      0557-logind-check-return-value-log-warning-on-error.patch
+Patch0558:      0558-login-check-return-value-of-session_get_idle_hint.patch
+Patch0559:      0559-locale-make-sure-that-l-is-freed.patch
+Patch0560:      0560-modules-load-initalize-files-to-null.patch
+Patch0561:      0561-sysctl-fix-error-code-handling.patch
+Patch0562:      0562-login-missing-break-for-getopt-ARG_NO_ASK_PASSWORD-i.patch
+Patch0563:      0563-hwclock-add-missing-OOM-check.patch
+Patch0564:      0564-sysctl-always-return-the-last-error-we-encountered.patch
+Patch0565:      0565-rules-only-mark-MD-disks-not-partitions-with-SYSTEMD.patch
+Patch0566:      0566-tmpfiles-restore-previous-behavior-for-F-f.patch
+Patch0567:      0567-shared-fail-mkdir_p-if-the-target-exists-and-is-not-.patch
+Patch0568:      0568-sysctl-avoiding-exiting-with-error-on-EEXIST.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -727,6 +796,9 @@ ln -s systemctl %{buildroot}%{_bindir}/systemd-systemctl
 %ifarch s390 s390x
 find %{buildroot}%{_prefix}/lib -name '*vconsole*' -delete
 %endif
+
+# debug-shell.service is the new name. Provide a compat symlink in F17.
+ln -s debug-shell.service %{buildroot}%{_prefix}/lib/systemd/system/systemd-debug-shell.service
 
 %post
 /sbin/ldconfig
@@ -944,6 +1016,27 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Fri Oct 12 2012 Michal Schmidt <mschmidt@redhat.com> - 44-20
+- Revert the ntp migration code. Not going to do it in F17.
+- Backports from upstream v194+:
+- PartOf= dependencies
+- enabling/disabling of instantiated units
+- usability improvements for systemctl:
+  - systemctl status /home
+  - systemctl status /dev/foobar
+  - implied .service suffix
+- new timeouts TimeoutStartSec=, TimeoutStopSec=
+- understand PARTUUID=, PARTLABEL= in fstab
+- new conditions ConditionHost=, ConditionFileNotEmpty=
+- tmpfiles: globbing support with 'w' mode
+- various fixes
+- Resolves: #752774, #767795, #802198, #855863, #856975, #858266, #858754,
+-           #858771, #858777, fdo#39386, fdo#54448, fdo#54522, fdo#54766
+
+* Fri Jul 27 2012 Michal Schmidt <mschmidt@redhat.com> - 44-19
+- Fix for broken fstab mounts in 44-18.
+- Add scriptlets to migrate away from systemd-timedated-ntp.target.
+
 * Tue Jul 24 2012 Michal Schmidt <mschmidt@redhat.com> - 44-18
 - Backports from upstream:
 - rework the handling of ntp services in timedated (#821813)

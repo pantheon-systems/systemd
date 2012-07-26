@@ -1,0 +1,36 @@
+From 15f925c53fa42c8f9808d85dad6698a17b0ae41a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 18 Sep 2012 18:40:31 +0200
+Subject: [PATCH] mount: notify the user if we over-mount a non-empty
+ directory
+
+https://bugzilla.redhat.com/show_bug.cgi?id=858266
+(cherry picked from commit 257f1d8ec49046c7b481801acfdd5bf57c9efa5c)
+---
+ src/core/mount.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 3a33d93..5ebf5d7 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1011,6 +1011,9 @@ static void mount_enter_mounting(Mount *m) {
+ 
+         mkdir_p_label(m->where, m->directory_mode);
+ 
++        if (dir_is_empty(m->where) <= 0)
++                log_notice("%s: Directory %s to mount over is not empty, ignoring. (To see the over-mounted files, please manually mount the underlying file system to a secondary location.)", m->meta.id, m->where);
++
+         /* Create the source directory for bind-mounts if needed */
+         p = get_mount_parameters_configured(m);
+         if (p && mount_is_bind(p))
+@@ -1039,7 +1042,8 @@ static void mount_enter_mounting(Mount *m) {
+ 
+         mount_unwatch_control_pid(m);
+ 
+-        if ((r = mount_spawn(m, m->control_command, &m->control_pid)) < 0)
++        r = mount_spawn(m, m->control_command, &m->control_pid);
++        if (r < 0)
+                 goto fail;
+ 
+         mount_set_state(m, MOUNT_MOUNTING);

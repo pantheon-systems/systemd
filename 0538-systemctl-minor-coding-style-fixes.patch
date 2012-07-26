@@ -1,0 +1,53 @@
+From cdd880c67b144852c05716dd226449c40a4f5d9e Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 13 Sep 2012 22:42:22 +0200
+Subject: [PATCH] systemctl: minor coding style fixes (cherry picked from
+ commit a33fdebb30cac102db7037a5bcdc85d6c49d4aad)
+
+---
+ src/systemctl/systemctl.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index a3810de..23977ac 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -4097,23 +4097,25 @@ finish:
+ }
+ 
+ static int mangle_names(char **original_names, char ***mangled_names) {
+-        char **names_it = NULL;
+-        char **name = NULL;
++        char **i, **l, **name;
+ 
+-        (*mangled_names) = new(char*, strv_length(original_names)+1);
+-        if(!(*mangled_names))
+-                return log_oom();
+-
+-        names_it = *mangled_names;
++        l = new(char*, strv_length(original_names) + 1);
++        if (!l)
++                return -ENOMEM;
+ 
++        i = l;
+         STRV_FOREACH(name, original_names) {
+-                char *n = unit_name_mangle(*name);
+-                (*names_it) = n ? n : strdup(*name);
+-                if(!(*names_it))
+-                        return log_oom();
+-                names_it++;
++                *i = unit_name_mangle(*name);
++                if (!*i) {
++                        strv_free(l);
++                        return -ENOMEM;
++                }
++
++                i++;
+         }
+-        *names_it = NULL;
++
++        *i = NULL;
++        *mangled_names = l;
+ 
+         return 0;
+ }

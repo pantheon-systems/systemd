@@ -1,0 +1,105 @@
+From 22bfd2637d4c82c87ce049848902fd1a3b442e0b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 12 Sep 2012 04:46:38 +0200
+Subject: [PATCH] unit-name: rework unit_name_replace_instance function()
+
+https://bugzilla.redhat.com/show_bug.cgi?id=855863
+(cherry picked from commit 8556879e0d14925ce897875c6c264368e2d048c2)
+
+Conflicts:
+	TODO
+---
+ src/shared/unit-name.c    | 35 ++++++++++++++---------------------
+ src/test/test-unit-name.c | 24 ++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+), 21 deletions(-)
+
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index 28e3e76..90f5842 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -356,36 +356,29 @@ bool unit_name_is_instance(const char *n) {
+ char *unit_name_replace_instance(const char *f, const char *i) {
+         const char *p, *e;
+         char *r, *k;
+-        size_t a;
++        size_t a, b;
+ 
+         assert(f);
+ 
+         p = strchr(f, '@');
+-        assert_se(e = strrchr(f, '.'));
+-
+-        a = p - f;
+-
+-        if (p) {
+-                size_t b;
+-
+-                b = strlen(i);
+-
+-                r = new(char, a + 1 + b + strlen(e) + 1);
+-                if (!r)
+-                        return NULL;
++        if (!p)
++                return strdup(f);
+ 
+-                k = mempcpy(r, f, a + 1);
+-                k = mempcpy(k, i, b);
+-        } else {
++        e = strrchr(f, '.');
++        if (!e)
++                assert_se(e = strchr(f, 0));
+ 
+-                r = new(char, a + strlen(e) + 1);
+-                if (!r)
+-                        return NULL;
++        a = p - f;
++        b = strlen(i);
+ 
+-                k = mempcpy(r, f, a);
+-        }
++        r = new(char, a + 1 + b + strlen(e) + 1);
++        if (!r)
++                return NULL;
+ 
++        k = mempcpy(r, f, a + 1);
++        k = mempcpy(k, i, b);
+         strcpy(k, e);
++
+         return r;
+ }
+ 
+diff --git a/src/test/test-unit-name.c b/src/test/test-unit-name.c
+index 392e358..cf43455 100644
+--- a/src/test/test-unit-name.c
++++ b/src/test/test-unit-name.c
+@@ -29,6 +29,30 @@
+ int main(int argc, char* argv[]) {
+         char *t, *k;
+ 
++        t = unit_name_replace_instance("foo@.service", "waldo");
++        puts(t);
++        free(t);
++
++        t = unit_name_replace_instance("foo@xyz.service", "waldo");
++        puts(t);
++        free(t);
++
++        t = unit_name_replace_instance("xyz", "waldo");
++        puts(t);
++        free(t);
++
++        t = unit_name_replace_instance("", "waldo");
++        puts(t);
++        free(t);
++
++        t = unit_name_replace_instance("", "");
++        puts(t);
++        free(t);
++
++        t = unit_name_replace_instance("foo.service", "waldo");
++        puts(t);
++        free(t);
++
+         t = unit_name_from_path("/waldo", ".mount");
+         puts(t);
+         k = unit_name_to_path(t);

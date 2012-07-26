@@ -1,0 +1,43 @@
+From b667a525077329c2ddd8bb3a646839a1acf98201 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 17 Sep 2012 14:55:56 +0200
+Subject: [PATCH] service: don't hit an assert if a service unit changes type
+ and we get a spurious event from before (cherry picked from
+ commit bfba3256a02a0871579c4ee48d787dfe4585fd8d)
+
+Conflicts:
+	TODO
+---
+ src/core/service.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index d300e34..b2d493a 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2944,12 +2944,10 @@ static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
+                                         else
+                                                 service_enter_signal(s, SERVICE_FINAL_SIGTERM, f);
+                                         break;
+-                                } else {
+-                                        assert(s->type == SERVICE_DBUS || s->type == SERVICE_NOTIFY);
+-
+-                                        /* Fall through */
+                                 }
+ 
++                                /* Fall through */
++
+                         case SERVICE_RUNNING:
+                                 service_enter_running(s, f);
+                                 break;
+@@ -3019,7 +3017,9 @@ static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
+                                 break;
+ 
+                         case SERVICE_START:
+-                                assert(s->type == SERVICE_FORKING);
++                                if (s->type != SERVICE_FORKING)
++                                        /* Maybe spurious event due to a reload that changed the type? */
++                                        break;
+ 
+                                 if (f != SERVICE_SUCCESS) {
+                                         service_enter_signal(s, SERVICE_FINAL_SIGTERM, f);

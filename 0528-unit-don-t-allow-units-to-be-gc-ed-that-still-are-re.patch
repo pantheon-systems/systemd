@@ -1,0 +1,25 @@
+From 37e9419bf4f2f905a0aeeed2bf500c8b9be29da2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 10 Sep 2012 10:12:10 +0200
+Subject: [PATCH] unit: don't allow units to be gc'ed that still are
+ referenced via UnitRef (cherry picked from commit
+ 9d576438a1ee932bde1fb0f1be1aa5cae646fd4e)
+
+---
+ src/core/unit.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index b810f8f..5865405 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -256,6 +256,9 @@ bool unit_check_gc(Unit *u) {
+         if (unit_active_state(u) != UNIT_INACTIVE)
+                 return true;
+ 
++        if (u->refs)
++                return true;
++
+         if (UNIT_VTABLE(u)->check_gc)
+                 if (UNIT_VTABLE(u)->check_gc(u))
+                         return true;

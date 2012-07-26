@@ -1,0 +1,27 @@
+From 979912f035d5841e76252f8cd2d0f7696148dc3b Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Mon, 30 Jul 2012 20:27:52 +0200
+Subject: [PATCH] rules/99-systemd.rules.in: ENV{SYSTEMD_READY}="0" for
+ incomplete md (cherry picked from commit
+ 44b5651f19b60a84dbfdbb0ea13196b784080c8b)
+
+---
+ src/99-systemd.rules.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/99-systemd.rules.in b/src/99-systemd.rules.in
+index ea305b1..023a459 100644
+--- a/src/99-systemd.rules.in
++++ b/src/99-systemd.rules.in
+@@ -17,10 +17,10 @@ SUBSYSTEM=="block", KERNEL!="ram*|loop*", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=
+ 
+ # Ignore encrypted devices with no identified superblock on it, since
+ # we are probably still calling mke2fs or mkswap on it.
+-
+ SUBSYSTEM=="block", KERNEL!="ram*|loop*", ENV{DM_UUID}=="CRYPT-*", ENV{ID_PART_TABLE_TYPE}=="", ENV{ID_FS_USAGE}=="", ENV{SYSTEMD_READY}="0"
+ 
+ # Ignore raid devices that are not yet assembled and started
++SUBSYSTEM=="block", KERNEL=="md*", TEST!="md/array_state", ENV{SYSTEMD_READY}="0"
+ SUBSYSTEM=="block", KERNEL=="md*", ATTR{md/array_state}=="|clear|inactive", ENV{SYSTEMD_READY}="0"
+ 
+ # We need a hardware independent way to identify network devices. We

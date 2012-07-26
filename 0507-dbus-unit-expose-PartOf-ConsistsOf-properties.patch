@@ -1,0 +1,28 @@
+From 1cd70f5ae49e63ceee0c293bcce552e83dc81824 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 26 Jul 2012 09:38:39 +0200
+Subject: [PATCH] dbus-unit: expose PartOf/ConsistsOf properties (cherry
+ picked from commit
+ b05afff1afe19cf7b48d9d0d2e8b5b4aa9e949dd)
+
+---
+ src/core/dbus-unit.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/core/dbus-unit.c b/src/core/dbus-unit.c
+index a7c5fa8..c7a3524 100644
+--- a/src/core/dbus-unit.c
++++ b/src/core/dbus-unit.c
+@@ -794,10 +794,12 @@ const BusProperty bus_unit_properties[] = {
+         { "RequisiteOverridable", bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUISITE_OVERRIDABLE]),   true },
+         { "Wants",                bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_WANTS]),                   true },
+         { "BindsTo",              bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_BINDS_TO]),                true },
++        { "PartOf",               bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_PART_OF]),                 true },
+         { "RequiredBy",           bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUIRED_BY]),             true },
+         { "RequiredByOverridable",bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_REQUIRED_BY_OVERRIDABLE]), true },
+         { "WantedBy",             bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_WANTED_BY]),               true },
+         { "BoundBy",              bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_BOUND_BY]),                true },
++        { "ConsistsOf",           bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_CONSISTS_OF]),             true },
+         { "Conflicts",            bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_CONFLICTS]),               true },
+         { "ConflictedBy",         bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_CONFLICTED_BY]),           true },
+         { "Before",               bus_unit_append_dependencies,      "as", offsetof(Unit, dependencies[UNIT_BEFORE]),                  true },

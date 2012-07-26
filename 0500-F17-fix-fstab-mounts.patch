@@ -1,0 +1,25 @@
+From 49cece83331d054f7b09b03291d18454c731ee63 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 27 Jul 2012 08:19:28 +0200
+Subject: [PATCH] F17: fix fstab mounts
+
+The backport of "mount: load only if we there's mountinfo or fragment"
+broke the loading of fstab. F17 needs this fixup patch to account for
+fstab being handled in the core, not in a generator like upstream.
+---
+ src/core/mount.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index d939e21..3a33d93 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -676,7 +676,7 @@ static int mount_load(Unit *u) {
+         assert(u);
+         assert(u->load_state == UNIT_STUB);
+ 
+-        if (m->from_proc_self_mountinfo)
++        if (m->from_proc_self_mountinfo || m->from_etc_fstab)
+                 r = unit_load_fragment_and_dropin_optional(u);
+         else
+                 r = unit_load_fragment_and_dropin(u);

@@ -1,0 +1,23 @@
+From 799718bac8e3ae099ec598f769d4543fe63a1df8 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 11 Oct 2012 22:38:07 +0200
+Subject: [PATCH] Revert "timedate: uniq'ify ntp units list"
+
+This reverts commit 4e9e1d80dda7c6a786d576de515327edba5942b9.
+---
+ src/timedate/timedated.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index e391e03..1dcf509 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -354,7 +354,7 @@ static char** get_ntp_services(void) {
+ 
+         strv_free(files);
+ 
+-        return strv_uniq(r);
++        return r;
+ }
+ 
+ static int read_ntp(DBusConnection *bus) {

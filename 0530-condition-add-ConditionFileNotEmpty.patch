@@ -1,0 +1,101 @@
+From 8f4e96fb4823991334c03d13623af2af2ad4bde8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 11 Sep 2012 01:29:46 +0200
+Subject: [PATCH] condition: add ConditionFileNotEmpty=
+
+https://bugs.freedesktop.org/show_bug.cgi?id=54448
+(cherry picked from commit 742a862bb803641b78a40f6b498486397a321294)
+---
+ man/systemd.unit.xml | 22 +++++++++++++++-------
+ src/core/condition.c | 10 ++++++++++
+ src/core/condition.h |  1 +
+ 3 files changed, 26 insertions(+), 7 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 5f942b9..2ac0ef7 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -730,6 +730,7 @@
+                                 <term><varname>ConditionPathIsMountPoint=</varname></term>
+                                 <term><varname>ConditionPathIsReadWrite=</varname></term>
+                                 <term><varname>ConditionDirectoryNotEmpty=</varname></term>
++                                <term><varname>ConditionFileNotEmpty=</varname></term>
+                                 <term><varname>ConditionFileIsExecutable=</varname></term>
+                                 <term><varname>ConditionKernelCommandLine=</varname></term>
+                                 <term><varname>ConditionVirtualization=</varname></term>
+@@ -800,21 +801,28 @@
+                                 (i.e. not mounted
+                                 read-only).</para>
+ 
+-                                <para><varname>ConditionFileIsExecutable=</varname>
++                                <para><varname>ConditionDirectoryNotEmpty=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+-                                exists, is a regular file and marked
+-                                executable.</para>
++                                exists and is a non-empty
++                                directory.</para>
+ 
+-                                <para><varname>ConditionDirectoryNotEmpty=</varname>
++                                <para><varname>ConditionFileNotEmpty=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+-                                exists and is a non-empty
+-                                directory.</para>
++                                exists and refers to a regular file
++                                with a non-zero size.</para>
++
++                                <para><varname>ConditionFileIsExecutable=</varname>
++                                is similar to
++                                <varname>ConditionPathExists=</varname>
++                                but verifies whether a certain path
++                                exists, is a regular file and marked
++                                executable.</para>
+ 
+-                                <para>Similarly,
++                                <para>Similar,
+                                 <varname>ConditionKernelCommandLine=</varname>
+                                 may be used to check whether a
+                                 specific kernel command line option is
+diff --git a/src/core/condition.c b/src/core/condition.c
+index b4ed2da..ff6292c 100644
+--- a/src/core/condition.c
++++ b/src/core/condition.c
+@@ -261,6 +261,15 @@ bool condition_test(Condition *c) {
+                 return !(k == -ENOENT || k > 0) == !c->negate;
+         }
+ 
++        case CONDITION_FILE_NOT_EMPTY: {
++                struct stat st;
++
++                if (stat(c->parameter, &st) < 0)
++                        return c->negate;
++
++                return (S_ISREG(st.st_mode) && st.st_size > 0) == !c->negate;
++        }
++
+         case CONDITION_FILE_IS_EXECUTABLE: {
+                 struct stat st;
+ 
+@@ -350,6 +359,7 @@ static const char* const condition_type_table[_CONDITION_TYPE_MAX] = {
+         [CONDITION_PATH_IS_MOUNT_POINT] = "ConditionPathIsMountPoint",
+         [CONDITION_PATH_IS_READ_WRITE] = "ConditionPathIsReadWrite",
+         [CONDITION_DIRECTORY_NOT_EMPTY] = "ConditionDirectoryNotEmpty",
++        [CONDITION_FILE_NOT_EMPTY] = "ConditionFileNotEmpty",
+         [CONDITION_KERNEL_COMMAND_LINE] = "ConditionKernelCommandLine",
+         [CONDITION_VIRTUALIZATION] = "ConditionVirtualization",
+         [CONDITION_SECURITY] = "ConditionSecurity",
+diff --git a/src/core/condition.h b/src/core/condition.h
+index 0162c22..f4a5801 100644
+--- a/src/core/condition.h
++++ b/src/core/condition.h
+@@ -34,6 +34,7 @@ typedef enum ConditionType {
+         CONDITION_PATH_IS_MOUNT_POINT,
+         CONDITION_PATH_IS_READ_WRITE,
+         CONDITION_DIRECTORY_NOT_EMPTY,
++        CONDITION_FILE_NOT_EMPTY,
+         CONDITION_FILE_IS_EXECUTABLE,
+         CONDITION_KERNEL_COMMAND_LINE,
+         CONDITION_VIRTUALIZATION,

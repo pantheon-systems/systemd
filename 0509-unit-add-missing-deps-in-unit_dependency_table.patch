@@ -1,0 +1,49 @@
+From e675d810aac128365313330c02d3e56bfe7402a3 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 26 Jul 2012 09:46:40 +0200
+Subject: [PATCH] unit: add missing deps in unit_dependency_table
+
+also reorder the table according to the enum order.
+(cherry picked from commit ac6a4abed3e69daf6795e02fa4be1719ae6ae6ab)
+---
+ src/core/unit.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 6c373b3..7b54df3 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2750,25 +2750,27 @@ DEFINE_STRING_TABLE_LOOKUP(unit_active_state, UnitActiveState);
+ static const char* const unit_dependency_table[_UNIT_DEPENDENCY_MAX] = {
+         [UNIT_REQUIRES] = "Requires",
+         [UNIT_REQUIRES_OVERRIDABLE] = "RequiresOverridable",
+-        [UNIT_WANTS] = "Wants",
+         [UNIT_REQUISITE] = "Requisite",
+         [UNIT_REQUISITE_OVERRIDABLE] = "RequisiteOverridable",
++        [UNIT_WANTS] = "Wants",
++        [UNIT_BINDS_TO] = "BindsTo",
++        [UNIT_PART_OF] = "PartOf",
+         [UNIT_REQUIRED_BY] = "RequiredBy",
+         [UNIT_REQUIRED_BY_OVERRIDABLE] = "RequiredByOverridable",
+-        [UNIT_BINDS_TO] = "BindsTo",
+         [UNIT_WANTED_BY] = "WantedBy",
++        [UNIT_BOUND_BY] = "BoundBy",
++        [UNIT_CONSISTS_OF] = "ConsistsOf",
+         [UNIT_CONFLICTS] = "Conflicts",
+         [UNIT_CONFLICTED_BY] = "ConflictedBy",
+-        [UNIT_BOUND_BY] = "BoundBy",
+         [UNIT_BEFORE] = "Before",
+         [UNIT_AFTER] = "After",
+-        [UNIT_REFERENCES] = "References",
+-        [UNIT_REFERENCED_BY] = "ReferencedBy",
+         [UNIT_ON_FAILURE] = "OnFailure",
+         [UNIT_TRIGGERS] = "Triggers",
+         [UNIT_TRIGGERED_BY] = "TriggeredBy",
+         [UNIT_PROPAGATES_RELOAD_TO] = "PropagatesReloadTo",
+-        [UNIT_RELOAD_PROPAGATED_FROM] = "ReloadPropagatedFrom"
++        [UNIT_RELOAD_PROPAGATED_FROM] = "ReloadPropagatedFrom",
++        [UNIT_REFERENCES] = "References",
++        [UNIT_REFERENCED_BY] = "ReferencedBy",
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(unit_dependency, UnitDependency);

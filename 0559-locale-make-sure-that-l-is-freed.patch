@@ -1,0 +1,25 @@
+From 242a2918217e798e04d4eac567552665f84d055c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?V=C3=A1clav=20Pavl=C3=ADn?= <vpavlin@redhat.com>
+Date: Fri, 21 Sep 2012 15:00:43 +0200
+Subject: [PATCH] locale: make sure that l is freed (cherry picked from commit
+ f2cc3753ce0e85960f0299855c3b98ba60efa580)
+
+---
+ src/locale/localed.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/locale/localed.c b/src/locale/localed.c
+index da46106..46fa99a 100644
+--- a/src/locale/localed.c
++++ b/src/locale/localed.c
+@@ -1157,7 +1157,9 @@ static DBusHandlerResult locale_message_handler(
+                                         "Locale\0");
+                         if (!changed)
+                                 goto oom;
+-                }
++                } else
++                        strv_free(l);
++
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.locale1", "SetVConsoleKeyboard")) {
+ 
+                 const char *keymap, *keymap_toggle;

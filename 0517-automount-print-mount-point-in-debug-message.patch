@@ -1,0 +1,31 @@
+From 5ab84d8c9bb5473af7524b133163ccf6207b48e7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 13 Jul 2011 14:06:42 +0200
+Subject: [PATCH] automount: print mount point in debug message
+
+Old: systemd[1]: Got direct mount request for ffff88003bb10c00, triggered by 14476 (fuser)
+New: systemd[1]: Got direct mount request on /dev/mqueue, triggered by 2177 (ls)
+(cherry picked from commit 2cc58876202b06fabcdb1b0ab1cf7beb1945a3f3)
+---
+ src/core/automount.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index 27ca887..5c716ee 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -782,11 +782,12 @@ static void automount_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
+                         char *p = NULL;
+ 
+                         get_process_comm(packet.v5_packet.pid, &p);
+-                        log_debug("Got direct mount request for %s, triggered by %lu (%s)", packet.v5_packet.name, (unsigned long) packet.v5_packet.pid, strna(p));
++                        log_debug("Got direct mount request on %s, triggered by %lu (%s)",
++                                  a->where, (unsigned long) packet.v5_packet.pid, strna(p));
+                         free(p);
+ 
+                 } else
+-                        log_debug("Got direct mount request for %s", packet.v5_packet.name);
++                        log_debug("Got direct mount request on %s", a->where);
+ 
+                 if (!a->tokens)
+                         if (!(a->tokens = set_new(trivial_hash_func, trivial_compare_func))) {

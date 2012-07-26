@@ -1,0 +1,25 @@
+From 3a5f3e7fbe262754c6efce8853c14a87678340bf Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Fri, 21 Sep 2012 12:30:56 +0200
+Subject: [PATCH] sysctl: fix error code handling
+
+After  if (r <= 0) r can't  be 0 so
+if (k < 0 && r == 0) never happens.
+(cherry picked from commit 089d4a08d0cda5bae0bf9bb3273bfdb397200ee8)
+---
+ src/sysctl/sysctl.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/sysctl/sysctl.c b/src/sysctl/sysctl.c
+index 04773a3..961b29b 100644
+--- a/src/sysctl/sysctl.c
++++ b/src/sysctl/sysctl.c
+@@ -264,6 +264,8 @@ int main(int argc, char *argv[]) {
+         if (r <= 0)
+                 return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+ 
++        r = 0;
++
+         log_set_target(LOG_TARGET_AUTO);
+         log_parse_environment();
+         log_open();

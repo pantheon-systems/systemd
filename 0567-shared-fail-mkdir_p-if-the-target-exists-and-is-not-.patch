@@ -1,0 +1,40 @@
+From 85236b1a36f6e58c9dead9a42f7262fc55f9f8b3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 2 Oct 2012 14:42:10 +0200
+Subject: [PATCH] shared: fail mkdir_p if the target exists and is not a
+ directory
+
+This makes mkdir_p actually behave like mkdir -p.
+(cherry picked from commit 5b585b5380e8e9b7975905989042743911d699e2)
+---
+ src/shared/mkdir.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/mkdir.c b/src/shared/mkdir.c
+index d8c3275..c77f090 100644
+--- a/src/shared/mkdir.c
++++ b/src/shared/mkdir.c
+@@ -116,6 +116,13 @@ int mkdir_parents_label(const char *path, mode_t mode) {
+         return makedir_parents(path, mode, true);
+ }
+ 
++static int is_dir(const char* path) {
++        struct stat st;
++        if (stat(path, &st) < 0)
++                return -errno;
++        return S_ISDIR(st.st_mode);
++}
++
+ static int makedir_p(const char *path, mode_t mode, bool apply) {
+         int r;
+ 
+@@ -125,7 +132,8 @@ static int makedir_p(const char *path, mode_t mode, bool apply) {
+         if (r < 0)
+                 return r;
+ 
+-        if (label_mkdir(path, mode, apply) < 0 && errno != EEXIST)
++        r = label_mkdir(path, mode, apply);
++        if (r < 0 && (errno != EEXIST || is_dir(path) <= 0))
+                 return -errno;
+ 
+         return 0;

@@ -1,0 +1,247 @@
+From 6dcded71e67f2d1afbca520be7cce2579ba71fca Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Tue, 7 Aug 2012 14:41:48 +0200
+Subject: [PATCH] systemd: introduced new timeout types
+
+Makes possible to specify separate timeout for start and stop of
+the service.
+
+[ Improved the manpage. Coding style fix. -- michich ]
+(cherry picked from commit d568a3350ee8a45877eef87cd026a954124e2cf8)
+
+Conflicts:
+	man/systemd.service.xml
+---
+ man/systemd.service.xml               | 43 ++++++++++++++++++++++++++---------
+ src/core/dbus-service.c               |  4 +++-
+ src/core/load-fragment-gperf.gperf.m4 |  4 +++-
+ src/core/load-fragment.c              | 12 +++++++---
+ src/core/service.c                    | 35 ++++++++++++++++------------
+ src/core/service.h                    |  5 ++--
+ 6 files changed, 71 insertions(+), 32 deletions(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index c615db1..3c1e011 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -441,27 +441,48 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
+-                                <term><varname>TimeoutSec=</varname></term>
++                                <term><varname>TimeoutStartSec=</varname></term>
+                                 <listitem><para>Configures the time to
+-                                wait for start-up and stop. If a
++                                wait for start-up. If a
+                                 daemon service does not signal
+                                 start-up completion within the
+-                                configured time the service will be
++                                configured time, the service will be
+                                 considered failed and be shut down
+-                                again. If a service is asked to stop
+-                                but does not terminate in the
+-                                specified time it will be terminated
++                                again.
++                                Takes a unit-less value in seconds, or a
++                                time span value such as "5min
++                                20s". Pass 0 to disable the timeout
++                                logic. Defaults to 90s, except when
++                                <varname>Type=oneshot</varname> is
++                                used in which case the timeout
++                                is disabled by default.
++                                </para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><varname>TimeoutStopSec=</varname></term>
++                                <listitem><para>Configures the time to
++                                wait for stop. If a service is asked
++                                to stop but does not terminate in the
++                                specified time, it will be terminated
+                                 forcibly via SIGTERM, and after
+                                 another delay of this time with
+-                                SIGKILL. (See
++                                SIGKILL (See
+                                 <varname>KillMode=</varname>
+                                 below.) Takes a unit-less value in seconds, or a
+                                 time span value such as "5min
+                                 20s". Pass 0 to disable the timeout
+-                                logic. Defaults to
+-                                90s, except when <varname>Type=oneshot</varname> is
+-                                used in which case the timeout
+-                                is disabled by default.</para></listitem>
++                                logic. Defaults to 90s.
++                                </para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
++                                <term><varname>TimeoutSec=</varname></term>
++                                <listitem><para>A shorthand for configuring
++                                both <varname>TimeoutStartSec=</varname>
++                                and <varname>TimeoutStopSec=</varname>
++                                to the specified value.
++                                </para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/src/core/dbus-service.c b/src/core/dbus-service.c
+index d840415..42c8a34 100644
+--- a/src/core/dbus-service.c
++++ b/src/core/dbus-service.c
+@@ -124,7 +124,9 @@ static const BusProperty bus_service_properties[] = {
+         { "PIDFile",                bus_property_append_string,       "s", offsetof(Service, pid_file),               true },
+         { "NotifyAccess",           bus_service_append_notify_access, "s", offsetof(Service, notify_access)                },
+         { "RestartUSec",            bus_property_append_usec,         "t", offsetof(Service, restart_usec)                 },
+-        { "TimeoutUSec",            bus_property_append_usec,         "t", offsetof(Service, timeout_usec)                 },
++        { "TimeoutUSec",            bus_property_append_usec,         "t", offsetof(Service, timeout_start_usec)           },
++        { "TimeoutStartUSec",       bus_property_append_usec,         "t", offsetof(Service, timeout_start_usec)           },
++        { "TimeoutStopUSec",        bus_property_append_usec,         "t", offsetof(Service, timeout_stop_usec)            },
+         { "WatchdogUSec",           bus_property_append_usec,         "t", offsetof(Service, watchdog_usec)                },
+         { "WatchdogTimestamp",      bus_property_append_usec,         "t", offsetof(Service, watchdog_timestamp.realtime)  },
+         { "WatchdogTimestampMonotonic",bus_property_append_usec,      "t", offsetof(Service, watchdog_timestamp.monotonic) },
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 1489342..c878476 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -141,7 +141,9 @@ Service.ExecReload,              config_parse_exec,                  SERVICE_EXE
+ Service.ExecStop,                config_parse_exec,                  SERVICE_EXEC_STOP,             offsetof(Service, exec_command)
+ Service.ExecStopPost,            config_parse_exec,                  SERVICE_EXEC_STOP_POST,        offsetof(Service, exec_command)
+ Service.RestartSec,              config_parse_usec,                  0,                             offsetof(Service, restart_usec)
+-Service.TimeoutSec,              config_parse_service_timeout,       0,                             offsetof(Service, timeout_usec)
++Service.TimeoutSec,              config_parse_service_timeout,       0,                             offsetof(Service, timeout_start_usec)
++Service.TimeoutStartSec,         config_parse_service_timeout,       0,                             offsetof(Service, timeout_start_usec)
++Service.TimeoutStopSec,          config_parse_service_timeout,       0,                             offsetof(Service, timeout_stop_usec)
+ Service.WatchdogSec,             config_parse_usec,                  0,                             offsetof(Service, watchdog_usec)
+ Service.StartLimitInterval,      config_parse_usec,                  0,                             offsetof(Service, start_limit.interval)
+ Service.StartLimitBurst,         config_parse_unsigned,              0,                             offsetof(Service, start_limit.burst)
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 2003e1d..099c9c2 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -1418,10 +1418,16 @@ int config_parse_service_timeout(
+ 
+         r = config_parse_usec(filename, line, section, lvalue, ltype, rvalue, data, userdata);
+ 
+-        if (!r)
+-                s->timeout_defined = true;
++        if (r)
++                return r;
+ 
+-        return r;
++        if (streq(lvalue, "TimeoutSec")) {
++                s->start_timeout_defined = true;
++                s->timeout_stop_usec = s->timeout_start_usec;
++        } else if (streq(lvalue, "TimeoutStartSec"))
++                s->start_timeout_defined = true;
++
++        return 0;
+ }
+ 
+ int config_parse_unit_env_file(
+diff --git a/src/core/service.c b/src/core/service.c
+index 2e38d13..d300e34 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -135,7 +135,8 @@ static void service_init(Unit *u) {
+         assert(u);
+         assert(u->load_state == UNIT_STUB);
+ 
+-        s->timeout_usec = DEFAULT_TIMEOUT_USEC;
++        s->timeout_start_usec = DEFAULT_TIMEOUT_USEC;
++        s->timeout_stop_usec = DEFAULT_TIMEOUT_USEC;
+         s->restart_usec = DEFAULT_RESTART_USEC;
+         s->type = _SERVICE_TYPE_INVALID;
+ 
+@@ -914,9 +915,13 @@ static int service_load_sysv_path(Service *s, const char *path) {
+                 UNIT(s)->default_dependencies = false;
+ 
+                 /* Don't timeout special services during boot (like fsck) */
+-                s->timeout_usec = 0;
+-        } else
+-                s->timeout_usec = DEFAULT_SYSV_TIMEOUT_USEC;
++                s->timeout_start_usec = 0;
++                s->timeout_stop_usec = 0;
++        } else {
++                s->timeout_start_usec = DEFAULT_SYSV_TIMEOUT_USEC;
++                s->timeout_stop_usec = DEFAULT_SYSV_TIMEOUT_USEC;
++        }
++
+ 
+         /* Special setting for all SysV services */
+         s->type = SERVICE_FORKING;
+@@ -1245,9 +1250,9 @@ static int service_load(Unit *u) {
+                 if (s->type == _SERVICE_TYPE_INVALID)
+                         s->type = s->bus_name ? SERVICE_DBUS : SERVICE_SIMPLE;
+ 
+-                /* Oneshot services have disabled timeout by default */
+-                if (s->type == SERVICE_ONESHOT && !s->timeout_defined)
+-                        s->timeout_usec = 0;
++                /* Oneshot services have disabled start timeout by default */
++                if (s->type == SERVICE_ONESHOT && !s->start_timeout_defined)
++                        s->timeout_start_usec = 0;
+ 
+                 service_fix_output(s);
+ 
+@@ -1604,11 +1609,10 @@ static int service_coldplug(Unit *u) {
+                     s->deserialized_state == SERVICE_FINAL_SIGTERM ||
+                     s->deserialized_state == SERVICE_FINAL_SIGKILL ||
+                     s->deserialized_state == SERVICE_AUTO_RESTART) {
+-
+-                        if (s->deserialized_state == SERVICE_AUTO_RESTART || s->timeout_usec > 0) {
++                        if (s->deserialized_state == SERVICE_AUTO_RESTART || s->timeout_start_usec > 0) {
+                                 usec_t k;
+ 
+-                                k = s->deserialized_state == SERVICE_AUTO_RESTART ? s->restart_usec : s->timeout_usec;
++                                k = s->deserialized_state == SERVICE_AUTO_RESTART ? s->restart_usec : s->timeout_start_usec;
+ 
+                                 if ((r = unit_watch_timer(UNIT(s), k, &s->timer_watch)) < 0)
+                                         return r;
+@@ -1754,8 +1758,9 @@ static int service_spawn(
+                 }
+         }
+ 
+-        if (timeout && s->timeout_usec) {
+-                if ((r = unit_watch_timer(UNIT(s), s->timeout_usec, &s->timer_watch)) < 0)
++        if (timeout && s->timeout_start_usec) {
++                r = unit_watch_timer(UNIT(s), s->timeout_start_usec, &s->timer_watch);
++                if (r < 0)
+                         goto fail;
+         } else
+                 unit_unwatch_timer(UNIT(s), &s->timer_watch);
+@@ -2010,9 +2015,11 @@ static void service_enter_signal(Service *s, ServiceState state, ServiceResult f
+         }
+ 
+         if (wait_for_exit) {
+-                if (s->timeout_usec > 0)
+-                        if ((r = unit_watch_timer(UNIT(s), s->timeout_usec, &s->timer_watch)) < 0)
++                if (s->timeout_stop_usec > 0) {
++                        r = unit_watch_timer(UNIT(s), s->timeout_stop_usec, &s->timer_watch);
++                        if (r < 0)
+                                 goto fail;
++                }
+ 
+                 service_set_state(s, state);
+         } else if (state == SERVICE_STOP_SIGTERM || state == SERVICE_STOP_SIGKILL)
+diff --git a/src/core/service.h b/src/core/service.h
+index 48f4dbb..0531fec 100644
+--- a/src/core/service.h
++++ b/src/core/service.h
+@@ -120,7 +120,8 @@ struct Service {
+         char *pid_file;
+ 
+         usec_t restart_usec;
+-        usec_t timeout_usec;
++        usec_t timeout_start_usec;
++        usec_t timeout_stop_usec;
+ 
+         dual_timestamp watchdog_timestamp;
+         usec_t watchdog_usec;
+@@ -164,7 +165,7 @@ struct Service {
+         bool bus_name_good:1;
+         bool forbid_restart:1;
+         bool got_socket_fd:1;
+-        bool timeout_defined:1;
++        bool start_timeout_defined:1;
+ #ifdef HAVE_SYSV_COMPAT
+         bool sysv_has_lsb:1;
+         bool sysv_enabled:1;

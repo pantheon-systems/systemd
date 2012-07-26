@@ -1,0 +1,73 @@
+From 49bf9200bdd680a02ea5c6107716fdb5e2d4b4e2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 17 Sep 2012 22:14:24 +0200
+Subject: [PATCH] log: avoid function loop
+
+https://bugs.freedesktop.org/show_bug.cgi?id=54766
+(cherry picked from commit cd15c4182b2e39bac51afc1c839f9a9f64d1d78f)
+---
+ src/shared/log.c | 19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
+
+diff --git a/src/shared/log.c b/src/shared/log.c
+index a2fa653..4ec7b8f 100644
+--- a/src/shared/log.c
++++ b/src/shared/log.c
+@@ -72,14 +72,9 @@ static int log_open_console(void) {
+                 return 0;
+ 
+         if (getpid() == 1) {
+-
+                 console_fd = open_terminal("/dev/console", O_WRONLY|O_NOCTTY|O_CLOEXEC);
+-                if (console_fd < 0) {
+-                        log_error("Failed to open /dev/console for logging: %s", strerror(-console_fd));
++                if (console_fd < 0)
+                         return console_fd;
+-                }
+-
+-                log_debug("Successfully opened /dev/console for logging.");
+         } else
+                 console_fd = STDERR_FILENO;
+ 
+@@ -101,12 +96,8 @@ static int log_open_kmsg(void) {
+                 return 0;
+ 
+         kmsg_fd = open("/dev/kmsg", O_WRONLY|O_NOCTTY|O_CLOEXEC);
+-        if (kmsg_fd < 0) {
+-                log_error("Failed to open /dev/kmsg for logging: %s", strerror(errno));
++        if (kmsg_fd < 0)
+                 return -errno;
+-        }
+-
+-        log_debug("Successfully opened /dev/kmsg for logging.");
+ 
+         return 0;
+ }
+@@ -173,13 +164,10 @@ static int log_open_syslog(void) {
+         } else
+                 syslog_is_stream = false;
+ 
+-        log_debug("Successfully opened syslog for logging.");
+-
+         return 0;
+ 
+ fail:
+         log_close_syslog();
+-        log_debug("Failed to open syslog for logging: %s", strerror(-r));
+         return r;
+ }
+ 
+@@ -214,13 +202,10 @@ static int log_open_journal(void) {
+                 goto fail;
+         }
+ 
+-        log_debug("Successfully opened journal for logging.");
+-
+         return 0;
+ 
+ fail:
+         log_close_journal();
+-        log_debug("Failed to open journal for logging: %s", strerror(-r));
+         return r;
+ }
+ 

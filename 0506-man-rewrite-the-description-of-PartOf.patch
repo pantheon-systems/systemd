@@ -1,0 +1,41 @@
+From 6aa1a75b61970693d86e4f12ec6e98fd0ca6cb8b Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 26 Jul 2012 09:34:27 +0200
+Subject: [PATCH] man: rewrite the description of PartOf (cherry picked from
+ commit f3d52e8cf23582d9150bd62a05dbedb8dd102f9c)
+
+---
+ man/systemd.unit.xml | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 5b708b3..7542052 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -429,16 +429,16 @@
+                         <varlistentry>
+                                 <term><varname>PartOf=</varname></term>
+ 
+-                                 <listitem><para>Configures dependency
+-                                 on other unit. When systemd stops or
+-                                 restarts unit listed here, stop or
+-                                 restart is propagated to dependent
+-                                 units. Note that this is one way
+-                                 dependency and changes to dependent
+-                                 units does not affect listed unit. If
+-                                 something else is desired, please
+-                                 use some other type of dependency.
+-                                 </para></listitem>
++                                <listitem><para>Configures dependencies
++                                similar to <varname>Requires=</varname>,
++                                but limited to stopping and restarting
++                                of units. When systemd stops or restarts
++                                the units listed here, the action is
++                                propagated to this unit.
++                                Note that this is a one way dependency -
++                                changes to this unit do not affect the
++                                listed units.
++                                </para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>

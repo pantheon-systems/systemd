@@ -1,0 +1,30 @@
+From de3ae467f065df30b425e65294be8cac4ed3bcc0 Mon Sep 17 00:00:00 2001
+From: Colin Walters <walters@verbum.org>
+Date: Thu, 13 Sep 2012 10:51:30 -0400
+Subject: [PATCH] update-utmp: Don't error out on runlevel updates if utmp
+ doesn't exist
+
+Other parts of the code handle utmp not existing, so let's be
+consistent.  At the moment my GNOME-OSTree builds don't have utmp.
+(cherry picked from commit 55f2dca329afd0dcdc4793ce3e945cb8af653937)
+---
+ src/update-utmp/update-utmp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/update-utmp/update-utmp.c b/src/update-utmp/update-utmp.c
+index 4b38a78..a71bfaa 100644
+--- a/src/update-utmp/update-utmp.c
++++ b/src/update-utmp/update-utmp.c
+@@ -343,8 +343,10 @@ static int on_runlevel(Context *c) {
+ #endif
+ 
+         if ((q = utmp_put_runlevel(runlevel, previous)) < 0) {
+-                log_error("Failed to write utmp record: %s", strerror(-q));
+-                r = q;
++                if (q != -ESRCH && q != -ENOENT) {
++                        log_error("Failed to write utmp record: %s", strerror(-q));
++                        r = q;
++                }
+         }
+ 
+         return r;

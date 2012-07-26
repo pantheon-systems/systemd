@@ -1,0 +1,26 @@
+From 9e2345393982a3025b7104dc7e031827d7d4f733 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 24 Sep 2012 14:55:25 +0200
+Subject: [PATCH] rules: only mark MD disks, not partitions, with
+ SYSTEMD_READY=0 (cherry picked from commit
+ d2fff1ced447c09c6601a6617300467ccd81660b)
+
+---
+ src/99-systemd.rules.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/99-systemd.rules.in b/src/99-systemd.rules.in
+index 8ef7b8f..a1d6f1b 100644
+--- a/src/99-systemd.rules.in
++++ b/src/99-systemd.rules.in
+@@ -20,8 +20,8 @@ SUBSYSTEM=="block", KERNEL!="ram*|loop*", ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=
+ SUBSYSTEM=="block", KERNEL!="ram*|loop*", ENV{DM_UUID}=="CRYPT-*", ENV{ID_PART_TABLE_TYPE}=="", ENV{ID_FS_USAGE}=="", ENV{SYSTEMD_READY}="0"
+ 
+ # Ignore raid devices that are not yet assembled and started
+-SUBSYSTEM=="block", KERNEL=="md*", TEST!="md/array_state", ENV{SYSTEMD_READY}="0"
+-SUBSYSTEM=="block", KERNEL=="md*", ATTR{md/array_state}=="|clear|inactive", ENV{SYSTEMD_READY}="0"
++SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL=="md*", TEST!="md/array_state", ENV{SYSTEMD_READY}="0"
++SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL=="md*", ATTR{md/array_state}=="|clear|inactive", ENV{SYSTEMD_READY}="0"
+ 
+ # Ignore nbd devices in the "add" event, with "change" the nbd is ready
+ ACTION=="add", SUBSYSTEM=="block", KERNEL=="nbd*", ENV{SYSTEMD_READY}="0"

@@ -1,0 +1,25 @@
+From 71041ee5a4c35078194f4a1a07a6ef5add230d24 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 15 Sep 2012 12:58:48 -0400
+Subject: [PATCH] socket: prevent signed integer overflow
+
+src/core/socket.c:588:25: error: overflow in implicit constant conversion
+src/core/socket.c:589:17: error: overflow in implicit constant conversion
+(cherry picked from commit c65a0b146652cac52fe3c43f7cb8fe6a2ac3e063)
+---
+ src/core/socket.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 1196e64..2b1cf52 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -578,7 +578,7 @@ static int instance_from_socket(int fd, unsigned nr, char **instance) {
+         }
+ 
+         case AF_INET6: {
+-                static const char ipv4_prefix[] = {
++                static const unsigned char ipv4_prefix[] = {
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF
+                 };
+ 

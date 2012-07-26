@@ -1,0 +1,374 @@
+From 58a8868845195a6621e2daffe7d53eb5a79bdba2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 25 Jun 2012 20:16:15 +0200
+Subject: [PATCH] cryptsetup: fix escaping when generating cryptsetup units
+ (cherry picked from commit
+ 35eb6b124ebdf82bd77aad6e44962a9a039c4d33)
+
+Conflicts:
+	TODO
+	src/cryptsetup/cryptsetup-generator.c
+---
+ src/core/unit.c                       |   3 +-
+ src/cryptsetup/cryptsetup-generator.c |   2 +-
+ src/shared/unit-name.c                | 168 ++++++++++++----------------------
+ src/shared/unit-name.h                |   3 +-
+ src/test/test-unit-name.c             |  51 +++++++++++
+ 5 files changed, 115 insertions(+), 112 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 7b54df3..b810f8f 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2507,7 +2507,8 @@ int unit_add_node_link(Unit *u, const char *what, bool wants) {
+         if (!is_device_path(what))
+                 return 0;
+ 
+-        if (!(e = unit_name_build_escape(what+1, NULL, ".device")))
++        e = unit_name_from_path(what, ".device");
++        if (!e)
+                 return -ENOMEM;
+ 
+         r = manager_load_unit(u->manager, e, NULL, NULL, &device);
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index 4c1d04c..48f9fa4 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -76,7 +76,7 @@ static int create_disk(
+         noauto = has_option(options, "noauto");
+         nofail = has_option(options, "nofail");
+ 
+-        n = unit_name_build_escape("cryptsetup", name, ".service");
++        n = unit_name_from_path_instance("cryptsetup", name, ".service");
+         if (!n) {
+                 r = -ENOMEM;
+                 log_error("Failed to allocate unit name.");
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index 8db0a6e..fb31d19 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -140,7 +140,8 @@ int unit_name_to_instance(const char *n, char **instance) {
+         assert(instance);
+ 
+         /* Everything past the first @ and before the last . is the instance */
+-        if (!(p = strchr(n, '@'))) {
++        p = strchr(n, '@');
++        if (!p) {
+                 *instance = NULL;
+                 return 0;
+         }
+@@ -148,7 +149,8 @@ int unit_name_to_instance(const char *n, char **instance) {
+         assert_se(d = strrchr(n, '.'));
+         assert(p < d);
+ 
+-        if (!(i = strndup(p+1, d-p-1)))
++        i = strndup(p+1, d-p-1);
++        if (!i)
+                 return -ENOMEM;
+ 
+         *instance = i;
+@@ -239,50 +241,6 @@ static char *do_escape(const char *f, char *t) {
+         return t;
+ }
+ 
+-char *unit_name_build_escape(const char *prefix, const char *instance, const char *suffix) {
+-        char *r, *t;
+-        size_t a, b, c;
+-
+-        assert(prefix);
+-        assert(suffix);
+-
+-        /* Takes a arbitrary string for prefix and instance plus a
+-         * suffix and makes a nice string suitable as unit name of it,
+-         * escaping all weird chars on the way.
+-         *
+-         * / becomes -, and all chars not allowed in a unit name get
+-         * escaped as \xFF, including \ and -, of course. This
+-         * escaping is hence reversible.
+-         *
+-         * This is primarily useful to make nice unit names from
+-         * strings, but is actually useful for any kind of string.
+-         */
+-
+-        a = strlen(prefix);
+-        c = strlen(suffix);
+-
+-        if (instance) {
+-                b = strlen(instance);
+-
+-                r = new(char, a*4 + 1 + b*4 + c + 1);
+-                if (!r)
+-                        return NULL;
+-
+-                t = do_escape(prefix, r);
+-                *(t++) = '@';
+-                t = do_escape(instance, t);
+-        } else {
+-
+-                if (!(r = new(char, a*4 + c + 1)))
+-                        return NULL;
+-
+-                t = do_escape(prefix, r);
+-        }
+-
+-        strcpy(t, suffix);
+-        return r;
+-}
+-
+ char *unit_name_escape(const char *f) {
+         char *r, *t;
+ 
+@@ -329,6 +287,49 @@ char *unit_name_unescape(const char *f) {
+         return r;
+ }
+ 
++char *unit_name_path_escape(const char *f) {
++        char *p, *e;
++
++        assert(f);
++
++        p = strdup(f);
++        if (!p)
++                return NULL;
++
++        path_kill_slashes(p);
++
++        if (streq(p, "/")) {
++                free(p);
++                return strdup("-");
++        }
++
++        e = unit_name_escape(p[0] == '/' ? p + 1 : p);
++        free(p);
++
++        return e;
++}
++
++char *unit_name_path_unescape(const char *f) {
++        char *e;
++
++        assert(f);
++
++        e = unit_name_unescape(f);
++        if (!e)
++                return NULL;
++
++        if (e[0] != '/') {
++                char *w;
++
++                w = strappend("/", e);
++                free(e);
++
++                return w;
++        }
++
++        return e;
++}
++
+ bool unit_name_is_template(const char *n) {
+         const char *p;
+ 
+@@ -369,14 +370,16 @@ char *unit_name_replace_instance(const char *f, const char *i) {
+ 
+                 b = strlen(i);
+ 
+-                if (!(r = new(char, a + 1 + b + strlen(e) + 1)))
++                r = new(char, a + 1 + b + strlen(e) + 1);
++                if (!r)
+                         return NULL;
+ 
+                 k = mempcpy(r, f, a + 1);
+                 k = mempcpy(k, i, b);
+         } else {
+ 
+-                if (!(r = new(char, a + strlen(e) + 1)))
++                r = new(char, a + strlen(e) + 1);
++                if (!r)
+                         return NULL;
+ 
+                 k = mempcpy(r, f, a);
+@@ -413,20 +416,11 @@ char *unit_name_from_path(const char *path, const char *suffix) {
+         assert(path);
+         assert(suffix);
+ 
+-        p = strdup(path);
++        p = unit_name_path_escape(path);
+         if (!p)
+                 return NULL;
+ 
+-        path_kill_slashes(p);
+-
+-        path = p[0] == '/' ? p + 1 : p;
+-
+-        if (path[0] == 0) {
+-                free(p);
+-                return strappend("-", suffix);
+-        }
+-
+-        r = unit_name_build_escape(path, NULL, suffix);
++        r = strappend(p, suffix);
+         free(p);
+ 
+         return r;
+@@ -435,22 +429,15 @@ char *unit_name_from_path(const char *path, const char *suffix) {
+ char *unit_name_from_path_instance(const char *prefix, const char *path, const char *suffix) {
+         char *p, *r;
+ 
++        assert(prefix);
+         assert(path);
+         assert(suffix);
+ 
+-        if (!(p = strdup(path)))
++        p = unit_name_path_escape(path);
++        if (!p)
+                 return NULL;
+ 
+-        path_kill_slashes(p);
+-
+-        path = p[0] == '/' ? p + 1 : p;
+-
+-        if (path[0] == 0) {
+-                free(p);
+-                return unit_name_build_escape(prefix, "-", suffix);
+-        }
+-
+-        r = unit_name_build_escape(prefix, path, suffix);
++        r = join(prefix, "@", p, suffix, NULL);
+         free(p);
+ 
+         return r;
+@@ -465,52 +452,17 @@ char *unit_name_to_path(const char *name) {
+         if (!w)
+                 return NULL;
+ 
+-        e = unit_name_unescape(w);
++        e = unit_name_path_unescape(w);
+         free(w);
+ 
+-        if (!e)
+-                return NULL;
+-
+-        if (e[0] != '/') {
+-                w = strappend("/", e);
+-                free(e);
+-
+-                if (!w)
+-                        return NULL;
+-
+-                return w;
+-        }
+-
+-        return e;
+-}
+-
+-char *unit_name_path_unescape(const char *f) {
+-        char *e;
+-
+-        assert(f);
+-
+-        e = unit_name_unescape(f);
+-        if (!e)
+-                return NULL;
+-
+-        if (e[0] != '/') {
+-                char *w;
+-
+-                w = strappend("/", e);
+-                free(e);
+-
+-                if (!w)
+-                        return NULL;
+-
+-                return w;
+-        }
+-
+         return e;
+ }
+ 
+ char *unit_dbus_path_from_name(const char *name) {
+         char *e, *p;
+ 
++        assert(name);
++
+         e = bus_path_escape(name);
+         if (!e)
+                 return NULL;
+diff --git a/src/shared/unit-name.h b/src/shared/unit-name.h
+index 8e6f692..fb6bdef 100644
+--- a/src/shared/unit-name.h
++++ b/src/shared/unit-name.h
+@@ -73,11 +73,10 @@ UnitType unit_name_to_type(const char *n);
+ char *unit_name_change_suffix(const char *n, const char *suffix);
+ 
+ char *unit_name_build(const char *prefix, const char *instance, const char *suffix);
+-char *unit_name_build_escape(const char *prefix, const char *instance, const char *suffix);
+ 
+ char *unit_name_escape(const char *f);
+ char *unit_name_unescape(const char *f);
+-
++char *unit_name_path_escape(const char *f);
+ char *unit_name_path_unescape(const char *f);
+ 
+ bool unit_name_is_template(const char *n);
+diff --git a/src/test/test-unit-name.c b/src/test/test-unit-name.c
+index 9d636af..392e358 100644
+--- a/src/test/test-unit-name.c
++++ b/src/test/test-unit-name.c
+@@ -29,6 +29,57 @@
+ int main(int argc, char* argv[]) {
+         char *t, *k;
+ 
++        t = unit_name_from_path("/waldo", ".mount");
++        puts(t);
++        k = unit_name_to_path(t);
++        puts(k);
++        free(k);
++        free(t);
++
++        t = unit_name_from_path("/waldo/quuix", ".mount");
++        puts(t);
++        k = unit_name_to_path(t);
++        puts(k);
++        free(k);
++        free(t);
++
++        t = unit_name_from_path("/waldo/quuix/", ".mount");
++        puts(t);
++        k = unit_name_to_path(t);
++        puts(k);
++        free(k);
++        free(t);
++
++        t = unit_name_from_path("/", ".mount");
++        puts(t);
++        k = unit_name_to_path(t);
++        puts(k);
++        free(k);
++        free(t);
++
++        t = unit_name_from_path("///", ".mount");
++        puts(t);
++        k = unit_name_to_path(t);
++        puts(k);
++        free(k);
++        free(t);
++
++        t = unit_name_from_path_instance("waldo", "/waldo", ".mount");
++        puts(t);
++        free(t);
++
++        t = unit_name_from_path_instance("waldo", "/waldo////quuix////", ".mount");
++        puts(t);
++        free(t);
++
++        t = unit_name_from_path_instance("waldo", "/", ".mount");
++        puts(t);
++        free(t);
++
++        t = unit_name_from_path_instance("wa--ldo", "/--", ".mount");
++        puts(t);
++        free(t);
++
+         assert_se(t = unit_name_mangle("/home"));
+         assert_se(k = unit_name_mangle(t));
+         puts(t);

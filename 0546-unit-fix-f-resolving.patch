@@ -1,0 +1,41 @@
+From daeb571274741a10bfb3c95c528b38470a51c665 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 18 Sep 2012 11:18:37 +0200
+Subject: [PATCH] unit: fix %f resolving (cherry picked from commit
+ 99006251161aee07b6a099e3186b4360be66eeaa)
+
+Conflicts:
+	src/core/unit.c
+---
+ src/core/unit.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 857b92d..fe4fa77 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2178,7 +2178,7 @@ static char *specifier_filename(char specifier, void *data, void *userdata) {
+         if (u->instance)
+                 return unit_name_path_unescape(u->instance);
+ 
+-        return unit_name_to_path(u->instance);
++        return unit_name_to_path(u->id);
+ }
+ 
+ static char *specifier_cgroup(char specifier, void *data, void *userdata) {
+@@ -2253,6 +2253,7 @@ char *unit_full_printf(Unit *u, const char *format) {
+         /* This is similar to unit_name_printf() but also supports
+          * unescaping. Also, adds a couple of additional codes:
+          *
++         * %f the the instance if set, otherwise the id
+          * %c cgroup path of unit
+          * %r root cgroup path of this systemd instance (e.g. "/user/lennart/shared/systemd-4711")
+          * %R parent of root cgroup path (e.g. "/usr/lennart/shared")
+@@ -2266,6 +2267,7 @@ char *unit_full_printf(Unit *u, const char *format) {
+                 { 'P', specifier_prefix_unescaped,    NULL },
+                 { 'i', specifier_string,              u->instance },
+                 { 'I', specifier_instance_unescaped,  NULL },
++
+                 { 'f', specifier_filename,            NULL },
+                 { 'c', specifier_cgroup,              NULL },
+                 { 'r', specifier_cgroup_root,         NULL },

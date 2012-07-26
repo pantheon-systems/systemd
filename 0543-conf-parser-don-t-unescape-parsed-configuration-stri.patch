@@ -1,0 +1,86 @@
+From ed13e6cb0f7ff95a5d5dd0150cda236c29ca814d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 17 Sep 2012 21:58:03 +0200
+Subject: [PATCH] conf-parser: don't unescape parsed configuration strings by
+ default
+
+In many cases this might have a negative effect since we drop escaping
+from strings where we better shouldn't have dropped it.
+
+If unescaping makes sense for some settings we can readd it later again,
+on a per-case basis.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=54522
+(cherry picked from commit faa368e3376cb5e3e3c27550fdde652f1d3c9584)
+---
+ src/core/service.c       |  1 -
+ src/core/unit.c          | 10 ++++++----
+ src/shared/conf-parser.c |  2 +-
+ src/shared/util.c        |  2 ++
+ 4 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index b2d493a..d0369da 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -922,7 +922,6 @@ static int service_load_sysv_path(Service *s, const char *path) {
+                 s->timeout_stop_usec = DEFAULT_SYSV_TIMEOUT_USEC;
+         }
+ 
+-
+         /* Special setting for all SysV services */
+         s->type = SERVICE_FORKING;
+         s->remain_after_exit = !s->pid_file;
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 5865405..857b92d 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2516,16 +2516,18 @@ int unit_add_node_link(Unit *u, const char *what, bool wants) {
+ 
+         r = manager_load_unit(u->manager, e, NULL, NULL, &device);
+         free(e);
+-
+         if (r < 0)
+                 return r;
+ 
+-        if ((r = unit_add_two_dependencies(u, UNIT_AFTER, UNIT_BINDS_TO, device, true)) < 0)
++        r = unit_add_two_dependencies(u, UNIT_AFTER, UNIT_BINDS_TO, device, true);
++        if (r < 0)
+                 return r;
+ 
+-        if (wants)
+-                if ((r = unit_add_dependency(device, UNIT_WANTS, u, false)) < 0)
++        if (wants) {
++                r = unit_add_dependency(device, UNIT_WANTS, u, false);
++                if (r < 0)
+                         return r;
++        }
+ 
+         return 0;
+ }
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index 8582f6d..24a853c 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -591,7 +591,7 @@ int config_parse_string(
+         assert(rvalue);
+         assert(data);
+ 
+-        n = cunescape(rvalue);
++        n = strdup(rvalue);
+         if (!n)
+                 return -ENOMEM;
+ 
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 2bdf4a5..af1c9c0 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4038,6 +4038,8 @@ static char *tag_to_udev_node(const char *tagvalue, const char *by) {
+ }
+ 
+ char *fstab_node_to_udev_node(const char *p) {
++        assert(p);
++
+         if (startswith(p, "LABEL="))
+                 return tag_to_udev_node(p+6, "label");
+ 

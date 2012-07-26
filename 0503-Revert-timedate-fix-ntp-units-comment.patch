@@ -1,0 +1,20 @@
+From 4cda8d75b297012e79305d8c3dda1e5a33448a75 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 11 Oct 2012 22:38:40 +0200
+Subject: [PATCH] Revert "timedate: fix ntp-units comment"
+
+This reverts commit ab8a1ee403831f40b815802a0062439d6cb90557.
+---
+ src/timedate/ntp-units | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/timedate/ntp-units b/src/timedate/ntp-units
+index 2a46f66..6fdef44 100644
+--- a/src/timedate/ntp-units
++++ b/src/timedate/ntp-units
+@@ -1,4 +1,4 @@
+-# NTP service implementations, in order of preference
++# NTP ervice implementations, in order for preference
+ 
+ chronyd.service
+ ntpd.service

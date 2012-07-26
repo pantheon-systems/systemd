@@ -1,0 +1,37 @@
+From ad0c112c72e6ad3c5af510b7d54606edf5c0c044 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 19 Sep 2012 09:55:56 +0200
+Subject: [PATCH] mount: reword directory empty warning a bit (cherry picked
+ from commit a99124d92f8a60215f5ea5ed95de9792c1fb3324)
+
+---
+ src/core/automount.c | 2 +-
+ src/core/mount.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index 7312f86..76d99f8 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -504,7 +504,7 @@ static void automount_enter_waiting(Automount *a) {
+         mkdir_p_label(a->where, 0555);
+ 
+         if (dir_is_empty(a->where) <= 0)
+-                log_notice("%s: Directory %s to mount over is not empty, ignoring. (To see the over-mounted files, please manually mount the underlying file system to a secondary location.)", a->meta.id, a->where);
++                log_notice("%s: Directory %s to mount over is not empty, mounting anyway. (To see the over-mounted files, please manually mount the underlying file system to a secondary location.)", a->meta.id, a->where);
+ 
+         if (pipe2(p, O_NONBLOCK|O_CLOEXEC) < 0) {
+                 r = -errno;
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 5ebf5d7..86bf16c 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1012,7 +1012,7 @@ static void mount_enter_mounting(Mount *m) {
+         mkdir_p_label(m->where, m->directory_mode);
+ 
+         if (dir_is_empty(m->where) <= 0)
+-                log_notice("%s: Directory %s to mount over is not empty, ignoring. (To see the over-mounted files, please manually mount the underlying file system to a secondary location.)", m->meta.id, m->where);
++                log_notice("%s: Directory %s to mount over is not empty, mounting anyway. (To see the over-mounted files, please manually mount the underlying file system to a secondary location.)", m->meta.id, m->where);
+ 
+         /* Create the source directory for bind-mounts if needed */
+         p = get_mount_parameters_configured(m);

@@ -1,0 +1,117 @@
+From bbb015bed0b09ddd9e86583f15d8a9366a892c6d Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Fri, 20 Jul 2012 15:55:01 +0200
+Subject: [PATCH] systemd: added new dependency PartOf
+
+This should address TODO item "new dependency type to "group" services
+in a target". Semantic of new dependency is as follows. Once configured
+it creates dependency which will cause that all dependent units get
+stopped if unit they all depend on is stopped or restarted.  Usual use
+case would be configuring PartOf=some.target in template unit file
+and WantedBy=some.target in [Install] section and enabling desired
+number of instances. In this case starting one instance won't pull in
+target but stopping or starting target(in case of WantedBy is properly
+configured) will cause stop/start of all instances.
+(cherry picked from commit 85e9a1010d16064ce435b84f02dc585bc645aade)
+---
+ man/systemd.unit.xml                  | 15 +++++++++++++++
+ src/core/load-fragment-gperf.gperf.m4 |  1 +
+ src/core/transaction.c                | 12 ++++++++++++
+ src/core/unit.c                       |  3 ++-
+ src/core/unit.h                       |  2 ++
+ 5 files changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 698cbe3..5b708b3 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -427,6 +427,21 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>PartOf=</varname></term>
++
++                                 <listitem><para>Configures dependency
++                                 on other unit. When systemd stops or
++                                 restarts unit listed here, stop or
++                                 restart is propagated to dependent
++                                 units. Note that this is one way
++                                 dependency and changes to dependent
++                                 units does not affect listed unit. If
++                                 something else is desired, please
++                                 use some other type of dependency.
++                                 </para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>Conflicts=</varname></term>
+ 
+                                 <listitem><para>Configures negative
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index e6d0db3..1489342 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -108,6 +108,7 @@ Unit.PropagatesReloadTo,         config_parse_unit_deps,             UNIT_PROPAG
+ Unit.PropagateReloadTo,          config_parse_unit_deps,             UNIT_PROPAGATES_RELOAD_TO,     0
+ Unit.ReloadPropagatedFrom,       config_parse_unit_deps,             UNIT_RELOAD_PROPAGATED_FROM,   0
+ Unit.PropagateReloadFrom,        config_parse_unit_deps,             UNIT_RELOAD_PROPAGATED_FROM,   0
++Unit.PartOf,                     config_parse_unit_deps,             UNIT_PART_OF,                  0
+ Unit.RequiresMountsFor,          config_parse_unit_requires_mounts_for, 0,                          offsetof(Unit, requires_mounts_for)
+ Unit.StopWhenUnneeded,           config_parse_bool,                  0,                             offsetof(Unit, stop_when_unneeded)
+ Unit.RefuseManualStart,          config_parse_bool,                  0,                             offsetof(Unit, refuse_manual_start)
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index a1cf706..1f8d803 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -994,6 +994,18 @@ int transaction_add_job_and_dependencies(
+                                                 dbus_error_free(e);
+                                 }
+                         }
++
++                        SET_FOREACH(dep, ret->unit->dependencies[UNIT_CONSISTS_OF], i) {
++                                r = transaction_add_job_and_dependencies(tr, type, dep, ret, true, override, false, false, ignore_order, e);
++                                if (r < 0) {
++                                        if (r != -EBADR)
++                                                goto fail;
++
++                                        if (e)
++                                                dbus_error_free(e);
++                                }
++                        }
++
+                 }
+ 
+                 if (type == JOB_RELOAD) {
+diff --git a/src/core/unit.c b/src/core/unit.c
+index ca3892c..f0880a3 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1606,7 +1606,8 @@ int unit_add_dependency(Unit *u, UnitDependency d, Unit *other, bool add_referen
+                 [UNIT_TRIGGERS] = UNIT_TRIGGERED_BY,
+                 [UNIT_TRIGGERED_BY] = UNIT_TRIGGERS,
+                 [UNIT_PROPAGATES_RELOAD_TO] = UNIT_RELOAD_PROPAGATED_FROM,
+-                [UNIT_RELOAD_PROPAGATED_FROM] = UNIT_PROPAGATES_RELOAD_TO
++                [UNIT_RELOAD_PROPAGATED_FROM] = UNIT_PROPAGATES_RELOAD_TO,
++                [UNIT_PART_OF] = UNIT_CONSISTS_OF
+         };
+         int r, q = 0, v = 0, w = 0;
+ 
+diff --git a/src/core/unit.h b/src/core/unit.h
+index ed31c62..992afa2 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -77,12 +77,14 @@ enum UnitDependency {
+         UNIT_REQUISITE_OVERRIDABLE,
+         UNIT_WANTS,
+         UNIT_BINDS_TO,
++        UNIT_PART_OF,
+ 
+         /* Inverse of the above */
+         UNIT_REQUIRED_BY,             /* inverse of 'requires' and 'requisite' is 'required_by' */
+         UNIT_REQUIRED_BY_OVERRIDABLE, /* inverse of 'requires_overridable' and 'requisite_overridable' is 'soft_required_by' */
+         UNIT_WANTED_BY,               /* inverse of 'wants' */
+         UNIT_BOUND_BY,                /* inverse of 'binds_to' */
++        UNIT_CONSISTS_OF,             /* inverse of 'part_of' */
+ 
+         /* Negative dependencies */
+         UNIT_CONFLICTS,               /* inverse of 'conflicts' is 'conflicted_by' */

@@ -1,0 +1,28 @@
+From c51b257db0bc1434f1dedb031a3feb14c2bb4ac6 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Fri, 21 Sep 2012 10:22:46 +0200
+Subject: [PATCH] shared: call va_end in all cases (cherry picked from commit
+ e98055de981b568c31f18f470181ae166b56f172)
+
+Conflicts:
+	src/shared/log.c
+---
+ src/shared/util.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 6f2780a..0d48691 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5114,8 +5114,10 @@ char *join(const char *x, ...) {
+                                 break;
+ 
+                         n = strlen(t);
+-                        if (n > ((size_t) -1) - l)
++                        if (n > ((size_t) -1) - l) {
++                                va_end(ap);
+                                 return NULL;
++                        }
+ 
+                         l += n;
+                 }

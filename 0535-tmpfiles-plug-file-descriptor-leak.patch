@@ -1,0 +1,24 @@
+From 1c8ef96fcfbcd108f5f024a159a5104fe5f84f39 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Wed, 12 Sep 2012 16:21:00 -0400
+Subject: [PATCH] tmpfiles: plug file descriptor leak.
+
+Introduced in d4e9eb91.
+(cherry picked from commit 3612fbc1e4ae57af0783cc82a56917bcd29a0431)
+---
+ src/tmpfiles/tmpfiles.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index dfbd6ea..0540572 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -506,6 +506,8 @@ static int write_one_file(Item *i, const char *path) {
+                 }
+         }
+ 
++        close_nointr_nofail(fd);
++
+         if (stat(path, &st) < 0) {
+                 log_error("stat(%s) failed: %m", path);
+                 return -errno;

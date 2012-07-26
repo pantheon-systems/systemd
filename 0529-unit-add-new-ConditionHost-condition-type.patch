@@ -1,0 +1,342 @@
+From 567df5544e3fb6d4e79aaca99f93381df332798a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 22 Aug 2012 01:51:53 +0200
+Subject: [PATCH] unit: add new ConditionHost= condition type (cherry picked
+ from commit c0d6e764d107a81a6439c41edbe92790623ed7de)
+
+Conflicts:
+	TODO
+---
+ man/systemd.unit.xml                  | 112 +++++++++++++++++++++++-----------
+ src/core/condition.c                  |  31 ++++++++++
+ src/core/condition.h                  |   1 +
+ src/core/load-fragment-gperf.gperf.m4 |   1 +
+ src/core/load-fragment.c              |   9 ++-
+ 5 files changed, 117 insertions(+), 37 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 7542052..5f942b9 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -561,7 +561,7 @@
+                                 <term><varname>RequiresMountsFor=</varname></term>
+ 
+                                 <listitem><para>Takes a space
+-                                separated list of paths. Automatically
++                                separated list of absolute paths. Automatically
+                                 adds dependencies of type
+                                 <varname>Requires=</varname> and
+                                 <varname>After=</varname> for all
+@@ -735,65 +735,86 @@
+                                 <term><varname>ConditionVirtualization=</varname></term>
+                                 <term><varname>ConditionSecurity=</varname></term>
+                                 <term><varname>ConditionCapability=</varname></term>
++                                <term><varname>ConditionHost=</varname></term>
+                                 <term><varname>ConditionNull=</varname></term>
+ 
+                                 <listitem><para>Before starting a unit
+                                 verify that the specified condition is
+-                                true. With
++                                true. If it is not true the starting
++                                of the unit will be skipped, however
++                                all ordering dependencies of it are
++                                still respected. A failing condition
++                                will not result in the unit being
++                                moved into a failure state. The
++                                condition is checked at the time the
++                                queued start job is to be
++                                executed.</para>
++
++                                <para>With
+                                 <varname>ConditionPathExists=</varname>
+-                                a file existence condition can be
++                                a file existence condition is
+                                 checked before a unit is started. If
+                                 the specified absolute path name does
+-                                not exist, startup of a unit will not
+-                                actually happen, however the unit is
+-                                still useful for ordering purposes in
+-                                this case. The condition is checked at
+-                                the time the queued start job is to be
+-                                executed. If the absolute path name
+-                                passed to
++                                not exist the condition will
++                                fail. If the absolute path name passed
++                                to
+                                 <varname>ConditionPathExists=</varname>
+                                 is prefixed with an exclamation mark
+-                                (!), the test is negated, and the unit
++                                ('!'), the test is negated, and the unit
+                                 is only started if the path does not
+-                                exist.
+-                                <varname>ConditionPathExistsGlob=</varname>
+-                                works in a similar way, but checks for
+-                                the existence of at least one file or
+-                                directory matching the specified
+-                                globbing
+-                                pattern. <varname>ConditionPathIsDirectory=</varname>
++                                exist.</para>
++
++                                <para><varname>ConditionPathExistsGlob=</varname>
++                                is similar to
++                                <varname>ConditionPathExists=</varname>,
++                                but checks for the existence of at
++                                least one file or directory matching
++                                the specified globbing pattern.</para>
++
++                                <para><varname>ConditionPathIsDirectory=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+                                 exists and is a
+-                                directory. <varname>ConditionPathIsSymbolicLink=</varname>
++                                directory.</para>
++
++                                <para><varname>ConditionPathIsSymbolicLink=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+                                 exists and is a symbolic
+-                                link. <varname>ConditionPathIsMountPoint=</varname>
++                                link.</para>
++
++                                <para><varname>ConditionPathIsMountPoint=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+                                 exists and is a mount
+-                                point. <varname>ConditionPathIsReadWrite=</varname>
++                                point.</para>
++
++                                <para><varname>ConditionPathIsReadWrite=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether the underlying
+-                                file system is read and writable
++                                file system is readable and writable
+                                 (i.e. not mounted
+-                                read-only). <varname>ConditionFileIsExecutable=</varname>
++                                read-only).</para>
++
++                                <para><varname>ConditionFileIsExecutable=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+                                 exists, is a regular file and marked
+-                                executable.
+-                                <varname>ConditionDirectoryNotEmpty=</varname>
++                                executable.</para>
++
++                                <para><varname>ConditionDirectoryNotEmpty=</varname>
+                                 is similar to
+                                 <varname>ConditionPathExists=</varname>
+                                 but verifies whether a certain path
+                                 exists and is a non-empty
+-                                directory. Similarly
++                                directory.</para>
++
++                                <para>Similarly,
+                                 <varname>ConditionKernelCommandLine=</varname>
+                                 may be used to check whether a
+                                 specific kernel command line option is
+@@ -801,14 +822,16 @@
+                                 exclamation mark unset). The argument
+                                 must either be a single word, or an
+                                 assignment (i.e. two words, separated
+-                                by the equality sign). In the former
++                                '='). In the former
+                                 case the kernel command line is
+                                 searched for the word appearing as is,
+                                 or as left hand side of an
+                                 assignment. In the latter case the
+                                 exact assignment is looked for with
+                                 right and left hand side
+-                                matching. <varname>ConditionVirtualization=</varname>
++                                matching.</para>
++
++                                <para><varname>ConditionVirtualization=</varname>
+                                 may be used to check whether the
+                                 system is executed in a virtualized
+                                 environment and optionally test
+@@ -818,7 +841,7 @@
+                                 any virtualized environment, or one of
+                                 <varname>vm</varname> and
+                                 <varname>container</varname> to test
+-                                against a specific type of
++                                against a generic type of
+                                 virtualization solution, or one of
+                                 <varname>qemu</varname>,
+                                 <varname>kvm</varname>,
+@@ -837,15 +860,18 @@
+                                 virtualization technologies are nested
+                                 only the innermost is considered. The
+                                 test may be negated by prepending an
+-                                exclamation mark.
+-                                <varname>ConditionSecurity=</varname>
++                                exclamation mark.</para>
++
++                                <para><varname>ConditionSecurity=</varname>
+                                 may be used to check whether the given
+                                 security module is enabled on the
+                                 system.  Currently the only recognized
+                                 value is <varname>selinux</varname>.
+                                 The test may be negated by prepending
+                                 an exclamation
+-                                mark. <varname>ConditionCapability=</varname>
++                                mark.</para>
++
++                                <para><varname>ConditionCapability=</varname>
+                                 may be used to check whether the given
+                                 capability exists in the capability
+                                 bounding set of the service manager
+@@ -856,14 +882,32 @@
+                                 for details). Pass a capability name
+                                 such as <literal>CAP_MKNOD</literal>,
+                                 possibly prefixed with an exclamation
+-                                mark to negate the check. Finally,
++                                mark to negate the check.</para>
++
++                                <para><varname>ConditionHost=</varname>
++                                may be used to match against the
++                                host name or machine ID of the
++                                host. This either takes a host name
++                                string (optionally with shell style
++                                globs) which is tested against the
++                                locally set host name as returned by
++                                <citerefentry><refentrytitle>gethostname</refentrytitle><manvolnum>2</manvolnum></citerefentry>,
++                                or a machine ID formatted as string
++                                (see
++                                <citerefentry><refentrytitle>machine-id</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
++                                The test may be negated by prepending
++                                an exclamation mark.</para>
++
++                                <para>Finally,
+                                 <varname>ConditionNull=</varname> may
+                                 be used to add a constant condition
+                                 check value to the unit. It takes a
+                                 boolean argument. If set to
+                                 <varname>false</varname> the condition
+                                 will always fail, otherwise
+-                                succeed. If multiple conditions are
++                                succeed.</para>
++
++                                <para>If multiple conditions are
+                                 specified the unit will be executed if
+                                 all of them apply (i.e. a logical AND
+                                 is applied). Condition checks can be
+diff --git a/src/core/condition.c b/src/core/condition.c
+index ae82abd..b4ed2da 100644
+--- a/src/core/condition.c
++++ b/src/core/condition.c
+@@ -25,11 +25,13 @@
+ #include <unistd.h>
+ #include <sys/capability.h>
+ #include <sys/statvfs.h>
++#include <fnmatch.h>
+ 
+ #ifdef HAVE_SELINUX
+ #include <selinux/selinux.h>
+ #endif
+ 
++#include <systemd/sd-id128.h>
+ #include "util.h"
+ #include "condition.h"
+ #include "virt.h"
+@@ -194,6 +196,31 @@ static bool test_capability(const char *parameter) {
+         return !!(capabilities & (1ULL << value));
+ }
+ 
++static bool test_host(const char *parameter) {
++        sd_id128_t x, y;
++        char *h;
++        int r;
++        bool b;
++
++        if (sd_id128_from_string(parameter, &x) >= 0) {
++
++                r = sd_id128_get_machine(&y);
++                if (r < 0)
++                        return false;
++
++                return sd_id128_equal(x, y);
++        }
++
++        h = gethostname_malloc();
++        if (!h)
++                return false;
++
++        b = fnmatch(parameter, h, FNM_CASEFOLD) == 0;
++        free(h);
++
++        return b;
++}
++
+ bool condition_test(Condition *c) {
+         assert(c);
+ 
+@@ -255,6 +282,9 @@ bool condition_test(Condition *c) {
+         case CONDITION_CAPABILITY:
+                 return test_capability(c->parameter) == !c->negate;
+ 
++        case CONDITION_HOST:
++                return test_host(c->parameter) == !c->negate;
++
+         case CONDITION_NULL:
+                 return !c->negate;
+ 
+@@ -323,6 +353,7 @@ static const char* const condition_type_table[_CONDITION_TYPE_MAX] = {
+         [CONDITION_KERNEL_COMMAND_LINE] = "ConditionKernelCommandLine",
+         [CONDITION_VIRTUALIZATION] = "ConditionVirtualization",
+         [CONDITION_SECURITY] = "ConditionSecurity",
++        [CONDITION_HOST] = "ConditionHost",
+         [CONDITION_NULL] = "ConditionNull"
+ };
+ 
+diff --git a/src/core/condition.h b/src/core/condition.h
+index 087010c..0162c22 100644
+--- a/src/core/condition.h
++++ b/src/core/condition.h
+@@ -39,6 +39,7 @@ typedef enum ConditionType {
+         CONDITION_VIRTUALIZATION,
+         CONDITION_SECURITY,
+         CONDITION_CAPABILITY,
++        CONDITION_HOST,
+         CONDITION_NULL,
+         _CONDITION_TYPE_MAX,
+         _CONDITION_TYPE_INVALID = -1
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index c878476..997bd92 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -131,6 +131,7 @@ Unit.ConditionKernelCommandLine, config_parse_unit_condition_string, CONDITION_K
+ Unit.ConditionVirtualization,    config_parse_unit_condition_string, CONDITION_VIRTUALIZATION,      0
+ Unit.ConditionSecurity,          config_parse_unit_condition_string, CONDITION_SECURITY,            0
+ Unit.ConditionCapability,        config_parse_unit_condition_string, CONDITION_CAPABILITY,          0
++Unit.ConditionHost,              config_parse_unit_condition_string, CONDITION_HOST,                0
+ Unit.ConditionNull,              config_parse_unit_condition_null,   0,                             0
+ m4_dnl
+ Service.PIDFile,                 config_parse_unit_path_printf,      0,                             offsetof(Service, pid_file)
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 099c9c2..9fa749f 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -1558,13 +1558,16 @@ int config_parse_unit_condition_string(
+         assert(rvalue);
+         assert(data);
+ 
+-        if ((trigger = rvalue[0] == '|'))
++        trigger = rvalue[0] == '|';
++        if (trigger)
+                 rvalue++;
+ 
+-        if ((negate = rvalue[0] == '!'))
++        negate = rvalue[0] == '!';
++        if (negate)
+                 rvalue++;
+ 
+-        if (!(c = condition_new(cond, rvalue, trigger, negate)))
++        c = condition_new(cond, rvalue, trigger, negate);
++        if (!c)
+                 return -ENOMEM;
+ 
+         LIST_PREPEND(Condition, conditions, u->conditions, c);

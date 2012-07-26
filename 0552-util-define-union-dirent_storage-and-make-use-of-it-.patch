@@ -1,0 +1,322 @@
+From 77add7ed8cfb796a7eed18e2451351cb89e5ef69 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 19 Sep 2012 22:21:09 +0200
+Subject: [PATCH] util: define union dirent_storage and make use of it
+ everywhere
+
+Make sure to allocate enough space for readdir_r().
+
+https://bugzilla.redhat.com/show_bug.cgi?id=858754
+(cherry picked from commit 7d5e9c0f60cddf01ec803012cbdc02d2f55b78c1)
+
+Conflicts:
+	src/journal/journal-vacuum.c
+	src/journal/sd-journal.c
+	src/shared/util.c
+---
+ src/delta/delta.c        |  5 +++--
+ src/journal/journald.c   |  5 +++--
+ src/journal/sd-journal.c | 10 ++++++----
+ src/login/sd-login.c     |  5 +++--
+ src/shared/conf-files.c  |  5 +++--
+ src/shared/hwclock.c     |  5 +++--
+ src/shared/install.c     | 15 +++++++++------
+ src/shared/util.c        | 17 +++++++++++------
+ src/shared/util.h        |  7 +++++++
+ src/tmpfiles/tmpfiles.c  |  5 +++--
+ 10 files changed, 51 insertions(+), 28 deletions(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 4694fc8..65dcedd 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -176,11 +176,12 @@ static int enumerate_dir(Hashmap *top, Hashmap *bottom, const char *path) {
+         }
+ 
+         for (;;) {
+-                struct dirent *de, buf;
++                struct dirent *de;
++                union dirent_storage buf;
+                 int k;
+                 char *p;
+ 
+-                k = readdir_r(d, &buf, &de);
++                k = readdir_r(d, &buf.de, &de);
+                 if (k != 0) {
+                         r = -k;
+                         goto finish;
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index a538047..78e3278 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -156,9 +156,10 @@ static uint64_t available_space(Server *s) {
+ 
+         for (;;) {
+                 struct stat st;
+-                struct dirent buf, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+ 
+-                r = readdir_r(d, &buf, &de);
++                r = readdir_r(d, &buf.de, &de);
+                 if (r != 0)
+                         break;
+ 
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index c67069a..5a82fbd 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -1064,9 +1064,10 @@ static int add_directory(sd_journal *j, const char *prefix, const char *dir) {
+         free(fn);
+ 
+         for (;;) {
+-                struct dirent buf, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+ 
+-                r = readdir_r(d, &buf, &de);
++                r = readdir_r(d, &buf.de, &de);
+                 if (r != 0 || !de)
+                         break;
+ 
+@@ -1201,10 +1202,11 @@ _public_ int sd_journal_open(sd_journal **ret, int flags) {
+                 add_root_wd(j, p);
+ 
+                 for (;;) {
+-                        struct dirent buf, *de;
++                        struct dirent *de;
++                        union dirent_storage buf;
+                         sd_id128_t id;
+ 
+-                        r = readdir_r(d, &buf, &de);
++                        r = readdir_r(d, &buf.de, &de);
+                         if (r != 0 || !de)
+                                 break;
+ 
+diff --git a/src/login/sd-login.c b/src/login/sd-login.c
+index d47a49c..a0bcbbd 100644
+--- a/src/login/sd-login.c
++++ b/src/login/sd-login.c
+@@ -641,11 +641,12 @@ _public_ int sd_get_uids(uid_t **users) {
+                 return -errno;
+ 
+         for (;;) {
+-                struct dirent buffer, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+                 int k;
+                 uid_t uid;
+ 
+-                k = readdir_r(d, &buffer, &de);
++                k = readdir_r(d, &buf.de, &de);
+                 if (k != 0) {
+                         r = -k;
+                         goto finish;
+diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
+index 83e4cce..34b8629 100644
+--- a/src/shared/conf-files.c
++++ b/src/shared/conf-files.c
+@@ -39,7 +39,6 @@
+ 
+ static int files_add(Hashmap *h, const char *path, const char *suffix) {
+         DIR *dir;
+-        struct dirent buffer, *de;
+         int r = 0;
+ 
+         dir = opendir(path);
+@@ -50,10 +49,12 @@ static int files_add(Hashmap *h, const char *path, const char *suffix) {
+         }
+ 
+         for (;;) {
++                struct dirent *de;
++                union dirent_storage buf;
+                 int k;
+                 char *p;
+ 
+-                k = readdir_r(dir, &buffer, &de);
++                k = readdir_r(dir, &buf.de, &de);
+                 if (k != 0) {
+                         r = -k;
+                         goto finish;
+diff --git a/src/shared/hwclock.c b/src/shared/hwclock.c
+index e536a8d..05be72c 100644
+--- a/src/shared/hwclock.c
++++ b/src/shared/hwclock.c
+@@ -61,10 +61,11 @@ static int rtc_open(int flags) {
+ 
+         for (;;) {
+                 char *p, *v;
+-                struct dirent buf, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+                 int r;
+ 
+-                r = readdir_r(d, &buf, &de);
++                r = readdir_r(d, &buf.de, &de);
+                 if (r != 0)
+                         goto fallback;
+ 
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 6f0e018..c1f7022 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -200,7 +200,6 @@ static int remove_marked_symlinks_fd(
+ 
+         int r = 0;
+         DIR *d;
+-        struct dirent buffer, *de;
+ 
+         assert(remove_symlinks_to);
+         assert(fd >= 0);
+@@ -217,9 +216,11 @@ static int remove_marked_symlinks_fd(
+         rewinddir(d);
+ 
+         for (;;) {
++                struct dirent *de;
++                union dirent_storage buf;
+                 int k;
+ 
+-                k = readdir_r(d, &buffer, &de);
++                k = readdir_r(d, &buf.de, &de);
+                 if (k != 0) {
+                         r = -errno;
+                         break;
+@@ -374,7 +375,6 @@ static int find_symlinks_fd(
+ 
+         int r = 0;
+         DIR *d;
+-        struct dirent buffer, *de;
+ 
+         assert(name);
+         assert(fd >= 0);
+@@ -390,8 +390,10 @@ static int find_symlinks_fd(
+ 
+         for (;;) {
+                 int k;
++                struct dirent *de;
++                union dirent_storage buf;
+ 
+-                k = readdir_r(d, &buffer, &de);
++                k = readdir_r(d, &buf.de, &de);
+                 if (k != 0) {
+                         r = -errno;
+                         break;
+@@ -1913,7 +1915,6 @@ int unit_file_get_list(
+                 return r;
+ 
+         STRV_FOREACH(i, paths.unit_path) {
+-                struct dirent buffer, *de;
+                 const char *units_dir;
+ 
+                 free(buf);
+@@ -1941,9 +1942,11 @@ int unit_file_get_list(
+                 }
+ 
+                 for (;;) {
++                        struct dirent *de;
++                        union dirent_storage buffer;
+                         UnitFileList *f;
+ 
+-                        r = readdir_r(d, &buffer, &de);
++                        r = readdir_r(d, &buffer.de, &de);
+                         if (r != 0) {
+                                 r = -r;
+                                 goto finish;
+diff --git a/src/shared/util.c b/src/shared/util.c
+index af1c9c0..de89bf2 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -2969,13 +2969,16 @@ bool is_device_path(const char *path) {
+ int dir_is_empty(const char *path) {
+         DIR *d;
+         int r;
+-        struct dirent buf, *de;
+ 
+         if (!(d = opendir(path)))
+                 return -errno;
+ 
+         for (;;) {
+-                if ((r = readdir_r(d, &buf, &de)) > 0) {
++                struct dirent *de;
++                union dirent_storage buf;
++
++                r = readdir_r(d, &buf.de, &de);
++                if (r > 0) {
+                         r = -r;
+                         break;
+                 }
+@@ -3270,12 +3273,13 @@ int rm_rf_children(int fd, bool only_dirs, bool honour_sticky, struct stat *root
+         }
+ 
+         for (;;) {
+-                struct dirent buf, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+                 bool is_dir, keep_around;
+                 struct stat st;
+                 int r;
+ 
+-                r = readdir_r(d, &buf, &de);
++                r = readdir_r(d, &buf.de, &de);
+                 if (r != 0 && ret == 0) {
+                         ret = -r;
+                         break;
+@@ -5030,10 +5034,11 @@ int get_files_in_directory(const char *path, char ***list) {
+                 return -errno;
+ 
+         for (;;) {
+-                struct dirent buffer, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+                 int k;
+ 
+-                k = readdir_r(d, &buffer, &de);
++                k = readdir_r(d, &buf.de, &de);
+                 if (k != 0) {
+                         r = -k;
+                         goto finish;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 804bd37..9502fcb 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -35,6 +35,7 @@
+ #include <sys/stat.h>
+ #include <dirent.h>
+ #include <sys/resource.h>
++#include <stddef.h>
+ 
+ #include "macro.h"
+ 
+@@ -46,6 +47,12 @@ typedef struct dual_timestamp {
+         usec_t monotonic;
+ } dual_timestamp;
+ 
++union dirent_storage {
++        struct dirent de;
++        uint8_t storage[offsetof(struct dirent, d_name) +
++                        ((NAME_MAX + 1 + sizeof(long)) & ~(sizeof(long) - 1))];
++};
++
+ #define MSEC_PER_SEC  1000ULL
+ #define USEC_PER_SEC  1000000ULL
+ #define USEC_PER_MSEC 1000ULL
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index a8f464a..30b0b93 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -530,12 +530,13 @@ static int recursive_relabel_children(Item *i, const char *path) {
+                 return errno == ENOENT ? 0 : -errno;
+ 
+         for (;;) {
+-                struct dirent buf, *de;
++                struct dirent *de;
++                union dirent_storage buf;
+                 bool is_dir;
+                 int r;
+                 char *entry_path;
+ 
+-                r = readdir_r(d, &buf, &de);
++                r = readdir_r(d, &buf.de, &de);
+                 if (r != 0) {
+                         if (ret == 0)
+                                 ret = -r;

@@ -1,0 +1,29 @@
+From e59808f894df3054f3a012ac7257fd09261ada2f Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 11 Aug 2012 13:32:29 -0400
+Subject: [PATCH] shared/util: add fstab support for partuuid/partlabel
+
+udev has supported this since 172, so it should be a safe (and welcome)
+addition for users of GPT partitioned disks.
+(cherry picked from commit 84cc2abf3472b6dddd54b046b24f559ec8807ee4)
+---
+ src/shared/util.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index d89833f..2bdf4a5 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4044,6 +4044,12 @@ char *fstab_node_to_udev_node(const char *p) {
+         if (startswith(p, "UUID="))
+                 return tag_to_udev_node(p+5, "uuid");
+ 
++        if (startswith(p, "PARTUUID="))
++                return tag_to_udev_node(p+9, "partuuid");
++
++        if (startswith(p, "PARTLABEL="))
++                return tag_to_udev_node(p+10, "partlabel");
++
+         return strdup(p);
+ }
+ 

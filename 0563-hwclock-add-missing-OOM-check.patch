@@ -1,0 +1,26 @@
+From 047837464824d68b4d9997fc321286b69cd0b4e1 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 21 Sep 2012 16:29:09 +0200
+Subject: [PATCH] hwclock: add missing OOM check (cherry picked from commit
+ 4eeebf70aa5ac9825899f5a063431329904d37e5)
+
+---
+ src/shared/hwclock.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/shared/hwclock.c b/src/shared/hwclock.c
+index 05be72c..9a0d2cf 100644
+--- a/src/shared/hwclock.c
++++ b/src/shared/hwclock.c
+@@ -94,6 +94,11 @@ static int rtc_open(int flags) {
+                         continue;
+ 
+                 p = strappend("/dev/", de->d_name);
++                if (!p) {
++                        closedir(d);
++                        return -ENOMEM;
++                }
++
+                 fd = open(p, flags);
+                 free(p);
+ 

@@ -1,0 +1,76 @@
+From 0cd754e00ecfb06b42d549a6d337240784181ccf Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 8 Aug 2012 23:54:21 +0200
+Subject: [PATCH] fix a couple of issues found with llvm-analyze (cherry
+ picked from commit
+ 64825d3c589cd8742887f30acde8c57eceac2001)
+
+Conflicts:
+	src/cryptsetup/cryptsetup-generator.c
+	src/libudev/libudev-list.c
+	src/readahead/readahead-analyze.c
+---
+ src/core/namespace.c       | 2 ++
+ src/journal/journal-file.c | 8 +++++---
+ src/shared/utf8.c          | 2 +-
+ 3 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index d27ffb1..0148f5f 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -312,6 +312,8 @@ int setup_namespace(
+                 goto undo_mounts;
+         }
+ 
++        free(paths);
++
+         t = old_root_dir + sizeof(root_dir) - 1;
+         if (umount2(t, MNT_DETACH) < 0)
+                 /* At this point it's too late to turn anything back,
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index 8390ea2..ac0d547 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -766,7 +766,7 @@ static int journal_file_append_data(
+         }
+ #endif
+ 
+-        if (!compressed)
++        if (!compressed && size > 0)
+                 memcpy(o->data.payload, data, size);
+ 
+         r = journal_file_link_data(f, o, p, hash);
+@@ -1035,7 +1035,8 @@ int journal_file_append_entry(JournalFile *f, const dual_timestamp *ts, const st
+             ts->monotonic < le64toh(f->header->tail_entry_monotonic))
+                 return -EINVAL;
+ 
+-        items = alloca(sizeof(EntryItem) * n_iovec);
++        /* alloca() can't take 0, hence let's allocate at least one */
++        items = alloca(sizeof(EntryItem) * MAX(1, n_iovec));
+ 
+         for (i = 0; i < n_iovec; i++) {
+                 uint64_t p;
+@@ -2105,7 +2106,8 @@ int journal_directory_vacuum(const char *directory, uint64_t max_use, uint64_t m
+                 n_list ++;
+         }
+ 
+-        qsort(list, n_list, sizeof(struct vacuum_info), vacuum_compare);
++        if (n_list > 0)
++                qsort(list, n_list, sizeof(struct vacuum_info), vacuum_compare);
+ 
+         for(i = 0; i < n_list; i++) {
+                 struct statvfs ss;
+diff --git a/src/shared/utf8.c b/src/shared/utf8.c
+index 11619dc..562c570 100644
+--- a/src/shared/utf8.c
++++ b/src/shared/utf8.c
+@@ -204,7 +204,7 @@ char *ascii_filter(const char *str) {
+         if (!r)
+                 return NULL;
+ 
+-        for (s = r, d = r; *s; s++)
++        for (s = str, d = r; *s; s++)
+                 if ((unsigned char) *s < 128)
+                         *(d++) = *s;
+ 

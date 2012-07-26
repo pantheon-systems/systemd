@@ -1,0 +1,22 @@
+From 7f75f59bcab871549b73325fcf837981fb12ac9a Mon Sep 17 00:00:00 2001
+From: Artur Zaprzala <zybi@talex.pl>
+Date: Tue, 31 Jul 2012 14:14:51 +0200
+Subject: [PATCH] journald: fixed memory leak (cherry picked from commit
+ 4cdc45994a9444820ae0d11b1a8b29dc5641ba15)
+
+---
+ src/journal/journald.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/journal/journald.c b/src/journal/journald.c
+index 3b50cd8..a538047 100644
+--- a/src/journal/journald.c
++++ b/src/journal/journald.c
+@@ -1134,6 +1134,7 @@ static void process_syslog_message(Server *s, const char *buf, struct ucred *ucr
+         free(syslog_priority);
+         free(syslog_facility);
+         free(syslog_identifier);
++        free(syslog_pid);
+ }
+ 
+ static bool valid_user_field(const char *p, size_t l) {

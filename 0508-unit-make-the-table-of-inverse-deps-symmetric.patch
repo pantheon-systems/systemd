@@ -1,0 +1,36 @@
+From 590c688056c7bc69f3f39d0cc8e47fb99a674af6 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 26 Jul 2012 09:42:26 +0200
+Subject: [PATCH] unit: make the table of inverse deps symmetric (cherry
+ picked from commit
+ 60649f17bd5ef8659dab474ace8bf42ee23ffca3)
+
+---
+ src/core/unit.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index f0880a3..6c373b3 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1592,10 +1592,12 @@ int unit_add_dependency(Unit *u, UnitDependency d, Unit *other, bool add_referen
+                 [UNIT_REQUISITE] = UNIT_REQUIRED_BY,
+                 [UNIT_REQUISITE_OVERRIDABLE] = UNIT_REQUIRED_BY_OVERRIDABLE,
+                 [UNIT_BINDS_TO] = UNIT_BOUND_BY,
++                [UNIT_PART_OF] = UNIT_CONSISTS_OF,
+                 [UNIT_REQUIRED_BY] = _UNIT_DEPENDENCY_INVALID,
+                 [UNIT_REQUIRED_BY_OVERRIDABLE] = _UNIT_DEPENDENCY_INVALID,
+                 [UNIT_WANTED_BY] = _UNIT_DEPENDENCY_INVALID,
+                 [UNIT_BOUND_BY] = UNIT_BINDS_TO,
++                [UNIT_CONSISTS_OF] = UNIT_PART_OF,
+                 [UNIT_CONFLICTS] = UNIT_CONFLICTED_BY,
+                 [UNIT_CONFLICTED_BY] = UNIT_CONFLICTS,
+                 [UNIT_BEFORE] = UNIT_AFTER,
+@@ -1607,7 +1609,6 @@ int unit_add_dependency(Unit *u, UnitDependency d, Unit *other, bool add_referen
+                 [UNIT_TRIGGERED_BY] = UNIT_TRIGGERS,
+                 [UNIT_PROPAGATES_RELOAD_TO] = UNIT_RELOAD_PROPAGATED_FROM,
+                 [UNIT_RELOAD_PROPAGATED_FROM] = UNIT_PROPAGATES_RELOAD_TO,
+-                [UNIT_PART_OF] = UNIT_CONSISTS_OF
+         };
+         int r, q = 0, v = 0, w = 0;
+ 

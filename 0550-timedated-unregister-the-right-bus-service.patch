@@ -1,0 +1,24 @@
+From e89977c192428db435609133fce0e0bc19257a90 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 19 Sep 2012 19:09:22 +0200
+Subject: [PATCH] timedated: unregister the right bus service
+
+https://bugzilla.redhat.com/show_bug.cgi?id=858771
+(cherry picked from commit c68df23956455129087fb0ddc588ca492771555b)
+---
+ src/timedate/timedated.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index 191c974..8b1fefd 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -909,7 +909,7 @@ int main(int argc, char *argv[]) {
+ 
+                 if (!exiting && remain_until < now(CLOCK_MONOTONIC)) {
+                         exiting = true;
+-                        bus_async_unregister_and_exit(bus, "org.freedesktop.hostname1");
++                        bus_async_unregister_and_exit(bus, "org.freedesktop.timedated1");
+                 }
+         }
+ 

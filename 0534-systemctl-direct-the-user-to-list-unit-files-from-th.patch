@@ -1,0 +1,29 @@
+From 4d8296c7cb9607ed7103aabf73d4a48ca04d0f2a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 12 Sep 2012 08:56:57 +0200
+Subject: [PATCH] systemctl: direct the user to list-unit-files from the
+ list-units output (cherry picked from commit
+ bb3241614a1a3a3ef68329dadc56e8fec090ff64)
+
+---
+ src/systemctl/systemctl.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index e7eb9e7..340efbb 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -442,9 +442,11 @@ static void output_units_list(const struct unit_info *unit_infos, unsigned c) {
+                        "JOB    = Pending job for the unit.\n");
+ 
+                 if (arg_all)
+-                        printf("\n%u units listed.\n", n_shown);
++                        printf("\n%u loaded units listed.\n"
++                               "To show all installed unit files use 'systemctl list-unit-files'.\n", n_shown);
+                 else
+-                        printf("\n%u units listed. Pass --all to see inactive units, too.\n", n_shown);
++                        printf("\n%u loaded units listed. Pass --all to see loaded but inactive units, too.\n"
++                               "To show all installed unit files use 'systemctl list-unit-files'.\n", n_shown);
+         }
+ }
+ 

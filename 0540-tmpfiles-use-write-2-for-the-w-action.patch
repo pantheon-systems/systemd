@@ -1,0 +1,96 @@
+From c2b14be2c3791aed363db398a9bb488967ec9dc5 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 15 Sep 2012 12:58:49 -0400
+Subject: [PATCH] tmpfiles: use write(2) for the 'w' action
+
+This resolves problems with filesystems which do not implement the
+aio_write file operation. In this case, the kernel will fall back using
+a loop writing technique for each pointer in a received iovec. The
+result is strange errors in dmesg such as:
+
+[   31.855871] elevator: type  not found
+[   31.856262] elevator: switch to
+[   31.856262]  failed
+
+It does not make sense to implement a synchronous aio_write method for
+sysfs as this isn't a real filesystem where a reasonable use case for
+using writev exists, nor is there an expectation that tmpfiles will be
+used to write more data than can be reasonably written in a single write
+syscall.
+
+In addition, some sysfs attrs are currently buggy and will NOT reject
+the second write with the newline, causing the sysfs value to be zeroed
+out. This of course should be fixed in the kernel regardless of any
+wrongdoing in userspace, but this simple change makes us immune to such
+a bug.
+
+This change means that we do not write a trailing newline by default, as
+the expected use case of 'w' is for sysfs and procfs. In exchange, honor
+C-style backslash escapes so that if the newline is really needed, the
+user can add it.
+(cherry picked from commit 54693d9bfa855841e8097d7a6b8c8d7acc068004)
+---
+ man/tmpfiles.d.xml      |  5 ++++-
+ src/tmpfiles/tmpfiles.c | 23 ++++++++---------------
+ 2 files changed, 12 insertions(+), 16 deletions(-)
+
+diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
+index 5dd196b..9fae638 100644
+--- a/man/tmpfiles.d.xml
++++ b/man/tmpfiles.d.xml
+@@ -114,7 +114,10 @@ L    /tmp/foobar -    -    -    -   /dev/null</programlisting>
+ 
+                                 <varlistentry>
+                                         <term><varname>w</varname></term>
+-                                        <listitem><para>Write the argument parameter to a file, if it exists. Lines of this type accept shell-style globs in place of normal path names.</para></listitem>
++                                        <listitem><para>Write the argument parameter to a file, if the file exists.
++                                            Lines of this type accept shell-style globs in place of normal path
++                                            names. The argument parameter will be written without a trailing
++                                            newline. C-style backslash escapes are interpreted.</para></listitem>
+                                 </varlistentry>
+ 
+                                 <varlistentry>
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index 0540572..a8f464a 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -41,6 +41,7 @@
+ 
+ #include "log.h"
+ #include "util.h"
++#include "macro.h"
+ #include "mkdir.h"
+ #include "path-util.h"
+ #include "strv.h"
+@@ -481,24 +482,16 @@ static int write_one_file(Item *i, const char *path) {
+         if (i->argument) {
+                 ssize_t n;
+                 size_t l;
+-                struct iovec iovec[2];
+-                static const char new_line = '\n';
++                char *unescaped;
+ 
+-                l = strlen(i->argument);
++                unescaped = cunescape(i->argument);
++                if (unescaped == NULL)
++                        return -ENOMEM;
+ 
+-                zero(iovec);
+-                iovec[0].iov_base = i->argument;
+-                iovec[0].iov_len = l;
++                l = strlen(unescaped);
++                n = write(fd, unescaped, l);
++                free(unescaped);
+ 
+-                iovec[1].iov_base = (void*) &new_line;
+-                iovec[1].iov_len = 1;
+-
+-                n = writev(fd, iovec, 2);
+-
+-                /* It's OK if we don't write the trailing
+-                 * newline, hence we check for l, instead of
+-                 * l+1 here. Files in /sys often refuse
+-                 * writing of the trailing newline. */
+                 if (n < 0 || (size_t) n < l) {
+                         log_error("Failed to write file %s: %s", path, n < 0 ? strerror(-n) : "Short write");
+                         close_nointr_nofail(fd);

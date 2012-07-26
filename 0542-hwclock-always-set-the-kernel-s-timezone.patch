@@ -1,0 +1,138 @@
+From 9f77c263bcc7ba8af78dd3f49af91c5bf7e9eb2a Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Mon, 17 Sep 2012 16:41:13 +0200
+Subject: [PATCH] hwclock: always set the kernel's timezone
+
+Properly tell the kernel at bootup, and any later time zone changes,
+the actual system time zone.
+
+Things like the kernel's FAT filesystem driver needs the actual time
+zone to calculate the proper local time to use for the on-disk time
+stamps.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=802198
+(cherry picked from commit 72edcff5db936e54cfc322d9392ec46e2428fd9b)
+---
+ src/core/main.c          | 15 ++++++++++++---
+ src/shared/hwclock.c     |  9 +++++++--
+ src/shared/hwclock.h     |  4 ++--
+ src/timedate/timedated.c | 13 +++++--------
+ 4 files changed, 26 insertions(+), 15 deletions(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index ecb17d4..06f14c3 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1300,17 +1300,26 @@ int main(int argc, char *argv[]) {
+                 if (label_init(NULL) < 0)
+                         goto finish;
+ 
+-                if (!skip_setup)
++                if (!skip_setup) {
+                         if (hwclock_is_localtime() > 0) {
+                                 int min;
+ 
+-                                r = hwclock_apply_localtime_delta(&min);
++                                /* The first-time call to settimeofday() does a time warp in the kernel */
++                                r = hwclock_set_timezone(&min);
+                                 if (r < 0)
+                                         log_error("Failed to apply local time delta, ignoring: %s", strerror(-r));
+                                 else
+                                         log_info("RTC configured in localtime, applying delta of %i minutes to system time.", min);
+-                        }
++                        } else {
++                                /* Do dummy first-time call to seal the kernel's time warp magic */
++                                hwclock_reset_timezone();
+ 
++                                /* Tell the kernel our time zone */
++                                r = hwclock_set_timezone(NULL);
++                                if (r < 0)
++                                        log_error("Failed to set the kernel's time zone, ignoring: %s", strerror(-r));
++                        }
++                }
+         } else {
+                 arg_running_as = MANAGER_USER;
+                 log_set_target(LOG_TARGET_AUTO);
+diff --git a/src/shared/hwclock.c b/src/shared/hwclock.c
+index d40bb26..e536a8d 100644
+--- a/src/shared/hwclock.c
++++ b/src/shared/hwclock.c
+@@ -188,7 +188,7 @@ int hwclock_is_localtime(void) {
+         return local;
+ }
+ 
+-int hwclock_apply_localtime_delta(int *min) {
++int hwclock_set_timezone(int *min) {
+         const struct timeval *tv_null = NULL;
+         struct timespec ts;
+         struct tm *tm;
+@@ -214,13 +214,18 @@ int hwclock_apply_localtime_delta(int *min) {
+         return 0;
+ }
+ 
+-int hwclock_reset_localtime_delta(void) {
++int hwclock_reset_timezone(void) {
+         const struct timeval *tv_null = NULL;
+         struct timezone tz;
+ 
+         tz.tz_minuteswest = 0;
+         tz.tz_dsttime = 0; /* DST_NONE*/
+ 
++        /*
++         * The very first time we set the kernel's timezone, it will warp
++         * the clock. Do a dummy call here, so the time warping is sealed
++         * and we set only the time zone with next call.
++         */
+         if (settimeofday(tv_null, &tz) < 0)
+                 return -errno;
+ 
+diff --git a/src/shared/hwclock.h b/src/shared/hwclock.h
+index 26d1b44..b2bdc78 100644
+--- a/src/shared/hwclock.h
++++ b/src/shared/hwclock.h
+@@ -23,8 +23,8 @@
+ ***/
+ 
+ int hwclock_is_localtime(void);
+-int hwclock_apply_localtime_delta(int *min);
+-int hwclock_reset_localtime_delta(void);
++int hwclock_set_timezone(int *min);
++int hwclock_reset_timezone(void);
+ int hwclock_get_time(struct tm *tm);
+ int hwclock_set_time(const struct tm *tm);
+ 
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index b008f15..191c974 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -580,13 +580,13 @@ static DBusHandlerResult timedate_message_handler(
+                                 return bus_send_error_reply(connection, message, NULL, r);
+                         }
+ 
++                        /* 2. Tell the kernel our time zone */
++                        hwclock_set_timezone(NULL);
++
+                         if (tz.local_rtc) {
+                                 struct timespec ts;
+                                 struct tm *tm;
+ 
+-                                /* 2. Teach kernel new timezone */
+-                                hwclock_apply_localtime_delta(NULL);
+-
+                                 /* 3. Sync RTC from system clock, with the new delta */
+                                 assert_se(clock_gettime(CLOCK_REALTIME, &ts) == 0);
+                                 assert_se(tm = localtime(&ts.tv_sec));
+@@ -633,11 +633,8 @@ static DBusHandlerResult timedate_message_handler(
+                                 return bus_send_error_reply(connection, message, NULL, r);
+                         }
+ 
+-                        /* 2. Teach kernel new timezone */
+-                        if (tz.local_rtc)
+-                                hwclock_apply_localtime_delta(NULL);
+-                        else
+-                                hwclock_reset_localtime_delta();
++                        /* 2. Tell the kernel our time zone */
++                        hwclock_set_timezone(NULL);
+ 
+                         /* 3. Synchronize clocks */
+                         assert_se(clock_gettime(CLOCK_REALTIME, &ts) == 0);

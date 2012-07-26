@@ -1,0 +1,25 @@
+From 607c7f865e59ca9c286c448f3b6bfaded1df3389 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 18 Sep 2012 18:59:01 +0200
+Subject: [PATCH] automount: also whine if an automount directory is not empty
+ (cherry picked from commit
+ e872b43c7ee51efb6bd6ca31d79e02af8cc3cb82)
+
+---
+ src/core/automount.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index 5c716ee..7312f86 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -503,6 +503,9 @@ static void automount_enter_waiting(Automount *a) {
+         /* We knowingly ignore the results of this call */
+         mkdir_p_label(a->where, 0555);
+ 
++        if (dir_is_empty(a->where) <= 0)
++                log_notice("%s: Directory %s to mount over is not empty, ignoring. (To see the over-mounted files, please manually mount the underlying file system to a secondary location.)", a->meta.id, a->where);
++
+         if (pipe2(p, O_NONBLOCK|O_CLOEXEC) < 0) {
+                 r = -errno;
+                 goto fail;

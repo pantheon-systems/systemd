@@ -1,0 +1,33 @@
+From 1cc54fc48c8261b1dd22c69eeafa5d9d4a2c3155 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 26 Jul 2012 16:05:26 +0200
+Subject: [PATCH] logs-show: fix OOM path (cherry picked from commit
+ 46b0d922256b62bc8291951d9868c243ced80c9a)
+
+Conflicts:
+	src/shared/logs-show.c
+---
+ src/shared/logs-show.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index 6bc24fa..2219c80 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -59,13 +59,14 @@ static int parse_field(const void *data, size_t length, const char *field, char
+ 
+         nl = length - fl;
+         buf = malloc(nl+1);
+-        memcpy(buf, (const char*) data + fl, nl);
+-        ((char*)buf)[nl] = 0;
+         if (!buf) {
+                 log_error("Out of memory");
+                 return -ENOMEM;
+         }
+ 
++        memcpy(buf, (const char*) data + fl, nl);
++        ((char*)buf)[nl] = 0;
++
+         free(*target);
+         *target = buf;
+         *target_size = nl;

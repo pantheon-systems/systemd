@@ -1,0 +1,257 @@
+From 7e896cf8a93ae698475c065ef0e847dabf3b3441 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Fri, 13 Jul 2012 15:59:26 +0200
+Subject: [PATCH] systemd: enable/disable instances of template
+
+https://bugzilla.redhat.com/show_bug.cgi?id=752774
+(cherry picked from commit 29283ea4cf5df20aa0ea9e24e3cb7035bf4c4a04)
+---
+ man/systemctl.xml      | 33 ++++++++++++---------
+ src/shared/install.c   | 78 +++++++++++++++++++++++++++++++++++++++++++-------
+ src/shared/unit-name.c | 12 ++++++++
+ src/shared/unit-name.h |  1 +
+ 4 files changed, 100 insertions(+), 24 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 9808f41..92d22ba 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -683,24 +683,29 @@
+                         <varlistentry>
+                                 <term><command>enable [NAME...]</command></term>
+ 
+-                                <listitem><para>Enable one or more
+-                                unit files, as specified on the
++                                <listitem><para>Enable one or
++                                more unit files or unit file
++                                instances, as specified on the
+                                 command line. This will create a
+-                                number of symlinks as encoded in the
+-                                <literal>[Install]</literal> sections
+-                                of the unit files. After the symlinks
+-                                have been created the systemd
+-                                configuration is reloaded (in a way
+-                                that is equivalent to
+-                                <command>daemon-reload</command>) to
+-                                ensure the changes are taken into
++                                number of symlinks as encoded in
++                                the <literal>[Install]</literal>
++                                sections of the unit files. After
++                                the symlinks have been created the
++                                systemd configuration is reloaded
++                                (in a way that is equivalent to
++                                <command>daemon-reload</command>)
++                                to ensure the changes are taken into
+                                 account immediately. Note that this
+                                 does not have the effect that any of
+                                 the units enabled are also started at
+-                                the same time. If this is desired a
+-                                separate <command>start</command>
+-                                command must be invoked for the
+-                                unit.</para>
++                                the same time.  If this is desired
++                                a separate <command>start</command>
++                                command must be invoked for the unit.
++                                Also note that in case of instance
++                                enablement, symlinks named same as
++                                instances are created in install
++                                location, however they all point to
++                                the same template unit file.</para>
+ 
+                                 <para>This command will
+                                 print the actions executed. This
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 786846e..6f0e018 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -195,7 +195,8 @@ static int remove_marked_symlinks_fd(
+                 const char *config_path,
+                 bool *deleted,
+                 UnitFileChange **changes,
+-                unsigned *n_changes) {
++                unsigned *n_changes,
++                char** files) {
+ 
+         int r = 0;
+         DIR *d;
+@@ -254,7 +255,7 @@ static int remove_marked_symlinks_fd(
+                         }
+ 
+                         /* This will close nfd, regardless whether it succeeds or not */
+-                        q = remove_marked_symlinks_fd(remove_symlinks_to, nfd, p, config_path, deleted, changes, n_changes);
++                        q = remove_marked_symlinks_fd(remove_symlinks_to, nfd, p, config_path, deleted, changes, n_changes, files);
+                         free(p);
+ 
+                         if (r == 0)
+@@ -287,6 +288,9 @@ static int remove_marked_symlinks_fd(
+                                 set_get(remove_symlinks_to, dest) ||
+                                 set_get(remove_symlinks_to, path_get_file_name(dest));
+ 
++                        if (unit_name_is_instance(p))
++                                found = found && strv_contains(files, path_get_file_name(p));
++
+                         if (found) {
+ 
+                                 if (unlink(p) < 0 && errno != ENOENT) {
+@@ -325,7 +329,8 @@ static int remove_marked_symlinks(
+                 Set *remove_symlinks_to,
+                 const char *config_path,
+                 UnitFileChange **changes,
+-                unsigned *n_changes) {
++                unsigned *n_changes,
++                char** files) {
+ 
+         int fd, r = 0;
+         bool deleted;
+@@ -350,7 +355,7 @@ static int remove_marked_symlinks(
+                 }
+ 
+                 /* This takes possession of cfd and closes it */
+-                q = remove_marked_symlinks_fd(remove_symlinks_to, cfd, config_path, config_path, &deleted, changes, n_changes);
++                q = remove_marked_symlinks_fd(remove_symlinks_to, cfd, config_path, config_path, &deleted, changes, n_changes, files);
+                 if (r == 0)
+                         r = q;
+         } while (deleted);
+@@ -716,7 +721,7 @@ int unit_file_unmask(
+ 
+ 
+ finish:
+-        q = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes);
++        q = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes, files);
+         if (r == 0)
+                 r = q;
+ 
+@@ -1093,8 +1098,48 @@ static int unit_file_search(
+ 
+                 if (r >= 0)
+                         info->path = path;
+-                else
++                else {
++                        if (r == -ENOENT && unit_name_is_instance(info->name)) {
++                                /* unit file doesn't exist, however instance enablement was request */
++                                /* we will check if it is possible to load template unit file */
++                                char *template = NULL,
++                                     *template_path = NULL,
++                                     *template_dir = NULL;
++
++                                template = unit_name_template(info->name);
++                                if (!template) {
++                                        free(path);
++                                        return -ENOMEM;
++                                }
++
++                                /* we will reuse path variable since we don't need it anymore */
++                                template_dir = path;
++                                *(strrchr(path, '/') + 1) = '\0';
++
++                                template_path = join(template_dir, template, NULL);
++                                if (!template_path) {
++                                        free(path);
++                                        free(template);
++                                        return -ENOMEM;
++                                }
++
++                                /* let's try to load template unit */
++                                r = unit_file_load(c, info, template_path, allow_symlink);
++                                if (r >= 0) {
++                                        info->path = strdup(template_path);
++                                        if (!info->path) {
++                                                free(path);
++                                                free(template);
++                                                free(template_path);
++                                                return -ENOMEM;
++                                        }
++                                }
++
++                                free(template);
++                                free(template_path);
++                        }
+                         free(path);
++                }
+ 
+                 if (r != -ENOENT && r != -ELOOP)
+                         return r;
+@@ -1418,7 +1463,20 @@ static int install_context_mark_for_removal(
+                 } else if (r >= 0)
+                         r += q;
+ 
+-                q = mark_symlink_for_removal(remove_symlinks_to, i->name);
++                if (unit_name_is_instance(i->name)) {
++                        char *unit_file = NULL;
++
++                        unit_file = path_get_file_name(i->path);
++
++                        if (unit_name_is_instance(unit_file))
++                                /* unit file named as instance exists, thus all symlinks pointing to it, will be removed */
++                                q = mark_symlink_for_removal(remove_symlinks_to, i->name);
++                        else
++                                /* does not exist, thus we will mark for removal symlinks to template unit file */
++                                q = mark_symlink_for_removal(remove_symlinks_to, unit_file);
++                } else
++                        q = mark_symlink_for_removal(remove_symlinks_to, i->name);
++
+                 if (r >= 0 && q < 0)
+                         r = q;
+         }
+@@ -1510,7 +1568,7 @@ int unit_file_disable(
+ 
+         r = install_context_mark_for_removal(&c, &paths, &remove_symlinks_to, config_path, root_dir);
+ 
+-        q = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes);
++        q = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes, files);
+         if (r == 0)
+                 r = q;
+ 
+@@ -1562,7 +1620,7 @@ int unit_file_reenable(
+                         goto finish;
+         }
+ 
+-        r = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes);
++        r = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes, files);
+ 
+         /* Returns number of symlinks that where supposed to be installed. */
+         q = install_context_apply(&c, &paths, config_path, root_dir, force, changes, n_changes);
+@@ -1812,7 +1870,7 @@ int unit_file_preset(
+ 
+         r = install_context_mark_for_removal(&minus, &paths, &remove_symlinks_to, config_path, root_dir);
+ 
+-        q = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes);
++        q = remove_marked_symlinks(remove_symlinks_to, config_path, changes, n_changes, files);
+         if (r == 0)
+                 r = q;
+ 
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index dd15119..e9b83b7 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -336,6 +336,18 @@ bool unit_name_is_template(const char *n) {
+         return p[1] == '.';
+ }
+ 
++bool unit_name_is_instance(const char *n) {
++        const char *p;
++
++        assert(n);
++
++        p = strchr(n, '@');
++        if (!p)
++                return false;
++
++        return p[1] != '.';
++}
++
+ char *unit_name_replace_instance(const char *f, const char *i) {
+         const char *p, *e;
+         char *r, *k;
+diff --git a/src/shared/unit-name.h b/src/shared/unit-name.h
+index f23d2cd..5d8c7fd 100644
+--- a/src/shared/unit-name.h
++++ b/src/shared/unit-name.h
+@@ -81,6 +81,7 @@ char *unit_name_unescape(const char *f);
+ char *unit_name_path_unescape(const char *f);
+ 
+ bool unit_name_is_template(const char *n);
++bool unit_name_is_instance(const char *n);
+ 
+ char *unit_name_replace_instance(const char *f, const char *i);
+ 

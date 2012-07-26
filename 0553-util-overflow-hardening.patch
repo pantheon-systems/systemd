@@ -1,0 +1,72 @@
+From 63e3234a4ab3a654966accbedb14a36433c89afd Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 20 Sep 2012 11:08:27 +0200
+Subject: [PATCH] util: overflow hardening (cherry picked from commit
+ 040f18ea8a682dc80c9f3940cf234ccd1135e115)
+
+Conflicts:
+	TODO
+	src/shared/util.c
+---
+ src/shared/util.c | 14 +++++++++++---
+ src/shared/util.h |  2 +-
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index de89bf2..9c189eb 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -1212,8 +1212,11 @@ char *strnappend(const char *s, const char *suffix, size_t b) {
+         assert(suffix);
+ 
+         a = strlen(s);
++        if ((size_t) -1 - a > b)
++                return NULL;
+ 
+-        if (!(r = new(char, a+b+1)))
++        r = new(char, a+b+1);
++        if (!r)
+                 return NULL;
+ 
+         memcpy(r, s, a);
+@@ -5104,12 +5107,17 @@ char *join(const char *x, ...) {
+ 
+                 for (;;) {
+                         const char *t;
++                        size_t n;
+ 
+                         t = va_arg(ap, const char *);
+                         if (!t)
+                                 break;
+ 
+-                        l += strlen(t);
++                        n = strlen(t);
++                        if (n > ((size_t) -1) - l)
++                                return NULL;
++
++                        l += n;
+                 }
+         } else
+                 l = 0;
+@@ -5381,7 +5389,7 @@ int signal_from_string(const char *s) {
+         int offset = 0;
+         unsigned u;
+ 
+-        signo =__signal_from_string(s);
++        signo = __signal_from_string(s);
+         if (signo > 0)
+                 return signo;
+ 
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 9502fcb..86f899a 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -536,7 +536,7 @@ _malloc_  static inline void *malloc_multiply(size_t a, size_t b) {
+         return malloc(a * b);
+ }
+ 
+-static inline void *memdup_multiply(const void *p, size_t a, size_t b) {
++_malloc_ static inline void *memdup_multiply(const void *p, size_t a, size_t b) {
+         if (_unlikely_(a > ((size_t) -1) / b))
+                 return NULL;
+ 

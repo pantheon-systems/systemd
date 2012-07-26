@@ -1,0 +1,88 @@
+From 247f00d1d7d2972e29607eb3ee70e52b671f3fde Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 11 Aug 2012 13:31:50 -0400
+Subject: [PATCH] shared/util: refactor fstab_node_to_udev_node
+
+Since this is purely duplicated logic, separate it out into a small
+static function.
+(cherry picked from commit 383182b5c435dca06a3f4ba32c6d1be2d1e35881)
+---
+ src/shared/util.c | 52 +++++++++++++++++++---------------------------------
+ 1 file changed, 19 insertions(+), 33 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 9dc64a0..d89833f 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4011,52 +4011,38 @@ void dual_timestamp_deserialize(const char *value, dual_timestamp *t) {
+         }
+ }
+ 
+-char *fstab_node_to_udev_node(const char *p) {
++static char *tag_to_udev_node(const char *tagvalue, const char *by) {
+         char *dn, *t, *u;
+         int r;
+ 
+         /* FIXME: to follow udev's logic 100% we need to leave valid
+          * UTF8 chars unescaped */
+ 
+-        if (startswith(p, "LABEL=")) {
+-
+-                if (!(u = unquote(p+6, "\"\'")))
+-                        return NULL;
+-
+-                t = xescape(u, "/ ");
+-                free(u);
+-
+-                if (!t)
+-                        return NULL;
+-
+-                r = asprintf(&dn, "/dev/disk/by-label/%s", t);
+-                free(t);
+-
+-                if (r < 0)
+-                        return NULL;
+-
+-                return dn;
+-        }
++        u = unquote(tagvalue, "\"\'");
++        if (u == NULL)
++                return NULL;
+ 
+-        if (startswith(p, "UUID=")) {
++        t = xescape(u, "/ ");
++        free(u);
+ 
+-                if (!(u = unquote(p+5, "\"\'")))
+-                        return NULL;
++        if (t == NULL)
++                return NULL;
+ 
+-                t = xescape(u, "/ ");
+-                free(u);
++        r = asprintf(&dn, "/dev/disk/by-%s/%s", by, t);
++        free(t);
+ 
+-                if (!t)
+-                        return NULL;
++        if (r < 0)
++                return NULL;
+ 
+-                r = asprintf(&dn, "/dev/disk/by-uuid/%s", t);
+-                free(t);
++        return dn;
++}
+ 
+-                if (r < 0)
+-                        return NULL;
++char *fstab_node_to_udev_node(const char *p) {
++        if (startswith(p, "LABEL="))
++                return tag_to_udev_node(p+6, "label");
+ 
+-                return dn;
+-        }
++        if (startswith(p, "UUID="))
++                return tag_to_udev_node(p+5, "uuid");
+ 
+         return strdup(p);
+ }
