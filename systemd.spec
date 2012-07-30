@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        187
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -78,6 +78,8 @@ Conflicts:      dracut < 020-57
 Conflicts:      plymouth < 0.8.5.1
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
+Obsoletes:      system-setup-keyboard < 0.9
+Provides:       system-setup-keyboard = 0.9
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -499,6 +501,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
+- Obsolete: system-setup-keyboard
+
 * Wed Jul 25 2012 Kalev Lember <kalevlember@gmail.com> - 187-2
 - Run ldconfig for the new -libs subpackage
 
