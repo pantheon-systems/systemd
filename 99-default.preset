@@ -1,2 +1,5 @@
+# Enable GDM by default
+enable gdm.service
+
 # Enforce Fedora's disable-by-default policy
 disable *
