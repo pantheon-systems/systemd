@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        187
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -501,6 +501,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Aug  6 2012 Lennart Poettering <lpoetter@redhat.com> - 187-4
+- Enable gdm by default via the preset file
+
 * Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
 - Obsolete: system-setup-keyboard
 
