@@ -172,91 +172,94 @@ glib-based applications using libudev functionality.
 make %{?_smp_mflags}
 
 %install
-make DESTDIR=%{buildroot} install
-find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
-mkdir -p %{buildroot}/%{_sbindir}
-ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
-mkdir -p %{buildroot}%{_prefix}/lib/firmware/updates
+/usr/bin/make DESTDIR=%{buildroot} install
+/usr/bin/find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
+
+# udev links
+/usr/bin/mkdir -p %{buildroot}/%{_sbindir}
+/usr/bin/ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/firmware/updates
 
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
-ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
-ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
-ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
-ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
-ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
-ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
-ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
-ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
+/usr/bin/ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
+/usr/bin/ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
+/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
+/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
+/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
+/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
+/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
+/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
-ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
+# legacy links
+/usr/bin/ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
 
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the used deleted
 # them.
-rm -r %{buildroot}%{_sysconfdir}/systemd/system/*.target.wants
+/usr/bin/rm -r %{buildroot}%{_sysconfdir}/systemd/system/*.target.wants
 
 # Make sure the ghost-ing below works
-touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
-touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
-touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
-touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
+/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
+/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
+/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
+/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
 # Make sure these directories are properly owned
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/basic.target.wants
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/basic.target.wants
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
 
 # Make sure the user generators dir exists too
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
 
 # Create new-style configuration files so that we can ghost-own them
-touch %{buildroot}%{_sysconfdir}/hostname
-touch %{buildroot}%{_sysconfdir}/vconsole.conf
-touch %{buildroot}%{_sysconfdir}/locale.conf
-touch %{buildroot}%{_sysconfdir}/machine-id
-touch %{buildroot}%{_sysconfdir}/machine-info
-touch %{buildroot}%{_sysconfdir}/timezone
-mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
-touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
+/usr/bin/touch %{buildroot}%{_sysconfdir}/hostname
+/usr/bin/touch %{buildroot}%{_sysconfdir}/vconsole.conf
+/usr/bin/touch %{buildroot}%{_sysconfdir}/locale.conf
+/usr/bin/touch %{buildroot}%{_sysconfdir}/machine-id
+/usr/bin/touch %{buildroot}%{_sysconfdir}/machine-info
+/usr/bin/touch %{buildroot}%{_sysconfdir}/timezone
+/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
+/usr/bin/touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
 # Install Fedora default preset policy
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
-install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
+/usr/bin/install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
 
 # Make sure the NTP units dir exists
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
+/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
 
 # Install SysV conversion tool for systemd
-install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
+/usr/bin/install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 # Install modprobe fragment
-mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
-install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
+/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
+/usr/bin/install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 
 # Install rsyslog fragment
-mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
-install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
+/usr/bin/install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 
 # To avoid making life hard for Rawhide-using developers, don't package the
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
-rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+/usr/bin/rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 %pre
-getent group cdrom >/dev/null || /usr/sbin/groupadd -g 11 cdrom || :
-getent group tape >/dev/null || /usr/sbin/groupadd -g 33 tape || :
-getent group dialout >/dev/null || /usr/sbin/groupadd -g 18 dialout || :
-getent group floppy >/dev/null || /usr/sbin/groupadd -g 19 floppy || :
-systemctl stop systemd-udev.service systemd-udev-control.socket systemd-udev-kernel.socket >/dev/null 2>&1 || :
+/usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom || :
+/usr/bin/getent group tape >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 33 tape || :
+/usr/bin/getent group dialout >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 18 dialout || :
+/usr/bin/getent group floppy >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 19 floppy || :
+/usr/bin/systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
 # Rename configuration files that changed their names
 /usr/bin/mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
@@ -265,16 +268,16 @@ systemctl stop systemd-udev.service systemd-udev-control.socket systemd-udev-ker
 %post
 /usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
-/bin/systemctl daemon-reexec > /dev/null 2>&1 || :
-/bin/systemctl start systemd-udev.service >/dev/null 2>&1 || :
+/usr/bin/systemctl daemon-reexec > /dev/null 2>&1 || :
+/usr/bin/systemctl start systemd-udevd.service >/dev/null 2>&1 || :
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
-/bin/ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
+/usr/bin/ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
-        runlevel=$(/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
+        runlevel=$(/usr/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
         if [ -z "$runlevel" ] ; then
                 target="/usr/lib/systemd/system/graphical.target"
         else
@@ -282,10 +285,10 @@ if [ $1 -eq 1 ] ; then
         fi
 
         # And symlink what we found to the new-style default.target
-        /bin/ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
+        /usr/bin/ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
 
         # Enable the services we install by default.
-        /bin/systemctl enable \
+        /usr/bin/systemctl enable \
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
@@ -293,32 +296,60 @@ if [ $1 -eq 1 ] ; then
 else
         # This systemd service does not exist anymore, we now do it
         # internally in PID 1
-        /bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
+        /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
+fi
+
+# Convert old /etc/sysconfig/desktop settings
+preferred=
+if [ -f /etc/sysconfig/desktop ]; then
+	. /etc/sysconfig/desktop
+	if [ "$DISPLAYMANAGER" = GNOME ]; then
+		preferred=gdm
+	elif [ "$DISPLAYMANAGER" = KDE ]; then
+		preferred=kdm
+	elif [ "$DISPLAYMANAGER" = WDM ]; then
+		preferred=wdm
+	elif [ "$DISPLAYMANAGER" = XDM ]; then
+	        preferred=xdm
+        elif [ -n "$DISPLAYMANAGER" ]; then
+		preferred=${DISPLAYMANAGER##*/}
+	fi
+fi
+if [ -z "$preferred" ]; then
+	if [ -x /usr/sbin/gdm ]; then
+		preferred=gdm
+	elif [ -x /usr/bin/kdm ]; then
+		preferred=kdm
+	fi
+fi
+if [ -n "$preferred" -a -r "/usr/lib/systemd/system/$preferred.service" ]; then
+        # This is supposed to fail when the symlink already exists
+	/usr/bin/ln -s "/usr/lib/systemd/system/$preferred.service" /etc/systemd/system/display-manager.service >/dev/null 2>&1 || :
 fi
 
 %postun
 if [ $1 -ge 1 ] ; then
-        /bin/systemctl daemon-reload > /dev/null 2>&1 || :
-        /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
+        /usr/bin/systemctl daemon-reload > /dev/null 2>&1 || :
+        /usr/bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
 fi
 
 %preun
 if [ $1 -eq 0 ] ; then
-        /bin/systemctl disable \
+        /usr/bin/systemctl disable \
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service >/dev/null 2>&1 || :
 
-        /bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
+        /usr/bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 fi
 
 %triggerun -- systemd-units < 38-5
-mv /etc/systemd/system/default.target /etc/systemd/system/default.target.save >/dev/null 2>&1 || :
+/usr/bin/mv /etc/systemd/system/default.target /etc/systemd/system/default.target.save >/dev/null 2>&1 || :
 
 %triggerpostun -- systemd-units < 38-5
-mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/dev/null 2>&1
-/bin/systemctl enable \
+/usr/bin/mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/dev/null 2>&1
+/usr/bin/systemctl enable \
         getty@.service \
         remote-fs.target \
         systemd-readahead-replay.service \
@@ -503,6 +534,7 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %changelog
 * Mon Aug  6 2012 Lennart Poettering <lpoetter@redhat.com> - 187-4
 - Enable gdm by default via the preset file
+- Convert /etc/sysconfig/desktop to display-manager.service symlink
 
 * Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
 - Obsolete: system-setup-keyboard
