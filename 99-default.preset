@@ -1,3 +1,9 @@
+# Also see:
+# https://fedoraproject.org/wiki/Starting_services_by_default
+
+# Enable Avahi by default
+enable avahi-daemon.*
+
 # Enable GDM by default
 enable gdm.service
 
