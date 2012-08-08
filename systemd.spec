@@ -1,5 +1,10 @@
 #global gitcommit e7aee75
 
+# According to https://fedoraproject.org/wiki/Hardened_Packages we
+# need to enable hardening for systemd.  But unfortunately this breaks
+# the build...
+#global _hardened_build 1
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        187
