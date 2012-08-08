@@ -94,12 +94,13 @@ work as a drop-in replacement for sysvinit.
 %package libs
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
+Requires:       %{name} = %{version}-%{release}
 Obsoletes:      libudev < 183
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 
 %description libs
-Libraries for systemd and udev. systemd PAM module.
+Libraries for systemd and udev, as well as the systemd PAM module.
 
 %package devel
 Summary:        Development headers for systemd
@@ -138,6 +139,7 @@ at boot.
 Summary:        Libraries for adding libudev support to applications that use glib
 Conflicts:      filesystem < 3
 License:        LGPLv2+
+Requires:       %{name} = %{version}-%{release}
 
 %description -n libgudev1
 This package contains the libraries that make it easier to use libudev
