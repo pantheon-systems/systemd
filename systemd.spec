@@ -1,14 +1,11 @@
 #global gitcommit e7aee75
 
-# According to https://fedoraproject.org/wiki/Hardened_Packages we
-# need to enable hardening for systemd.  But unfortunately this breaks
-# the build...
-#global _hardened_build 1
+%global _hardened_build 1
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        187
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        188
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -533,9 +530,11 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Mon Aug  6 2012 Lennart Poettering <lpoetter@redhat.com> - 187-4
+* Wed Aug  8 2012 Lennart Poettering <lpoetter@redhat.com> - 188-1
+- New upstream release
 - Enable gdm and avahi by default via the preset file
 - Convert /etc/sysconfig/desktop to display-manager.service symlink
+- Enable hardened build
 
 * Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
 - Obsolete: system-setup-keyboard
