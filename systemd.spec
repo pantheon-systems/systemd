@@ -5,7 +5,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        188
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -353,11 +353,11 @@ fi
         systemd-readahead-replay.service \
         systemd-readahead-collect.service
 
-%post libs -p /usr/sbin/ldconfig
-%postun libs -p /usr/sbin/ldconfig
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
 
-%post -n libgudev1 -p /usr/sbin/ldconfig
-%postun -n libgudev1 -p /usr/sbin/ldconfig
+%post -n libgudev1 -p /sbin/ldconfig
+%postun -n libgudev1 -p /sbin/ldconfig
 
 %files
 %doc %{_docdir}/systemd
@@ -530,6 +530,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Aug 08 2012 Rex Dieter <rdieter@fedoraproject.org> - 188-2
+- fix scriptlets
+
 * Wed Aug  8 2012 Lennart Poettering <lpoetter@redhat.com> - 188-1
 - New upstream release
 - Enable gdm and avahi by default via the preset file
