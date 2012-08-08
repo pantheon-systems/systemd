@@ -255,10 +255,10 @@ glib-based applications using libudev functionality.
 /usr/bin/rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 %pre
-/usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom || :
-/usr/bin/getent group tape >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 33 tape || :
-/usr/bin/getent group dialout >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 18 dialout || :
-/usr/bin/getent group floppy >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 19 floppy || :
+/usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
+/usr/bin/getent group tape >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 33 tape >/dev/null 2>&1 || :
+/usr/bin/getent group dialout >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 18 dialout >/dev/null 2>&1 || :
+/usr/bin/getent group floppy >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 19 floppy >/dev/null 2>&1 || :
 /usr/bin/systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
 # Rename configuration files that changed their names
@@ -509,7 +509,7 @@ fi
 %{_libdir}/pkgconfig/libudev.pc
 %{_mandir}/man3/*
 %dir %{_datadir}/gtk-doc/html/libudev
-%attr(0644,root,root) %{_datadir}/gtk-doc/html/libudev/*
+%{_datadir}/gtk-doc/html/libudev/*
 
 %files sysv
 %{_bindir}/systemd-sysv-convert
@@ -518,22 +518,22 @@ fi
 %{_bindir}/systemd-analyze
 
 %files -n libgudev1
-%attr(0755,root,root) %{_libdir}/libgudev-1.0.so.*
-%attr(0644,root,root) %{_libdir}/girepository-1.0/GUdev-1.0.typelib
+%{_libdir}/libgudev-1.0.so.*
+%{_libdir}/girepository-1.0/GUdev-1.0.typelib
 
 %files -n libgudev1-devel
-%attr(0755,root,root) %{_libdir}/libgudev-1.0.so
-%dir %attr(0755,root,root) %{_includedir}/gudev-1.0
-%dir %attr(0755,root,root) %{_includedir}/gudev-1.0/gudev
-%attr(0644,root,root) %{_includedir}/gudev-1.0/gudev/*.h
-%attr(0644,root,root) %{_datadir}/gir-1.0/GUdev-1.0.gir
+%{_libdir}/libgudev-1.0.so
+%dir %{_includedir}/gudev-1.0
+%dir %{_includedir}/gudev-1.0/gudev
+%{_includedir}/gudev-1.0/gudev/*.h
+%{_datadir}/gir-1.0/GUdev-1.0.gir
 %dir %{_datadir}/gtk-doc/html/gudev
-%attr(0644,root,root) %{_datadir}/gtk-doc/html/gudev/*
-%attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
+%{_datadir}/gtk-doc/html/gudev/*
+%{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
 * Mon Aug  6 2012 Lennart Poettering <lpoetter@redhat.com> - 187-4
-- Enable gdm by default via the preset file
+- Enable gdm and avahi by default via the preset file
 - Convert /etc/sysconfig/desktop to display-manager.service symlink
 
 * Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
