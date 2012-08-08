@@ -163,7 +163,6 @@ glib-based applications using libudev functionality.
 %{?gitcommit: ./autogen.sh }
 %configure \
         --with-distro=fedora \
-        --disable-plymouth \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static
