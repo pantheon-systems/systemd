@@ -164,15 +164,15 @@ glib-based applications using libudev functionality.
 %build
 %{?gitcommit: ./autogen.sh }
 %configure \
-  --with-distro=fedora \
-  --disable-plymouth \
-  --libexecdir=%{_prefix}/lib \
-  --enable-gtk-doc \
-  --disable-static
-make %{?_smp_mflags}
+        --with-distro=fedora \
+        --disable-plymouth \
+        --libexecdir=%{_prefix}/lib \
+        --enable-gtk-doc \
+        --disable-static
+/usr/bin/make %{?_smp_mflags}
 
 %install
-/usr/bin/make DESTDIR=%{buildroot} install
+%make_install
 /usr/bin/find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 
 # udev links
