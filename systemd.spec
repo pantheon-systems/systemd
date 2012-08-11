@@ -5,7 +5,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        188
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -59,6 +59,8 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+Patch0:         0001-shutdown-recursively-mark-root-as-private-before-piv.patch
+Patch1:         0001-switch-root-remount-to-MS_PRIVATE.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -158,6 +160,8 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch0 -p1
+%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -529,6 +533,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Sat Aug 11 2012 Lennart Poettering <lpoetter@redhat.com> - 188-3
+- Remount file systems MS_PRIVATE before switching roots
+- https://bugzilla.redhat.com/show_bug.cgi?id=847418
+
 * Wed Aug 08 2012 Rex Dieter <rdieter@fedoraproject.org> - 188-2
 - fix scriptlets
 
