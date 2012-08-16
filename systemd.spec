@@ -5,7 +5,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        188
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -297,6 +297,7 @@ else
         /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 fi
 
+%posttrans
 # Convert old /etc/sysconfig/desktop settings
 preferred=
 if [ -f /etc/sysconfig/desktop ]; then
@@ -530,6 +531,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Aug 16 2012 Ray Strode <rstrode@redhat.com> 188-3
+- more scriptlet fixes
+  (move dm migration logic to %posttrans so the service
+   files it's looking for are available at the time
+   the logic is run)
+
 * Wed Aug 08 2012 Rex Dieter <rdieter@fedoraproject.org> - 188-2
 - fix scriptlets
 
