@@ -4,8 +4,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        188
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        189
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -16,20 +16,22 @@ BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
 BuildRequires:  cryptsetup-luks-devel
 BuildRequires:  dbus-devel
-BuildRequires:  libxslt
-BuildRequires:  docbook-style-xsl
-BuildRequires:  pkgconfig
 BuildRequires:  libacl-devel
 BuildRequires:  pciutils-devel
 BuildRequires:  glib2-devel
-BuildRequires:  hwdata
 BuildRequires:  gobject-introspection-devel >= 0.6.2
-BuildRequires:  usbutils >= 0.82
 BuildRequires:  libblkid-devel >= 2.20
-BuildRequires:  intltool >= 0.40.0
-BuildRequires:  gperf
 BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
+BuildRequires:  libgcrypt-devel
+BuildRequires:  qrencode-devel
+BuildRequires:  hwdata
+BuildRequires:  libxslt
+BuildRequires:  docbook-style-xsl
+BuildRequires:  pkgconfig
+BuildRequires:  usbutils >= 0.82
+BuildRequires:  intltool >= 0.40.0
+BuildRequires:  gperf
 BuildRequires:  gtk-doc
 %if %{defined gitcommit}
 BuildRequires:  automake
@@ -59,8 +61,6 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-Patch0:         0001-shutdown-recursively-mark-root-as-private-before-piv.patch
-Patch1:         0001-switch-root-remount-to-MS_PRIVATE.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -160,8 +160,6 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
-%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -533,6 +531,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-1:.git%{gitcommit}}%{?dist}
+- New upstream release
+
 * Sat Aug 11 2012 Lennart Poettering <lpoetter@redhat.com> - 188-3
 - Remount file systems MS_PRIVATE before switching roots
 - https://bugzilla.redhat.com/show_bug.cgi?id=847418
