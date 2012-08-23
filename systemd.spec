@@ -5,7 +5,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        189
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -531,7 +531,11 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-1:.git%{gitcommit}}%{?dist}
+* Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-2
+- Update preset policy
+- https://bugzilla.redhat.com/show_bug.cgi?id=850814
+
+* Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-1
 - New upstream release
 
 * Sat Aug 11 2012 Lennart Poettering <lpoetter@redhat.com> - 188-3

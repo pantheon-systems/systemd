@@ -7,5 +7,8 @@ enable avahi-daemon.*
 # Enable GDM by default
 enable gdm.service
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=850814
+arp-ethers.service
+
 # Enforce Fedora's disable-by-default policy
 disable *
