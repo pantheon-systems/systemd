@@ -4,6 +4,18 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
+
+# Hey, you! So you are preparing an update for a Fedora version that
+# is not yet released, but is already forked off Rawhide? If so,
+# please think twice before commiting this also into Rawhide. In
+# almost all cases we simply let Koji do the work for us and let the
+# build system inherit the currently developed version into Rawhide,
+# and do not do this via explicit git cherry picks. Thank you very
+# much.
+
+# AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
+# THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
+
 Version:        189
 Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
