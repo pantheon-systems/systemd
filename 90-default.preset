@@ -28,12 +28,6 @@ enable libvirtd.service
 enable xinetd.service
 enable ladvd.service
 
-# https://bugzilla.redhat.com/show_bug.cgi?id=850814
-enable arp-ethers.service
-
-# Probably something to statically enable
-enable firstboot-graphical.service
-
 # Storage
 enable multipathd.service
 enable libstoragemgmt.service
