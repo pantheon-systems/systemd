@@ -237,7 +237,6 @@ glib-based applications using libudev functionality.
 /usr/bin/touch %{buildroot}%{_sysconfdir}/locale.conf
 /usr/bin/touch %{buildroot}%{_sysconfdir}/machine-id
 /usr/bin/touch %{buildroot}%{_sysconfdir}/machine-info
-/usr/bin/touch %{buildroot}%{_sysconfdir}/timezone
 /usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 /usr/bin/touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
@@ -424,7 +423,6 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
-%ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %{_bindir}/systemd
 %{_bindir}/systemctl
