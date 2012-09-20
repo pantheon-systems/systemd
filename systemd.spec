@@ -2,10 +2,27 @@
 
 %global _hardened_build 1
 
+# We ship a .pc file but don't want to have a dep on pkg-config. We
+# strip the automatically generated dep here and instead co-own the
+# directory.
+%global __requires_exclude pkg-config
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        188
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+
+# Hey, you! So you are preparing an update for a Fedora version that
+# is not yet released, but is already forked off Rawhide? If so,
+# please think twice before commiting this also into Rawhide. In
+# almost all cases we simply let Koji do the work for us and let the
+# build system inherit the currently developed version into Rawhide,
+# and do not do this via explicit git cherry picks. Thank you very
+# much.
+
+# AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
+# THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
+
+Version:        190
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -16,21 +33,24 @@ BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
 BuildRequires:  cryptsetup-luks-devel
 BuildRequires:  dbus-devel
-BuildRequires:  libxslt
-BuildRequires:  docbook-style-xsl
-BuildRequires:  pkgconfig
 BuildRequires:  libacl-devel
 BuildRequires:  pciutils-devel
 BuildRequires:  glib2-devel
-BuildRequires:  hwdata
 BuildRequires:  gobject-introspection-devel >= 0.6.2
-BuildRequires:  usbutils >= 0.82
 BuildRequires:  libblkid-devel >= 2.20
-BuildRequires:  intltool >= 0.40.0
-BuildRequires:  gperf
 BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
+BuildRequires:  libgcrypt-devel
+BuildRequires:  qrencode-devel
+BuildRequires:  hwdata
+BuildRequires:  libxslt
+BuildRequires:  docbook-style-xsl
+BuildRequires:  pkgconfig
+BuildRequires:  usbutils >= 0.82
+BuildRequires:  intltool >= 0.40.0
+BuildRequires:  gperf
 BuildRequires:  gtk-doc
+BuildRequires:  python2-devel
 %if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -52,7 +72,7 @@ Source0:        %{name}-git%{gitcommit}.tar.xz
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
 %endif
 # Fedora's default preset policy
-Source1:        99-default.preset
+Source1:        90-default.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
@@ -137,6 +157,14 @@ initialization at boot.
 'systemd-analyze plot' renders an SVG visualizing the parallel start of units
 at boot.
 
+%package python
+Summary:        Python Bindings for systemd
+License:        LGPLv2+
+Requires:       %{name} = %{version}-%{release}
+
+%description python
+This package contains python binds for systemd APIs
+
 %package -n libgudev1
 Summary:        Libraries for adding libudev support to applications that use glib
 Conflicts:      filesystem < 3
@@ -163,7 +191,6 @@ glib-based applications using libudev functionality.
 %{?gitcommit: ./autogen.sh }
 %configure \
         --with-distro=fedora \
-        --disable-plymouth \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static
@@ -219,7 +246,7 @@ glib-based applications using libudev functionality.
 /usr/bin/touch %{buildroot}%{_sysconfdir}/locale.conf
 /usr/bin/touch %{buildroot}%{_sysconfdir}/machine-id
 /usr/bin/touch %{buildroot}%{_sysconfdir}/machine-info
-/usr/bin/touch %{buildroot}%{_sysconfdir}/timezone
+/usr/bin/touch %{buildroot}%{_sysconfdir}/localtime
 /usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 /usr/bin/touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
@@ -296,6 +323,15 @@ else
         # internally in PID 1
         /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 fi
+
+# Migrate /etc/sysconfig/clock
+if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
+       . /etc/sysconfig/clock 2>&1 || :
+       if [ -n "$ZONE" -a -e "/usr/share/zoneinfo/$ZONE" ] ; then
+              /usr/bin/ln -sf "../usr/share/zoneinfo/$ZONE" /etc/localtime >/dev/null 2>&1 || :
+       fi
+fi
+/usr/bin/rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -386,6 +422,7 @@ fi
 %dir %{_prefix}/lib/firmware
 %dir %{_prefix}/lib/firmware/updates
 %dir %{_datadir}/systemd
+%dir %{_datadir}/pkgconfig
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -402,11 +439,11 @@ fi
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
 %ghost %config(noreplace) %{_sysconfdir}/hostname
+%ghost %config(noreplace) %{_sysconfdir}/localtime
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
-%ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %{_bindir}/systemd
 %{_bindir}/systemctl
@@ -441,7 +478,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
-%{_prefix}/lib/systemd/system-preset/99-default.preset
+%{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -516,6 +553,15 @@ fi
 %files analyze
 %{_bindir}/systemd-analyze
 
+%files python
+%{python_sitearch}/systemd/__init__.py
+%{python_sitearch}/systemd/__init__.pyc
+%{python_sitearch}/systemd/__init__.pyo
+%{python_sitearch}/systemd/_journal.so
+%{python_sitearch}/systemd/journal.py
+%{python_sitearch}/systemd/journal.pyc
+%{python_sitearch}/systemd/journal.pyo
+
 %files -n libgudev1
 %{_libdir}/libgudev-1.0.so.*
 %{_libdir}/girepository-1.0/GUdev-1.0.typelib
@@ -531,11 +577,67 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Thu Aug 16 2012 Ray Strode <rstrode@redhat.com> 188-3
+* Thu Sep 20 2012 Lennart Poettering <lpoetter@redhat.com> - 190-1
+- New upstream release
+- Take possession of /etc/localtime, and remove /etc/sysconfig/clock
+- https://bugzilla.redhat.com/show_bug.cgi?id=858780
+- https://bugzilla.redhat.com/show_bug.cgi?id=858787
+- https://bugzilla.redhat.com/show_bug.cgi?id=858771
+- https://bugzilla.redhat.com/show_bug.cgi?id=858754
+- https://bugzilla.redhat.com/show_bug.cgi?id=858746
+- https://bugzilla.redhat.com/show_bug.cgi?id=858266
+- https://bugzilla.redhat.com/show_bug.cgi?id=858224
+- https://bugzilla.redhat.com/show_bug.cgi?id=857670
+- https://bugzilla.redhat.com/show_bug.cgi?id=856975
+- https://bugzilla.redhat.com/show_bug.cgi?id=855863
+- https://bugzilla.redhat.com/show_bug.cgi?id=851970
+- https://bugzilla.redhat.com/show_bug.cgi?id=851275
+- https://bugzilla.redhat.com/show_bug.cgi?id=851131
+- https://bugzilla.redhat.com/show_bug.cgi?id=847472
+- https://bugzilla.redhat.com/show_bug.cgi?id=847207
+- https://bugzilla.redhat.com/show_bug.cgi?id=846483
+- https://bugzilla.redhat.com/show_bug.cgi?id=846085
+- https://bugzilla.redhat.com/show_bug.cgi?id=845973
+- https://bugzilla.redhat.com/show_bug.cgi?id=845194
+- https://bugzilla.redhat.com/show_bug.cgi?id=845028
+- https://bugzilla.redhat.com/show_bug.cgi?id=844630
+- https://bugzilla.redhat.com/show_bug.cgi?id=839736
+- https://bugzilla.redhat.com/show_bug.cgi?id=835848
+- https://bugzilla.redhat.com/show_bug.cgi?id=831740
+- https://bugzilla.redhat.com/show_bug.cgi?id=823485
+- https://bugzilla.redhat.com/show_bug.cgi?id=821813
+- https://bugzilla.redhat.com/show_bug.cgi?id=807886
+- https://bugzilla.redhat.com/show_bug.cgi?id=802198
+- https://bugzilla.redhat.com/show_bug.cgi?id=767795
+- https://bugzilla.redhat.com/show_bug.cgi?id=767561
+- https://bugzilla.redhat.com/show_bug.cgi?id=752774
+- https://bugzilla.redhat.com/show_bug.cgi?id=732874
+- https://bugzilla.redhat.com/show_bug.cgi?id=858735
+
+* Thu Sep 13 2012 Lennart Poettering <lpoetter@redhat.com> - 189-4
+- Don't pull in pkg-config as dep
+- https://bugzilla.redhat.com/show_bug.cgi?id=852828
+
+* Wed Sep 12 2012 Lennart Poettering <lpoetter@redhat.com> - 189-3
+- Update preset policy
+- Rename preset policy file from 99-default.preset to 90-default.preset so that people can order their own stuff after the Fedora default policy if they wish
+
+* Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-2
+- Update preset policy
+- https://bugzilla.redhat.com/show_bug.cgi?id=850814
+
+* Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-1
+- New upstream release
+
+* Thu Aug 16 2012 Ray Strode <rstrode@redhat.com> 188-4
 - more scriptlet fixes
   (move dm migration logic to %posttrans so the service
    files it's looking for are available at the time
    the logic is run)
+
+* Sat Aug 11 2012 Lennart Poettering <lpoetter@redhat.com> - 188-3
+- Remount file systems MS_PRIVATE before switching roots
+- https://bugzilla.redhat.com/show_bug.cgi?id=847418
 
 * Wed Aug 08 2012 Rex Dieter <rdieter@fedoraproject.org> - 188-2
 - fix scriptlets
