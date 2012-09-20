@@ -47,7 +47,7 @@ enable lm_sensors.service
 enable mcelog.*
 enable acpid.*
 enable smartd.service
-enable pcscd.*
+enable pcscd.socket
 
 # Other stuff
 enable abrtd.service
