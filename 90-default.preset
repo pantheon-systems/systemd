@@ -69,7 +69,6 @@ enable xenconsoled.service
 enable accounts-daemon.service
 enable rtkit-daemon.service
 enable upower.service
-enable gdm.service
 enable udisks2.service
 enable polkit.service
 enable packagekit-offline-update.service

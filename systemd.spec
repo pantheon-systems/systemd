@@ -21,7 +21,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        190
+Version:        191
 Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
@@ -73,6 +73,7 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 %endif
 # Fedora's default preset policy
 Source1:        90-default.preset
+Source5:        90-display-manager.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
@@ -254,6 +255,7 @@ glib-based applications using libudev functionality.
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
 /usr/bin/install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+/usr/bin/install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -479,6 +481,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/systemd/system-preset/90-default.preset
+%{_prefix}/lib/systemd/system-preset/90-display-manager.preset
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -577,6 +580,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-1
+- New upstream release
+- Enable all display managers by default, as discussed with Adam Williamson
+
 * Thu Sep 20 2012 Lennart Poettering <lpoetter@redhat.com> - 190-1
 - New upstream release
 - Take possession of /etc/localtime, and remove /etc/sysconfig/clock
