@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        191
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -80,6 +80,8 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+
+Patch1:         0001-journal-bring-mmap-cache-prototype-in-sync.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -187,6 +189,7 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -580,6 +583,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-2
+- Fix journal mmap header prototype definition to fix compilation on 32bit
+
 * Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-1
 - New upstream release
 - Enable all display managers by default, as discussed with Adam Williamson
