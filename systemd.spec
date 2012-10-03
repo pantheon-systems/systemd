@@ -21,7 +21,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        193
+Version:        194
 Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
@@ -582,6 +582,11 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Oct  3 2012 Lennart Poettering <lpoetter@redhat.com> - 194-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=859614
+- https://bugzilla.redhat.com/show_bug.cgi?id=859655
+
 * Fri Sep 28 2012 Lennart Poettering <lpoetter@redhat.com> - 193-1
 - New upstream release
 
