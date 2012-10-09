@@ -464,7 +464,7 @@ fi
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
 %{_bindir}/systemd-delta
-%{_bindir}/systemd-detect-virt
+%caps(cap_dac_override,cap_sys_ptrace=pe) %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
 %{_bindir}/udevadm
 %{_prefix}/lib/systemd/systemd
