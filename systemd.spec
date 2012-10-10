@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        194
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -293,6 +293,42 @@ glib-based applications using libudev functionality.
 /usr/bin/mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
 /usr/bin/mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
 
+%pretrans -p <lua>
+--# Migrate away from systemd-timedated-ntp.target.
+--# Take note which ntp services, if any, were pulled in by it.
+--# We'll enable them the usual way in %%post.
+--# Remove this after upgrades from F17 are no longer supported.
+function migrate_ntp()
+    --# Are we upgrading from a version that had systemd-timedated-ntp.target?
+    t = posix.stat("/usr/lib/systemd/system/systemd-timedated-ntp.target", "type")
+    if t ~= "regular" then return end
+
+    --# Was the target enabled?
+    t = posix.stat("/etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target", "type")
+    if t ~= "link" then return end
+
+    --# filesystem provides /var/lib/rpm-state since F17 GA
+    r,msg,errno = posix.mkdir("/var/lib/rpm-state/systemd")
+    if r == nil and errno ~= 17 then return end  --# EEXIST is fine.
+
+    --# Save the list of ntp services pulled by the target.
+    f = io.open("/var/lib/rpm-state/systemd/ntp-units", "w")
+    if f == nil then return end
+
+    files = posix.dir("/usr/lib/systemd/system/systemd-timedated-ntp.target.wants")
+    for i,name in ipairs(files) do
+        if name ~= "." and name ~= ".." then
+            s = string.format("%s\n", name)
+            f:write(s)
+        end
+    end
+
+    f:close()
+end
+
+migrate_ntp()
+return 0
+
 %post
 /usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
 /usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
@@ -325,6 +361,18 @@ else
         # This systemd service does not exist anymore, we now do it
         # internally in PID 1
         /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
+
+        # This systemd target does not exist anymore. It's been replaced
+        # by ntp-units.d.
+        /usr/bin/rm -f /etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target >/dev/null 2>&1 || :
+
+        # Enable the units recorded by %%pretrans
+        if [ -e /var/lib/rpm-state/systemd/ntp-units ] ; then
+                while read service; do
+                        /usr/bin/systemctl enable "$service" >/dev/null 2>&1 || :
+                done < /var/lib/rpm-state/systemd/ntp-units
+                /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units
+	fi
 fi
 
 # Migrate /etc/sysconfig/clock
@@ -582,6 +630,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Oct 10 2012 Michal Schmidt <mschmidt@redhat.com> - 194-2
+- Add scriptlets for migration away from systemd-timedated-ntp.target
+
 * Wed Oct  3 2012 Lennart Poettering <lpoetter@redhat.com> - 194-1
 - New upstream release
 - https://bugzilla.redhat.com/show_bug.cgi?id=859614
