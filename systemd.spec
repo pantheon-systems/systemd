@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -104,6 +104,7 @@ Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
+Provides:       syslog
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -639,6 +640,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-2
+- Provide syslog because the journal is fine as a syslog implementation
+
 * Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-1
 - New upstream release
 - https://bugzilla.redhat.com/show_bug.cgi?id=831665
