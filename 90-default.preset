@@ -32,6 +32,7 @@ enable libstoragemgmt.service
 enable lvm2-monitor.*
 enable lvm2-lvmetad.*
 enable dm-event.*
+enable dmraid-activation.service
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=855372
 enable mdmonitor.service

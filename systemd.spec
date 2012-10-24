@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -81,6 +81,8 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+# Prevent accidental removal of the systemd package
+Source6:        yum-protect-systemd.conf
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -276,6 +278,10 @@ glib-based applications using libudev functionality.
 # Install rsyslog fragment
 /usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
 /usr/bin/install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+
+# Install yum protection fragment
+/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
+/usr/bin/install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
 # To avoid making life hard for Rawhide-using developers, don't package the
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
@@ -522,6 +528,7 @@ fi
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
+%config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
@@ -671,6 +678,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Oct 24 2012 Michal Schmidt <mschmidt@redhat.com> - 195-4
+- add dmraid-activation.service to the default preset
+- add yum protected.d fragment
+- https://bugzilla.redhat.com/show_bug.cgi?id=869619
+- https://bugzilla.redhat.com/show_bug.cgi?id=869717
+
 * Wed Oct 24 2012 Kay Sievers <kay@redhat.com> - 195-3
 - Migrate /etc/sysconfig/ i18n, keyboard, network files/variables to
   systemd native files
