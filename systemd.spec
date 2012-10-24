@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -377,7 +377,7 @@ else
                         /usr/bin/systemctl enable "$service" >/dev/null 2>&1 || :
                 done < /var/lib/rpm-state/systemd/ntp-units
                 /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units
-	fi
+        fi
 fi
 
 # Migrate /etc/sysconfig/clock
@@ -388,6 +388,37 @@ if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
        fi
 fi
 /usr/bin/rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
+
+# Migrate /etc/sysconfig/i18n
+if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
+        unset LANG
+        . /etc/sysconfig/i18n 2>&1 || :
+        [ -n "$LANG" ] && echo LANG=$LANG > /etc/locale.conf 2>&1 || :
+fi
+
+# Migrate /etc/sysconfig/keyboard
+if [ -e /etc/sysconfig/keyboard -a ! -e /etc/vconsole.conf ]; then
+        unset SYSFONT
+        unset SYSFONTACM
+        unset UNIMAP
+        unset KEYMAP
+        [ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n 2>&1 || :
+        . /etc/sysconfig/keyboard 2>&1 || :
+        [ -n "$SYSFONT" ] && echo FONT=$SYSFONT > /etc/vconsole.conf 2>&1 || :
+        [ -n "$SYSFONTACM" ] && echo FONT_MAP=$SYSFONTACM >> /etc/vconsole.conf 2>&1 || :
+        [ -n "$UNIMAP" ] && echo FONT_UNIMAP=$UNIMAP >> /etc/vconsole.conf 2>&1 || :
+        [ -n "$KEYTABLE" ] && echo KEYMAP=$KEYTABLE >> /etc/vconsole.conf 2>&1 || :
+fi
+/usr/bin/rm -f /etc/sysconfig/i18n >/dev/null 2>&1 || :
+/usr/bin/rm -f /etc/sysconfig/keyboard >/dev/null 2>&1 || :
+
+# Migrate HOSTNAME= from /etc/sysconfig/network
+if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
+        unset HOSTNAME
+        . /etc/sysconfig/network 2>&1 || :
+        [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
+fi
+/usr/bin/sed -i '/HOSTNAME/d' /etc/sysconfig/network 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -640,6 +671,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Oct 24 2012 Kay Sievers <kay@redhat.com> - 195-3
+- Migrate /etc/sysconfig/ i18n, keyboard, network files/variables to
+  systemd native files
+
 * Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-2
 - Provide syslog because the journal is fine as a syslog implementation
 
