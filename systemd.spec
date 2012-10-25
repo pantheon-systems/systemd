@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -59,6 +59,7 @@ BuildRequires:  libtool
 %endif
 Requires(post): coreutils
 Requires(post): gawk
+Requires(post): sed
 Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
@@ -424,7 +425,7 @@ if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
         . /etc/sysconfig/network 2>&1 || :
         [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
 fi
-/usr/bin/sed -i '/HOSTNAME/d' /etc/sysconfig/network 2>&1 || :
+/usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -678,6 +679,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Oct 25 2012 Kay Sievers <kay@redhat.com> - 195-5
+- require 'sed', limit HOSTNAME= match
+
 * Wed Oct 24 2012 Michal Schmidt <mschmidt@redhat.com> - 195-4
 - add dmraid-activation.service to the default preset
 - add yum protected.d fragment
