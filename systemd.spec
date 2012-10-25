@@ -21,8 +21,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        190
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        195
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -42,6 +42,7 @@ BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
+BuildRequires:  libmicrohttpd-devel
 BuildRequires:  hwdata
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
@@ -73,12 +74,15 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 %endif
 # Fedora's default preset policy
 Source1:        90-default.preset
+Source5:        90-display-manager.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+# Prevent accidental removal of the systemd package
+Source6:        yum-protect-systemd.conf
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -102,6 +106,7 @@ Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
+Provides:       syslog
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -254,6 +259,7 @@ glib-based applications using libudev functionality.
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
 /usr/bin/install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+/usr/bin/install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -273,11 +279,19 @@ glib-based applications using libudev functionality.
 /usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
 /usr/bin/install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 
+# Install yum protection fragment
+/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
+/usr/bin/install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
+
 # To avoid making life hard for Rawhide-using developers, don't package the
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
 /usr/bin/rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+
+# For now remove /var/log/README since we are not enabling persistant
+# logging yet.
+/usr/bin/rm -f %{buildroot}%{_localstatedir}/log/README
 
 %pre
 /usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
@@ -289,6 +303,42 @@ glib-based applications using libudev functionality.
 # Rename configuration files that changed their names
 /usr/bin/mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
 /usr/bin/mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
+
+%pretrans -p <lua>
+--# Migrate away from systemd-timedated-ntp.target.
+--# Take note which ntp services, if any, were pulled in by it.
+--# We'll enable them the usual way in %%post.
+--# Remove this after upgrades from F17 are no longer supported.
+function migrate_ntp()
+    --# Are we upgrading from a version that had systemd-timedated-ntp.target?
+    t = posix.stat("/usr/lib/systemd/system/systemd-timedated-ntp.target", "type")
+    if t ~= "regular" then return end
+
+    --# Was the target enabled?
+    t = posix.stat("/etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target", "type")
+    if t ~= "link" then return end
+
+    --# filesystem provides /var/lib/rpm-state since F17 GA
+    r,msg,errno = posix.mkdir("/var/lib/rpm-state/systemd")
+    if r == nil and errno ~= 17 then return end  --# EEXIST is fine.
+
+    --# Save the list of ntp services pulled by the target.
+    f = io.open("/var/lib/rpm-state/systemd/ntp-units", "w")
+    if f == nil then return end
+
+    files = posix.dir("/usr/lib/systemd/system/systemd-timedated-ntp.target.wants")
+    for i,name in ipairs(files) do
+        if name ~= "." and name ~= ".." then
+            s = string.format("%s\n", name)
+            f:write(s)
+        end
+    end
+
+    f:close()
+end
+
+migrate_ntp()
+return 0
 
 %post
 /usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
@@ -322,6 +372,18 @@ else
         # This systemd service does not exist anymore, we now do it
         # internally in PID 1
         /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
+
+        # This systemd target does not exist anymore. It's been replaced
+        # by ntp-units.d.
+        /usr/bin/rm -f /etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target >/dev/null 2>&1 || :
+
+        # Enable the units recorded by %%pretrans
+        if [ -e /var/lib/rpm-state/systemd/ntp-units ] ; then
+                while read service; do
+                        /usr/bin/systemctl enable "$service" >/dev/null 2>&1 || :
+                done < /var/lib/rpm-state/systemd/ntp-units
+                /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units
+        fi
 fi
 
 # Migrate /etc/sysconfig/clock
@@ -332,6 +394,37 @@ if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
        fi
 fi
 /usr/bin/rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
+
+# Migrate /etc/sysconfig/i18n
+if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
+        unset LANG
+        . /etc/sysconfig/i18n 2>&1 || :
+        [ -n "$LANG" ] && echo LANG=$LANG > /etc/locale.conf 2>&1 || :
+fi
+
+# Migrate /etc/sysconfig/keyboard
+if [ -e /etc/sysconfig/keyboard -a ! -e /etc/vconsole.conf ]; then
+        unset SYSFONT
+        unset SYSFONTACM
+        unset UNIMAP
+        unset KEYMAP
+        [ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n 2>&1 || :
+        . /etc/sysconfig/keyboard 2>&1 || :
+        [ -n "$SYSFONT" ] && echo FONT=$SYSFONT > /etc/vconsole.conf 2>&1 || :
+        [ -n "$SYSFONTACM" ] && echo FONT_MAP=$SYSFONTACM >> /etc/vconsole.conf 2>&1 || :
+        [ -n "$UNIMAP" ] && echo FONT_UNIMAP=$UNIMAP >> /etc/vconsole.conf 2>&1 || :
+        [ -n "$KEYTABLE" ] && echo KEYMAP=$KEYTABLE >> /etc/vconsole.conf 2>&1 || :
+fi
+/usr/bin/rm -f /etc/sysconfig/i18n >/dev/null 2>&1 || :
+/usr/bin/rm -f /etc/sysconfig/keyboard >/dev/null 2>&1 || :
+
+# Migrate HOSTNAME= from /etc/sysconfig/network
+if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
+        unset HOSTNAME
+        . /etc/sysconfig/network 2>&1 || :
+        [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
+fi
+/usr/bin/sed -i '/HOSTNAME/d' /etc/sysconfig/network 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -435,9 +528,11 @@ fi
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
+%config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
+%{_sysconfdir}/rc.d/init.d/README
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/localtime
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
@@ -461,8 +556,12 @@ fi
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
 %{_bindir}/systemd-delta
-%{_bindir}/systemd-detect-virt
+%caps(cap_dac_override,cap_sys_ptrace=pe) %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
+%{_bindir}/hostnamectl
+%{_bindir}/localectl
+%{_bindir}/timedatectl
+%{_bindir}/systemd-coredumpctl
 %{_bindir}/udevadm
 %{_prefix}/lib/systemd/systemd
 %{_prefix}/lib/systemd/system
@@ -479,6 +578,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/systemd/system-preset/90-default.preset
+%{_prefix}/lib/systemd/system-preset/90-display-manager.preset
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -509,6 +609,7 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
+%{_datadir}/systemd/gatewayd/browse.html
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -577,6 +678,54 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Oct 24 2012 Michal Schmidt <mschmidt@redhat.com> - 195-4
+- add dmraid-activation.service to the default preset
+- add yum protected.d fragment
+- https://bugzilla.redhat.com/show_bug.cgi?id=869619
+- https://bugzilla.redhat.com/show_bug.cgi?id=869717
+
+* Wed Oct 24 2012 Kay Sievers <kay@redhat.com> - 195-3
+- Migrate /etc/sysconfig/ i18n, keyboard, network files/variables to
+  systemd native files
+
+* Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-2
+- Provide syslog because the journal is fine as a syslog implementation
+
+* Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=831665
+- https://bugzilla.redhat.com/show_bug.cgi?id=847720
+- https://bugzilla.redhat.com/show_bug.cgi?id=858693
+- https://bugzilla.redhat.com/show_bug.cgi?id=863481
+- https://bugzilla.redhat.com/show_bug.cgi?id=864629
+- https://bugzilla.redhat.com/show_bug.cgi?id=864672
+- https://bugzilla.redhat.com/show_bug.cgi?id=864674
+- https://bugzilla.redhat.com/show_bug.cgi?id=865128
+- https://bugzilla.redhat.com/show_bug.cgi?id=866346
+- https://bugzilla.redhat.com/show_bug.cgi?id=867407
+- https://bugzilla.redhat.com/show_bug.cgi?id=868603
+
+* Wed Oct 10 2012 Michal Schmidt <mschmidt@redhat.com> - 194-2
+- Add scriptlets for migration away from systemd-timedated-ntp.target
+
+* Wed Oct  3 2012 Lennart Poettering <lpoetter@redhat.com> - 194-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=859614
+- https://bugzilla.redhat.com/show_bug.cgi?id=859655
+
+* Fri Sep 28 2012 Lennart Poettering <lpoetter@redhat.com> - 193-1
+- New upstream release
+
+* Tue Sep 25 2012 Lennart Poettering <lpoetter@redhat.com> - 192-1
+- New upstream release
+
+* Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-2
+- Fix journal mmap header prototype definition to fix compilation on 32bit
+
+* Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-1
+- New upstream release
+- Enable all display managers by default, as discussed with Adam Williamson
+
 * Thu Sep 20 2012 Lennart Poettering <lpoetter@redhat.com> - 190-1
 - New upstream release
 - Take possession of /etc/localtime, and remove /etc/sysconfig/clock
