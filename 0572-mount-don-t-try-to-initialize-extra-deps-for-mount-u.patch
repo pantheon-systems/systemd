@@ -1,0 +1,83 @@
+From 64d56941422d305c0fcddef7fe52218ce5dea17a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 16 Oct 2012 19:50:26 +0200
+Subject: [PATCH] mount: don't try to initialize extra deps for mount units
+ before initializing their basic fields
+
+Under some circumstances this could lead to a segfault since we we
+half-initialized a mount unit, then tried to hook it into the network of
+things and while doing that recursively ended up looking at our
+half-initialized mount unit again assuming it was fully initialized.
+(cherry picked from commit b87705cdd2f791f8520edb78791d3e6f78afd481)
+---
+ src/core/mount.c  | 14 +++++++++++---
+ src/core/socket.c |  9 ++++++---
+ 2 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 86bf16c..4f9fa77 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1470,6 +1470,7 @@ static int mount_add_one(
+         bool delete;
+         char *e, *w = NULL, *o = NULL, *f = NULL;
+         MountParameters *p;
++        bool load_extras = false;
+ 
+         assert(m);
+         assert(what);
+@@ -1525,9 +1526,10 @@ static int mount_add_one(
+                 if (u->load_state == UNIT_ERROR) {
+                         u->load_state = UNIT_LOADED;
+                         u->load_error = 0;
+-                        r = mount_add_extras(MOUNT(u));
+-                        if (r < 0)
+-                                goto fail;
++
++                        /* Load in the extras later on, after we
++                         * finished initialization of the unit */
++                        load_extras = true;
+                 }
+         }
+ 
+@@ -1564,6 +1566,12 @@ static int mount_add_one(
+ 
+         p->passno = passno;
+ 
++        if (load_extras) {
++                r = mount_add_extras(MOUNT(u));
++                if (r < 0)
++                        goto fail;
++        }
++
+         unit_add_to_dbus_queue(u);
+ 
+         return 0;
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 2b1cf52..23e8932 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -263,7 +263,8 @@ int socket_add_one_mount_link(Socket *s, Mount *m) {
+         if (!socket_needs_mount(s, m->where))
+                 return 0;
+ 
+-        if ((r = unit_add_two_dependencies(UNIT(s), UNIT_AFTER, UNIT_REQUIRES, UNIT(m), true)) < 0)
++        r = unit_add_two_dependencies(UNIT(s), UNIT_AFTER, UNIT_REQUIRES, UNIT(m), true);
++        if (r < 0)
+                 return r;
+ 
+         return 0;
+@@ -275,9 +276,11 @@ static int socket_add_mount_links(Socket *s) {
+ 
+         assert(s);
+ 
+-        LIST_FOREACH(units_by_type, other, UNIT(s)->manager->units_by_type[UNIT_MOUNT])
+-                if ((r = socket_add_one_mount_link(s, MOUNT(other))) < 0)
++        LIST_FOREACH(units_by_type, other, UNIT(s)->manager->units_by_type[UNIT_MOUNT]) {
++                r = socket_add_one_mount_link(s, MOUNT(other));
++                if (r < 0)
+                         return r;
++        }
+ 
+         return 0;
+ }

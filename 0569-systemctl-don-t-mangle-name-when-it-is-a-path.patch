@@ -1,0 +1,35 @@
+From 11a2fb31c2dcd7465240d01b6b5471a140abe008 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Mon, 15 Oct 2012 14:51:27 +0200
+Subject: [PATCH] systemctl: don't mangle name when it is a path
+
+systemctl enable, disable, ... can also accept full path and in this case
+we don't need to alter it.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=866346
+(cherry picked from commit 44386fc156bfa2d623567ff7f7c8f313cfafb9bc)
+---
+ src/systemctl/systemctl.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 23977ac..0bf57ad 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -4105,7 +4105,15 @@ static int mangle_names(char **original_names, char ***mangled_names) {
+ 
+         i = l;
+         STRV_FOREACH(name, original_names) {
+-                *i = unit_name_mangle(*name);
++
++                /* When enabling units qualified path names are OK,
++                 * too, hence allow them explicitly. */
++
++                if (is_path(*name))
++                        *i = strdup(*name);
++                else
++                        *i = unit_name_mangle(*name);
++
+                 if (!*i) {
+                         strv_free(l);
+                         return -ENOMEM;

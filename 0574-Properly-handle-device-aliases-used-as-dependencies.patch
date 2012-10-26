@@ -1,0 +1,45 @@
+From ccb91ca18924663a6088865cfab642c38332cacf Mon Sep 17 00:00:00 2001
+From: Eelco Dolstra <eelco.dolstra@logicblox.com>
+Date: Wed, 10 Oct 2012 16:43:10 -0400
+Subject: [PATCH] Properly handle device aliases used as dependencies
+
+If a device unit has aliases defined in udev rules, and there are
+other units that depend on that alias, as in
+
+  BindTo=sys-subsystem-net-devices-eth0.device
+
+then systemd will fail the start the alias, and any dependent units
+will time out.  See
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=52580
+
+This is because unit_add_name() in device_add_escaped_name() will
+return EEXIST.
+
+The solution taken here is to call device_update_unit() on the alias
+name.  Thus if a unit with the alias name already exists, we reuse it;
+otherwise a new unit is created.  Creating multiple units for a single
+device is perhaps suboptimal, but it's consistent with the treatment
+of udev symlinks in device_process_new_device().
+(cherry picked from commit 22349cee29b31cde7ef8582b4882475f553af97a)
+---
+ src/core/device.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/src/core/device.c b/src/core/device.c
+index 4502f9a..a7c695b 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -269,11 +269,8 @@ static int device_update_unit(Manager *m, struct udev_device *dev, const char *p
+                                         log_warning("SYSTEMD_ALIAS for %s is not a path, ignoring: %s", sysfs, e);
+                                         free(e);
+                                 } else {
+-
+-                                        r = device_add_escaped_name(u, e);
++                                        device_update_unit(m, dev, e, false);
+                                         free(e);
+-                                        if (r < 0)
+-                                                goto fail;
+                                 }
+                         }
+                 }

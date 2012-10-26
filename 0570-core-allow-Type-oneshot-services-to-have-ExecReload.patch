@@ -1,0 +1,40 @@
+From 0a56ef568ab927317ded9fb927a92d03b64cd3da Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Mantas=20Mikul=C4=97nas?= <grawity@gmail.com>
+Date: Wed, 10 Oct 2012 20:18:42 +0300
+Subject: [PATCH] core: allow Type=oneshot services to have ExecReload
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use cases:
+
+ * iptables.service – atomically reload rules without having to flush
+   them beforehand (which may leave the system insecure if reload fails)
+
+ * rpc-nfsd.service – reexport filesystems after /etc/exports update
+   without completely stopping and restarting nfsd
+
+(In both cases, the actual service is provided by a kernel module and
+does not have any associated user-space processes, thus Type=oneshot.)
+(cherry picked from commit 2abba39d759bacebd7461f7370bb108f48dcce92)
+---
+ src/core/service.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index d0369da..f4c5d1c 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1154,12 +1154,6 @@ static int service_verify(Service *s) {
+                 return -EINVAL;
+         }
+ 
+-        if (s->type == SERVICE_ONESHOT &&
+-            s->exec_command[SERVICE_EXEC_RELOAD]) {
+-                log_error("%s has an ExecReload setting, which is not allowed for Type=oneshot services. Refusing.", UNIT(s)->id);
+-                return -EINVAL;
+-        }
+-
+         if (s->type == SERVICE_DBUS && !s->bus_name) {
+                 log_error("%s is of type D-Bus but no D-Bus service name has been specified. Refusing.", UNIT(s)->id);
+                 return -EINVAL;

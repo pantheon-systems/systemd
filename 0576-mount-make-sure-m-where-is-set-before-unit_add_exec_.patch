@@ -1,0 +1,63 @@
+From c0a4e5dd415c28fbedde59d37ce2ae6f52159ff9 Mon Sep 17 00:00:00 2001
+From: Will Woods <wwoods@redhat.com>
+Date: Tue, 16 Oct 2012 17:04:34 -0400
+Subject: [PATCH] mount: make sure m->where is set before
+ unit_add_exec_dependencies()
+
+If you enter unit_add_exec_dependencies with m->where = NULL, you'll
+very likely end up aborting somewhere under socket_needs_mount.
+
+(When systemd goes to check to see if the journald socket requires your
+mount, it'll do path_startswith(path, m->where)... *kaboom*)
+
+This patch should ensure that:
+
+    a) both branches in mount_add_one() set m->where, and
+    b) mount_add_extras() calls unit_add_exec_dependencies() *after*
+       setting m->where.
+(cherry picked from commit bcbd5405b1b6d9d219259e3be2c3ec4d92812bcb)
+---
+ src/core/mount.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 4f9fa77..5eba12c 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -594,10 +594,6 @@ static int mount_add_extras(Mount *m) {
+         Unit *u = UNIT(m);
+         int r;
+ 
+-        r = unit_add_exec_dependencies(u, &m->exec_context);
+-        if (r < 0)
+-                return r;
+-
+         if (UNIT(m)->fragment_path)
+                 m->from_fragment = true;
+ 	else if (m->from_etc_fstab)
+@@ -614,6 +610,10 @@ static int mount_add_extras(Mount *m) {
+ 
+         path_kill_slashes(m->where);
+ 
++        r = unit_add_exec_dependencies(u, &m->exec_context);
++        if (r < 0)
++                return r;
++
+         if (!UNIT(m)->description) {
+                 r = unit_set_description(u, m->where);
+                 if (r < 0)
+@@ -1523,6 +1523,14 @@ static int mount_add_one(
+                 delete = false;
+                 free(e);
+ 
++                if (!MOUNT(u)->where) {
++                        MOUNT(u)->where = strdup(where);
++                        if (!MOUNT(u)->where) {
++                                r = -ENOMEM;
++                                goto fail;
++                        }
++                }
++
+                 if (u->load_state == UNIT_ERROR) {
+                         u->load_state = UNIT_LOADED;
+                         u->load_error = 0;

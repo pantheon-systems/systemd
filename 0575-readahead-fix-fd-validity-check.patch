@@ -1,0 +1,24 @@
+From cb99229d9622cf49a04667cc004851a1568c93f8 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 22 Oct 2012 22:07:31 +0200
+Subject: [PATCH] readahead: fix fd validity check
+
+https://bugzilla.redhat.com/show_bug.cgi?id=868603
+(cherry picked from commit c4b996bd8748d14d4bb298462a29fbd977fa6fef)
+---
+ src/readahead/readahead-collect.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
+index b8825a6..2bc0379 100644
+--- a/src/readahead/readahead-collect.c
++++ b/src/readahead/readahead-collect.c
+@@ -461,7 +461,7 @@ static int collect(const char *root) {
+                                 log_warning("readlink(%s) failed: %s", fn, strerror(-k));
+ 
+                 next_iteration:
+-                        if (m->fd)
++                        if (m->fd >= 0)
+                                 close_nointr_nofail(m->fd);
+                 }
+         }

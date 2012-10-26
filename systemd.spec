@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        20%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        21%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -628,6 +628,16 @@ Patch0565:      0565-rules-only-mark-MD-disks-not-partitions-with-SYSTEMD.patch
 Patch0566:      0566-tmpfiles-restore-previous-behavior-for-F-f.patch
 Patch0567:      0567-shared-fail-mkdir_p-if-the-target-exists-and-is-not-.patch
 Patch0568:      0568-sysctl-avoiding-exiting-with-error-on-EEXIST.patch
+Patch0569:      0569-systemctl-don-t-mangle-name-when-it-is-a-path.patch
+Patch0570:      0570-core-allow-Type-oneshot-services-to-have-ExecReload.patch
+Patch0571:      0571-systemctl-append-.service-when-unit-does-not-have-va.patch
+Patch0572:      0572-mount-don-t-try-to-initialize-extra-deps-for-mount-u.patch
+Patch0573:      0573-udev-support-multiple-entries-for-ENV-SYSTEMD_ALIAS-.patch
+Patch0574:      0574-Properly-handle-device-aliases-used-as-dependencies.patch
+Patch0575:      0575-readahead-fix-fd-validity-check.patch
+Patch0576:      0576-mount-make-sure-m-where-is-set-before-unit_add_exec_.patch
+Patch0577:      0577-job-avoid-recursion-into-transaction-code-from-job-c.patch
+Patch0578:      0578-sysctl-parse-all-keys-in-a-config-file.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -1016,6 +1026,12 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Fri Oct 26 2012 Michal Schmidt <mschmidt@redhat.com> - 44-21
+- Fixes from upstream v195+:
+- Don't forbid ExecReload in oneshot units.
+- various fixes
+- Resolves: #866346, #868603, #869779, fdo#52580
+
 * Fri Oct 12 2012 Michal Schmidt <mschmidt@redhat.com> - 44-20
 - Revert the ntp migration code. Not going to do it in F17.
 - Backports from upstream v194+:

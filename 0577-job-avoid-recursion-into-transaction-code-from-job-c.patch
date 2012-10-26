@@ -1,0 +1,46 @@
+From 38012e20ada9a6d0eef38ce4abe6e18403c1e9dc Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 25 Oct 2012 02:31:49 +0200
+Subject: [PATCH] job: avoid recursion into transaction code from job
+ cancelation
+
+I hit an "assert(j->installed)" failure in transaction_apply(). Looking
+into the backtrace I saw what happened:
+1. The system was booting. var.mount/start was an installed job.
+2. I pressed Ctrl+Alt+Del.
+3. reboot.target was going to be isolated.
+4. transaction_apply() proceeded to install a var.mount/stop job.
+5. job_install() canceled the conflicting start job.
+6. Depending jobs ended recursively with JOB_DEPENDENCY, among them was
+   local-fs.target/start.
+7. Its OnFailure action triggered - emergency.target was now going to be
+   isolated.
+8. We recursed back into transaction_apply() where the half-installed
+   var.mount/stop job confused us.
+
+Recursing from job installation back into the transaction code cannot be
+a good idea. Avoid the problem by canceling the conflicting job
+non-recursively in job_install(). I don't think we'll miss anything by
+not recursing here. After all, we are called from transaction_apply().
+We will not be installing just this one job, but all jobs from a
+transaction. All requirement dependencies will be included in it and
+will be installed separately. Every transaction job will get a chance
+to cancel its own conflicting installed job.
+(cherry picked from commit 1abc85b8d026a2d72442b0edaee5213d0ee73c1f)
+---
+ src/core/job.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 020fe4d..1fff653 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -178,7 +178,7 @@ Job* job_install(Job *j) {
+ 
+         if (uj) {
+                 if (j->type != JOB_NOP && job_type_is_conflicting(uj->type, j->type))
+-                        job_finish_and_invalidate(uj, JOB_CANCELED, true);
++                        job_finish_and_invalidate(uj, JOB_CANCELED, false);
+                 else {
+                         /* not conflicting, i.e. mergeable */
+ 
