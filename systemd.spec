@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -59,6 +59,7 @@ BuildRequires:  libtool
 %endif
 Requires(post): coreutils
 Requires(post): gawk
+Requires(post): sed
 Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
@@ -66,6 +67,7 @@ Requires:       dbus
 Requires:       hwdata
 Requires:       filesystem >= 3
 Requires:       nss-myhostname
+Requires:       %{name}-libs = %{version}-%{release}
 %if %{defined gitcommit}
 # Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
 Source0:        %{name}-git%{gitcommit}.tar.xz
@@ -83,6 +85,9 @@ Source3:        udlfb.conf
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
+
+# Temporary workaround for build error https://bugzilla.redhat.com/show_bug.cgi?id=872638
+Patch0:         disable-broken-test-build.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -121,7 +126,6 @@ work as a drop-in replacement for sysvinit.
 %package libs
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
-Requires:       %{name} = %{version}-%{release}
 Obsoletes:      libudev < 183
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
@@ -191,6 +195,7 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch0 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -398,8 +403,32 @@ fi
 # Migrate /etc/sysconfig/i18n
 if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
         unset LANG
+        unset LC_CTYPE
+        unset LC_NUMERIC
+        unset LC_TIME
+        unset LC_COLLATE
+        unset LC_MONETARY
+        unset LC_MESSAGES
+        unset LC_PAPER
+        unset LC_NAME
+        unset LC_ADDRESS
+        unset LC_TELEPHONE
+        unset LC_MEASUREMENT
+        unset LC_IDENTIFICATION
         . /etc/sysconfig/i18n 2>&1 || :
         [ -n "$LANG" ] && echo LANG=$LANG > /etc/locale.conf 2>&1 || :
+        [ -n "$LC_CTYPE" ] && echo LC_CTYPE=$LC_CTYPE >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_NUMERIC" ] && echo LC_NUMERIC=$LC_NUMERIC >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_TIME" ] && echo LC_TIME=$LC_TIME >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_COLLATE" ] && echo LC_COLLATE=$LC_COLLATE >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_MONETARY" ] && echo LC_MONETARY=$LC_MONETARY >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_MESSAGES" ] && echo LC_MESSAGES=$LC_MESSAGES >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_PAPER" ] && echo LC_PAPER=$LC_PAPER >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_NAME" ] && echo LC_NAME=$LC_NAME >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_ADDRESS" ] && echo LC_ADDRESS=$LC_ADDRESS >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_TELEPHONE" ] && echo LC_TELEPHONE=$LC_TELEPHONE >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_MEASUREMENT" ] && echo LC_MEASUREMENT=$LC_MEASUREMENT >> /etc/locale.conf 2>&1 || :
+        [ -n "$LC_IDENTIFICATION" ] && echo LC_IDENTIFICATION=$LC_IDENTIFICATION >> /etc/locale.conf 2>&1 || :
 fi
 
 # Migrate /etc/sysconfig/keyboard
@@ -424,7 +453,7 @@ if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
         . /etc/sysconfig/network 2>&1 || :
         [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
 fi
-/usr/bin/sed -i '/HOSTNAME/d' /etc/sysconfig/network 2>&1 || :
+/usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -678,6 +707,15 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Nov 09 2012 Michal Schmidt <mschmidt@redhat.com> - 195-6
+- Fix cyclical dep between systemd and systemd-libs.
+- Avoid broken build of test-journal-syslog.
+- https://bugzilla.redhat.com/show_bug.cgi?id=873387
+- https://bugzilla.redhat.com/show_bug.cgi?id=872638
+
+* Thu Oct 25 2012 Kay Sievers <kay@redhat.com> - 195-5
+- require 'sed', limit HOSTNAME= match
+
 * Wed Oct 24 2012 Michal Schmidt <mschmidt@redhat.com> - 195-4
 - add dmraid-activation.service to the default preset
 - add yum protected.d fragment
