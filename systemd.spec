@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -88,6 +88,8 @@ Source6:        yum-protect-systemd.conf
 
 # Temporary workaround for build error https://bugzilla.redhat.com/show_bug.cgi?id=872638
 Patch0:         disable-broken-test-build.patch
+# F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
+Patch1:         0001-revert-udev-killing.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -196,6 +198,7 @@ glib-based applications using libudev functionality.
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
 %patch0 -p1
+%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -707,6 +710,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Nov 15 2012 Michal Schmidt <mschmidt@redhat.com> - 195-7
+- Revert udev killing cgroup patch for F18 Beta.
+- https://bugzilla.redhat.com/show_bug.cgi?id=873576
+
 * Fri Nov 09 2012 Michal Schmidt <mschmidt@redhat.com> - 195-6
 - Fix cyclical dep between systemd and systemd-libs.
 - Avoid broken build of test-journal-syslog.
