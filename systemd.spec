@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        195
-Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -90,6 +90,11 @@ Source6:        yum-protect-systemd.conf
 Patch0:         disable-broken-test-build.patch
 # F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
 Patch1:         0001-revert-udev-killing.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=873459
+Patch2:         0001-shutdown-readd-explicit-sync-when-shutting-down.patch
+Patch3:         0001-umount-always-remount-read-only-before-unmounting-in.patch
+Patch4:         0001-switch-root-try-pivot_root-before-overmounting.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -199,6 +204,9 @@ glib-based applications using libudev functionality.
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -418,7 +426,7 @@ if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
         unset LC_TELEPHONE
         unset LC_MEASUREMENT
         unset LC_IDENTIFICATION
-        . /etc/sysconfig/i18n 2>&1 || :
+        . /etc/sysconfig/i18n >/dev/null 2>&1 || :
         [ -n "$LANG" ] && echo LANG=$LANG > /etc/locale.conf 2>&1 || :
         [ -n "$LC_CTYPE" ] && echo LC_CTYPE=$LC_CTYPE >> /etc/locale.conf 2>&1 || :
         [ -n "$LC_NUMERIC" ] && echo LC_NUMERIC=$LC_NUMERIC >> /etc/locale.conf 2>&1 || :
@@ -440,8 +448,8 @@ if [ -e /etc/sysconfig/keyboard -a ! -e /etc/vconsole.conf ]; then
         unset SYSFONTACM
         unset UNIMAP
         unset KEYMAP
-        [ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n 2>&1 || :
-        . /etc/sysconfig/keyboard 2>&1 || :
+        [ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n >/dev/null 2>&1 || :
+        . /etc/sysconfig/keyboard >/dev/null 2>&1 || :
         [ -n "$SYSFONT" ] && echo FONT=$SYSFONT > /etc/vconsole.conf 2>&1 || :
         [ -n "$SYSFONTACM" ] && echo FONT_MAP=$SYSFONTACM >> /etc/vconsole.conf 2>&1 || :
         [ -n "$UNIMAP" ] && echo FONT_UNIMAP=$UNIMAP >> /etc/vconsole.conf 2>&1 || :
@@ -453,10 +461,10 @@ fi
 # Migrate HOSTNAME= from /etc/sysconfig/network
 if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
         unset HOSTNAME
-        . /etc/sysconfig/network 2>&1 || :
+        . /etc/sysconfig/network >/dev/null 2>&1 || :
         [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
 fi
-/usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network 2>&1 || :
+/usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network >/dev/null 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -710,6 +718,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Nov 20 2012 Lennart Poettering <lpoetter@redhat.com> - 195-8
+- https://bugzilla.redhat.com/show_bug.cgi?id=873459
+- https://bugzilla.redhat.com/show_bug.cgi?id=878093
+
 * Thu Nov 15 2012 Michal Schmidt <mschmidt@redhat.com> - 195-7
 - Revert udev killing cgroup patch for F18 Beta.
 - https://bugzilla.redhat.com/show_bug.cgi?id=873576

@@ -1,0 +1,81 @@
+From 891a4918ef75fa81e22691156c050d061bd53dd3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 16 Nov 2012 18:15:30 +0100
+Subject: [PATCH] switch-root: try pivot_root() before overmounting /
+
+We should always try to umount the old root dir if possible, instead of
+overmounting it -- if that's possible.
+
+The initial ("first") kernel rootfs can never be umounted, hence
+for the usual nitrd case we never bothered using pivot_root() and
+hence with fully unmounting it. However, fedup now tranisitions twice
+during boot, and in that case it is highly desirable that the "second"
+root dir is entirely unmounted when we switch to the "third". This patch
+makes that possible.
+
+The pivot_root() needs a directory in the "third" root dir, to move the
+"second" root dir to. We use /mnt for that, under the assumption that
+this directory is likely to exist, and is not itself a mount point.
+---
+ src/core/switch-root.c | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/switch-root.c b/src/core/switch-root.c
+index 150332a..ce0e41d 100644
+--- a/src/core/switch-root.c
++++ b/src/core/switch-root.c
+@@ -30,6 +30,7 @@
+ #include "util.h"
+ #include "path-util.h"
+ #include "switch-root.h"
++#include "missing.h"
+ 
+ int switch_root(const char *new_root) {
+ 
+@@ -44,10 +45,21 @@ int switch_root(const char *new_root) {
+         struct stat new_root_stat;
+         bool old_root_remove;
+         const char *i;
++        _cleanup_free_ char *temporary_old_root = NULL;
+ 
+         if (path_equal(new_root, "/"))
+                 return 0;
+ 
++        /* When using pivot_root() we assume that /mnt exists as place
++         * we can temporarily move the old root to. As we immediately
++         * unmount it from there it doesn't matter much which
++         * directory we choose for this, but it should be more likely
++         * than not that /mnt exists and is suitable as mount point
++         * and is on the same fs as the old root dir */
++        temporary_old_root = strappend(new_root, "/mnt");
++        if (!temporary_old_root)
++                return -ENOMEM;
++
+         old_root_remove = in_initrd();
+ 
+         if (stat(new_root, &new_root_stat) < 0) {
+@@ -103,7 +115,20 @@ int switch_root(const char *new_root) {
+                         log_warning("Failed to open root directory: %m");
+         }
+ 
+-        if (mount(new_root, "/", NULL, MS_MOVE, NULL) < 0) {
++        /* We first try a pivot_root() so that we can umount the old
++         * root dir. In many cases (i.e. where rootfs is /), that's
++         * not possible however, and hence we simply overmount root */
++        if (pivot_root(new_root, temporary_old_root) >= 0) {
++
++                /* Immediately get rid of the old root. Since we are
++                 * running off it we need to do this lazily. */
++                if (umount2(temporary_old_root, MNT_DETACH) < 0) {
++                        r = -errno;
++                        log_error("Failed to umount old root dir %s: %m", temporary_old_root);
++                        goto fail;
++                }
++
++        } else if (mount(new_root, "/", NULL, MS_MOVE, NULL) < 0) {
+                 r = -errno;
+                 log_error("Failed to mount moving %s to /: %m", new_root);
+                 goto fail;
+-- 
+1.7.12.1
+
