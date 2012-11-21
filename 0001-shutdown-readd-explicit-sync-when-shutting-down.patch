@@ -1,0 +1,49 @@
+From 0049f05a8bb82c3e084bacc5945596761d706c55 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 16 Nov 2012 01:30:29 +0100
+Subject: [PATCH] shutdown: readd explicit sync() when shutting down
+
+As it turns out reboot() doesn't actually imply a file system sync, but
+only a disk sync. Accordingly, readd explicit sync() invocations
+immediately before we invoke reboot().
+
+This is much less dramatic than it might sounds as we umount all
+disks/read-only remount them anyway before going down.
+---
+ src/core/service.c  | 1 +
+ src/core/shutdown.c | 7 +++++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index cf08485..df72aba 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -2485,6 +2485,7 @@ static int service_start_limit_test(Service *s) {
+ 
+         case SERVICE_START_LIMIT_REBOOT_IMMEDIATE:
+                 log_warning("%s start request repeated too quickly, rebooting immediately.", UNIT(s)->id);
++                sync();
+                 reboot(RB_AUTOBOOT);
+                 break;
+ 
+diff --git a/src/core/shutdown.c b/src/core/shutdown.c
+index cc8c57b..b59aef1 100644
+--- a/src/core/shutdown.c
++++ b/src/core/shutdown.c
+@@ -273,6 +273,13 @@ int main(int argc, char *argv[]) {
+                 }
+         }
+ 
++        /* The kernel will automaticall flush ATA disks and suchlike
++         * on reboot(), but the file systems need to be synce'd
++         * explicitly in advance. So let's do this here, but not
++         * needlessly slow down containers. */
++        if (!in_container)
++                sync();
++
+         if (cmd == LINUX_REBOOT_CMD_KEXEC) {
+ 
+                 if (!in_container) {
+-- 
+1.7.12.1
+
