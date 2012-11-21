@@ -21,8 +21,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        195
-Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        196
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -85,16 +85,6 @@ Source3:        udlfb.conf
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
-
-# Temporary workaround for build error https://bugzilla.redhat.com/show_bug.cgi?id=872638
-Patch0:         disable-broken-test-build.patch
-# F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
-Patch1:         0001-revert-udev-killing.patch
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=873459
-Patch2:         0001-shutdown-readd-explicit-sync-when-shutting-down.patch
-Patch3:         0001-umount-always-remount-read-only-before-unmounting-in.patch
-Patch4:         0001-switch-root-try-pivot_root-before-overmounting.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -202,11 +192,6 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -357,10 +342,12 @@ migrate_ntp()
 return 0
 
 %post
-/usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
-/usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
-/usr/bin/systemctl daemon-reexec > /dev/null 2>&1 || :
+/usr/bin/systemd-machine-id-setup >/dev/null 2>&1 || :
+/usr/lib/systemd/systemd-random-seed save >/dev/null 2>&1 || :
+/usr/bin/systemctl daemon-reexec >/dev/null 2>&1 || :
 /usr/bin/systemctl start systemd-udevd.service >/dev/null 2>&1 || :
+/usr/bin/udevadm hwdb --update >/dev/null 2>&1 || :
+/usr/bin/journalctl --update-catalog >/dev/null 2>&1 || :
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
@@ -548,6 +535,8 @@ fi
 %dir %{_prefix}/lib/systemd/user-preset
 %dir %{_prefix}/lib/systemd/system-shutdown
 %dir %{_prefix}/lib/systemd/system-sleep
+%dir %{_prefix}/lib/systemd/catalog
+%dir %{_prefix}/lib/systemd/ntp-units.d
 %dir %{_prefix}/lib/tmpfiles.d
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
@@ -619,6 +608,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/90-display-manager.preset
+%{_prefix}/lib/systemd/catalog/systemd.catalog
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -718,6 +708,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Nov 21 2012 Lennart Poettering <lpoetter@redhat.com> - 196-1
+- New upstream release
+
 * Tue Nov 20 2012 Lennart Poettering <lpoetter@redhat.com> - 195-8
 - https://bugzilla.redhat.com/show_bug.cgi?id=873459
 - https://bugzilla.redhat.com/show_bug.cgi?id=878093
