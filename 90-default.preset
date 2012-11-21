@@ -38,6 +38,9 @@ enable dmraid-activation.service
 enable mdmonitor.service
 enable mdmonitor-takeover.service
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=876237
+enable spice-vdagentd.service
+
 # Hardware
 enable gpm.*
 enable gpsd.*
