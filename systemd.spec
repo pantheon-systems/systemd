@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        21%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        22%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -638,6 +638,7 @@ Patch0575:      0575-readahead-fix-fd-validity-check.patch
 Patch0576:      0576-mount-make-sure-m-where-is-set-before-unit_add_exec_.patch
 Patch0577:      0577-job-avoid-recursion-into-transaction-code-from-job-c.patch
 Patch0578:      0578-sysctl-parse-all-keys-in-a-config-file.patch
+Patch0579:      0579-add-libsystemd-id128-dependency.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -1026,6 +1027,10 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Dec 04 2012 Karsten Hopp <karsten@redhat.com> 44-22
+- fix build on ppc, similar to 
+  http://lists.freedesktop.org/archives/systemd-devel/2012-September/006424.html
+
 * Fri Oct 26 2012 Michal Schmidt <mschmidt@redhat.com> - 44-21
 - Fixes from upstream v195+:
 - Don't forbid ExecReload in oneshot units.
