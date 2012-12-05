@@ -22,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        196
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -31,7 +31,7 @@ BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
-BuildRequires:  cryptsetup-luks-devel
+BuildRequires:  cryptsetup-devel
 BuildRequires:  dbus-devel
 BuildRequires:  libacl-devel
 BuildRequires:  pciutils-devel
@@ -200,7 +200,7 @@ glib-based applications using libudev functionality.
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static
-/usr/bin/make %{?_smp_mflags}
+/usr/bin/make %{?_smp_mflags} V=1
 
 %install
 %make_install
@@ -708,6 +708,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Dec 05 2012 Michal Schmidt <mschmidt@redhat.com> - 196-2
+- added spice-vdagentd.service to presets (Lennart, #876237)
+- BR cryptsetup-devel instead of the legacy cryptsetup-luks-devel provide name
+  (requested by Milan Brož).
+- verbose make to see the actual build flags
+
 * Wed Nov 21 2012 Lennart Poettering <lpoetter@redhat.com> - 196-1
 - New upstream release
 
