@@ -25,7 +25,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        196
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -711,6 +711,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 196-4
+- Enable rngd.service by default (#857765).
+
 * Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 196-3
 - Disable hardening on s390(x) because PIE is broken there and produces
   text relocations with __thread (#868839).

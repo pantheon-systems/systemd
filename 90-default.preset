@@ -50,6 +50,7 @@ enable mcelog.*
 enable acpid.*
 enable smartd.service
 enable pcscd.socket
+enable rngd.service
 
 # Other stuff
 enable abrtd.service
