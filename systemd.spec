@@ -1,6 +1,9 @@
 #global gitcommit e7aee75
 
+# PIE is broken on s390 (#868839, #872148)
+%ifnarch s390 s390x
 %global _hardened_build 1
+%endif
 
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
