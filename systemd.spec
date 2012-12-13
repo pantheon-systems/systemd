@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        22%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        22%{?gitcommit:.git%{gitcommit}}%{?dist}.pantheon1
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -639,6 +639,7 @@ Patch0576:      0576-mount-make-sure-m-where-is-set-before-unit_add_exec_.patch
 Patch0577:      0577-job-avoid-recursion-into-transaction-code-from-job-c.patch
 Patch0578:      0578-sysctl-parse-all-keys-in-a-config-file.patch
 Patch0579:      0579-add-libsystemd-id128-dependency.patch
+Patch1000:      1000-mount-setup.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24

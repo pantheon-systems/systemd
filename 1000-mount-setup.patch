@@ -1,0 +1,40 @@
+From b3ac5f8cb98757416d8660023d6564a7c411f0a0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 06 Aug 2012 16:28:42 +0000
+Subject: mount-setup: change system mount propagation to shared by default
+
+In order to make containers work nicely out of the box it is highly
+desirable to have the mount propagation mode for the root fs is set as
+"shared" by default so that containers receive system mounts by default.
+(See mount --make-shared for more information).
+
+As it is unlikely that the kernel will change the default to "shared"
+for this, do this early at boot-up from PID 1. Setups which prefer the
+default of "private" should undo this change via invoking "mount
+--make-private /" or a similar command after boot.
+
+In the long run /etc/fstab should take the propagation mode as a mount
+option like any other, so that this may be used to change the default
+mode. However, if fstab is not around or doesn't list / we still should
+default to shared as propagation mode, hence this change now.
+---
+diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
+index 6dc36cb..6d99afe 100644
+--- a/src/core/mount-setup.c
++++ b/src/core/mount-setup.c
+@@ -404,6 +404,15 @@
+          * udevd. */
+         dev_setup();
+ 
++        /* Mark the root directory as shared in regards to mount
++         * propagation. The kernel defaults to "private", but we think
++         * it makes more sense to have a default of "shared" so that
++         * nspawn and the container tools work out of the box. If
++         * specific setups need other settings they can reset the
++         * propagation mode to private if needed. */
++        if (mount(NULL, "/", NULL, MS_REC|MS_SHARED, NULL) < 0)
++                log_warning("Failed to set up the root directory for shared mount propagation: %m");
++
+         /* Create a few directories we always want around */
+         mkdir_label("/run/systemd", 0755);
+         mkdir_label("/run/systemd/system", 0755);
