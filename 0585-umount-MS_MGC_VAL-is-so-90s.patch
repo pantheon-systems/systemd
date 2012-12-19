@@ -1,0 +1,23 @@
+From 3ef44d88ca758feaf311925c767b19a2d176212a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 13 Aug 2012 16:30:10 +0200
+Subject: [PATCH] umount: MS_MGC_VAL is so 90s (cherry picked from commit
+ 8caf9d6836c3ed5b7bb4c1ea8dea5241a634c298)
+
+---
+ src/core/umount.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/umount.c b/src/core/umount.c
+index d65ed6a..ecc5e11 100644
+--- a/src/core/umount.c
++++ b/src/core/umount.c
+@@ -440,7 +440,7 @@ static int mount_points_list_remount_read_only(MountPoint **head, bool *changed)
+         LIST_FOREACH_SAFE(mount_point, m, n, *head) {
+ 
+                 /* Trying to remount read-only */
+-                if (mount(NULL, m->path, NULL, MS_MGC_VAL|MS_REMOUNT|MS_RDONLY, NULL) == 0) {
++                if (mount(NULL, m->path, NULL, MS_REMOUNT|MS_RDONLY, NULL) == 0) {
+                         if (changed)
+                                 *changed = true;
+ 
