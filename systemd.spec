@@ -24,8 +24,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        196
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        197
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -112,6 +112,8 @@ Conflicts:      systemd < 185-4
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
 Provides:       syslog
+Obsoletes:      nss-myhostname < 0.4
+Provides:       nss-myhostname = 0.4
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -199,10 +201,10 @@ glib-based applications using libudev functionality.
 %build
 %{?gitcommit: ./autogen.sh }
 %configure \
-        --with-distro=fedora \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
-        --disable-static
+        --disable-static \
+        --with-sysvinit-path=/etc/rc.d/init.d
 /usr/bin/make %{?_smp_mflags} V=1
 
 %install
@@ -456,6 +458,22 @@ if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
 fi
 /usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network >/dev/null 2>&1 || :
 
+# Migrate the old systemd-setup-keyboard X11 configuration fragment
+if [ ! -e /etc/X11/xorg.conf.d/00-keyboard.conf ] ; then
+        /usr/bin/mv /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf >/dev/null 2>&1 || :
+else
+        /usr/bin/rm -f /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf >/dev/null 2>&1 || :
+fi
+
+# sed-fu to add myhostname to the hosts line of /etc/nsswitch.conf
+if [ -f /etc/nsswitch.conf ] ; then
+        sed -i.bak -e '
+                /^hosts:/ !b
+                /\<myhostname\>/ b
+                s/[[:blank:]]*$/ myhostname/
+                ' /etc/nsswitch.conf
+fi
+
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
 preferred=
@@ -500,6 +518,13 @@ if [ $1 -eq 0 ] ; then
                 systemd-readahead-collect.service >/dev/null 2>&1 || :
 
         /usr/bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
+
+        if [ -f /etc/nsswitch.conf ] ; then
+                sed -i.bak -e '
+                        /^hosts:/ !b
+                        s/[[:blank:]]\+myhostname\>//
+                        ' /etc/nsswitch.conf
+        fi
 fi
 
 %triggerun -- systemd-units < 38-5
@@ -572,6 +597,7 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
+%ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-system-setup-keyboard.conf
 %{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
@@ -653,6 +679,7 @@ fi
 
 %files libs
 %{_libdir}/security/pam_systemd.so
+%{_libdir}/libnss_myhostname.so.2
 %{_libdir}/libsystemd-daemon.so.*
 %{_libdir}/libsystemd-login.so.*
 %{_libdir}/libsystemd-journal.so.*
@@ -711,6 +738,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Jan  8 2013 Lennart Poettering <lpoetter@redhat.com> - 197-4
+- New upstream release
+
 * Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 196-4
 - Enable rngd.service by default (#857765).
 
