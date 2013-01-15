@@ -159,6 +159,7 @@ License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
 Requires:       dbus-python
 Requires:       pycairo
+Requires:       pygobject3-base
 # for the systemd-analyze split:
 Obsoletes:      systemd < 38-5
 
