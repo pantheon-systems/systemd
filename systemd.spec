@@ -46,7 +46,6 @@ BuildRequires:  kmod-devel >= 5
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
 BuildRequires:  libmicrohttpd-devel
-BuildRequires:  hwdata
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
@@ -67,7 +66,6 @@ Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
-Requires:       hwdata
 Requires:       filesystem >= 3
 Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
