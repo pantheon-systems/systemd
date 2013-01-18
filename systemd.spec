@@ -87,19 +87,11 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
-Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
-Provides:       sysvinit-userspace
-Provides:       systemd-sysvinit
-Obsoletes:      systemd-sysvinit
-Obsoletes:      upstart < 1.2-3
-Obsoletes:      upstart-sysvinit < 1.2-3
-Conflicts:      upstart-sysvinit
-Obsoletes:      readahead < 1:1.5.7-3
-Provides:       readahead = 1:1.5.7-3
+Obsoletes:      upstart < 1.2-7
+Obsoletes:      readahead < 1:1.5.7-5
+Provides:       readahead = 1:1.5.7-5
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
-Obsoletes:      systemd-units < 38-5
 Provides:       systemd-units = %{version}-%{release}
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
@@ -157,8 +149,6 @@ License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
 Requires:       pycairo
 Requires:       pygobject3-base
-# for the systemd-analyze split:
-Obsoletes:      systemd < 38-5
 
 %description analyze
 'systemd-analyze blame' lists which systemd unit needed how much time to finish
