@@ -25,7 +25,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        197
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -736,7 +736,13 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Tue Jan  8 2013 Lennart Poettering <lpoetter@redhat.com> - 197-4
+* Fri Jan 18 2013 Michal Schmidt <mschmidt@redhat.com> - 197-2
+- Added qemu-guest-agent.service to presets (Lennart, #885406).
+- Add missing pygobject3-base to systemd-analyze deps (Lennart).
+- Do not require hwdata, it is all in the hwdb now (Kay).
+- Drop dependency on dbus-python.
+
+* Tue Jan  8 2013 Lennart Poettering <lpoetter@redhat.com> - 197-1
 - New upstream release
 
 * Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 196-4
