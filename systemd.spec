@@ -155,7 +155,6 @@ SysV compatibility tools for systemd
 Summary:        Tool for processing systemd profiling information
 License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
-Requires:       dbus-python
 Requires:       pycairo
 Requires:       pygobject3-base
 # for the systemd-analyze split:
