@@ -202,7 +202,8 @@ glib-based applications using libudev functionality.
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static \
-        --with-sysvinit-path=/etc/rc.d/init.d
+        --with-sysvinit-path=/etc/rc.d/init.d \
+        --with-rc-local-script-path-start=/etc/rc.d/rc.local
 /usr/bin/make %{?_smp_mflags} V=1
 
 %install
