@@ -575,6 +575,7 @@ fi
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
+%{_sysconfdir}/udev/hwdb.bin
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
