@@ -638,8 +638,6 @@ Patch0575:      0575-readahead-fix-fd-validity-check.patch
 Patch0576:      0576-mount-make-sure-m-where-is-set-before-unit_add_exec_.patch
 Patch0577:      0577-job-avoid-recursion-into-transaction-code-from-job-c.patch
 Patch0578:      0578-sysctl-parse-all-keys-in-a-config-file.patch
-Patch0579:      0579-add-libsystemd-id128-dependency.patch
-Patch1000:      1000-mount-setup.patch
 Patch0579:      0579-add-libsystemd-id128-dependency-for-libsystemd-core..patch
 Patch0580:      0580-mount-setup-change-system-mount-propagation-to-share.patch
 Patch0581:      0581-shutdown-recursively-mark-root-as-private-before-piv.patch
@@ -647,6 +645,7 @@ Patch0582:      0582-switch-root-remount-to-MS_PRIVATE.patch
 Patch0583:      0583-namespace-rework-namespace-support.patch
 Patch0584:      0584-nspawn-namespaces-make-sure-we-recursively-bind-moun.patch
 Patch0585:      0585-umount-MS_MGC_VAL-is-so-90s.patch
+Patch1001:      1001-rlimit_nofile.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
