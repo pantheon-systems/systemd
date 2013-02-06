@@ -1,0 +1,56 @@
+From b30c1453ec7db9b41dafb9b27a7f575179852847 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 13 Aug 2012 16:25:03 +0200
+Subject: [PATCH] nspawn,namespaces: make sure we recursively bind mount things
+ in
+
+We want to make sure that everything from the host is also visible in
+the sandbox.
+(cherry picked from commit 1e41be20158a6d982c34cea20e66ff271302abc5)
+---
+ src/core/namespace.c | 4 ++--
+ src/nspawn/nspawn.c  | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index d163762..9f2c0de 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -156,7 +156,7 @@ static int apply_mount(
+ 
+         assert(what);
+ 
+-        r = mount(what, p->path, NULL, MS_BIND, NULL);
++        r = mount(what, p->path, NULL, MS_BIND|MS_REC, NULL);
+         if (r >= 0)
+                 log_debug("Successfully mounted %s to %s", what, p->path);
+ 
+@@ -171,7 +171,7 @@ static int make_read_only(Path *p) {
+         if (p->mode != INACCESSIBLE && p->mode != READONLY)
+                 return 0;
+ 
+-        r = mount(NULL, p->path, NULL, MS_BIND|MS_REMOUNT|MS_RDONLY, NULL);
++        r = mount(NULL, p->path, NULL, MS_BIND|MS_REMOUNT|MS_RDONLY|MS_REC, NULL);
+         if (r < 0)
+                 return -errno;
+ 
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 681cc2f..d3769c1 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -963,13 +963,13 @@ int main(int argc, char *argv[]) {
+                         goto child_fail;
+ 
+                 /* Turn directory into bind mount */
+-                if (mount(arg_directory, arg_directory, "bind", MS_BIND, NULL) < 0) {
++                if (mount(arg_directory, arg_directory, "bind", MS_BIND|MS_REC, NULL) < 0) {
+                         log_error("Failed to make bind mount.");
+                         goto child_fail;
+                 }
+ 
+                 if (arg_read_only)
+-                        if (mount(arg_directory, arg_directory, "bind", MS_BIND|MS_REMOUNT|MS_RDONLY, NULL) < 0) {
++                        if (mount(arg_directory, arg_directory, "bind", MS_BIND|MS_REMOUNT|MS_RDONLY|MS_REC, NULL) < 0) {
+                                 log_error("Failed to make read-only.");
+                                 goto child_fail;
+                         }

@@ -1,0 +1,25 @@
+From 38766ec45ac2b782509e5377d84de6b8db2a2d2d Mon Sep 17 00:00:00 2001
+From: gustavold <gustavold@fedoraproject.org>
+Date: Tue, 4 Dec 2012 14:01:19 +0100
+Subject: [PATCH] add libsystemd-id128 dependency for libsystemd-core.a
+
+Based on http://lists.freedesktop.org/archives/systemd-devel/2012-September/006424.html
+
+[ Karsten Hopp, a provenpackager, applied this to F17. It resembles upstream commit
+  54aa25e63c9ab14525497e4c2aeb9e1f996b177a. -- michich ]
+---
+ Makefile.am | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index b2eac88..8be6922 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -819,6 +819,7 @@ libsystemd_core_la_LIBADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la \
+ 	libsystemd-dbus.la \
++	libsystemd-id128.la \
+ 	$(UDEV_LIBS) \
+ 	$(LIBWRAP_LIBS) \
+ 	$(PAM_LIBS) \
