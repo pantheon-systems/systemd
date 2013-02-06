@@ -1,0 +1,98 @@
+From 4096d6f5879aef73e20dd7b62a01f447629945b0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 17 Sep 2012 14:35:59 +0000
+Subject: main: bump up RLIMIT_NOFILE for systemd itself
+
+For setups with many listening sockets the default kernel resource limit
+of 1024 fds is not enough. Bump this up to 64K to avoid any limitations
+in this regard. We are careful to pass on the kernel default to daemons
+however, since normally resource limits are a good to enforce,
+especially since select() can't handle fds > 1023.
+
+--- a/src/core/main.c	2013-02-06 21:57:34.710326013 +0000
++++ b/src/core/main.c	2013-02-06 22:00:12.129931277 +0000
+@@ -1145,6 +1145,44 @@
+         return r;
+ }
+ 
++static int bump_rlimit_nofile(struct rlimit *saved_rlimit) {
++        struct rlimit nl;
++        int r;
++
++        assert(saved_rlimit);
++
++        /* Save the original RLIMIT_NOFILE so that we can reset it
++         * later when transitioning from the initrd to the main
++         * systemd or suchlike. */
++        if (getrlimit(RLIMIT_NOFILE, saved_rlimit) < 0) {
++                log_error("Reading RLIMIT_NOFILE failed: %m");
++                return -errno;
++        }
++
++        /* Make sure forked processes get the default kernel setting */
++        if (!arg_default_rlimit[RLIMIT_NOFILE]) {
++                struct rlimit *rl;
++
++                rl = newdup(struct rlimit, saved_rlimit, 1);
++                if (!rl) {
++                        log_error("Out of memory.");
++                        return -ENOMEM;
++                }
++
++                arg_default_rlimit[RLIMIT_NOFILE] = rl;
++        }
++
++        /* Bump up the resource limit for ourselves substantially */
++        nl.rlim_cur = nl.rlim_max = 64*1024;
++        r = setrlimit_closest(RLIMIT_NOFILE, &nl);
++        if (r < 0) {
++                log_error("Setting RLIMIT_NOFILE failed: %s", strerror(-r));
++                return r;
++        }
++
++        return 0;
++}
++
+ static struct dual_timestamp* parse_initrd_timestamp(struct dual_timestamp *t) {
+         const char *e;
+         unsigned long long a, b;
+@@ -1227,6 +1265,7 @@
+         bool arm_reboot_watchdog = false;
+         bool queue_default_job = false;
+         char *switch_root_dir = NULL, *switch_root_init = NULL;
++        static struct rlimit saved_rlimit_nofile = { 0, 0 };
+ 
+ #ifdef HAVE_SYSV_COMPAT
+         if (getpid() != 1 && strstr(program_invocation_short_name, "init")) {
+@@ -1519,6 +1558,9 @@
+                 }
+         }
+ 
++        if (arg_running_as == MANAGER_SYSTEM)
++                bump_rlimit_nofile(&saved_rlimit_nofile);
++
+         r = manager_new(arg_running_as, &m);
+         if (r < 0) {
+                 log_error("Failed to allocate manager object: %s", strerror(-r));
+@@ -1702,7 +1744,7 @@
+                 manager_free(m);
+ 
+         for (j = 0; j < RLIMIT_NLIMITS; j++)
+-                free (arg_default_rlimit[j]);
++                free(arg_default_rlimit[j]);
+ 
+         free(arg_default_unit);
+         strv_free(arg_default_controllers);
+@@ -1720,6 +1762,12 @@
+                  * rebooted while we do that */
+                 watchdog_close(true);
+ 
++                /* Reset the RLIMIT_NOFILE to the kernel default, so
++                 * that the new systemd can pass the kernel default to
++                 * its child processes */
++                if (saved_rlimit_nofile.rlim_cur > 0)
++                        setrlimit(RLIMIT_NOFILE, &saved_rlimit_nofile);
++
+                 if (switch_root_dir) {
+                         r = switch_root(switch_root_dir);
+                         if (r < 0)
