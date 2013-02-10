@@ -25,7 +25,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        197
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -728,6 +728,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Sun Feb 10 2013 Peter Robinson <pbrobinson@fedoraproject.org> 197-3
+- Bump for ARM
+
 * Fri Jan 18 2013 Michal Schmidt <mschmidt@redhat.com> - 197-2
 - Added qemu-guest-agent.service to presets (Lennart, #885406).
 - Add missing pygobject3-base to systemd-analyze deps (Lennart).
