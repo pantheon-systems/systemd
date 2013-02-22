@@ -80,8 +80,6 @@ Source1:        90-default.preset
 Source5:        90-display-manager.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
-# Stop-gap, just to ensure things work out-of-the-box for this driver.
-Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
@@ -265,10 +263,6 @@ glib-based applications using libudev functionality.
 
 # Install SysV conversion tool for systemd
 /usr/bin/install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
-
-# Install modprobe fragment
-/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
-/usr/bin/install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 
 # Install rsyslog fragment
 /usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
@@ -573,7 +567,6 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/journald.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
-%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
 %{_sysconfdir}/udev/hwdb.bin
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
