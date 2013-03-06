@@ -49,7 +49,6 @@ BuildRequires:  libmicrohttpd-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
-BuildRequires:  usbutils >= 0.82
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
