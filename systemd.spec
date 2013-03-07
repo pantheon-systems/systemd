@@ -39,17 +39,17 @@ BuildRequires:  dbus-devel
 BuildRequires:  libacl-devel
 BuildRequires:  pciutils-devel
 BuildRequires:  glib2-devel
-BuildRequires:  gobject-introspection-devel >= 0.6.2
-BuildRequires:  libblkid-devel >= 2.20
+BuildRequires:  gobject-introspection-devel
+BuildRequires:  libblkid-devel
 BuildRequires:  xz-devel
-BuildRequires:  kmod-devel >= 5
+BuildRequires:  kmod-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
 BuildRequires:  libmicrohttpd-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
-BuildRequires:  intltool >= 0.40.0
+BuildRequires:  intltool
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
@@ -66,7 +66,6 @@ Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
-Requires:       filesystem >= 3
 Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
 %if %{defined gitcommit}
@@ -85,22 +84,21 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-Obsoletes:      upstart < 1.2-7
-Obsoletes:      readahead < 1:1.5.7-5
-Provides:       readahead = 1:1.5.7-5
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
+Provides:       syslog
 Provides:       systemd-units = %{version}-%{release}
+# part of system since f18, drop at f20
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 020-57
+# f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
-# Ensures correct multilib updates (added F18, drop this at F20)
+# Ensures correct multilib updates added F18, drop at F20
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
+# added F18, drop at F20
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
-Provides:       syslog
 # nss-myhostname got integrated in F19, drop at F21
 Obsoletes:      nss-myhostname < 0.4
 Provides:       nss-myhostname = 0.4
@@ -515,17 +513,6 @@ if [ $1 -eq 0 ] ; then
         fi
 fi
 
-%triggerun -- systemd-units < 38-5
-/usr/bin/mv /etc/systemd/system/default.target /etc/systemd/system/default.target.save >/dev/null 2>&1 || :
-
-%triggerpostun -- systemd-units < 38-5
-/usr/bin/mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/dev/null 2>&1
-/usr/bin/systemctl enable \
-        getty@.service \
-        remote-fs.target \
-        systemd-readahead-replay.service \
-        systemd-readahead-collect.service
-
 %post libs -p /sbin/ldconfig
 %postun libs -p /sbin/ldconfig
 
@@ -556,6 +543,7 @@ fi
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
+# drop firmware dirs: https://bugzilla.redhat.com/show_bug.cgi?id=919249
 %dir %{_prefix}/lib/firmware
 %dir %{_prefix}/lib/firmware/updates
 %dir %{_datadir}/systemd
