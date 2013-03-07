@@ -24,8 +24,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        197
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        198
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -61,6 +61,7 @@ BuildRequires:  libtool
 Requires(post): coreutils
 Requires(post): gawk
 Requires(post): sed
+Requires(post): acl
 Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
@@ -94,13 +95,18 @@ Provides:       udev = %{version}
 Obsoletes:      udev < 183
 Conflicts:      dracut < 020-57
 Conflicts:      plymouth < 0.8.5.1
+# Ensures correct multilib updates (added F18, drop this at F20)
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
 Provides:       syslog
+# nss-myhostname got integrated in F19, drop at F21
 Obsoletes:      nss-myhostname < 0.4
 Provides:       nss-myhostname = 0.4
+# systemd-analyze got merged in F19, drop at F21
+Obsoletes:      systemd-analyze < 198
+Provides:       systemd-analyze = 198
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -139,19 +145,6 @@ Requires:       %{name} = %{version}-%{release}
 
 %description sysv
 SysV compatibility tools for systemd
-
-%package analyze
-Summary:        Tool for processing systemd profiling information
-License:        LGPLv2+
-Requires:       %{name} = %{version}-%{release}
-Requires:       pycairo
-Requires:       pygobject3-base
-
-%description analyze
-'systemd-analyze blame' lists which systemd unit needed how much time to finish
-initialization at boot.
-'systemd-analyze plot' renders an SVG visualizing the parallel start of units
-at boot.
 
 %package python
 Summary:        Python Bindings for systemd
@@ -260,6 +253,13 @@ glib-based applications using libudev functionality.
 # Make sure the NTP units dir exists
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
 
+# Make sure directories in /var exist
+/usr/bin/mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/coredump
+/usr/bin/mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
+/usr/bin/mkdir -p %{buildroot}%{_localstatedir}/log/journal
+/usr/bin/touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
+/usr/bin/touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
+
 # Install SysV conversion tool for systemd
 /usr/bin/install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
@@ -280,6 +280,10 @@ glib-based applications using libudev functionality.
 # For now remove /var/log/README since we are not enabling persistant
 # logging yet.
 /usr/bin/rm -f %{buildroot}%{_localstatedir}/log/README
+
+# bash-completion ships udevadm too, so let's remove ours until this gets fixed
+# https://bugzilla.redhat.com/show_bug.cgi?id=919246
+/usr/bin/rm -f %{buildroot}%{_datadir}/bash-completion/completions/udevadm
 
 %pre
 /usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
@@ -453,8 +457,10 @@ if [ -f /etc/nsswitch.conf ] ; then
                 /^hosts:/ !b
                 /\<myhostname\>/ b
                 s/[[:blank:]]*$/ myhostname/
-                ' /etc/nsswitch.conf
+                ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
+
+/usr/bin/setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -535,7 +541,6 @@ fi
 %dir %{_sysconfdir}/sysctl.d
 %dir %{_sysconfdir}/modules-load.d
 %dir %{_sysconfdir}/binfmt.d
-%dir %{_sysconfdir}/bash_completion.d
 %dir %{_sysconfdir}/udev
 %dir %{_sysconfdir}/udev/rules.d
 %dir %{_prefix}/lib/systemd
@@ -554,7 +559,12 @@ fi
 %dir %{_prefix}/lib/firmware
 %dir %{_prefix}/lib/firmware/updates
 %dir %{_datadir}/systemd
+%dir %{_datadir}/systemd/gatewayd
 %dir %{_datadir}/pkgconfig
+%dir %{_localstatedir}/log/journal
+%dir %{_localstatedir}/lib/systemd
+%dir %{_localstatedir}/lib/systemd/catalog
+%dir %{_localstatedir}/lib/systemd/coredump
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -564,11 +574,11 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/logind.conf
 %config(noreplace) %{_sysconfdir}/systemd/journald.conf
+%config(noreplace) %{_sysconfdir}/systemd/bootchart.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
-%{_sysconfdir}/udev/hwdb.bin
-%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
+%ghost %{_sysconfdir}/udev/hwdb.bin
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/rc.d/init.d/README
@@ -580,9 +590,11 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-system-setup-keyboard.conf
+%ghost %{_localstatedir}/lib/systemd/catalog/database
 %{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
+%{_bindir}/systemd-analyze
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
@@ -601,8 +613,10 @@ fi
 %{_bindir}/hostnamectl
 %{_bindir}/localectl
 %{_bindir}/timedatectl
+%{_bindir}/bootctl
 %{_bindir}/systemd-coredumpctl
 %{_bindir}/udevadm
+%{_bindir}/kernel-install
 %{_prefix}/lib/systemd/systemd
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
@@ -613,6 +627,7 @@ fi
 %{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
 %{_prefix}/lib/systemd/system-generators/systemd-fstab-generator
 %{_prefix}/lib/systemd/system-generators/systemd-system-update-generator
+%{_prefix}/lib/systemd/system-generators/systemd-efi-boot-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
@@ -651,6 +666,14 @@ fi
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
 %{_datadir}/systemd/gatewayd/browse.html
+%{_datadir}/bash-completion/completions/hostnamectl
+%{_datadir}/bash-completion/completions/journalctl
+%{_datadir}/bash-completion/completions/localectl
+%{_datadir}/bash-completion/completions/loginctl
+%{_datadir}/bash-completion/completions/systemctl
+%{_datadir}/bash-completion/completions/systemd-coredumpctl
+%{_datadir}/bash-completion/completions/timedatectl
+#%{_datadir}/bash-completion/completions/udevadm
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -669,6 +692,7 @@ fi
 %{_libdir}/libudev.so.*
 
 %files devel
+%dir %{_includedir}/systemd
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
 %{_libdir}/libsystemd-journal.so
@@ -693,14 +717,13 @@ fi
 %files sysv
 %{_bindir}/systemd-sysv-convert
 
-%files analyze
-%{_bindir}/systemd-analyze
-
 %files python
 %{python_sitearch}/systemd/__init__.py
 %{python_sitearch}/systemd/__init__.pyc
 %{python_sitearch}/systemd/__init__.pyo
 %{python_sitearch}/systemd/_journal.so
+%{python_sitearch}/systemd/_reader.so
+%{python_sitearch}/systemd/id128.so
 %{python_sitearch}/systemd/journal.py
 %{python_sitearch}/systemd/journal.pyc
 %{python_sitearch}/systemd/journal.pyo
@@ -720,6 +743,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Mar 7 2013 Lennart Poettering <lpoetter@redhat.com> - 198-1
+- New release
+- Enable journal persistancy by default
+
 * Sun Feb 10 2013 Peter Robinson <pbrobinson@fedoraproject.org> 197-3
 - Bump for ARM
 
