@@ -25,7 +25,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        198
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -288,6 +288,10 @@ glib-based applications using libudev functionality.
 /usr/bin/getent group tape >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 33 tape >/dev/null 2>&1 || :
 /usr/bin/getent group dialout >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 18 dialout >/dev/null 2>&1 || :
 /usr/bin/getent group floppy >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 19 floppy >/dev/null 2>&1 || :
+/usr/bin/getent group systemd-journal >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 190 systemd-journal 2>&1 || :
+/usr/bin/getent group systemd-journal-gateway >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
+/usr/bin/getent passwd systemd-journal-gateway >/dev/null 2>&1 || /usr/sbin/useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+
 /usr/bin/systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
 # Rename configuration files that changed their names
@@ -374,13 +378,13 @@ else
                 while read service; do
                         /usr/bin/systemctl enable "$service" >/dev/null 2>&1 || :
                 done < /var/lib/rpm-state/systemd/ntp-units
-                /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units
+                /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units >/dev/null 2>&1 || :
         fi
 fi
 
 # Migrate /etc/sysconfig/clock
 if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
-       . /etc/sysconfig/clock 2>&1 || :
+       . /etc/sysconfig/clock >/dev/null 2>&1 || :
        if [ -n "$ZONE" -a -e "/usr/share/zoneinfo/$ZONE" ] ; then
               /usr/bin/ln -sf "../usr/share/zoneinfo/$ZONE" /etc/localtime >/dev/null 2>&1 || :
        fi
@@ -509,7 +513,7 @@ if [ $1 -eq 0 ] ; then
                 sed -i.bak -e '
                         /^hosts:/ !b
                         s/[[:blank:]]\+myhostname\>//
-                        ' /etc/nsswitch.conf
+                        ' /etc/nsswitch.conf >/dev/null 2>&1 || :
         fi
 fi
 
@@ -731,6 +735,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Mar  7 2013 Lennart Poettering <lpoetter@redhat.com> - 198-2
+- Create required users
+
 * Thu Mar 7 2013 Lennart Poettering <lpoetter@redhat.com> - 198-1
 - New release
 - Enable journal persistancy by default
