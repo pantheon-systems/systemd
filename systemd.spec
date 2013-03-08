@@ -25,7 +25,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        198
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -91,6 +91,7 @@ Provides:       systemd-units = %{version}-%{release}
 # part of system since f18, drop at f20
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
+Conflicts:      dracut < 026
 # f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
 # Ensures correct multilib updates added F18, drop at F20
@@ -735,6 +736,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Mar 08 2013 Harald Hoyer <harald@redhat.com> 198-3
+- add Conflict with dracut < 026 because of the new switch-root isolate
+
 * Thu Mar  7 2013 Lennart Poettering <lpoetter@redhat.com> - 198-2
 - Create required users
 
