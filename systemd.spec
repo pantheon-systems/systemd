@@ -25,7 +25,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        198
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -91,7 +91,7 @@ Provides:       systemd-units = %{version}-%{release}
 # part of system since f18, drop at f20
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 026
+Conflicts:      dracut < 026-19
 # f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
 # Ensures correct multilib updates added F18, drop at F20
@@ -106,6 +106,15 @@ Provides:       nss-myhostname = 0.4
 # systemd-analyze got merged in F19, drop at F21
 Obsoletes:      systemd-analyze < 198
 Provides:       systemd-analyze = 198
+
+# patches for dracut's initramfs
+# remove for new git snapshots or releases
+BuildRequires:  git
+Patch13:        0013-build-sys-don-t-hard-code-binary-paths-in-initrd-.se.patch
+Patch45:        0045-add-initrd-fs.target-and-root-fs.target.patch
+
+# kernel-install patch for grubby, drop if grubby is obsolete
+Patch1000:      kernel-install-grubby.patch
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -174,6 +183,22 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+
+if command -v git &>/dev/null && [ -n "%{patches}" ]; then
+    git init
+    git config user.email "systemd-maint@redhat.com"
+    git config user.name "Fedora systemd team"
+    git add .
+    git commit -a -q -m "%{version} baseline."
+
+    # Apply all the patches.
+    git am %{patches}
+else
+
+# kernel-install patch for grubby, drop if grubby is obsolete
+%patch1000 -p1
+
+fi
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -736,6 +761,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Mar 13 2013 Harald Hoyer <harald@redhat.com> 198-4
+- fix switch-root and local-fs.target problem
+- patch kernel-install to use grubby, if available
+
 * Fri Mar 08 2013 Harald Hoyer <harald@redhat.com> 198-3
 - add Conflict with dracut < 026 because of the new switch-root isolate
 

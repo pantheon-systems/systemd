@@ -1,0 +1,43 @@
+From 5150a366a4771a2a498d4e062482728d1dce94dd Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 13 Mar 2013 07:57:53 +0100
+Subject: [PATCH] kernel-install: add fedora specific callouts to
+ new-kernel-pkg
+
+---
+ src/kernel-install/kernel-install | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/src/kernel-install/kernel-install b/src/kernel-install/kernel-install
+index 16c06e0..cf9829e 100644
+--- a/src/kernel-install/kernel-install
++++ b/src/kernel-install/kernel-install
+@@ -25,6 +25,25 @@ COMMAND="$1"
+ KERNEL_VERSION="$2"
+ KERNEL_IMAGE="$3"
+ 
++if [[ -x /sbin/new-kernel-pkg ]]; then
++    case "$COMMAND" in
++        add)
++            /sbin/new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --install "$KERNEL_VERSION" || exit $?
++            /sbin/new-kernel-pkg --package kernel --rpmposttrans "$KERNEL_VERSION" || exit $?
++            ;;
++        remove)
++            /sbin/new-kernel-pkg --rminitrd --rmmoddep --remove "$KERNEL_VERSION" || exit $?
++            ;;
++        *)
++            ;;
++    esac
++
++    # exit, if we can't find a boot loader spec conforming setup
++    if ! [[ -d /boot/loader/entries || -L /boot/loader/entries ]]; then
++        exit 0
++    fi
++fi
++
+ [[ -f /etc/os-release ]] && . /etc/os-release
+ if ! [[ $ID ]]; then
+     echo "Can't determine the name of your distribution. Please create /etc/os-release." >&2
+-- 
+1.8.1
+
