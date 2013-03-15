@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        198
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -201,121 +201,121 @@ autoreconf
         --disable-static \
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local
-/usr/bin/make %{?_smp_mflags} V=1
+make %{?_smp_mflags} V=1
 
 %install
 %make_install
-/usr/bin/find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
+find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 
 # udev links
-/usr/bin/mkdir -p %{buildroot}/%{_sbindir}
-/usr/bin/ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/firmware/updates
+mkdir -p %{buildroot}/%{_sbindir}
+ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
+mkdir -p %{buildroot}%{_prefix}/lib/firmware/updates
 
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
-/usr/bin/ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
-/usr/bin/ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
-/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
-/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
-/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
-/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
-/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
-/usr/bin/ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
+ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
+ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
 # legacy links
-/usr/bin/ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
+ln -s loginctl %{buildroot}%{_bindir}/systemd-loginctl
 
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the used deleted
 # them.
-/usr/bin/rm -r %{buildroot}%{_sysconfdir}/systemd/system/*.target.wants
+rm -r %{buildroot}%{_sysconfdir}/systemd/system/*.target.wants
 
 # Make sure the ghost-ing below works
-/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
-/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
-/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
-/usr/bin/touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel2.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel3.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
+touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
 # Make sure these directories are properly owned
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/basic.target.wants
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/basic.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
 
 # Make sure the user generators dir exists too
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
 
 # Create new-style configuration files so that we can ghost-own them
-/usr/bin/touch %{buildroot}%{_sysconfdir}/hostname
-/usr/bin/touch %{buildroot}%{_sysconfdir}/vconsole.conf
-/usr/bin/touch %{buildroot}%{_sysconfdir}/locale.conf
-/usr/bin/touch %{buildroot}%{_sysconfdir}/machine-id
-/usr/bin/touch %{buildroot}%{_sysconfdir}/machine-info
-/usr/bin/touch %{buildroot}%{_sysconfdir}/localtime
-/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
-/usr/bin/touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
+touch %{buildroot}%{_sysconfdir}/hostname
+touch %{buildroot}%{_sysconfdir}/vconsole.conf
+touch %{buildroot}%{_sysconfdir}/locale.conf
+touch %{buildroot}%{_sysconfdir}/machine-id
+touch %{buildroot}%{_sysconfdir}/machine-info
+touch %{buildroot}%{_sysconfdir}/localtime
+mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
+touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
 # Install Fedora default preset policy
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
-/usr/bin/install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-/usr/bin/install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
+install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
 
 # Make sure the NTP units dir exists
-/usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
 
 # Make sure directories in /var exist
-/usr/bin/mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/coredump
-/usr/bin/mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
-/usr/bin/mkdir -p %{buildroot}%{_localstatedir}/log/journal
-/usr/bin/touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
-/usr/bin/touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
+mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/coredump
+mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
+mkdir -p %{buildroot}%{_localstatedir}/log/journal
+touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
+touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
 
 # Install SysV conversion tool for systemd
-/usr/bin/install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
+install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 # Install rsyslog fragment
-/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
-/usr/bin/install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
+install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 
 # Install yum protection fragment
-/usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
-/usr/bin/install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
+mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
+install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
 # To avoid making life hard for Rawhide-using developers, don't package the
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
-/usr/bin/rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
 # For now remove /var/log/README since we are not enabling persistant
 # logging yet.
-/usr/bin/rm -f %{buildroot}%{_localstatedir}/log/README
+rm -f %{buildroot}%{_localstatedir}/log/README
 
 # bash-completion ships udevadm too, so let's remove ours until this gets fixed
 # https://bugzilla.redhat.com/show_bug.cgi?id=919246
-/usr/bin/rm -f %{buildroot}%{_datadir}/bash-completion/completions/udevadm
+rm -f %{buildroot}%{_datadir}/bash-completion/completions/udevadm
 
 %pre
-/usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
-/usr/bin/getent group tape >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 33 tape >/dev/null 2>&1 || :
-/usr/bin/getent group dialout >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 18 dialout >/dev/null 2>&1 || :
-/usr/bin/getent group floppy >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 19 floppy >/dev/null 2>&1 || :
-/usr/bin/getent group systemd-journal >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 190 systemd-journal 2>&1 || :
-/usr/bin/getent group systemd-journal-gateway >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
-/usr/bin/getent passwd systemd-journal-gateway >/dev/null 2>&1 || /usr/sbin/useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
+getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
+getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
+getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 || :
+getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
+getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
+getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
 
-/usr/bin/systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
+systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
 # Rename configuration files that changed their names
-/usr/bin/mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
-/usr/bin/mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
+mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
+mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
 
 %pretrans -p <lua>
 --# Migrate away from systemd-timedated-ntp.target.
@@ -354,20 +354,20 @@ migrate_ntp()
 return 0
 
 %post
-/usr/bin/systemd-machine-id-setup >/dev/null 2>&1 || :
+systemd-machine-id-setup >/dev/null 2>&1 || :
 /usr/lib/systemd/systemd-random-seed save >/dev/null 2>&1 || :
-/usr/bin/systemctl daemon-reexec >/dev/null 2>&1 || :
-/usr/bin/systemctl start systemd-udevd.service >/dev/null 2>&1 || :
-/usr/bin/udevadm hwdb --update >/dev/null 2>&1 || :
-/usr/bin/journalctl --update-catalog >/dev/null 2>&1 || :
+systemctl daemon-reexec >/dev/null 2>&1 || :
+systemctl start systemd-udevd.service >/dev/null 2>&1 || :
+udevadm hwdb --update >/dev/null 2>&1 || :
+journalctl --update-catalog >/dev/null 2>&1 || :
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
-/usr/bin/ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
+ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
-        runlevel=$(/usr/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
+        runlevel=$(awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
         if [ -z "$runlevel" ] ; then
                 target="/usr/lib/systemd/system/graphical.target"
         else
@@ -375,10 +375,10 @@ if [ $1 -eq 1 ] ; then
         fi
 
         # And symlink what we found to the new-style default.target
-        /usr/bin/ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
+        ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
 
         # Enable the services we install by default.
-        /usr/bin/systemctl enable \
+        systemctl enable \
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
@@ -386,18 +386,18 @@ if [ $1 -eq 1 ] ; then
 else
         # This systemd service does not exist anymore, we now do it
         # internally in PID 1
-        /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
+        rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 
         # This systemd target does not exist anymore. It's been replaced
         # by ntp-units.d.
-        /usr/bin/rm -f /etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target >/dev/null 2>&1 || :
+        rm -f /etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target >/dev/null 2>&1 || :
 
         # Enable the units recorded by %%pretrans
         if [ -e /var/lib/rpm-state/systemd/ntp-units ] ; then
                 while read service; do
-                        /usr/bin/systemctl enable "$service" >/dev/null 2>&1 || :
+                        systemctl enable "$service" >/dev/null 2>&1 || :
                 done < /var/lib/rpm-state/systemd/ntp-units
-                /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units >/dev/null 2>&1 || :
+                rm -r /var/lib/rpm-state/systemd/ntp-units >/dev/null 2>&1 || :
         fi
 fi
 
@@ -405,10 +405,10 @@ fi
 if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
        . /etc/sysconfig/clock >/dev/null 2>&1 || :
        if [ -n "$ZONE" -a -e "/usr/share/zoneinfo/$ZONE" ] ; then
-              /usr/bin/ln -sf "../usr/share/zoneinfo/$ZONE" /etc/localtime >/dev/null 2>&1 || :
+              ln -sf "../usr/share/zoneinfo/$ZONE" /etc/localtime >/dev/null 2>&1 || :
        fi
 fi
-/usr/bin/rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
+rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
 
 # Migrate /etc/sysconfig/i18n
 if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
@@ -454,8 +454,8 @@ if [ -e /etc/sysconfig/keyboard -a ! -e /etc/vconsole.conf ]; then
         [ -n "$UNIMAP" ] && echo FONT_UNIMAP=$UNIMAP >> /etc/vconsole.conf 2>&1 || :
         [ -n "$KEYTABLE" ] && echo KEYMAP=$KEYTABLE >> /etc/vconsole.conf 2>&1 || :
 fi
-/usr/bin/rm -f /etc/sysconfig/i18n >/dev/null 2>&1 || :
-/usr/bin/rm -f /etc/sysconfig/keyboard >/dev/null 2>&1 || :
+rm -f /etc/sysconfig/i18n >/dev/null 2>&1 || :
+rm -f /etc/sysconfig/keyboard >/dev/null 2>&1 || :
 
 # Migrate HOSTNAME= from /etc/sysconfig/network
 if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
@@ -463,13 +463,13 @@ if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
         . /etc/sysconfig/network >/dev/null 2>&1 || :
         [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
 fi
-/usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network >/dev/null 2>&1 || :
+sed -i '/^HOSTNAME=/d' /etc/sysconfig/network >/dev/null 2>&1 || :
 
 # Migrate the old systemd-setup-keyboard X11 configuration fragment
 if [ ! -e /etc/X11/xorg.conf.d/00-keyboard.conf ] ; then
-        /usr/bin/mv /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf >/dev/null 2>&1 || :
+        mv /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf >/dev/null 2>&1 || :
 else
-        /usr/bin/rm -f /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf >/dev/null 2>&1 || :
+        rm -f /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf >/dev/null 2>&1 || :
 fi
 
 # sed-fu to add myhostname to the hosts line of /etc/nsswitch.conf
@@ -481,7 +481,7 @@ if [ -f /etc/nsswitch.conf ] ; then
                 ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
 
-/usr/bin/setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
+setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -509,24 +509,24 @@ if [ -z "$preferred" ]; then
 fi
 if [ -n "$preferred" -a -r "/usr/lib/systemd/system/$preferred.service" ]; then
         # This is supposed to fail when the symlink already exists
-        /usr/bin/ln -s "/usr/lib/systemd/system/$preferred.service" /etc/systemd/system/display-manager.service >/dev/null 2>&1 || :
+        ln -s "/usr/lib/systemd/system/$preferred.service" /etc/systemd/system/display-manager.service >/dev/null 2>&1 || :
 fi
 
 %postun
 if [ $1 -ge 1 ] ; then
-        /usr/bin/systemctl daemon-reload > /dev/null 2>&1 || :
-        /usr/bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
+        systemctl daemon-reload > /dev/null 2>&1 || :
+        systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
 fi
 
 %preun
 if [ $1 -eq 0 ] ; then
-        /usr/bin/systemctl disable \
+        systemctl disable \
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service >/dev/null 2>&1 || :
 
-        /usr/bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
+        rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 
         if [ -f /etc/nsswitch.conf ] ; then
                 sed -i.bak -e '
@@ -754,6 +754,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Mar 18 2013 Michal Schmidt <mschmidt@redhat.com> 198-7
+- Drop /usr/s?bin/ prefixes.
+
 * Fri Mar 15 2013 Harald Hoyer <harald@redhat.com> 198-6
 - run autogen to pickup all changes
 
