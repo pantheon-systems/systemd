@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        198
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -80,7 +80,7 @@ Provides:       systemd-units = %{version}-%{release}
 # part of system since f18, drop at f20
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 026-19
+Conflicts:      dracut < 026-48
 # f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
 # Ensures correct multilib updates added F18, drop at F20
@@ -101,6 +101,8 @@ Provides:       systemd-analyze = 198
 BuildRequires:  git
 Patch13:        0013-build-sys-don-t-hard-code-binary-paths-in-initrd-.se.patch
 Patch45:        0045-add-initrd-fs.target-and-root-fs.target.patch
+Patch61:        0061-main-don-t-mount-sys-dev-and-friends-when-we-run-wit.patch
+Patch62:        0062-Make-initrd.target-the-default-target-in-the-initrd.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -750,6 +752,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Mar 15 2013 Harald Hoyer <harald@redhat.com> 198-5
+- do not mount anything, when not running as pid 1
+- add initrd.target for systemd in the initrd
+
 * Wed Mar 13 2013 Harald Hoyer <harald@redhat.com> 198-4
 - fix switch-root and local-fs.target problem
 - patch kernel-install to use grubby, if available
