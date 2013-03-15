@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        198
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -42,11 +42,11 @@ BuildRequires:  intltool
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
-%if %{defined gitcommit}
+#%if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-%endif
+#%endif
 Requires(post): coreutils
 Requires(post): gawk
 Requires(post): sed
@@ -192,7 +192,9 @@ else
 fi
 
 %build
-%{?gitcommit: ./autogen.sh }
+#%{?gitcommit: ./autogen.sh }
+autoreconf
+
 %configure \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
@@ -752,6 +754,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Mar 15 2013 Harald Hoyer <harald@redhat.com> 198-6
+- run autogen to pickup all changes
+
 * Fri Mar 15 2013 Harald Hoyer <harald@redhat.com> 198-5
 - do not mount anything, when not running as pid 1
 - add initrd.target for systemd in the initrd
