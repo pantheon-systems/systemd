@@ -210,7 +210,6 @@ find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 # udev links
 mkdir -p %{buildroot}/%{_sbindir}
 ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
-mkdir -p %{buildroot}%{_prefix}/lib/firmware/updates
 
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
@@ -566,9 +565,6 @@ fi
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
-# drop firmware dirs: https://bugzilla.redhat.com/show_bug.cgi?id=919249
-%dir %{_prefix}/lib/firmware
-%dir %{_prefix}/lib/firmware/updates
 %dir %{_datadir}/systemd
 %dir %{_datadir}/systemd/gatewayd
 %dir %{_datadir}/pkgconfig
