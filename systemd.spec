@@ -13,8 +13,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
-Version:        198
-Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        199
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -80,7 +80,7 @@ Provides:       systemd-units = %{version}-%{release}
 # part of system since f18, drop at f20
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 026-48
+Conflicts:      dracut < 027
 # f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
 # Ensures correct multilib updates added F18, drop at F20
@@ -99,10 +99,6 @@ Provides:       systemd-analyze = 198
 # patches for dracut's initramfs
 # remove for new git snapshots or releases
 BuildRequires:  git
-Patch13:        0013-build-sys-don-t-hard-code-binary-paths-in-initrd-.se.patch
-Patch45:        0045-add-initrd-fs.target-and-root-fs.target.patch
-Patch61:        0061-main-don-t-mount-sys-dev-and-friends-when-we-run-wit.patch
-Patch62:        0062-Make-initrd.target-the-default-target-in-the-initrd.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -291,7 +287,7 @@ install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.co
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
-rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 
 # For now remove /var/log/README since we are not enabling persistant
 # logging yet.
@@ -639,6 +635,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
+%{_prefix}/lib/sysctl.d/50-default.conf
 %{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/90-display-manager.preset
 %{_prefix}/lib/systemd/catalog/systemd.catalog
@@ -730,10 +727,14 @@ fi
 %{python_sitearch}/systemd/__init__.pyo
 %{python_sitearch}/systemd/_journal.so
 %{python_sitearch}/systemd/_reader.so
+%{python_sitearch}/systemd/_daemon.so
 %{python_sitearch}/systemd/id128.so
 %{python_sitearch}/systemd/journal.py
 %{python_sitearch}/systemd/journal.pyc
 %{python_sitearch}/systemd/journal.pyo
+%{python_sitearch}/systemd/daemon.py
+%{python_sitearch}/systemd/daemon.pyc
+%{python_sitearch}/systemd/daemon.pyo
 
 %files -n libgudev1
 %{_libdir}/libgudev-1.0.so.*
@@ -750,6 +751,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Mar 26 2013 Lennart Poettering <lpoetter@redhat.com> - 199-1
+- New upstream release
+
 * Mon Mar 18 2013 Michal Schmidt <mschmidt@redhat.com> 198-7
 - Drop /usr/s?bin/ prefixes.
 
