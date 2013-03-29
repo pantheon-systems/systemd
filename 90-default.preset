@@ -8,7 +8,6 @@ enable crond.*
 enable chronyd.service
 enable rpcbind.*
 enable NetworkManager.service
-enable NetworkManager-wait-online.service
 enable auditd.service
 enable restorecond.service
 enable bluetooth.*

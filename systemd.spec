@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        200
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -751,6 +751,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Mar 29 2013 Lennart Poettering <lpoetter@redhat.com> - 200-3
+- Remove NetworkManager-wait-online.service from presets file again, it should default to off
+
 * Fri Mar 29 2013 Lennart Poettering <lpoetter@redhat.com> - 200-2
 - New upstream release
 
