@@ -8,6 +8,8 @@ enable crond.*
 enable chronyd.service
 enable rpcbind.*
 enable NetworkManager.service
+enable ModemManager.service
+enable nm_dispatcher.service
 enable auditd.service
 enable restorecond.service
 enable bluetooth.*
@@ -44,6 +46,9 @@ enable spice-vdagentd.service
 # https://bugzilla.redhat.com/show_bug.cgi?id=885406
 enable qemu-guest-agent.service
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=928726
+enable dnf-makecache.timer
+
 # Hardware
 enable gpm.*
 enable gpsd.*
@@ -78,6 +83,7 @@ enable upower.service
 enable udisks2.service
 enable polkit.service
 enable packagekit-offline-update.service
+enable PackageKit.service
 
 # Enforce Fedora's disable-by-default policy
 disable *
