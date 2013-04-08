@@ -13,8 +13,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
-Version:        200
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        201
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -751,6 +751,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Apr  8 2013 Lennart Poettering <lpoetter@redhat.com> - 201-1
+- New upstream release
+
 * Mon Apr  8 2013 Lennart Poettering <lpoetter@redhat.com> - 200-4
 - Update preset file
 
