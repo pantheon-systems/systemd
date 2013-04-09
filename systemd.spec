@@ -12,12 +12,33 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-
 Version:        201
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
+
+%if %{defined gitcommit}
+# Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
+Source0:        %{name}-git%{gitcommit}.tar.xz
+%else
+Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
+%endif
+# Fedora's default preset policy
+Source1:        90-default.preset
+Source5:        90-display-manager.preset
+# Feodora's SysV convert script. meh.
+Source2:        systemd-sysv-convert
+# Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
+Source4:        listen.conf
+# Prevent accidental removal of the systemd package
+Source6:        yum-protect-systemd.conf
+
+# kernel-install patch for grubby, drop if grubby is obsolete
+Patch1000:      kernel-install-grubby.patch
+
+%global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
+
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
@@ -42,11 +63,14 @@ BuildRequires:  intltool
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
-#%if %{defined gitcommit}
+%if %{defined gitcommit}%{num_patches}
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-#%endif
+%endif
+%if %{num_patches}
+BuildRequires:  git
+%endif
 Requires(post): coreutils
 Requires(post): gawk
 Requires(post): sed
@@ -57,21 +81,6 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
-%if %{defined gitcommit}
-# Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
-Source0:        %{name}-git%{gitcommit}.tar.xz
-%else
-Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
-%endif
-# Fedora's default preset policy
-Source1:        90-default.preset
-Source5:        90-display-manager.preset
-# Feodora's SysV convert script. meh.
-Source2:        systemd-sysv-convert
-# Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
-Source4:        listen.conf
-# Prevent accidental removal of the systemd package
-Source6:        yum-protect-systemd.conf
 
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
@@ -95,13 +104,6 @@ Provides:       nss-myhostname = 0.4
 # systemd-analyze got merged in F19, drop at F21
 Obsoletes:      systemd-analyze < 198
 Provides:       systemd-analyze = 198
-
-# patches for dracut's initramfs
-# remove for new git snapshots or releases
-BuildRequires:  git
-
-# kernel-install patch for grubby, drop if grubby is obsolete
-Patch1000:      kernel-install-grubby.patch
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -171,7 +173,7 @@ glib-based applications using libudev functionality.
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
 
-if command -v git &>/dev/null && [ -n "%{patches}" ]; then
+%if %{num_patches}
     git init
     git config user.email "systemd-maint@redhat.com"
     git config user.name "Fedora systemd team"
@@ -180,16 +182,16 @@ if command -v git &>/dev/null && [ -n "%{patches}" ]; then
 
     # Apply all the patches.
     git am %{patches}
-else
-
-# kernel-install patch for grubby, drop if grubby is obsolete
-%patch1000 -p1
-
-fi
+%endif
 
 %build
-#%{?gitcommit: ./autogen.sh }
-autoreconf
+%if %{defined gitcommit}
+    ./autogen.sh
+%else
+    %if %{num_patches}
+        autoreconf
+    %endif
+%endif
 
 %configure \
         --libexecdir=%{_prefix}/lib \
@@ -201,7 +203,7 @@ make %{?_smp_mflags} V=1
 
 %install
 %make_install
-find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
+find %{buildroot} \( -name '*.a' -o -name '*.la' \) -delete
 
 # udev links
 mkdir -p %{buildroot}/%{_sbindir}
@@ -751,6 +753,11 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue Apr 09 2013 Michal Schmidt <mschmidt@redhat.com> - 201-2
+- Automatically discover whether to run autoreconf and add autotools and git
+  BuildRequires based on the presence of patches to be applied.
+- Use find -delete.
+
 * Mon Apr  8 2013 Lennart Poettering <lpoetter@redhat.com> - 201-1
 - New upstream release
 
