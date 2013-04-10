@@ -295,10 +295,6 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 # logging yet.
 rm -f %{buildroot}%{_localstatedir}/log/README
 
-# bash-completion ships udevadm too, so let's remove ours until this gets fixed
-# https://bugzilla.redhat.com/show_bug.cgi?id=919246
-rm -f %{buildroot}%{_datadir}/bash-completion/completions/udevadm
-
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
