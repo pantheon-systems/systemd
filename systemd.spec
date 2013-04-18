@@ -12,8 +12,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        201
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        202
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -753,6 +753,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Apr 18 2013 Lennart Poettering <lpoetter@redhat.com> - 202-1
+- New upstream release
+
 * Tue Apr 09 2013 Michal Schmidt <mschmidt@redhat.com> - 201-2
 - Automatically discover whether to run autoreconf and add autotools and git
   BuildRequires based on the presence of patches to be applied.
