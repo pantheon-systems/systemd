@@ -1,0 +1,60 @@
+From 7f876bc4281145e6c74e98de07c6648a5b51ed90 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 18 Apr 2013 19:37:26 -0400
+Subject: [PATCH] systemd-python: wrap sd_journal_add_conjunction
+
+---
+ src/python-systemd/_reader.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/src/python-systemd/_reader.c b/src/python-systemd/_reader.c
+index 05993b3..b836597 100644
+--- a/src/python-systemd/_reader.c
++++ b/src/python-systemd/_reader.c
+@@ -567,7 +567,10 @@ static PyObject* Reader_add_match(Reader *self, PyObject *args, PyObject *keywds
+ 
+ PyDoc_STRVAR(Reader_add_disjunction__doc__,
+              "add_disjunction() -> None\n\n"
+-             "Inserts a logical OR between matches added before and afterwards.");
++             "Inserts a logical OR between matches added since previous\n"
++             "add_disjunction() or add_conjunction() and the next\n"
++             "add_disjunction() or add_conjunction().\n\n"
++             "See man:sd_journal_add_disjunction(3) for explanation.");
+ static PyObject* Reader_add_disjunction(Reader *self, PyObject *args)
+ {
+     int r;
+@@ -579,6 +582,23 @@ static PyObject* Reader_add_disjunction(Reader *self, PyObject *args)
+ }
+ 
+ 
++PyDoc_STRVAR(Reader_add_conjunction__doc__,
++             "add_conjunction() -> None\n\n"
++             "Inserts a logical AND between matches added since previous\n"
++             "add_disjunction() or add_conjunction() and the next\n"
++             "add_disjunction() or add_conjunction().\n\n"
++             "See man:sd_journal_add_disjunction(3) for explanation.");
++static PyObject* Reader_add_conjunction(Reader *self, PyObject *args)
++{
++    int r;
++    r = sd_journal_add_conjunction(self->j);
++    set_error(r, NULL, NULL);
++    if (r < 0)
++        return NULL;
++    Py_RETURN_NONE;
++}
++
++
+ PyDoc_STRVAR(Reader_flush_matches__doc__,
+              "flush_matches() -> None\n\n"
+              "Clear all current match filters.");
+@@ -980,6 +1000,7 @@ static PyMethodDef Reader_methods[] = {
+     {"_get_monotonic",  (PyCFunction) Reader_get_monotonic, METH_NOARGS, Reader_get_monotonic__doc__},
+     {"add_match",       (PyCFunction) Reader_add_match, METH_VARARGS|METH_KEYWORDS, Reader_add_match__doc__},
+     {"add_disjunction", (PyCFunction) Reader_add_disjunction, METH_NOARGS, Reader_add_disjunction__doc__},
++    {"add_conjunction", (PyCFunction) Reader_add_conjunction, METH_NOARGS, Reader_add_conjunction__doc__},
+     {"flush_matches",   (PyCFunction) Reader_flush_matches, METH_NOARGS, Reader_flush_matches__doc__},
+     {"seek_head",       (PyCFunction) Reader_seek_head, METH_NOARGS, Reader_seek_head__doc__},
+     {"seek_tail",       (PyCFunction) Reader_seek_tail, METH_NOARGS, Reader_seek_tail__doc__},
+-- 
+1.8.2
+
