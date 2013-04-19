@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        202
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -33,6 +33,11 @@ Source2:        systemd-sysv-convert
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
+
+Patch1:         0001-nspawn-create-empty-etc-resolv.conf-if-necessary.patch
+Patch2:         0002-systemd-python-wrap-sd_journal_add_conjunction.patch
+Patch3:         0003-Update-NEWS.patch
+Patch4:         0004-Reintroduce-f_type-comparison-macro.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -753,6 +758,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Apr 19 2013 Harald Hoyer <harald@redhat.com> 202-2
+- nspawn create empty /etc/resolv.conf if necessary
+- python wrapper: add sd_journal_add_conjunction()
+- fix s390 booting
+Resolves: rhbz#953217
+
 * Thu Apr 18 2013 Lennart Poettering <lpoetter@redhat.com> - 202-1
 - New upstream release
 
@@ -1397,7 +1408,7 @@ fi
 * Mon Jun 14 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.4.20100614git393024
 - Pull the latest snapshot that fixes a segfault. Resolves rhbz#603231
 
-* Thu Jun 11 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.3.20100610git2f198e
+* Fri Jun 11 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.3.20100610git2f198e
 - More minor fixes as per review
 
 * Thu Jun 10 2010 Rahul Sundaram <sundaram@fedoraproject.org> - 0-0.2.20100610git2f198e

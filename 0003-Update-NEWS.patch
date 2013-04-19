@@ -1,0 +1,30 @@
+From cbeabcfbc5a5fa27385e5794780e8f034e090606 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 18 Apr 2013 19:59:12 -0400
+Subject: [PATCH] Update NEWS
+
+---
+ NEWS | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/NEWS b/NEWS
+index 2b46246..afaadf3 100644
+--- a/NEWS
++++ b/NEWS
+@@ -53,6 +53,13 @@ CHANGES WITH 202:
+           found the tool will now automatically fall back to prompting
+           the user.
+ 
++        * Python systemd.journal module was updated to wrap recently
++          added functions from libsystemd-journal. The interface was
++          changed to bring the low level interface in s.j._Reader
++          closer to the C API, and the high level interface in
++          s.j.Reader was updated to wrap and convert all data about
++          an entry.
++
+         Contributions from: Anatol Pomozov, Auke Kok, Harald Hoyer,
+         Henrik Grindal Bakken, Josh Triplett, Kay Sievers, Lennart
+         Poettering, Lukas Nykryn, Mantas Mikulėnas Marius Vollmer,
+-- 
+1.8.2
+
