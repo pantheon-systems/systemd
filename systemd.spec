@@ -680,7 +680,7 @@ fi
 %{_datadir}/bash-completion/completions/systemctl
 %{_datadir}/bash-completion/completions/systemd-coredumpctl
 %{_datadir}/bash-completion/completions/timedatectl
-#%{_datadir}/bash-completion/completions/udevadm
+%{_datadir}/bash-completion/completions/udevadm
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
