@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        202
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -38,6 +38,10 @@ Patch1:         0001-nspawn-create-empty-etc-resolv.conf-if-necessary.patch
 Patch2:         0002-systemd-python-wrap-sd_journal_add_conjunction.patch
 Patch3:         0003-Update-NEWS.patch
 Patch4:         0004-Reintroduce-f_type-comparison-macro.patch
+Patch6:         0006-crypt-setup-generator-correctly-check-return-of-strd.patch
+Patch7:         0007-logind-dbus-initialize-result-variable.patch
+Patch8:         0008-nss-myhostname-ensure-that-glibc-s-assert-is-used.patch
+Patch9:         0009-build-sys-prevent-library-underlinking.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -299,10 +303,6 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 # For now remove /var/log/README since we are not enabling persistant
 # logging yet.
 rm -f %{buildroot}%{_localstatedir}/log/README
-
-# bash-completion ships udevadm too, so let's remove ours until this gets fixed
-# https://bugzilla.redhat.com/show_bug.cgi?id=919246
-rm -f %{buildroot}%{_datadir}/bash-completion/completions/udevadm
 
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
@@ -684,7 +684,7 @@ fi
 %{_datadir}/bash-completion/completions/systemctl
 %{_datadir}/bash-completion/completions/systemd-coredumpctl
 %{_datadir}/bash-completion/completions/timedatectl
-#%{_datadir}/bash-completion/completions/udevadm
+%{_datadir}/bash-completion/completions/udevadm
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -758,6 +758,13 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Apr 24 2013 Harald Hoyer <harald@redhat.com> 202-3
+- fix ENOENT for getaddrinfo
+Resolves: rhbz#954012 rhbz#956035
+- crypt-setup-generator: correctly check return of strdup
+- logind-dbus: initialize result variable
+- prevent library underlinking
+
 * Fri Apr 19 2013 Harald Hoyer <harald@redhat.com> 202-2
 - nspawn create empty /etc/resolv.conf if necessary
 - python wrapper: add sd_journal_add_conjunction()
