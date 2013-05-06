@@ -54,7 +54,7 @@ enable initial-setup-graphical.service
 enable initial-setup-text.service
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=957135
-enable open-vm-tools.service
+enable vmtoolsd.service
 
 # Hardware
 enable gpm.*
