@@ -12,8 +12,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        202
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        203
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -34,17 +34,8 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-Patch1:         0001-nspawn-create-empty-etc-resolv.conf-if-necessary.patch
-Patch2:         0002-systemd-python-wrap-sd_journal_add_conjunction.patch
-Patch3:         0003-Update-NEWS.patch
-Patch4:         0004-Reintroduce-f_type-comparison-macro.patch
-Patch6:         0006-crypt-setup-generator-correctly-check-return-of-strd.patch
-Patch7:         0007-logind-dbus-initialize-result-variable.patch
-Patch8:         0008-nss-myhostname-ensure-that-glibc-s-assert-is-used.patch
-Patch9:         0009-build-sys-prevent-library-underlinking.patch
-
 # kernel-install patch for grubby, drop if grubby is obsolete
-Patch1000:      kernel-install-grubby.patch
+# Patch1000:      kernel-install-grubby.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -646,6 +637,8 @@ fi
 %{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/90-display-manager.preset
 %{_prefix}/lib/systemd/catalog/systemd.catalog
+%{_prefix}/lib/kernel/install.d/50-depmod.install
+%{_prefix}/lib/kernel/install.d/90-loaderentry.install
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -685,6 +678,8 @@ fi
 %{_datadir}/bash-completion/completions/systemd-coredumpctl
 %{_datadir}/bash-completion/completions/timedatectl
 %{_datadir}/bash-completion/completions/udevadm
+%{_datadir}/bash-completion/completions/systemd-analyze
+
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -758,6 +753,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue May  7 2013 Lennart Poettering <lpoetter@redhat.com> - 203-1
+- New upstream release
+
 * Wed Apr 24 2013 Harald Hoyer <harald@redhat.com> 202-3
 - fix ENOENT for getaddrinfo
 Resolves: rhbz#954012 rhbz#956035
