@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        203
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -35,7 +35,7 @@ Source4:        listen.conf
 Source6:        yum-protect-systemd.conf
 
 # kernel-install patch for grubby, drop if grubby is obsolete
-# Patch1000:      kernel-install-grubby.patch
+Patch1000:      kernel-install-grubby.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -753,6 +753,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Tue May 07 2013 Harald Hoyer <harald@redhat.com> 203-2
+- forward port kernel-install-grubby.patch
+
 * Tue May  7 2013 Lennart Poettering <lpoetter@redhat.com> - 203-1
 - New upstream release
 
