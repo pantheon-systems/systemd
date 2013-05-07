@@ -23,7 +23,6 @@ enable sysklogd.*
 
 # Network facing
 enable firewalld.service
-enable isdn.service
 enable libvirtd.service
 enable xinetd.service
 enable ladvd.service
