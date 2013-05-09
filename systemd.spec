@@ -12,7 +12,7 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        203
+Version:        204
 Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
@@ -731,6 +731,7 @@ fi
 %{python_sitearch}/systemd/_reader.so
 %{python_sitearch}/systemd/_daemon.so
 %{python_sitearch}/systemd/id128.so
+%{python_sitearch}/systemd/login.so
 %{python_sitearch}/systemd/journal.py
 %{python_sitearch}/systemd/journal.pyc
 %{python_sitearch}/systemd/journal.pyo
@@ -753,6 +754,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu May  9 2013 Lennart Poettering <lpoetter@redhat.com> - 203-1
+- New upstream release
+
 * Tue May 07 2013 Harald Hoyer <harald@redhat.com> 203-2
 - forward port kernel-install-grubby.patch
 
@@ -761,7 +765,7 @@ fi
 
 * Wed Apr 24 2013 Harald Hoyer <harald@redhat.com> 202-3
 - fix ENOENT for getaddrinfo
-Resolves: rhbz#954012 rhbz#956035
+- Resolves: rhbz#954012 rhbz#956035
 - crypt-setup-generator: correctly check return of strdup
 - logind-dbus: initialize result variable
 - prevent library underlinking
@@ -770,7 +774,7 @@ Resolves: rhbz#954012 rhbz#956035
 - nspawn create empty /etc/resolv.conf if necessary
 - python wrapper: add sd_journal_add_conjunction()
 - fix s390 booting
-Resolves: rhbz#953217
+- Resolves: rhbz#953217
 
 * Thu Apr 18 2013 Lennart Poettering <lpoetter@redhat.com> - 202-1
 - New upstream release
