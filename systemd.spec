@@ -754,8 +754,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Thu May  9 2013 Lennart Poettering <lpoetter@redhat.com> - 203-1
+* Thu May  9 2013 Lennart Poettering <lpoetter@redhat.com> - 204-2
 - New upstream release
+- disable isdn by default (#959793)
 
 * Tue May 07 2013 Harald Hoyer <harald@redhat.com> 203-2
 - forward port kernel-install-grubby.patch
