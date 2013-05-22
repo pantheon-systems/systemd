@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -754,6 +754,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed May 22 2013 Kay Sievers <kay@redhat.com> - 204-3
+- Fix kernel-install (#965897)
+
 * Thu May  9 2013 Lennart Poettering <lpoetter@redhat.com> - 204-2
 - New upstream release
 - disable isdn by default (#959793)
