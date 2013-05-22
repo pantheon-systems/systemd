@@ -19,7 +19,7 @@ index fb2ee57..1b73def 100644
 +if [[ -x /sbin/new-kernel-pkg ]]; then
 +    case "$1" in
 +        add)
-+            /sbin/new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --install "$2" || exit $?
++            /sbin/new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --update "$2" || exit $?
 +            /sbin/new-kernel-pkg --package kernel --rpmposttrans "$2" || exit $?
 +            ;;
 +        remove)
