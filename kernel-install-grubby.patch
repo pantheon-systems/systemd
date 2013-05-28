@@ -1,24 +1,25 @@
-From b3fdcc4f9a1331950f462e6bf43daa718a59dfe5 Mon Sep 17 00:00:00 2001
+From e42573cfbcd3f47c6485d9b437b3e87c95662dbd Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Wed, 13 Mar 2013 07:57:53 +0100
 Subject: [PATCH] kernel-install: add fedora specific callouts to
  new-kernel-pkg
 
 ---
- src/kernel-install/kernel-install | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ src/kernel-install/kernel-install | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 diff --git a/src/kernel-install/kernel-install b/src/kernel-install/kernel-install
-index fb2ee57..1b73def 100644
+index fb2ee57..f576dfe 100644
 --- a/src/kernel-install/kernel-install
 +++ b/src/kernel-install/kernel-install
-@@ -19,6 +19,25 @@
+@@ -19,6 +19,26 @@
  # You should have received a copy of the GNU Lesser General Public License
  # along with systemd; If not, see <http://www.gnu.org/licenses/>.
  
 +if [[ -x /sbin/new-kernel-pkg ]]; then
 +    case "$1" in
 +        add)
++            /sbin/new-kernel-pkg --package kernel --install "$2" || exit $?
 +            /sbin/new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --update "$2" || exit $?
 +            /sbin/new-kernel-pkg --package kernel --rpmposttrans "$2" || exit $?
 +            ;;
