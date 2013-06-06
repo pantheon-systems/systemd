@@ -90,6 +90,3 @@ enable udisks2.service
 enable polkit.service
 enable packagekit-offline-update.service
 enable PackageKit.service
-
-# Enforce Fedora's disable-by-default policy
-disable *
