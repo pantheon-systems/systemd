@@ -5,6 +5,12 @@
 %global _hardened_build 1
 %endif
 
+%define with_journal_gateway 1
+
+%if 0%{?rhel} > 0
+%define with_journal_gateway 0
+%endif
+
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
 # directory.
@@ -58,7 +64,9 @@ BuildRequires:  xz-devel
 BuildRequires:  kmod-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
+%if %{with_journal_gateway}
 BuildRequires:  libmicrohttpd-devel
+%endif
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
@@ -200,6 +208,9 @@ glib-based applications using libudev functionality.
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static \
+%if !%{with_journal_gateway}
+        --disable-microhttpd \
+%endif
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local
 make %{?_smp_mflags} V=1
@@ -305,8 +316,11 @@ getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
 getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 || :
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
+
+%if %{with_journal_gateway}
 getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
 getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+%endif
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
@@ -564,7 +578,9 @@ fi
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
 %dir %{_datadir}/systemd
+%if %{with_journal_gateway}
 %dir %{_datadir}/systemd/gatewayd
+%endif
 %dir %{_datadir}/pkgconfig
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
@@ -674,7 +690,9 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
+%if %{with_journal_gateway}
 %{_datadir}/systemd/gatewayd/browse.html
+%endif
 %{_datadir}/bash-completion/completions/hostnamectl
 %{_datadir}/bash-completion/completions/journalctl
 %{_datadir}/bash-completion/completions/localectl
