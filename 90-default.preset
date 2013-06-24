@@ -8,6 +8,7 @@ enable crond.*
 enable chronyd.service
 enable rpcbind.*
 enable NetworkManager.service
+enable NetworkManager-dispatcher.service
 enable ModemManager.service
 enable nm_dispatcher.service
 enable auditd.service
