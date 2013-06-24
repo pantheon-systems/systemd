@@ -19,7 +19,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -776,6 +776,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Jun 24 2013 Michal Schmidt <mschmidt@redhat.com> 204-9
+- Rename nm_dispatcher to NetworkManager-dispatcher in default preset (#977433)
+
 * Fri Jun 14 2013 Harald Hoyer <harald@redhat.com> 204-8
 - fix, which helps to sucessfully browse journals with
   duplicated seqnums
