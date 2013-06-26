@@ -5,12 +5,6 @@
 %global _hardened_build 1
 %endif
 
-%define with_journal_gateway 1
-
-%if 0%{?rhel} > 0
-%define with_journal_gateway 0
-%endif
-
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
 # directory.
@@ -19,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -64,9 +58,7 @@ BuildRequires:  xz-devel
 BuildRequires:  kmod-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
-%if %{with_journal_gateway}
 BuildRequires:  libmicrohttpd-devel
-%endif
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
@@ -103,8 +95,9 @@ Obsoletes:      udev < 183
 Conflicts:      dracut < 027
 # f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
+# For the journal-gateway split in F20, drop at F22
+Obsoletes:      systemd < 204-10
 # Ensures correct multilib updates added F18, drop at F20
-Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 # added F18, drop at F20
 Obsoletes:      system-setup-keyboard < 0.9
@@ -181,6 +174,20 @@ License:        LGPLv2+
 This package contains the header and pkg-config files for developing
 glib-based applications using libudev functionality.
 
+%package journal-gateway
+Summary:        Gateway for serving journal events over the network using HTTP
+Requires:       %{name} = %{version}-%{release}
+License:        LGPLv2+
+Requires(pre):    /usr/bin/getent
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
+# For the journal-gateway split in F20, drop at F22
+Obsoletes:      systemd < 204-10
+
+%description journal-gateway
+systemd-journal-gatewayd serves journal events over the network using HTTP.
+
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
 
@@ -208,9 +215,6 @@ glib-based applications using libudev functionality.
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static \
-%if !%{with_journal_gateway}
-        --disable-microhttpd \
-%endif
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local
 make %{?_smp_mflags} V=1
@@ -316,11 +320,6 @@ getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
 getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 || :
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
-
-%if %{with_journal_gateway}
-getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
-getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
-%endif
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
@@ -553,6 +552,19 @@ fi
 %post -n libgudev1 -p /sbin/ldconfig
 %postun -n libgudev1 -p /sbin/ldconfig
 
+%pre journal-gateway
+getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
+getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+
+%post journal-gateway
+%systemd_post systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
+
+%preun journal-gateway
+%systemd_preun systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
+
+%postun journal-gateway
+%systemd_postun_with_restart systemd-journal-gatewayd.service
+
 %files
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
@@ -578,9 +590,6 @@ fi
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
 %dir %{_datadir}/systemd
-%if %{with_journal_gateway}
-%dir %{_datadir}/systemd/gatewayd
-%endif
 %dir %{_datadir}/pkgconfig
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
@@ -639,8 +648,10 @@ fi
 %{_bindir}/udevadm
 %{_bindir}/kernel-install
 %{_prefix}/lib/systemd/systemd
+%exclude %{_prefix}/lib/systemd/system/systemd-journal-gatewayd.*
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
+%exclude %{_prefix}/lib/systemd/systemd-journal-gatewayd
 %{_prefix}/lib/systemd/systemd-*
 %{_prefix}/lib/udev
 %{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
@@ -671,6 +682,7 @@ fi
 %{_mandir}/man1/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
+%exclude %{_mandir}/man8/systemd-journal-gatewayd.*
 %{_mandir}/man8/*
 %{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
@@ -690,9 +702,6 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
-%if %{with_journal_gateway}
-%{_datadir}/systemd/gatewayd/browse.html
-%endif
 %{_datadir}/bash-completion/completions/hostnamectl
 %{_datadir}/bash-completion/completions/journalctl
 %{_datadir}/bash-completion/completions/localectl
@@ -775,7 +784,16 @@ fi
 %{_datadir}/gtk-doc/html/gudev/*
 %{_libdir}/pkgconfig/gudev-1.0*
 
+%files journal-gateway
+%{_prefix}/lib/systemd/system/systemd-journal-gatewayd.*
+%{_prefix}/lib/systemd/systemd-journal-gatewayd
+%{_mandir}/man8/systemd-journal-gatewayd.*
+%{_datadir}/systemd/gatewayd
+
 %changelog
+* Wed Jun 26 2013 Michal Schmidt <mschmidt@redhat.com> 204-10
+- Split systemd-journal-gateway subpackage (#908081).
+
 * Mon Jun 24 2013 Michal Schmidt <mschmidt@redhat.com> 204-9
 - Rename nm_dispatcher to NetworkManager-dispatcher in default preset (#977433)
 
