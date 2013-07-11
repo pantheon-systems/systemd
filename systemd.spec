@@ -228,7 +228,6 @@ ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
 ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
-ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
@@ -620,7 +619,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-system-setup-keyboard.conf
 %ghost %{_localstatedir}/lib/systemd/catalog/database
-%{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-analyze
