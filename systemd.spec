@@ -28,8 +28,6 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 Source1:        90-default.preset
 Source7:        99-default-disable.preset
 Source5:        85-display-manager.preset
-# Feodora's SysV convert script. meh.
-Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
@@ -106,6 +104,9 @@ Provides:       nss-myhostname = 0.4
 # systemd-analyze got merged in F19, drop at F21
 Obsoletes:      systemd-analyze < 198
 Provides:       systemd-analyze = 198
+# systemd-sysv-convert was removed in f20: https://fedorahosted.org/fpc/ticket/308
+Obsoletes:      systemd-sysv < 206
+Provides:       systemd-sysv = 206
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -289,9 +290,6 @@ mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
 mkdir -p %{buildroot}%{_localstatedir}/log/journal
 touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
 touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
-
-# Install SysV conversion tool for systemd
-install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 # Install rsyslog fragment
 mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
@@ -750,9 +748,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_mandir}/man3/*
 %dir %{_datadir}/gtk-doc/html/libudev
 %{_datadir}/gtk-doc/html/libudev/*
-
-%files sysv
-%{_bindir}/systemd-sysv-convert
 
 %files python
 %{python_sitearch}/systemd/__init__.py
