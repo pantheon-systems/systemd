@@ -12,7 +12,7 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        205
+Version:        206
 Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
@@ -786,6 +786,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Jul 23 2013 Kay Sievers <kay@redhat.com> - 206-1
+- New upstream release
+  Resolves (#984152)
+
 * Wed Jul  3 2013 Lennart Poettering <lpoetter@redhat.com> - 205-1
 - New upstream release
 
