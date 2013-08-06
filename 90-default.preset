@@ -1,6 +1,12 @@
 # Also see:
 # https://fedoraproject.org/wiki/Starting_services_by_default
 
+# systemd
+enable remote-fs.target
+enable getty@tty1.service
+enable systemd-readahead-replay.service
+enable systemd-readahead-collect.service
+
 # System stuff
 enable sshd.service
 enable atd.*

@@ -382,9 +382,9 @@ if [ $1 -eq 1 ] ; then
         # And symlink what we found to the new-style default.target
         ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
 
-        # Enable the services we install by default.
-        systemctl enable \
-                getty@.service \
+        # Services we install by default, and which are controlled by presets.
+        systemctl preset \
+                getty@tty1.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service >/dev/null 2>&1 || :
