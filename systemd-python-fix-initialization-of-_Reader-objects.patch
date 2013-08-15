@@ -1,0 +1,40 @@
+From c2748ce28c7111037f312c5446335f5538e673e8 Mon Sep 17 00:00:00 2001
+From: Steven Hiscocks <steven@hiscocks.me.uk>
+Date: Thu, 15 Aug 2013 12:50:32 -0400
+Subject: [PATCH] systemd-python: fix initialization of _Reader objects
+
+https://bugzilla.redhat.com/show_bug.cgi?id=995575
+---
+ src/python-systemd/_reader.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/python-systemd/_reader.c b/src/python-systemd/_reader.c
+index a678f69..3b1003b 100644
+--- a/src/python-systemd/_reader.c
++++ b/src/python-systemd/_reader.c
+@@ -64,6 +64,10 @@ static PyStructSequence_Desc Monotonic_desc = {
+ };
+ #endif
+ 
++/**
++ * Convert a Python sequence object into a strv (char**), and
++ * None into a NULL pointer.
++ */
+ static int strv_converter(PyObject* obj, void *_result) {
+         char ***result = _result;
+         Py_ssize_t i, len;
+@@ -73,6 +77,11 @@ static int strv_converter(PyObject* obj, void *_result) {
+         if (!obj)
+             goto cleanup;
+ 
++        if (obj == Py_None) {
++            *result = NULL;
++            return 1;
++        }
++
+         if (!PySequence_Check(obj))
+             return 0;
+ 
+-- 
+1.8.2.562.g931e949
+

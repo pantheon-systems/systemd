@@ -35,6 +35,8 @@ Source6:        yum-protect-systemd.conf
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
+Patch1001:      systemd-python-fix-initialization-of-_Reader-objects.patch
+Patch1002:      systemd-python-check-for-oom-give-nicer-error-messag.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
