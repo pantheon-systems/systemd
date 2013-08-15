@@ -46,7 +46,6 @@ BuildRequires:  audit-libs-devel
 BuildRequires:  cryptsetup-devel
 BuildRequires:  dbus-devel
 BuildRequires:  libacl-devel
-BuildRequires:  pciutils-devel
 BuildRequires:  glib2-devel
 BuildRequires:  gobject-introspection-devel
 BuildRequires:  libblkid-devel
@@ -60,6 +59,7 @@ BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
 BuildRequires:  intltool
 BuildRequires:  gperf
+BuildRequires:  gawk
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
 BuildRequires:  python3-devel
@@ -72,36 +72,25 @@ BuildRequires:  libtool
 BuildRequires:  git
 %endif
 Requires(post): coreutils
-Requires(post): gawk
 Requires(post): sed
 Requires(post): acl
 Requires(pre):  coreutils
 Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
-Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
-
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
 Provides:       systemd-units = %{version}-%{release}
-# part of system since f18, drop at f20
 Provides:       udev = %{version}
 Obsoletes:      udev < 183
-Conflicts:      dracut < 027
-# f18 version, drop at f20
-Conflicts:      plymouth < 0.8.5.1
-# For the journal-gateway split in F20, drop at F22
-Obsoletes:      systemd < 204-10
-# Ensures correct multilib updates added F18, drop at F20
-Conflicts:      systemd < 185-4
-# added F18, drop at F20
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
-# nss-myhostname got integrated in F19, drop at F21
 Obsoletes:      nss-myhostname < 0.4
 Provides:       nss-myhostname = 0.4
+# For the journal-gateway split in F20, drop at F22
+Obsoletes:      systemd < 204-10
 # systemd-analyze got merged in F19, drop at F21
 Obsoletes:      systemd-analyze < 198
 Provides:       systemd-analyze = 198
@@ -138,14 +127,6 @@ Obsoletes:      libudev-devel < 183
 
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
-
-%package sysv
-Summary:        SysV tools for systemd
-License:        LGPLv2+
-Requires:       %{name} = %{version}-%{release}
-
-%description sysv
-SysV compatibility tools for systemd
 
 %package python
 Summary:        Python 2 bindings for systemd
@@ -271,11 +252,8 @@ ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
-# legacy links
-ln -sf loginctl %{buildroot}%{_bindir}/systemd-loginctl
-
 # We create all wants links manually at installation time to make sure
-# they are not owned and hence overriden by rpm after the used deleted
+# they are not owned and hence overriden by rpm after the user deleted
 # them.
 rm -r %{buildroot}%{_sysconfdir}/systemd/system/*.target.wants
 
@@ -334,15 +312,9 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
 install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
-# To avoid making life hard for Rawhide-using developers, don't package the
-# kernel.core_pattern setting until systemd-coredump is a part of an actual
-# systemd release and it's made clear how to get the core dumps out of the
-# journal.
+# Don't package the kernel.core_pattern, we need minidumps working before
+# this can replace Fedora's current core dump handling.
 rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
-
-# For now remove /var/log/README since we are not enabling persistant
-# logging yet.
-rm -f %{buildroot}%{_localstatedir}/log/README
 
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
@@ -352,46 +324,6 @@ getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
-
-# Rename configuration files that changed their names
-mv -n %{_sysconfdir}/systemd/systemd-logind.conf %{_sysconfdir}/systemd/logind.conf >/dev/null 2>&1 || :
-mv -n %{_sysconfdir}/systemd/systemd-journald.conf %{_sysconfdir}/systemd/journald.conf >/dev/null 2>&1 || :
-
-%pretrans -p <lua>
---# Migrate away from systemd-timedated-ntp.target.
---# Take note which ntp services, if any, were pulled in by it.
---# We'll enable them the usual way in %%post.
---# Remove this after upgrades from F17 are no longer supported.
-function migrate_ntp()
-    --# Are we upgrading from a version that had systemd-timedated-ntp.target?
-    t = posix.stat("/usr/lib/systemd/system/systemd-timedated-ntp.target", "type")
-    if t ~= "regular" then return end
-
-    --# Was the target enabled?
-    t = posix.stat("/etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target", "type")
-    if t ~= "link" then return end
-
-    --# filesystem provides /var/lib/rpm-state since F17 GA
-    r,msg,errno = posix.mkdir("/var/lib/rpm-state/systemd")
-    if r == nil and errno ~= 17 then return end  --# EEXIST is fine.
-
-    --# Save the list of ntp services pulled by the target.
-    f = io.open("/var/lib/rpm-state/systemd/ntp-units", "w")
-    if f == nil then return end
-
-    files = posix.dir("/usr/lib/systemd/system/systemd-timedated-ntp.target.wants")
-    for i,name in ipairs(files) do
-        if name ~= "." and name ~= ".." then
-            s = string.format("%s\n", name)
-            f:write(s)
-        end
-    end
-
-    f:close()
-end
-
-migrate_ntp()
-return 0
 
 %post
 systemd-machine-id-setup >/dev/null 2>&1 || :
@@ -405,111 +337,13 @@ journalctl --update-catalog >/dev/null 2>&1 || :
 # to fail when the link already exists)
 ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
+# Services we install by default, and which are controlled by presets.
 if [ $1 -eq 1 ] ; then
-        # Try to read default runlevel from the old inittab if it exists
-        runlevel=$(awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
-        if [ -z "$runlevel" ] ; then
-                target="/usr/lib/systemd/system/graphical.target"
-        else
-                target="/usr/lib/systemd/system/runlevel$runlevel.target"
-        fi
-
-        # And symlink what we found to the new-style default.target
-        ln -sf "$target" /etc/systemd/system/default.target >/dev/null 2>&1 || :
-
-        # Services we install by default, and which are controlled by presets.
         systemctl preset \
                 getty@tty1.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
                 systemd-readahead-collect.service >/dev/null 2>&1 || :
-else
-        # This systemd service does not exist anymore, we now do it
-        # internally in PID 1
-        rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
-
-        # This systemd target does not exist anymore. It's been replaced
-        # by ntp-units.d.
-        rm -f /etc/systemd/system/multi-user.target.wants/systemd-timedated-ntp.target >/dev/null 2>&1 || :
-
-        # Enable the units recorded by %%pretrans
-        if [ -e /var/lib/rpm-state/systemd/ntp-units ] ; then
-                while read service; do
-                        systemctl enable "$service" >/dev/null 2>&1 || :
-                done < /var/lib/rpm-state/systemd/ntp-units
-                rm -r /var/lib/rpm-state/systemd/ntp-units >/dev/null 2>&1 || :
-        fi
-fi
-
-# Migrate /etc/sysconfig/clock
-if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
-       . /etc/sysconfig/clock >/dev/null 2>&1 || :
-       if [ -n "$ZONE" -a -e "/usr/share/zoneinfo/$ZONE" ] ; then
-              ln -sf "../usr/share/zoneinfo/$ZONE" /etc/localtime >/dev/null 2>&1 || :
-       fi
-fi
-rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
-
-# Migrate /etc/sysconfig/i18n
-if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
-        unset LANG
-        unset LC_CTYPE
-        unset LC_NUMERIC
-        unset LC_TIME
-        unset LC_COLLATE
-        unset LC_MONETARY
-        unset LC_MESSAGES
-        unset LC_PAPER
-        unset LC_NAME
-        unset LC_ADDRESS
-        unset LC_TELEPHONE
-        unset LC_MEASUREMENT
-        unset LC_IDENTIFICATION
-        . /etc/sysconfig/i18n >/dev/null 2>&1 || :
-        [ -n "$LANG" ] && echo LANG=$LANG > /etc/locale.conf 2>&1 || :
-        [ -n "$LC_CTYPE" ] && echo LC_CTYPE=$LC_CTYPE >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_NUMERIC" ] && echo LC_NUMERIC=$LC_NUMERIC >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_TIME" ] && echo LC_TIME=$LC_TIME >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_COLLATE" ] && echo LC_COLLATE=$LC_COLLATE >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_MONETARY" ] && echo LC_MONETARY=$LC_MONETARY >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_MESSAGES" ] && echo LC_MESSAGES=$LC_MESSAGES >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_PAPER" ] && echo LC_PAPER=$LC_PAPER >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_NAME" ] && echo LC_NAME=$LC_NAME >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_ADDRESS" ] && echo LC_ADDRESS=$LC_ADDRESS >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_TELEPHONE" ] && echo LC_TELEPHONE=$LC_TELEPHONE >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_MEASUREMENT" ] && echo LC_MEASUREMENT=$LC_MEASUREMENT >> /etc/locale.conf 2>&1 || :
-        [ -n "$LC_IDENTIFICATION" ] && echo LC_IDENTIFICATION=$LC_IDENTIFICATION >> /etc/locale.conf 2>&1 || :
-fi
-
-# Migrate /etc/sysconfig/keyboard
-if [ -e /etc/sysconfig/keyboard -a ! -e /etc/vconsole.conf ]; then
-        unset SYSFONT
-        unset SYSFONTACM
-        unset UNIMAP
-        unset KEYMAP
-        [ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n >/dev/null 2>&1 || :
-        . /etc/sysconfig/keyboard >/dev/null 2>&1 || :
-        [ -n "$SYSFONT" ] && echo FONT=$SYSFONT > /etc/vconsole.conf 2>&1 || :
-        [ -n "$SYSFONTACM" ] && echo FONT_MAP=$SYSFONTACM >> /etc/vconsole.conf 2>&1 || :
-        [ -n "$UNIMAP" ] && echo FONT_UNIMAP=$UNIMAP >> /etc/vconsole.conf 2>&1 || :
-        [ -n "$KEYTABLE" ] && echo KEYMAP=$KEYTABLE >> /etc/vconsole.conf 2>&1 || :
-fi
-rm -f /etc/sysconfig/i18n >/dev/null 2>&1 || :
-rm -f /etc/sysconfig/keyboard >/dev/null 2>&1 || :
-
-# Migrate HOSTNAME= from /etc/sysconfig/network
-if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
-        unset HOSTNAME
-        . /etc/sysconfig/network >/dev/null 2>&1 || :
-        [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
-fi
-sed -i '/^HOSTNAME=/d' /etc/sysconfig/network >/dev/null 2>&1 || :
-
-# Migrate the old systemd-setup-keyboard X11 configuration fragment
-if [ ! -e /etc/X11/xorg.conf.d/00-keyboard.conf ] ; then
-        mv /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf >/dev/null 2>&1 || :
-else
-        rm -f /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf >/dev/null 2>&1 || :
 fi
 
 # sed-fu to add myhostname to the hosts line of /etc/nsswitch.conf
@@ -521,36 +355,8 @@ if [ -f /etc/nsswitch.conf ] ; then
                 ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
 
+# Apply ACL to the journal directory
 setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
-
-%posttrans
-# Convert old /etc/sysconfig/desktop settings
-preferred=
-if [ -f /etc/sysconfig/desktop ]; then
-        . /etc/sysconfig/desktop
-        if [ "$DISPLAYMANAGER" = GNOME ]; then
-                preferred=gdm
-        elif [ "$DISPLAYMANAGER" = KDE ]; then
-                preferred=kdm
-        elif [ "$DISPLAYMANAGER" = WDM ]; then
-                preferred=wdm
-        elif [ "$DISPLAYMANAGER" = XDM ]; then
-                preferred=xdm
-        elif [ -n "$DISPLAYMANAGER" ]; then
-                preferred=${DISPLAYMANAGER##*/}
-        fi
-fi
-if [ -z "$preferred" ]; then
-        if [ -x /usr/sbin/gdm ]; then
-                preferred=gdm
-        elif [ -x /usr/bin/kdm ]; then
-                preferred=kdm
-        fi
-fi
-if [ -n "$preferred" -a -r "/usr/lib/systemd/system/$preferred.service" ]; then
-        # This is supposed to fail when the symlink already exists
-        ln -s "/usr/lib/systemd/system/$preferred.service" /etc/systemd/system/display-manager.service >/dev/null 2>&1 || :
-fi
 
 %postun
 if [ $1 -ge 1 ] ; then
@@ -625,6 +431,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
 %dir %{_localstatedir}/lib/systemd/coredump
+%{_localstatedir}/log/README
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -659,7 +466,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
 %{_bindir}/loginctl
-%{_bindir}/systemd-loginctl
 %{_bindir}/journalctl
 %{_bindir}/machinectl
 %{_bindir}/systemd-tmpfiles
