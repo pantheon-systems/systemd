@@ -10,6 +10,9 @@
 # directory.
 %global __requires_exclude pkg-config
 
+# Do not check .so files in the python_sitelib directory for provides.
+%global __provides_exclude_from ^(%{python_sitearch}|%{python3_sitearch})/.*\\.so
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
