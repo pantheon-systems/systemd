@@ -599,11 +599,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 
 %files python
 %{python_sitearch}/systemd
-%{python_sitearch}/systemd/*
 
 %files python3
 %{python3_sitearch}/systemd
-%{python3_sitearch}/systemd/*
 
 %files -n libgudev1
 %{_libdir}/libgudev-1.0.so.*
@@ -626,6 +624,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Aug 16 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 206-4
+- Filter out provides for private python modules.
+
 * Sun Aug 11 2013 Zbigniew Jedrzejewski-Szmek <zbyszek@in.waw.pl> - 206-3
 - New systemd-python3 package (#976427).
 - Add ownership of a few directories that we create (#894202).
