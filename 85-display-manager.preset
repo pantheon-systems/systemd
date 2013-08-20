@@ -6,5 +6,6 @@ enable gdm.service
 enable lightdm.service
 enable slim.service
 enable lxdm.service
+enable sddm.service
 enable kdm.service
 enable xdm.service
