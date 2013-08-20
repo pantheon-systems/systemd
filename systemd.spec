@@ -84,7 +84,7 @@ Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
-Required:       kmod >= 14
+Requires:       kmod >= 14
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
