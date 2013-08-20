@@ -628,7 +628,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 * Tue Aug 20 2013 Rex Dieter <rdieter@fedoraproject.org> - 206-5
 - add sddm.service to preset file (#998978)
 
-* Sun Aug 16 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 206-4
+* Fri Aug 16 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 206-4
 - Filter out provides for private python modules.
 - Add requires on kmod >= 14 (#990994).
 
