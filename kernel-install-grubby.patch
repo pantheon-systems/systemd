@@ -1,30 +1,31 @@
-From e42573cfbcd3f47c6485d9b437b3e87c95662dbd Mon Sep 17 00:00:00 2001
+From dd33348393551411885397ff7d88a3a908eeb018 Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Wed, 13 Mar 2013 07:57:53 +0100
 Subject: [PATCH] kernel-install: add fedora specific callouts to
  new-kernel-pkg
 
 ---
- src/kernel-install/kernel-install | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ src/kernel-install/kernel-install | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
 diff --git a/src/kernel-install/kernel-install b/src/kernel-install/kernel-install
-index fb2ee57..f576dfe 100644
+index fb2ee57..31e988a 100644
 --- a/src/kernel-install/kernel-install
 +++ b/src/kernel-install/kernel-install
-@@ -19,6 +19,26 @@
+@@ -19,6 +19,27 @@
  # You should have received a copy of the GNU Lesser General Public License
  # along with systemd; If not, see <http://www.gnu.org/licenses/>.
  
 +if [[ -x /sbin/new-kernel-pkg ]]; then
++    [[ "$2" == *\+* ]] && flavor=-"${2##*+}"
 +    case "$1" in
 +        add)
-+            /sbin/new-kernel-pkg --package kernel --install "$2" || exit $?
-+            /sbin/new-kernel-pkg --package kernel --mkinitrd --dracut --depmod --update "$2" || exit $?
-+            /sbin/new-kernel-pkg --package kernel --rpmposttrans "$2" || exit $?
++            /sbin/new-kernel-pkg --package "kernel${flavor}" --install "$2" || exit $?
++            /sbin/new-kernel-pkg --package "kernel${flavor}" --mkinitrd --dracut --depmod --update "$2" || exit $?
++            /sbin/new-kernel-pkg --package "kernel${flavor}" --rpmposttrans "$2" || exit $?
 +            ;;
 +        remove)
-+            /sbin/new-kernel-pkg --rminitrd --rmmoddep --remove "$2" || exit $?
++            /sbin/new-kernel-pkg --package "kernel${flavor+-$flavor}" --rminitrd --rmmoddep --remove "$2" || exit $?
 +            ;;
 +        *)
 +            ;;
@@ -40,5 +41,5 @@ index fb2ee57..f576dfe 100644
  {
      echo "Usage:" >&2
 -- 
-1.8.2.1
+1.8.3.1
 

@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -625,6 +625,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Aug 22 2013 Harald Hoyer <harald@redhat.com> 206-6
+- kernel-install now understands kernel flavors like PAE
+
 * Tue Aug 20 2013 Rex Dieter <rdieter@fedoraproject.org> - 206-5
 - add sddm.service to preset file (#998978)
 
