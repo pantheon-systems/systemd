@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -85,6 +85,7 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 14
+Requires:       grubby
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -625,6 +626,14 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Aug 27 2013 Dennis Gilmore <dennis@ausil.us> - 206-9
+- Require grubby, Fedora installs require grubby,
+- kernel-install took over from new-kernel-pkg
+- without the Requires we are unable to compose Fedora
+- everyone else says that since kernel-install took over
+- it is responsible for ensuring that grubby is in place
+- this is really what we want for Fedora
+
 * Tue Aug 27 2013 Kay Sievers <kay@redhat.com> - 206-8
 - Revert "Require grubby its needed by kernel-install"
 
