@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -85,7 +85,6 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 14
-Requires:       grubby
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -626,9 +625,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Mon Aug 26 2013 Dennis Gilmore <dennis@ausil.us> 206-7
-- Require grubby its needed by kernel-install
-
 * Thu Aug 22 2013 Harald Hoyer <harald@redhat.com> 206-6
 - kernel-install now understands kernel flavors like PAE
 
