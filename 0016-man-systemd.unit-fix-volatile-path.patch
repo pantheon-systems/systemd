@@ -1,0 +1,24 @@
+From fb65edbfc52681e54b8af6fceab780497034d8e7 Mon Sep 17 00:00:00 2001
+From: Brandon Philips <brandon@ifup.co>
+Date: Sat, 27 Jul 2013 09:49:58 -0700
+Subject: [PATCH] man: systemd.unit: fix volatile path
+
+The volatile path was '/run/systemd/systemd' when it should be
+'/run/systemd/system'. Fix.
+---
+ man/systemd.unit.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index f6a0791..2f65ec6 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -285,7 +285,7 @@
+                         <entry>Local configuration</entry>
+                       </row>
+                       <row>
+-                        <entry><filename>/run/systemd/systemd</filename></entry>
++                        <entry><filename>/run/systemd/system</filename></entry>
+                         <entry>Volatile units</entry>
+                       </row>
+                       <row>

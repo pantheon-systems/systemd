@@ -1,0 +1,22 @@
+From 5b09d0b9082447bea8cd0365a632305133e0277f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 24 Jul 2013 17:31:37 +0200
+Subject: [PATCH] man: there is no session mode, only user mode
+
+---
+ man/systemd.unit.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index a577e91..1b71538 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -317,7 +317,7 @@
+ 
+                 <table>
+                   <title>
+-                    Load path when running in session mode (<option>--user</option>).
++                    Load path when running in user mode (<option>--user</option>).
+                   </title>
+ 
+                   <tgroup cols='2'>

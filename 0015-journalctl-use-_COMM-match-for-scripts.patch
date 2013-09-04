@@ -1,0 +1,177 @@
+From 8517d72d5e52fb99eedfe4667303d5883fd38698 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 19 Jul 2013 04:02:50 -0400
+Subject: [PATCH] journalctl: use _COMM= match for scripts
+
+In case of scripts, _EXE is set to the interpreter name, and
+_COMM is set based on the file name. Add a match for _COMM,
+and _EXE if the interpreter is not a link (e.g. for yum,
+the interpreter is /usr/bin/python, but it is a link to
+/usr/bin/python2, which in turn is a link to /usr/bin/python2.7,
+at least on Fedora, so we end up with _EXE=/usr/bin/python2.7).
+I don't think that such link chasing makes sense, because
+the final _EXE name is more likely to change.
+---
+ src/journal/journalctl.c | 30 ++++++++++++++++++++++++++----
+ src/shared/fileio.c      | 29 +++++++++++++++++++++++++++++
+ src/shared/fileio.h      |  2 ++
+ src/test/test-fileio.c   | 35 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 92 insertions(+), 4 deletions(-)
+
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 083a597..dde2ed7 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -45,6 +45,7 @@
+ #include "logs-show.h"
+ #include "util.h"
+ #include "path-util.h"
++#include "fileio.h"
+ #include "build.h"
+ #include "pager.h"
+ #include "logs-show.h"
+@@ -627,8 +628,9 @@ static int add_matches(sd_journal *j, char **args) {
+                 if (streq(*i, "+"))
+                         r = sd_journal_add_disjunction(j);
+                 else if (path_is_absolute(*i)) {
+-                        _cleanup_free_ char *p, *t = NULL;
++                        _cleanup_free_ char *p, *t = NULL, *t2 = NULL;
+                         const char *path;
++                        _cleanup_free_ char *interpreter = NULL;
+                         struct stat st;
+ 
+                         p = canonicalize_file_name(*i);
+@@ -639,9 +641,27 @@ static int add_matches(sd_journal *j, char **args) {
+                                 return -errno;
+                         }
+ 
+-                        if (S_ISREG(st.st_mode) && (0111 & st.st_mode))
+-                                t = strappend("_EXE=", path);
+-                        else if (S_ISCHR(st.st_mode))
++                        if (S_ISREG(st.st_mode) && (0111 & st.st_mode)) {
++                                if (executable_is_script(path, &interpreter) > 0) {
++                                        _cleanup_free_ char *comm;
++
++                                        comm = strndup(path_get_file_name(path), 15);
++                                        if (!comm)
++                                                return log_oom();
++
++                                        t = strappend("_COMM=", comm);
++
++                                        /* Append _EXE only if the interpreter is not a link.
++                                           Otherwise it might be outdated often. */
++                                        if (lstat(interpreter, &st) == 0 &&
++                                            !S_ISLNK(st.st_mode)) {
++                                                t2 = strappend("_EXE=", interpreter);
++                                                if (!t2)
++                                                        return log_oom();
++                                        }
++                                } else
++                                        t = strappend("_EXE=", path);
++                        } else if (S_ISCHR(st.st_mode))
+                                 asprintf(&t, "_KERNEL_DEVICE=c%u:%u", major(st.st_rdev), minor(st.st_rdev));
+                         else if (S_ISBLK(st.st_mode))
+                                 asprintf(&t, "_KERNEL_DEVICE=b%u:%u", major(st.st_rdev), minor(st.st_rdev));
+@@ -654,6 +674,8 @@ static int add_matches(sd_journal *j, char **args) {
+                                 return log_oom();
+ 
+                         r = sd_journal_add_match(j, t, 0);
++                        if (t2)
++                                r = sd_journal_add_match(j, t2, 0);
+                 } else
+                         r = sd_journal_add_match(j, *i, 0);
+ 
+diff --git a/src/shared/fileio.c b/src/shared/fileio.c
+index dc13c9e..2b1dab8 100644
+--- a/src/shared/fileio.c
++++ b/src/shared/fileio.c
+@@ -593,3 +593,32 @@ int write_env_file(const char *fname, char **l) {
+ 
+         return r;
+ }
++
++int executable_is_script(const char *path, char **interpreter) {
++        int r;
++        char _cleanup_free_ *line = NULL;
++        int len;
++        char *ans;
++
++        assert(path);
++
++        r = read_one_line_file(path, &line);
++        if (r < 0)
++                return r;
++
++        if (!startswith(line, "#!"))
++                return 0;
++
++        ans = strstrip(line + 2);
++        len = strcspn(ans, " \t");
++
++        if (len == 0)
++                return 0;
++
++        ans = strndup(ans, len);
++        if (!ans)
++                return -ENOMEM;
++
++        *interpreter = ans;
++        return 1;
++}
+diff --git a/src/shared/fileio.h b/src/shared/fileio.h
+index 0ca6878..a0aae28 100644
+--- a/src/shared/fileio.h
++++ b/src/shared/fileio.h
+@@ -35,3 +35,5 @@ int read_full_file(const char *fn, char **contents, size_t *size);
+ int parse_env_file(const char *fname, const char *separator, ...) _sentinel_;
+ int load_env_file(const char *fname, const char *separator, char ***l);
+ int write_env_file(const char *fname, char **l);
++
++int executable_is_script(const char *path, char **interpreter);
+diff --git a/src/test/test-fileio.c b/src/test/test-fileio.c
+index d56f7cc..b08e796 100644
+--- a/src/test/test-fileio.c
++++ b/src/test/test-fileio.c
+@@ -139,7 +139,42 @@ static void test_parse_env_file(void) {
+         unlink("/tmp/test-fileio");
+ }
+ 
++static void test_executable_is_script(void) {
++        char t[] = "/tmp/test-executable-XXXXXX";
++        int fd, r;
++        FILE *f;
++        char *command;
++
++        fd = mkostemp(t, O_CLOEXEC);
++        assert_se(fd >= 0);
++
++        f = fdopen(fd, "w");
++        assert_se(f);
++
++        fputs("#! /bin/script -a -b \ngoo goo", f);
++        fflush(f);
++
++        r = executable_is_script(t, &command);
++        assert_se(r > 0);
++        assert_se(streq(command, "/bin/script"));
++        free(command);
++
++        r = executable_is_script("/bin/sh", &command);
++        assert_se(r == 0);
++
++        r = executable_is_script("/usr/bin/yum", &command);
++        assert_se(r > 0 || r == -ENOENT);
++        if (r > 0) {
++                assert_se(startswith(command, "/"));
++                free(command);
++        }
++
++        fclose(f);
++        unlink(t);
++}
++
+ int main(int argc, char *argv[]) {
+         test_parse_env_file();
++        test_executable_is_script();
+         return 0;
+ }

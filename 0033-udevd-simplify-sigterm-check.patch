@@ -1,0 +1,30 @@
+From 65a43fc88f420d5be42f6c443ce920c1852f6998 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 15 Aug 2013 19:51:08 +0200
+Subject: [PATCH] udevd: simplify sigterm check
+
+---
+ src/udev/udevd.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index 7c6c5d6..fd799cc 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -314,13 +314,11 @@ static void worker_new(struct event *event)
+                         udev_device_unref(dev);
+                         dev = NULL;
+ 
+-                        if (udev_event->sigterm) {
+-                                udev_event_unref(udev_event);
+-                                goto out;
+-                        }
+-
+                         udev_event_unref(udev_event);
+ 
++                        if (udev_event->sigterm)
++                                goto out;
++
+                         /* wait for more device messages from main udevd, or term signal */
+                         while (dev == NULL) {
+                                 struct epoll_event ev[4];

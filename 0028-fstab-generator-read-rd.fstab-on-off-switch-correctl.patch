@@ -1,0 +1,25 @@
+From 81e19a8767e4347df71a2874e724e50b43ee930d Mon Sep 17 00:00:00 2001
+From: WANG Chao <chaowang@redhat.com>
+Date: Fri, 9 Aug 2013 17:01:50 +0800
+Subject: [PATCH] fstab-generator: read rd.fstab=on/off switch correctly
+
+---
+ src/fstab-generator/fstab-generator.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
+index 87b17cd..5a2074e 100644
+--- a/src/fstab-generator/fstab-generator.c
++++ b/src/fstab-generator/fstab-generator.c
+@@ -600,9 +600,9 @@ static int parse_proc_cmdline(void) {
+                 } else if (startswith(word, "rd.fstab=")) {
+ 
+                         if (in_initrd()) {
+-                                r = parse_boolean(word + 6);
++                                r = parse_boolean(word + 9);
+                                 if (r < 0)
+-                                        log_warning("Failed to parse fstab switch %s. Ignoring.", word + 6);
++                                        log_warning("Failed to parse fstab switch %s. Ignoring.", word + 9);
+                                 else
+                                         arg_enabled = r;
+                         }

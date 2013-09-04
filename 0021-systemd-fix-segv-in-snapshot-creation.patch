@@ -1,0 +1,26 @@
+From 2c853443d3518f638b58f30cd866ca2d4c401281 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 6 Aug 2013 21:30:34 -0400
+Subject: [PATCH] systemd: fix segv in snapshot creation
+
+https://bugs.freedesktop.org/show_bug.cgi?id=67848
+---
+ src/core/snapshot.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/snapshot.c b/src/core/snapshot.c
+index 1423854..d11239d 100644
+--- a/src/core/snapshot.c
++++ b/src/core/snapshot.c
+@@ -221,8 +221,10 @@ int snapshot_create(Manager *m, const char *name, bool cleanup, DBusError *e, Sn
+                         if (asprintf(&n, "snapshot-%u.snapshot", ++ m->n_snapshots) < 0)
+                                 return -ENOMEM;
+ 
+-                        if (!manager_get_unit(m, n))
++                        if (!manager_get_unit(m, n)) {
++                                name = n;
+                                 break;
++                        }
+ 
+                         free(n);
+                         n = NULL;

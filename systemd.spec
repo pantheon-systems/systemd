@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,9 +36,49 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
+Patch0001: 0001-80-net-name-slot.rules-only-rename-network-interface.patch
+Patch0004: 0004-journal-handle-multiline-syslog-messages.patch
+Patch0005: 0005-man-Fix-copy-paste-error.patch
+Patch0006: 0006-core-synchronously-block-when-logging.patch
+Patch0007: 0007-journal-immediately-sync-to-disk-as-soon-as-we-recei.patch
+Patch0008: 0008-initctl-use-irreversible-jobs-when-switching-runleve.patch
+Patch0009: 0009-udev-log-error-if-chmod-chown-of-static-dev-nodes-fa.patch
+Patch0010: 0010-udev-static_node-don-t-touch-permissions-uneccessari.patch
+Patch0011: 0011-tmpfiles-support-passing-prefix-multiple-times.patch
+Patch0012: 0012-tmpfiles-introduce-exclude-prefix.patch
+Patch0013: 0013-tmpfiles-setup-exclude-dev-prefixes-files.patch
+Patch0014: 0014-logind-update-state-file-after-generating-the-sessio.patch
+Patch0015: 0015-journalctl-use-_COMM-match-for-scripts.patch
+Patch0016: 0016-man-systemd.unit-fix-volatile-path.patch
+Patch0017: 0017-man-link-up-scope-slice-units-from-systemd.unit-5.patch
+Patch0018: 0018-man-there-is-no-session-mode-only-user-mode.patch
+Patch0019: 0019-journal-fix-hashmap-leak-in-mmap-cache.patch
+Patch0020: 0020-systemd-delta-Only-print-colors-when-on-a-tty.patch
+Patch0021: 0021-systemd-fix-segv-in-snapshot-creation.patch
+Patch0022: 0022-udev-hwdb-try-reading-modalias-for-usb-before-fallin.patch
+Patch0023: 0023-udevd-respect-the-log-level-set-in-etc-udev-udev.con.patch
+Patch0024: 0024-fstab-generator-respect-noauto-nofail-when-adding-sy.patch
+Patch0025: 0025-service-always-unwatch-PIDs-before-forgetting-old-on.patch
+Patch0026: 0026-units-disable-kmod-static-nodes.service-in-container.patch
+Patch0027: 0027-use-CAP_MKNOD-ConditionCapability.patch
+Patch0028: 0028-fstab-generator-read-rd.fstab-on-off-switch-correctl.patch
+Patch0029: 0029-backlight-add-minimal-tool-to-save-restore-screen-br.patch
+Patch0030: 0030-backlight-instead-of-syspath-use-sysname-for-identif.patch
+Patch0031: 0031-sysctl-allow-overwriting-of-values-specified-in-late.patch
+Patch0032: 0032-systemd-python-fix-initialization-of-_Reader-objects.patch
+Patch0033: 0033-udevd-simplify-sigterm-check.patch
+Patch0034: 0034-libudev-fix-hwdb-validation-to-look-for-the-new-file.patch
+Patch0035: 0035-units-make-fsck-units-remain-after-exit.patch
+Patch0036: 0036-udev-replace-CAP_MKNOD-by-writable-sys-condition.patch
+Patch0037: 0037-libudev-enumerate.c-udev_enumerate_get_list_entry-fi.patch
+Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
+Patch0039: 0039-cgroup.c-check-return-value-of-unit_realize_cgroup_n.patch
+Patch0040: 0040-Revert-cgroup.c-check-return-value-of-unit_realize_c.patch
+Patch0041: 0041-Do-not-realloc-strings-which-are-already-in-the-hash.patch
+
+
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
-Patch1001:      systemd-python-fix-initialization-of-_Reader-objects.patch
 Patch1002:      systemd-python-check-for-oom-give-nicer-error-messag.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -85,7 +125,6 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 14
-Requires:       grubby
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -197,7 +236,39 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
     git commit -a -q -m "%{version} baseline."
 
     # Apply all the patches.
-    git am %{patches}
+    git am \
+        --exclude .gitignore \
+        --exclude docs/.gitignore \
+        --exclude docs/gudev/.gitignore \
+        --exclude docs/libudev/.gitignore \
+        --exclude docs/sysvinit/.gitignore \
+        --exclude docs/var-log/.gitignore \
+        --exclude hwdb/.gitignore \
+        --exclude m4/.gitignore \
+        --exclude man/.gitignore \
+        --exclude po/.gitignore \
+        --exclude rules/.gitignore \
+        --exclude src/.gitignore \
+        --exclude src/analyze/.gitignore \
+        --exclude src/core/.gitignore \
+        --exclude src/gudev/.gitignore \
+        --exclude src/hostname/.gitignore \
+        --exclude src/journal/.gitignore \
+        --exclude src/libsystemd-daemon/.gitignore \
+        --exclude src/libsystemd-id128/.gitignore \
+        --exclude src/libudev/.gitignore \
+        --exclude src/locale/.gitignore \
+        --exclude src/login/.gitignore \
+        --exclude src/python-systemd/.gitignore \
+        --exclude src/python-systemd/docs/.gitignore \
+        --exclude src/timedate/.gitignore \
+        --exclude src/udev/.gitignore \
+        --exclude src/udev/scsi_id/.gitignore \
+        --exclude sysctl.d/.gitignore \
+        --exclude test/.gitignore \
+        --exclude units/.gitignore \
+        --exclude units/user/.gitignore \
+        %{patches}
 %endif
 
 %build
@@ -626,6 +697,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Sep 04 2013 Harald Hoyer <harald@redhat.com> 206-10
+- Do not require grubby, lorax now takes care of grubby
+- cherry-picked a lot of patches from upstream
+
 * Tue Aug 27 2013 Dennis Gilmore <dennis@ausil.us> - 206-9
 - Require grubby, Fedora installs require grubby,
 - kernel-install took over from new-kernel-pkg

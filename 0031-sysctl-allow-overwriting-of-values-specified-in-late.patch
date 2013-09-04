@@ -1,0 +1,94 @@
+From e3435020cb50691abac53965a7ddf6f66991926f Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 15 Aug 2013 18:35:03 +0200
+Subject: [PATCH] sysctl: allow overwriting of values specified in "later"
+ files
+
+---
+ NEWS                            |  9 +++++++++
+ src/sysctl/sysctl.c             | 16 ++++++++--------
+ units/systemd-sysctl.service.in |  1 -
+ 3 files changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index f9929d0..9d989d3 100644
+--- a/NEWS
++++ b/NEWS
+@@ -2,6 +2,15 @@ systemd System and Service Manager
+ 
+ CHANGES WITH 206:
+ 
++        * The systemd-sysctl tool does no longer natively read the
++          file /etc/sysctl.conf. If desired, the file should be
++          symlinked from /etc/sysctl.d/99-sysctl.conf. Apart from
++          providing legacy support by a symlink rather than built-in
++          code, it also makes the otherwise hidden order of application
++          of the different files visible.
++
++CHANGES WITH 206:
++
+         * The documentation has been updated to cover the various new
+           concepts introduced with 205.
+ 
+diff --git a/src/sysctl/sysctl.c b/src/sysctl/sysctl.c
+index db18dd9..b5670db 100644
+--- a/src/sysctl/sysctl.c
++++ b/src/sysctl/sysctl.c
+@@ -135,6 +135,7 @@ static int parse_file(Hashmap *sysctl_options, const char *path, bool ignore_eno
+         log_debug("parse: %s\n", path);
+         while (!feof(f)) {
+                 char l[LINE_MAX], *p, *value, *new_value, *property, *existing;
++                void *v;
+                 int k;
+ 
+                 if (!fgets(l, sizeof(l), f)) {
+@@ -167,13 +168,14 @@ static int parse_file(Hashmap *sysctl_options, const char *path, bool ignore_eno
+                 p = normalize_sysctl(strstrip(p));
+                 value = strstrip(value);
+ 
+-                existing = hashmap_get(sysctl_options, p);
++                existing = hashmap_get2(sysctl_options, p, &v);
+                 if (existing) {
+-                        if (!streq(value, existing))
+-                                log_warning("Duplicate assignment of %s in file '%s', ignoring.",
+-                                            p, path);
++                        if (streq(value, existing))
++                                continue;
+ 
+-                        continue;
++                        log_info("Overwriting earlier assignment of %s in file '%s'.", p, path);
++                        free(hashmap_remove(sysctl_options, p));
++                        free(v);
+                 }
+ 
+                 property = strdup(p);
+@@ -188,7 +190,7 @@ static int parse_file(Hashmap *sysctl_options, const char *path, bool ignore_eno
+ 
+                 k = hashmap_put(sysctl_options, property, new_value);
+                 if (k < 0) {
+-                        log_error("Failed to add sysctl variable %s to hashmap: %s", property, strerror(-r));
++                        log_error("Failed to add sysctl variable %s to hashmap: %s", property, strerror(-k));
+                         free(property);
+                         free(new_value);
+                         return k;
+@@ -304,8 +306,6 @@ int main(int argc, char *argv[]) {
+                         goto finish;
+                 }
+ 
+-                r = parse_file(sysctl_options, "/etc/sysctl.conf", true);
+-
+                 STRV_FOREACH(f, files) {
+                         k = parse_file(sysctl_options, *f, true);
+                         if (k < 0 && r == 0)
+diff --git a/units/systemd-sysctl.service.in b/units/systemd-sysctl.service.in
+index 45e1ceb..5baf22c 100644
+--- a/units/systemd-sysctl.service.in
++++ b/units/systemd-sysctl.service.in
+@@ -13,7 +13,6 @@ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service
+ Before=sysinit.target shutdown.target
+ ConditionPathIsReadWrite=/proc/sys/
+-ConditionPathExists=|/etc/sysctl.conf
+ ConditionDirectoryNotEmpty=|/lib/sysctl.d
+ ConditionDirectoryNotEmpty=|/usr/lib/sysctl.d
+ ConditionDirectoryNotEmpty=|/usr/local/lib/sysctl.d

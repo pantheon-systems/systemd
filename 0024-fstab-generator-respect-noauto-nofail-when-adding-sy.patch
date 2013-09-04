@@ -1,0 +1,45 @@
+From 03c6b09de9b0d2b96657bc4b2b6d59b8425e3d12 Mon Sep 17 00:00:00 2001
+From: WANG Chao <chaowang@redhat.com>
+Date: Thu, 8 Aug 2013 15:18:11 +0800
+Subject: [PATCH] fstab-generator: respect noauto/nofail when adding sysroot
+ mount
+
+Currently we don't respect noauto/nofail root mount options (from
+rootflags kernel cmdline). We should map these two flags to the
+corresponding boolean variable noauto and nofail when calling
+add_mount().
+---
+ src/fstab-generator/fstab-generator.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
+index c17299f..87b17cd 100644
+--- a/src/fstab-generator/fstab-generator.c
++++ b/src/fstab-generator/fstab-generator.c
+@@ -492,6 +492,7 @@ static int parse_new_root_from_proc_cmdline(void) {
+         char *w, *state;
+         int r;
+         size_t l;
++        bool noauto, nofail;
+ 
+         r = read_one_line_file("/proc/cmdline", &line);
+         if (r < 0) {
+@@ -547,6 +548,9 @@ static int parse_new_root_from_proc_cmdline(void) {
+                 }
+         }
+ 
++        noauto = !!strstr(opts, "noauto");
++        nofail = !!strstr(opts, "nofail");
++
+         if (!what) {
+                 log_debug("Could not find a root= entry on the kernel commandline.");
+                 return 0;
+@@ -558,7 +562,7 @@ static int parse_new_root_from_proc_cmdline(void) {
+         }
+ 
+         log_debug("Found entry what=%s where=/sysroot type=%s", what, type);
+-        r = add_mount(what, "/sysroot", type, opts, 0, false, false, false,
++        r = add_mount(what, "/sysroot", type, opts, 0, noauto, nofail, false,
+                       false, NULL, NULL, NULL, SPECIAL_INITRD_ROOT_FS_TARGET, "/proc/cmdline");
+ 
+         return (r < 0) ? r : 0;

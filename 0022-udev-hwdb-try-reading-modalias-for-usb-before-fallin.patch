@@ -1,0 +1,32 @@
+From a6dfef02531465a318de68ac2cd3343250b9ef3a Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 7 Aug 2013 13:10:01 +0200
+Subject: [PATCH] udev: hwdb - try reading modalias for usb before falling back
+ to the composed one
+
+---
+ src/udev/udev-builtin-hwdb.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/src/udev/udev-builtin-hwdb.c b/src/udev/udev-builtin-hwdb.c
+index f1c0ca9..d6aa96b 100644
+--- a/src/udev/udev-builtin-hwdb.c
++++ b/src/udev/udev-builtin-hwdb.c
+@@ -102,14 +102,13 @@ static int udev_builtin_hwdb_search(struct udev_device *dev, struct udev_device
+                 if (subsystem && !streq(dsubsys, subsystem))
+                         continue;
+ 
++                modalias = udev_device_get_property_value(d, "MODALIAS");
++
+                 /* the usb_device does not have a modalias, compose one */
+-                if (streq(dsubsys, "usb"))
++                if (!modalias && streq(dsubsys, "usb"))
+                         modalias = modalias_usb(d, s, sizeof(s));
+ 
+                 if (!modalias)
+-                        modalias = udev_device_get_property_value(d, "MODALIAS");
+-
+-                if (!modalias)
+                         continue;
+ 
+                 n = udev_builtin_hwdb_lookup(dev, prefix, modalias, filter, test);
