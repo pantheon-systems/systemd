@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -75,7 +75,13 @@ Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
 Patch0039: 0039-cgroup.c-check-return-value-of-unit_realize_cgroup_n.patch
 Patch0040: 0040-Revert-cgroup.c-check-return-value-of-unit_realize_c.patch
 Patch0041: 0041-Do-not-realloc-strings-which-are-already-in-the-hash.patch
-
+Patch0042: 0042-log-to-kmsg-when-debug-is-used-on-the-kernel-command.patch
+Patch0043: 0043-libudev-fix-memleak-when-enumerating-childs.patch
+Patch0044: 0044-cgtop-fixup-the-online-help.patch
+Patch0045: 0045-libudev-enumerate-fix-NULL-deref-for-subsystem-match.patch
+Patch0046: 0046-libudev-enumerate-do-not-try-to-match-against-an-emp.patch
+Patch0047: 0047-journald-fix-vacuuming-of-archived-journals.patch
+Patch0048: 0048-journald-fix-fd-leak-in-journal_file_empty.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -697,6 +703,14 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Sep 06 2013 Harald Hoyer <harald@redhat.com> 206-11
+- support "debug" kernel command line parameter
+- journald: fix fd leak in journal_file_empty
+- journald: fix vacuuming of archived journals
+- libudev: enumerate - do not try to match against an empty subsystem
+- cgtop: fixup the online help
+- libudev: fix memleak when enumerating childs
+
 * Wed Sep 04 2013 Harald Hoyer <harald@redhat.com> 206-10
 - Do not require grubby, lorax now takes care of grubby
 - cherry-picked a lot of patches from upstream

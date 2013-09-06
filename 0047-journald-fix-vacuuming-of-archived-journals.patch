@@ -1,0 +1,42 @@
+From 2c284b172a7474731df01a7c3280e30de844ba75 Mon Sep 17 00:00:00 2001
+From: George McCollister <george.mccollister@gmail.com>
+Date: Wed, 4 Sep 2013 07:12:43 -0500
+Subject: [PATCH] journald: fix vacuuming of archived journals
+
+d_name is modified on line 227 so if the entire journal name is needed
+again p must be used. Before this change when journal_file_empty was called
+on archived journals it would always return with -2.
+
+Signed-off-by: George McCollister <george.mccollister@gmail.com>
+---
+ src/journal/journal-vacuum.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/journal/journal-vacuum.c b/src/journal/journal-vacuum.c
+index 79572f1..ace7722 100644
+--- a/src/journal/journal-vacuum.c
++++ b/src/journal/journal-vacuum.c
+@@ -265,18 +265,18 @@ int journal_directory_vacuum(
+                         /* We do not vacuum active files or unknown files! */
+                         continue;
+ 
+-                if (journal_file_empty(dirfd(d), de->d_name)) {
++                if (journal_file_empty(dirfd(d), p)) {
+ 
+                         /* Always vacuum empty non-online files. */
+ 
+-                        if (unlinkat(dirfd(d), de->d_name, 0) >= 0)
+-                                log_debug("Deleted empty journal %s/%s.", directory, de->d_name);
++                        if (unlinkat(dirfd(d), p, 0) >= 0)
++                                log_debug("Deleted empty journal %s/%s.", directory, p);
+                         else if (errno != ENOENT)
+-                                log_warning("Failed to delete %s/%s: %m", directory, de->d_name);
++                                log_warning("Failed to delete %s/%s: %m", directory, p);
+                         continue;
+                 }
+ 
+-                patch_realtime(directory, de->d_name, &st, &realtime);
++                patch_realtime(directory, p, &st, &realtime);
+ 
+                 GREEDY_REALLOC(list, n_allocated, n_list + 1);
+ 

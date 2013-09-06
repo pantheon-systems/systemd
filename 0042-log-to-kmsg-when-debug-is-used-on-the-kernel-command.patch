@@ -1,0 +1,30 @@
+From ea7df0ea7dd50f119f5f6b8cecffdbbbe49deda0 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 27 Aug 2013 18:25:06 +0200
+Subject: [PATCH] log to kmsg when "debug" is used on the kernel command line
+
+---
+ src/core/main.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 77cdcfe..716def7 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -413,9 +413,14 @@ static int parse_proc_cmdline_word(const char *word) {
+ 
+         } else if (streq(word, "quiet"))
+                 arg_show_status = false;
+-        else if (streq(word, "debug"))
++        else if (streq(word, "debug")) {
++                /* Log to kmsg, the journal socket will fill up before the
++                 * journal is started and tools running during that time
++                 * will block with every log message for for 60 seconds,
++                 * before they give up. */
+                 log_set_max_level(LOG_DEBUG);
+-        else if (!in_initrd()) {
++                log_set_target(LOG_TARGET_KMSG);
++        } else if (!in_initrd()) {
+                 unsigned i;
+ 
+                 /* SysV compatibility */

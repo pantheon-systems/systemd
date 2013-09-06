@@ -1,0 +1,44 @@
+From 8d74c49c208f4e36ef844a584557fc5577272c27 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 30 Aug 2013 15:50:41 +0200
+Subject: [PATCH] libudev: enumerate: fix NULL-deref for subsystem-matches
+
+udev_device_get_subsystem() may return NULL if no subsystem could be
+figured out by libudev. This might be due to OOM or if the device
+disconnected between the udev_device_new() call and
+udev_device_get_subsystem(). Therefore, we need to handle subsystem==NULL
+safely.
+
+Instead of testing for it in each helper, we treat subsystem==NULL as
+empty subsystem in match_subsystem().
+
+Backtrace of udev_enumerate with an input-device disconnecting in exactly
+this time-frame:
+ (gdb) bt
+ #0  0x00007ffff569dc24 in strnlen () from /usr/lib/libc.so.6
+ #1  0x00007ffff56d9e04 in fnmatch@@GLIBC_2.2.5 () from /usr/lib/libc.so.6
+ #2  0x00007ffff5beb83d in match_subsystem (udev_enumerate=0x7a05f0, subsystem=0x0) at src/libudev/libudev-enumerate.c:727
+ #3  0x00007ffff5bebb30 in parent_add_child (enumerate=enumerate@entry=0x7a05f0, path=<optimized out>) at src/libudev/libudev-enumerate.c:834
+ #4  0x00007ffff5bebc3f in parent_crawl_children (enumerate=enumerate@entry=0x7a05f0, path=0x7a56b0 "/sys/devices/<shortened>/input/input97", maxdepth=maxdepth@entry=254) at src/libudev/libudev-enumerate.c:866
+ #5  0x00007ffff5bebc54 in parent_crawl_children (enumerate=enumerate@entry=0x7a05f0, path=0x79e8c0 "/sys/devices/<shortened>/input", maxdepth=maxdepth@entry=255) at src/libudev/libudev-enumerate.c:868
+ #6  0x00007ffff5bebc54 in parent_crawl_children (enumerate=enumerate@entry=0x7a05f0, path=path@entry=0x753190 "/sys/devices/<shortened>", maxdepth=maxdepth@entry=256) at src/libudev/libudev-enumerate.c:868
+ #7  0x00007ffff5bec7df in scan_devices_children (enumerate=0x7a05f0) at src/libudev/libudev-enumerate.c:882
+ #8  udev_enumerate_scan_devices (udev_enumerate=udev_enumerate@entry=0x7a05f0) at src/libudev/libudev-enumerate.c:919
+ #9  0x00007ffff5df8777 in <random_caller> () at some/file.c:181
+---
+ src/libudev/libudev-enumerate.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/libudev/libudev-enumerate.c b/src/libudev/libudev-enumerate.c
+index b96e5b2..385829d 100644
+--- a/src/libudev/libudev-enumerate.c
++++ b/src/libudev/libudev-enumerate.c
+@@ -721,6 +721,8 @@ static bool match_subsystem(struct udev_enumerate *udev_enumerate, const char *s
+ {
+         struct udev_list_entry *list_entry;
+ 
++        subsystem = subsystem ? : "";
++
+         udev_list_entry_foreach(list_entry, udev_list_get_entry(&udev_enumerate->subsystem_nomatch_list)) {
+                 if (fnmatch(udev_list_entry_get_name(list_entry), subsystem, 0) == 0)
+                         return false;

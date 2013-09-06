@@ -1,0 +1,32 @@
+From f29938b8d28e574ae614f6db4e70478d8ccac4d0 Mon Sep 17 00:00:00 2001
+From: George McCollister <george.mccollister@gmail.com>
+Date: Wed, 4 Sep 2013 07:12:44 -0500
+Subject: [PATCH] journald: fix fd leak in journal_file_empty
+
+Before my previous patch, journal_file_empty wasn't be called with the
+correct filename. Now that it's being called with the correct filename
+it leaks file descriptors. This patch closes the file descriptors before
+returning.
+
+Signed-off-by: George McCollister <george.mccollister@gmail.com>
+
+[Edit harald@redhat.com: make use of _cleanup_close_ instead]
+---
+ src/journal/journal-vacuum.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/journal-vacuum.c b/src/journal/journal-vacuum.c
+index ace7722..178c803 100644
+--- a/src/journal/journal-vacuum.c
++++ b/src/journal/journal-vacuum.c
+@@ -129,8 +129,9 @@ static void patch_realtime(
+ }
+ 
+ static int journal_file_empty(int dir_fd, const char *name) {
+-        int fd, r;
++        int r;
+         le64_t n_entries;
++        _cleanup_close_ int fd;
+ 
+         fd = openat(dir_fd, name, O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK);
+         if (fd < 0)

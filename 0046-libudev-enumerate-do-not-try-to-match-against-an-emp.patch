@@ -1,0 +1,38 @@
+From 138ef72fbc2264a341873c1cf8c771c1c143922a Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Wed, 4 Sep 2013 17:59:14 +0200
+Subject: [PATCH] libudev: enumerate - do not try to match against an empty
+ subsystem
+
+---
+ src/libudev/libudev-enumerate.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/libudev/libudev-enumerate.c b/src/libudev/libudev-enumerate.c
+index 385829d..bc1e37d 100644
+--- a/src/libudev/libudev-enumerate.c
++++ b/src/libudev/libudev-enumerate.c
+@@ -721,12 +721,14 @@ static bool match_subsystem(struct udev_enumerate *udev_enumerate, const char *s
+ {
+         struct udev_list_entry *list_entry;
+ 
+-        subsystem = subsystem ? : "";
++        if (!subsystem)
++                return false;
+ 
+         udev_list_entry_foreach(list_entry, udev_list_get_entry(&udev_enumerate->subsystem_nomatch_list)) {
+                 if (fnmatch(udev_list_entry_get_name(list_entry), subsystem, 0) == 0)
+                         return false;
+         }
++
+         if (udev_list_get_entry(&udev_enumerate->subsystem_match_list) != NULL) {
+                 udev_list_entry_foreach(list_entry, udev_list_get_entry(&udev_enumerate->subsystem_match_list)) {
+                         if (fnmatch(udev_list_entry_get_name(list_entry), subsystem, 0) == 0)
+@@ -734,6 +736,7 @@ static bool match_subsystem(struct udev_enumerate *udev_enumerate, const char *s
+                 }
+                 return false;
+         }
++
+         return true;
+ }
+ 
