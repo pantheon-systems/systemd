@@ -1,0 +1,24 @@
+From 3b93bf5a35b0bb7111754fbae75e7654b775506d Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Fri, 13 Sep 2013 14:12:54 +0200
+Subject: [PATCH] libudev: fix move_later comparison
+
+At the beginning move_later is set to -1, but it is set to different
+value only if expression !move_later is true.
+---
+ src/libudev/libudev-enumerate.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libudev/libudev-enumerate.c b/src/libudev/libudev-enumerate.c
+index bc1e37d..8146f27 100644
+--- a/src/libudev/libudev-enumerate.c
++++ b/src/libudev/libudev-enumerate.c
+@@ -300,7 +300,7 @@ _public_ struct udev_list_entry *udev_enumerate_get_list_entry(struct udev_enume
+                         /* skip to be delayed devices, and move the to
+                          * the point where the prefix changes. We can
+                          * only move one item at a time. */
+-                        if (!move_later) {
++                        if (move_later == -1) {
+                                 move_later_prefix = devices_delay_later(udev_enumerate->udev, entry->syspath);
+ 
+                                 if (move_later_prefix > 0) {

@@ -1,0 +1,23 @@
+From 583f4eb5d443bc09502d6973f08755173db43fd8 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 13 Sep 2013 21:03:55 +0200
+Subject: [PATCH] man: document luks.options kernel commandline
+
+This should have been part of commit 7ab064a6d
+---
+ man/kernel-command-line.xml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/man/kernel-command-line.xml b/man/kernel-command-line.xml
+index a4b7d13..cc267a3 100644
+--- a/man/kernel-command-line.xml
++++ b/man/kernel-command-line.xml
+@@ -250,6 +250,8 @@
+                                 <term><varname>rd.luks.crypttab=</varname></term>
+                                 <term><varname>luks.uuid=</varname></term>
+                                 <term><varname>rd.luks.uuid=</varname></term>
++                                <term><varname>luks.options=</varname></term>
++                                <term><varname>rd.luks.options=</varname></term>
+                                 <term><varname>luks.key=</varname></term>
+                                 <term><varname>rd.luks.key=</varname></term>
+ 
