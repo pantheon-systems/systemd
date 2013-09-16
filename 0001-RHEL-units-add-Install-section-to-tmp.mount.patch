@@ -1,0 +1,24 @@
+From 2e987a0ac284a1cd1ab4f8e335abcae91c976f15 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 15 Feb 2013 09:07:57 +0100
+Subject: [PATCH] RHEL: units: add [Install] section to tmp.mount
+
+Related: #908253
+---
+ units/tmp.mount | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/units/tmp.mount b/units/tmp.mount
+index 99a3ba3..79e1c76 100644
+--- a/units/tmp.mount
++++ b/units/tmp.mount
+@@ -18,3 +18,9 @@ What=tmpfs
+ Where=/tmp
+ Type=tmpfs
+ Options=mode=1777,strictatime
++
++# tmp.mount is statically enabled in upstream. In RHEL tmp-on-tmpfs is not used
++# by default, but there are cases where it is necessary (anaconda, live images,
++# read-only root). Make 'systemctl enable tmp.mount' work:
++[Install]
++WantedBy=local-fs.target

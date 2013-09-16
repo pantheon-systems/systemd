@@ -1,0 +1,22 @@
+From d0746c1d17407a17c18f26876d9ca0f6f20b29b0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Sep 2013 04:13:47 +0200
+Subject: [PATCH] update TODO
+
+---
+ TODO | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/TODO b/TODO
+index 08d4914..5354692 100644
+--- a/TODO
++++ b/TODO
+@@ -58,6 +58,8 @@ CGroup Rework Completion:
+ 
+ Features:
+ 
++* Move backlight and random-seed into /var/lib/systemd
++
+ * When a Type=forking service fails and needed another service that
+   service is not cleaned up again when it has StopWhenUnneeded=yes
+   http://lists.freedesktop.org/archives/systemd-devel/2013-July/012141.html

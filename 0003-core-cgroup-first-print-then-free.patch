@@ -1,0 +1,23 @@
+From 89ad78921a404dc82f22862f2354707199ea1616 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Fri, 13 Sep 2013 14:31:17 +0200
+Subject: [PATCH] core/cgroup: first print then free
+
+---
+ src/core/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 3eeb475..513450a 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -395,8 +395,8 @@ static int unit_create_cgroups(Unit *u, CGroupControllerMask mask) {
+                 is_in_hash = true;
+ 
+         if (r < 0) {
+-                free(path);
+                 log_error("cgroup %s exists already: %s", path, strerror(-r));
++                free(path);
+                 return r;
+         }
+ 

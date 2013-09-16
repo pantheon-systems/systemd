@@ -1,0 +1,283 @@
+From 45f0d8e103c57e9e5e9d92bba1dc2d50b49806de Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 15 Sep 2013 22:26:56 -0400
+Subject: [PATCH] Verify validity of session name when received from outside
+
+Only ASCII letters and digits are allowed.
+---
+ Makefile.am                | 14 +++++++++++---
+ TODO                       |  3 ---
+ src/login/login-shared.c   |  8 ++++++++
+ src/login/login-shared.h   |  3 +++
+ src/login/logind-dbus.c    |  1 +
+ src/login/logind-session.c |  1 +
+ src/login/logind-session.h |  1 +
+ src/login/logind.c         |  6 ++++++
+ src/login/sd-login.c       | 12 +++++++-----
+ src/shared/cgroup-util.c   |  4 +---
+ src/shared/def.h           |  5 +++++
+ src/shared/env-util.c      |  5 ++---
+ src/shared/replace-var.c   |  3 ++-
+ src/shared/unit-name.c     |  5 ++---
+ 14 files changed, 50 insertions(+), 21 deletions(-)
+ create mode 100644 src/login/login-shared.c
+ create mode 100644 src/login/login-shared.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 7b7539a..6014521 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2324,7 +2324,10 @@ if HAVE_ACL
+ libudev_core_la_SOURCES += \
+ 	src/udev/udev-builtin-uaccess.c \
+ 	src/login/logind-acl.c \
+-	src/login/sd-login.c
++	src/login/sd-login.c \
++	src/systemd/sd-login.h \
++	src/login/login-shared.c \
++	src/login/login-shared.h
+ 
+ libudev_core_la_LIBADD += \
+ 	libsystemd-acl.la
+@@ -3759,7 +3762,9 @@ libsystemd_logind_core_la_SOURCES = \
+ 	src/login/logind-session-dbus.c \
+ 	src/login/logind-seat-dbus.c \
+ 	src/login/logind-user-dbus.c \
+-	src/login/logind-acl.h
++	src/login/logind-acl.h \
++	src/login/login-shared.c \
++	src/login/login-shared.h
+ 
+ libsystemd_logind_core_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+@@ -3860,7 +3865,10 @@ tests += \
+ 	test-login-tables
+ 
+ libsystemd_login_la_SOURCES = \
+-	src/login/sd-login.c
++	src/login/sd-login.c \
++	src/systemd/sd-login.h \
++	src/login/login-shared.c \
++	src/login/login-shared.h
+ 
+ libsystemd_login_la_CFLAGS = \
+ 	$(AM_CFLAGS) \
+diff --git a/TODO b/TODO
+index 9943b3e..bfeaa81 100644
+--- a/TODO
++++ b/TODO
+@@ -142,9 +142,6 @@ Features:
+ 
+ * journald: make sure ratelimit is actually really per-service with the new cgroup changes
+ 
+-* libsystemd-logind: sd_session_is_active() and friends: verify
+-  validity of session name before appending it to a path
+-
+ * gparted needs to disable auto-activation of mount units somehow, or
+   maybe we should stop doing auto-activation of this after boot
+   entirely. https://bugzilla.gnome.org/show_bug.cgi?id=701676
+diff --git a/src/login/login-shared.c b/src/login/login-shared.c
+new file mode 100644
+index 0000000..ff13c28
+--- /dev/null
++++ b/src/login/login-shared.c
+@@ -0,0 +1,8 @@
++#include "login-shared.h"
++#include "def.h"
++
++bool session_id_valid(const char *id) {
++        assert(id);
++
++        return id + strspn(id, LETTERS DIGITS) == '\0';
++}
+diff --git a/src/login/login-shared.h b/src/login/login-shared.h
+new file mode 100644
+index 0000000..728ef00
+--- /dev/null
++++ b/src/login/login-shared.h
+@@ -0,0 +1,3 @@
++#include <stdbool.h>
++
++bool session_id_valid(const char *id);
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 345df9f..d052e74 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -554,6 +554,7 @@ static int bus_manager_create_session(Manager *m, DBusMessage *message) {
+                  * the audit data and let's better register a new
+                  * ID */
+                 if (hashmap_get(m->sessions, id)) {
++                        log_warning("Existing logind session ID %s used by new audit session, ignoring", id);
+                         audit_id = 0;
+ 
+                         free(id);
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index a726fb1..2d22a68 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -41,6 +41,7 @@ Session* session_new(Manager *m, const char *id) {
+ 
+         assert(m);
+         assert(id);
++        assert(session_id_valid(id));
+ 
+         s = new0(Session, 1);
+         if (!s)
+diff --git a/src/login/logind-session.h b/src/login/logind-session.h
+index edaae8d..9cf6485 100644
+--- a/src/login/logind-session.h
++++ b/src/login/logind-session.h
+@@ -29,6 +29,7 @@ typedef enum KillWho KillWho;
+ #include "logind.h"
+ #include "logind-seat.h"
+ #include "logind-user.h"
++#include "login-shared.h"
+ 
+ typedef enum SessionState {
+         SESSION_OPENING,  /* Session scope is being created */
+diff --git a/src/login/logind.c b/src/login/logind.c
+index 9094567..4ef92b8 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -684,6 +684,12 @@ int manager_enumerate_sessions(Manager *m) {
+                 if (!dirent_is_file(de))
+                         continue;
+ 
++                if (!session_id_valid(de->d_name)) {
++                        log_warning("Invalid session file name '%s', ignoring.", de->d_name);
++                        r = -EINVAL;
++                        continue;
++                }
++
+                 k = manager_add_session(m, de->d_name, &s);
+                 if (k < 0) {
+                         log_error("Failed to add session by file name %s: %s", de->d_name, strerror(-k));
+diff --git a/src/login/sd-login.c b/src/login/sd-login.c
+index 8a7838d..71d8c29 100644
+--- a/src/login/sd-login.c
++++ b/src/login/sd-login.c
+@@ -31,6 +31,7 @@
+ #include "sd-login.h"
+ #include "strv.h"
+ #include "fileio.h"
++#include "login-shared.h"
+ 
+ _public_ int sd_pid_get_session(pid_t pid, char **session) {
+         if (pid < 0)
+@@ -226,17 +227,19 @@ static int file_of_session(const char *session, char **_p) {
+ 
+         assert(_p);
+ 
+-        if (session)
++        if (session) {
++                if (!session_id_valid(session))
++                        return -EINVAL;
++
+                 p = strappend("/run/systemd/sessions/", session);
+-        else {
+-                char *buf;
++        } else {
++                _cleanup_free_ char *buf = NULL;
+ 
+                 r = sd_pid_get_session(0, &buf);
+                 if (r < 0)
+                         return r;
+ 
+                 p = strappend("/run/systemd/sessions/", buf);
+-                free(buf);
+         }
+ 
+         if (!p)
+@@ -255,7 +258,6 @@ _public_ int sd_session_is_active(const char *session) {
+                 return r;
+ 
+         r = parse_env_file(p, NEWLINE, "ACTIVE", &s, NULL);
+-
+         if (r < 0)
+                 return r;
+ 
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index 1d545e0..0bffebd 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -1511,9 +1511,7 @@ char *cg_unescape(const char *p) {
+ }
+ 
+ #define CONTROLLER_VALID                        \
+-        "0123456789"                            \
+-        "abcdefghijklmnopqrstuvwxyz"            \
+-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"            \
++        DIGITS LETTERS                          \
+         "_"
+ 
+ bool cg_controller_is_valid(const char *p, bool allow_named) {
+diff --git a/src/shared/def.h b/src/shared/def.h
+index 5abb544..edd0bcf 100644
+--- a/src/shared/def.h
++++ b/src/shared/def.h
+@@ -33,3 +33,8 @@
+ 
+ #define SIGNALS_CRASH_HANDLER SIGSEGV,SIGILL,SIGFPE,SIGBUS,SIGQUIT,SIGABRT
+ #define SIGNALS_IGNORE SIGPIPE
++
++#define DIGITS            "0123456789"
++#define LOWERCASE_LETTERS "abcdefghijklmnopqrstuvwxyz"
++#define UPPERCASE_LETTERS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++#define LETTERS LOWERCASE_LETTERS UPPERCASE_LETTERS
+diff --git a/src/shared/env-util.c b/src/shared/env-util.c
+index 6a52fb9..5e29629 100644
+--- a/src/shared/env-util.c
++++ b/src/shared/env-util.c
+@@ -27,11 +27,10 @@
+ #include "utf8.h"
+ #include "util.h"
+ #include "env-util.h"
++#include "def.h"
+ 
+ #define VALID_CHARS_ENV_NAME                    \
+-        "0123456789"                            \
+-        "abcdefghijklmnopqrstuvwxyz"            \
+-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"            \
++        DIGITS LETTERS                          \
+         "_"
+ 
+ #ifndef ARG_MAX
+diff --git a/src/shared/replace-var.c b/src/shared/replace-var.c
+index e11c57a..478fc43 100644
+--- a/src/shared/replace-var.c
++++ b/src/shared/replace-var.c
+@@ -24,6 +24,7 @@
+ #include "macro.h"
+ #include "util.h"
+ #include "replace-var.h"
++#include "def.h"
+ 
+ /*
+  * Generic infrastructure for replacing @FOO@ style variables in
+@@ -40,7 +41,7 @@ static int get_variable(const char *b, char **r) {
+         if (*b != '@')
+                 return 0;
+ 
+-        k = strspn(b + 1, "ABCDEFGHIJKLMNOPQRSTUVWXYZ_");
++        k = strspn(b + 1, UPPERCASE_LETTERS "_");
+         if (k <= 0 || b[k+1] != '@')
+                 return 0;
+ 
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index 1baa6eb..8f6c28e 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -26,11 +26,10 @@
+ #include "path-util.h"
+ #include "util.h"
+ #include "unit-name.h"
++#include "def.h"
+ 
+ #define VALID_CHARS                             \
+-        "0123456789"                            \
+-        "abcdefghijklmnopqrstuvwxyz"            \
+-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"            \
++        DIGITS LETTERS                          \
+         ":-_.\\"
+ 
+ static const char* const unit_type_table[_UNIT_TYPE_MAX] = {
