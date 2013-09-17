@@ -1,0 +1,149 @@
+From 87e08d21857b2b2e59f3480e6d0538b535a5897c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 16 Sep 2013 11:04:20 -0500
+Subject: [PATCH] login: fix login_is_valid test
+
+---
+ Makefile.am                   | 10 +++++++++-
+ src/login/login-shared.c      | 23 ++++++++++++++++++++++-
+ src/login/login-shared.h      | 21 +++++++++++++++++++++
+ src/login/test-login-shared.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 90 insertions(+), 2 deletions(-)
+ create mode 100644 src/login/test-login-shared.c
+
+diff --git a/Makefile.am b/Makefile.am
+index 6014521..eae001b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -3836,6 +3836,13 @@ test_login_LDADD = \
+ 	libsystemd-login-internal.la \
+ 	libsystemd-shared.la
+ 
++test_login_shared_SOURCES = \
++	src/login/test-login-shared.c
++
++test_login_shared_LDADD = \
++	libsystemd-login-internal.la \
++	libsystemd-shared.la
++
+ test_inhibit_SOURCES = \
+ 	src/login/test-inhibit.c
+ 
+@@ -3862,7 +3869,8 @@ manual_tests += \
+ 	test-inhibit
+ 
+ tests += \
+-	test-login-tables
++	test-login-tables \
++	test-login-shared
+ 
+ libsystemd_login_la_SOURCES = \
+ 	src/login/sd-login.c \
+diff --git a/src/login/login-shared.c b/src/login/login-shared.c
+index ff13c28..054c775 100644
+--- a/src/login/login-shared.c
++++ b/src/login/login-shared.c
+@@ -1,8 +1,29 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2013 Zbigniew Jędrzejewski-Szmek
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
+ #include "login-shared.h"
+ #include "def.h"
+ 
+ bool session_id_valid(const char *id) {
+         assert(id);
+ 
+-        return id + strspn(id, LETTERS DIGITS) == '\0';
++        return id[0] && id[strspn(id, LETTERS DIGITS)] == '\0';
+ }
+diff --git a/src/login/login-shared.h b/src/login/login-shared.h
+index 728ef00..b2787c9 100644
+--- a/src/login/login-shared.h
++++ b/src/login/login-shared.h
+@@ -1,3 +1,24 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2013 Zbigniew Jędrzejewski-Szmek
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
+ #include <stdbool.h>
+ 
+ bool session_id_valid(const char *id);
+diff --git a/src/login/test-login-shared.c b/src/login/test-login-shared.c
+new file mode 100644
+index 0000000..2df6029
+--- /dev/null
++++ b/src/login/test-login-shared.c
+@@ -0,0 +1,38 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2013 Zbigniew Jędrzejewski-Szmek
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "macro.h"
++#include "login-shared.h"
++
++static void test_session_id_valid(void) {
++        assert_se(session_id_valid("c1"));
++        assert_se(session_id_valid("1234"));
++
++        assert_se(!session_id_valid("1-2"));
++        assert_se(!session_id_valid(""));
++        assert_se(!session_id_valid("\tid"));
++}
++
++int main(int argc, char* argv[]) {
++        test_session_id_valid();
++
++        return 0;
++}

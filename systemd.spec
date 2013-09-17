@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -59,6 +59,7 @@ Patch0022: 0022-transaction.c-do-not-point-users-to-logs-when-unit-n.patch
 Patch0023: 0023-Verify-validity-of-session-name-when-received-from-o.patch
 Patch0024: 0024-udev-rules-avoid-erroring-on-trailing-whitespace.patch
 Patch0025: 0025-keymap-Add-Samsung-Series-5-Ultra.patch
+Patch0026: 0026-login-fix-login_is_valid-test.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -690,6 +691,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Sep 17 2013 Harald Hoyer <harald@redhat.com> 207-3
+- fixed login
+Resolves: rhbz#1005233
+
 * Mon Sep 16 2013 Harald Hoyer <harald@redhat.com> 207-2
 - add some upstream fixes for 207
 - fixed swap activation
