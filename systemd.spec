@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -60,6 +60,7 @@ Patch0023: 0023-Verify-validity-of-session-name-when-received-from-o.patch
 Patch0024: 0024-udev-rules-avoid-erroring-on-trailing-whitespace.patch
 Patch0025: 0025-keymap-Add-Samsung-Series-5-Ultra.patch
 Patch0026: 0026-login-fix-login_is_valid-test.patch
+Patch0027: 0027-polkit-Avoid-race-condition-in-scraping-proc.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -691,6 +692,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Sep 18 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> 207-4
+- Fix policykit authentication
+Resolves: rhbz#1006680
+
 * Tue Sep 17 2013 Harald Hoyer <harald@redhat.com> 207-3
 - fixed login
 Resolves: rhbz#1005233
