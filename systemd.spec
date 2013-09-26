@@ -620,11 +620,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/systemd-run
 %{_datadir}/zsh/site-functions/*
 %ghost %{_localstatedir}/lib/random-seed
-%ghost %dir %{_localstatedir}/var/lib/systemd/
-%ghost %dir %{_localstatedir}/var/lib/systemd/coredump
-%ghost %dir %{_localstatedir}/var/lib/systemd/catalog
-%ghost %{_localstatedir}/var/lib/systemd/catalog/database
-%ghost %dir %{_localstatedir}/var/lib/backlight/
+%dir %{_localstatedir}/lib/systemd/
+%ghost %{_localstatedir}/lib/systemd/catalog/database
+%ghost %dir %{_localstatedir}/lib/backlight/
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
