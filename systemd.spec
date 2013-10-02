@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -369,9 +369,13 @@ systemctl start systemd-udevd.service >/dev/null 2>&1 || :
 udevadm hwdb --update >/dev/null 2>&1 || :
 journalctl --update-catalog >/dev/null 2>&1 || :
 
-# Make sure new journal files
+# Make sure new journal files will be owned by the "systemd-journal" group
 chgrp systemd-journal /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
 chmod g+s /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
+
+# Move old stuff around in /var/lib
+mv %{_localstatedir}/lib/random-seed %{_localstatedir}/lib/systemd/random-seed >/dev/null 2>&1 || :
+mv %{_localstatedir}/lib/backlight %{_localstatedir}/lib/systemd/backlight >/dev/null 2>&1 || :
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
@@ -670,6 +674,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-2
+- Move old random seed and backlight files into the right place
+
 * Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-1
 - New upstream release
 
