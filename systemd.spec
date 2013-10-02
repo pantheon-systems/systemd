@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        207
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        208
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -35,32 +35,6 @@ Source5:        85-display-manager.preset
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
-
-Patch0003: 0003-core-cgroup-first-print-then-free.patch
-Patch0004: 0004-swap-fix-reverse-dependencies.patch
-Patch0005: 0005-update-TODO.patch
-Patch0006: 0006-cryptsetup-generator-don-t-create-tmp-swap-units.patch
-Patch0007: 0007-cryptsetup-generator-allow-specifying-options-in-pro.patch
-Patch0008: 0008-automount-rename-repeat_unmont-to-repeat_unmount.patch
-Patch0009: 0009-cgroup-add-the-missing-setting-of-variable-s-value.patch
-Patch0010: 0010-cgroup-correct-the-log-information.patch
-Patch0011: 0011-cgroup-fix-incorrectly-setting-memory-cgroup.patch
-Patch0012: 0012-random-seed-we-should-return-errno-of-failed-loop_wr.patch
-Patch0013: 0013-update-TODO.patch
-Patch0014: 0014-libudev-fix-move_later-comparison.patch
-Patch0015: 0015-man-document-luks.options-kernel-commandline.patch
-Patch0016: 0016-keymap-remove-some-commented-out-lines.patch
-Patch0017: 0017-Advertise-hibernation-only-if-there-s-enough-free-sw.patch
-Patch0018: 0018-README-add-SCSI-BSG-option.patch
-Patch0019: 0019-swap-create-.wants-symlink-to-auto-swap-devices.patch
-Patch0020: 0020-cgroup-add-missing-equals-for-BlockIOWeight.patch
-Patch0021: 0021-Assume-that-proc-meminfo-can-be-missing.patch
-Patch0022: 0022-transaction.c-do-not-point-users-to-logs-when-unit-n.patch
-Patch0023: 0023-Verify-validity-of-session-name-when-received-from-o.patch
-Patch0024: 0024-udev-rules-avoid-erroring-on-trailing-whitespace.patch
-Patch0025: 0025-keymap-Add-Samsung-Series-5-Ultra.patch
-Patch0026: 0026-login-fix-login_is_valid-test.patch
-Patch0027: 0027-polkit-Avoid-race-condition-in-scraping-proc.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -395,6 +369,10 @@ systemctl start systemd-udevd.service >/dev/null 2>&1 || :
 udevadm hwdb --update >/dev/null 2>&1 || :
 journalctl --update-catalog >/dev/null 2>&1 || :
 
+# Make sure new journal files
+chgrp systemd-journal /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
+chmod g+s /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
+
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
 ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
@@ -619,10 +597,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/kernel-install
 %{_datadir}/bash-completion/completions/systemd-run
 %{_datadir}/zsh/site-functions/*
-%ghost %{_localstatedir}/lib/random-seed
-%dir %{_localstatedir}/lib/systemd/
+%ghost %dir %{_localstatedir}/lib/systemd/
+%ghost %dir %{_localstatedir}/lib/systemd/coredump
+%ghost %dir %{_localstatedir}/lib/systemd/catalog
+%ghost %dir %{_localstatedir}/lib/systemd/backlight
+%ghost %{_localstatedir}/lib/systemd/random-seed
 %ghost %{_localstatedir}/lib/systemd/catalog/database
-%ghost %dir %{_localstatedir}/lib/backlight/
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -690,21 +670,24 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-1
+- New upstream release
+
 * Thu Sep 26 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> 207-5
 - Do not create /var/var/... dirs
 
 * Wed Sep 18 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> 207-4
 - Fix policykit authentication
-Resolves: rhbz#1006680
+- Resolves: rhbz#1006680
 
 * Tue Sep 17 2013 Harald Hoyer <harald@redhat.com> 207-3
 - fixed login
-Resolves: rhbz#1005233
+- Resolves: rhbz#1005233
 
 * Mon Sep 16 2013 Harald Hoyer <harald@redhat.com> 207-2
 - add some upstream fixes for 207
 - fixed swap activation
-Resolves: rhbz#1008604
+- Resolves: rhbz#1008604
 
 * Fri Sep 13 2013 Lennart Poettering <lpoetter@redhat.com> - 207-1
 - New upstream release
