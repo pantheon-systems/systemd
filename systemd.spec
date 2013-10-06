@@ -680,6 +680,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 * Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-1
 - New upstream release
 
+* Thu Sep 26 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> 207-5
+- Do not create /var/var/... dirs
+
 * Wed Sep 18 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> 207-4
 - Fix policykit authentication
 - Resolves: rhbz#1006680
