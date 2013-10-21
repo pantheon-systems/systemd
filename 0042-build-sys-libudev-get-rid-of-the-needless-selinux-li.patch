@@ -1,0 +1,70 @@
+From 90144377494d06804b55b915e1321a2e85a957fe Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 15 Oct 2013 02:11:56 +0200
+Subject: [PATCH] build-sys: libudev - get rid of the needless selinux linking
+ (again)
+
+---
+ Makefile.am               | 6 +-----
+ src/libudev/libudev.pc.in | 1 -
+ 2 files changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 8d9c587..94d3358 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2141,9 +2141,7 @@ libudev_la_LDFLAGS = \
+ 
+ libudev_la_LIBADD = \
+ 	libsystemd-shared.la \
+-	libsystemd-label.la \
+ 	libsystemd-daemon-internal.la \
+-	$(RT_LIBS) \
+ 	libsystemd-id128-internal.la
+ 
+ pkgconfiglib_DATA += \
+@@ -2315,7 +2313,6 @@ libudev_core_la_LIBADD = \
+ 	libudev-private.la \
+ 	libsystemd-label.la \
+ 	libsystemd-daemon-internal.la \
+-	$(RT_LIBS) \
+ 	libsystemd-shared.la \
+ 	$(BLKID_LIBS) \
+ 	$(KMOD_LIBS)
+@@ -2377,6 +2374,7 @@ udevadm_SOURCES = \
+ 
+ udevadm_LDADD = \
+ 	libudev-core.la \
++	libsystemd-label.la \
+ 	libsystemd-shared.la
+ 
+ # Update hwdb on installation. Do not bother if installing
+@@ -2704,7 +2702,6 @@ libsystemd_id128_la_LDFLAGS = \
+ 
+ libsystemd_id128_la_LIBADD = \
+ 	libsystemd-shared.la \
+-	libsystemd-label.la \
+ 	libsystemd-daemon-internal.la \
+ 	$(RT_LIBS)
+ 
+@@ -2956,7 +2953,6 @@ libsystemd_journal_internal_la_CFLAGS = \
+ 	$(AM_CFLAGS)
+ 
+ libsystemd_journal_internal_la_LIBADD = \
+-	libsystemd-label.la \
+ 	libsystemd-audit.la \
+ 	libsystemd-daemon.la \
+ 	libudev.la \
+diff --git a/src/libudev/libudev.pc.in b/src/libudev/libudev.pc.in
+index 2b183e9..a0f3f52 100644
+--- a/src/libudev/libudev.pc.in
++++ b/src/libudev/libudev.pc.in
+@@ -14,5 +14,4 @@ Name: libudev
+ Description: Library to access udev device information
+ Version: @VERSION@
+ Libs: -L${libdir} -ludev
+-Libs.private: -lrt
+ Cflags: -I${includedir}
+-- 
+1.8.4.652.g0d6e0ce
+

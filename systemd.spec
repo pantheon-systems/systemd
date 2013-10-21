@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -35,6 +35,60 @@ Source5:        85-display-manager.preset
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
+
+Patch01:        0001-acpi-fptd-fix-memory-leak-in-acpi_get_boot_usec.patch
+Patch02:        0002-fix-lingering-references-to-var-lib-backlight-random.patch
+Patch03:        0003-acpi-make-sure-we-never-free-an-uninitialized-pointe.patch
+Patch04:        0004-systemctl-fix-name-mangling-for-sysv-units.patch
+Patch05:        0005-cryptsetup-fix-OOM-handling-when-parsing-mount-optio.patch
+Patch06:        0006-journald-add-missing-error-check.patch
+Patch07:        0007-bus-fix-potentially-uninitialized-memory-access.patch
+Patch08:        0008-dbus-fix-return-value-of-dispatch_rqueue.patch
+Patch09:        0009-modules-load-fix-error-handling.patch
+Patch10:        0010-efi-never-call-qsort-on-potentially-NULL-arrays.patch
+Patch11:        0011-strv-don-t-access-potentially-NULL-string-arrays.patch
+Patch12:        0012-mkdir-pass-a-proper-function-pointer-to-mkdir_safe_i.patch
+Patch13:        0013-tmpfiles.d-include-setgid-perms-for-run-log-journal.patch
+Patch14:        0014-execute.c-always-set-SHELL.patch
+Patch15:        0015-man-Improve-the-description-of-parameter-X-in-tmpfil.patch
+Patch16:        0016-execute-more-debugging-messages.patch
+Patch17:        0017-gpt-auto-generator-exit-immediately-if-in-container.patch
+Patch18:        0018-systemd-order-remote-mounts-from-mountinfo-before-re.patch
+Patch19:        0019-manager-when-verifying-whether-clients-may-change-en.patch
+Patch20:        0020-logind-fix-bus-introspection-data-for-TakeControl.patch
+Patch21:        0021-mount-check-for-NULL-before-reading-pm-what.patch
+Patch22:        0022-core-do-not-add-what-to-RequiresMountsFor-for-networ.patch
+Patch23:        0023-utf8-fix-utf8_is_printable.patch
+Patch24:        0024-shared-util-fix-off-by-one-error-in-tag_to_udev_node.patch
+Patch25:        0025-systemd-serialize-deserialize-forbid_restart-value.patch
+Patch26:        0026-core-unify-the-way-we-denote-serialization-attribute.patch
+Patch27:        0027-journald-fix-minor-memory-leak.patch
+Patch28:        0028-keymap-Fix-Samsung-900X-34-C.patch
+Patch29:        0029-do-not-accept-garbage-from-acpi-firmware-performance.patch
+Patch30:        0030-journald-remove-rotated-file-from-hashmap-when-rotat.patch
+Patch31:        0031-login-fix-invalid-free-in-sd_session_get_vt.patch
+Patch32:        0032-login-make-sd_session_get_vt-actually-work.patch
+Patch33:        0033-udevadm.xml-document-resolve-names-option-for-test.patch
+Patch34:        0034-Never-call-qsort-on-potentially-NULL-arrays.patch
+Patch35:        0035-dbus-common-avoid-leak-in-error-path.patch
+Patch36:        0036-drop-ins-check-return-value.patch
+Patch37:        0037-Make-sure-that-we-don-t-dereference-NULL.patch
+Patch38:        0038-gitignore-ignore-clang-analyze-output.patch
+Patch39:        0039-man-add-more-markup-to-udevadm-8.patch
+Patch40:        0040-shared-util-Fix-glob_extend-argument.patch
+Patch41:        0041-Fix-bad-assert-in-show_pid_array.patch
+Patch42:        0042-build-sys-libudev-get-rid-of-the-needless-selinux-li.patch
+Patch43:        0043-build-sys-libsystemd-id128-get-rid-of-the-needless-s.patch
+Patch44:        0044-Fix-for-SIGSEGV-in-systemd-bootchart-on-short-living.patch
+Patch45:        0045-man-document-the-b-special-boot-option.patch
+Patch46:        0046-logind-allow-unprivileged-session-device-access.patch
+Patch47:        0047-rules-expose-loop-block-devices-to-systemd.patch
+Patch48:        0048-rules-don-t-limit-some-of-the-rules-to-the-add-actio.patch
+Patch49:        0049-tmpfiles-log-unaccessible-FUSE-mount-points-only-as-.patch
+Patch50:        0050-hwdb-update.patch
+Patch51:        0051-rules-remove-pointless-MODE-settings.patch
+Patch52:        0052-analyze-set-white-backgound.patch
+Patch53:        0053-shell-completion-dump-has-moved-to-systemd-analyze.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -674,6 +728,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Oct 21 2013 Lennart Poettering <lpoetter@redhat.com - 208-3
+- Backport a bunch of fixes and hwdb updates
+
 * Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-2
 - Move old random seed and backlight files into the right place
 
