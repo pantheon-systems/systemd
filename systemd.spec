@@ -303,7 +303,7 @@ pushd build3
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         PYTHON=%{__python3}
-make %{?_smp_mflags} GCC_COLORS=""
+make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
 pushd build2
