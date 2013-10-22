@@ -357,6 +357,18 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
 
+# Temporary workaround for #1002806
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/poweroff.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/rescue.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/graphical.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/reboot.target.wants
+ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/poweroff.target.wants/
+ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/rescue.target.wants/
+ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/multi-user.target.wants/
+ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/graphical.target.wants/
+ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/reboot.target.wants/
+
 # Make sure the user generators dir exists too
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
@@ -723,13 +735,16 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Mon Oct 21 2013 Lennart Poettering <lpoetter@redhat.com - 208-3
+* Tue Oct 22 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-4
+- Add temporary fix for #1002806
+
+* Mon Oct 21 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-3
 - Backport a bunch of fixes and hwdb updates
 
-* Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-2
+* Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com> - 208-2
 - Move old random seed and backlight files into the right place
 
-* Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com - 208-1
+* Wed Oct 2 2013 Lennart Poettering <lpoetter@redhat.com> - 208-1
 - New upstream release
 
 * Thu Sep 26 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> 207-5
