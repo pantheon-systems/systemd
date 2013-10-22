@@ -1,4 +1,4 @@
-From b8cc2a94ad07cf529258ef0dde4002d8e1166f25 Mon Sep 17 00:00:00 2001
+From 8ee1b98e2f4d4d36d9fccc776aa3fb124d05ac9b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 21 Oct 2013 18:53:57 -0400
 Subject: [PATCH] shell-completion: dump has moved to systemd-analyze
