@@ -527,6 +527,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
 %dir %{_localstatedir}/lib/systemd/coredump
+%ghost %dir %{_localstatedir}/lib/systemd/backlight
+%ghost %{_localstatedir}/lib/systemd/random-seed
+%ghost %{_localstatedir}/lib/systemd/catalog/database
+
 %{_localstatedir}/log/README
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
@@ -555,7 +559,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %dir %{_sysconfdir}/X11/xorg.conf.d
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
-%ghost %{_localstatedir}/lib/systemd/catalog/database
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-analyze
@@ -653,12 +656,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/kernel-install
 %{_datadir}/bash-completion/completions/systemd-run
 %{_datadir}/zsh/site-functions/*
-%ghost %dir %{_localstatedir}/lib/systemd/
-%ghost %dir %{_localstatedir}/lib/systemd/coredump
-%ghost %dir %{_localstatedir}/lib/systemd/catalog
-%ghost %dir %{_localstatedir}/lib/systemd/backlight
-%ghost %{_localstatedir}/lib/systemd/random-seed
-%ghost %{_localstatedir}/lib/systemd/catalog/database
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -1050,7 +1047,7 @@ Resolves: rhbz#974132
 
 * Thu Aug 16 2012 Ray Strode <rstrode@redhat.com> 188-4
 - more scriptlet fixes
-  (move dm migration logic to %posttrans so the service
+  (move dm migration logic to %%posttrans so the service
    files it's looking for are available at the time
    the logic is run)
 
