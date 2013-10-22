@@ -77,18 +77,16 @@ Patch38:        0038-gitignore-ignore-clang-analyze-output.patch
 Patch39:        0039-man-add-more-markup-to-udevadm-8.patch
 Patch40:        0040-shared-util-Fix-glob_extend-argument.patch
 Patch41:        0041-Fix-bad-assert-in-show_pid_array.patch
-Patch42:        0042-build-sys-libudev-get-rid-of-the-needless-selinux-li.patch
-Patch43:        0043-build-sys-libsystemd-id128-get-rid-of-the-needless-s.patch
-Patch44:        0044-Fix-for-SIGSEGV-in-systemd-bootchart-on-short-living.patch
-Patch45:        0045-man-document-the-b-special-boot-option.patch
-Patch46:        0046-logind-allow-unprivileged-session-device-access.patch
-Patch47:        0047-rules-expose-loop-block-devices-to-systemd.patch
-Patch48:        0048-rules-don-t-limit-some-of-the-rules-to-the-add-actio.patch
-Patch49:        0049-tmpfiles-log-unaccessible-FUSE-mount-points-only-as-.patch
-Patch50:        0050-hwdb-update.patch
-Patch51:        0051-rules-remove-pointless-MODE-settings.patch
-Patch52:        0052-analyze-set-white-backgound.patch
-Patch53:        0053-shell-completion-dump-has-moved-to-systemd-analyze.patch
+Patch42:        0042-Fix-for-SIGSEGV-in-systemd-bootchart-on-short-living.patch
+Patch43:        0043-man-document-the-b-special-boot-option.patch
+Patch44:        0044-logind-allow-unprivileged-session-device-access.patch
+Patch45:        0045-rules-expose-loop-block-devices-to-systemd.patch
+Patch46:        0046-rules-don-t-limit-some-of-the-rules-to-the-add-actio.patch
+Patch47:        0047-tmpfiles-log-unaccessible-FUSE-mount-points-only-as-.patch
+Patch48:        0048-hwdb-update.patch
+Patch49:        0049-rules-remove-pointless-MODE-settings.patch
+Patch50:        0050-analyze-set-white-backgound.patch
+Patch51:        0051-shell-completion-dump-has-moved-to-systemd-analyze.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
