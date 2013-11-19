@@ -1,0 +1,22 @@
+From e46b85ec8f333d1bdd0e66b99530965c7781110b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 8 Nov 2013 13:53:25 +0100
+Subject: [PATCH] journal: fix minor memory leak
+
+---
+ src/journal/sd-journal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index 7700d6c..9676f0f 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -1276,7 +1276,7 @@ static void check_network(sd_journal *j, int fd) {
+ static bool file_has_type_prefix(const char *prefix, const char *filename) {
+         const char *full, *tilded, *atted;
+ 
+-        full = strappend(prefix, ".journal");
++        full = strappenda(prefix, ".journal");
+         tilded = strappenda(full, "~");
+         atted = strappenda(prefix, "@");
+ 

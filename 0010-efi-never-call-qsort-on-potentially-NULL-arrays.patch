@@ -21,6 +21,3 @@ index 1d5b6f9..c015b16 100644
  
          *options = list;
          return count;
--- 
-1.8.4.652.g0d6e0ce
-

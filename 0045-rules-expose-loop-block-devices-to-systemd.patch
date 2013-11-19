@@ -30,6 +30,3 @@ index bbb7d0c..3c99475 100644
  
  # Ignore raid devices that are not yet assembled and started
  SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL=="md*", TEST!="md/array_state", ENV{SYSTEMD_READY}="0"
--- 
-1.8.4.652.g0d6e0ce
-

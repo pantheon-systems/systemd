@@ -23,6 +23,3 @@ index 748f1bb..6c88040 100644
  
          if (k == GLOB_NOMATCH)
                  return -ENOENT;
--- 
-1.8.4.652.g0d6e0ce
-

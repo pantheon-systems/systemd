@@ -176,6 +176,3 @@ index db055f0..70cd372 100644
  static int mount_add_device_links(Mount *m) {
          MountParameters *p;
          bool device_wants_mount = false;
--- 
-1.8.4.652.g0d6e0ce
-

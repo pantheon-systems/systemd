@@ -36,6 +36,3 @@ index 3d46557..93bfa99 100644
                  if (r < 0)
                          goto fail;
  
--- 
-1.8.4.652.g0d6e0ce
-

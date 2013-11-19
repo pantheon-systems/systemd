@@ -34,6 +34,3 @@ index 4f47eb1..e03e413 100644
                  else {
                          hashmap_replace(s->user_journals, k, f);
                          server_fix_perms(s, f, PTR_TO_UINT32(k));
--- 
-1.8.4.652.g0d6e0ce
-

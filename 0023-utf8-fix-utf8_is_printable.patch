@@ -42,6 +42,3 @@ index 7bd0db1..f0182ee 100644
  }
  
  static void test_utf8_is_valid(void) {
--- 
-1.8.4.652.g0d6e0ce
-

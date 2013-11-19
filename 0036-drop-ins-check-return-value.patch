@@ -24,6 +24,3 @@ index 4b97710..1db7d06 100644
          if (unlink(q) < 0)
                  r = errno == ENOENT ? 0 : -errno;
          else
--- 
-1.8.4.652.g0d6e0ce
-

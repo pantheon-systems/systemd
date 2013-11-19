@@ -40,6 +40,3 @@ index 676a07f..8f4d017 100644
  
                  if (!dbus_message_iter_init(message, &iter))
                          goto oom;
--- 
-1.8.4.652.g0d6e0ce
-

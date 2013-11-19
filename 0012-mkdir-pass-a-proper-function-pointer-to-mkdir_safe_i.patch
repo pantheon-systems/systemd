@@ -20,6 +20,3 @@ index b7e5c6e..43c6ea6 100644
  }
  
  static int is_dir(const char* path) {
--- 
-1.8.4.652.g0d6e0ce
-

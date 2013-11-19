@@ -37,6 +37,3 @@ index 20d398f..b497f92 100644
   KEYBOARD_KEY_ce=!                                      # Fn+F8 keyboard backlight up
   KEYBOARD_KEY_8d=!                                      # Fn+F7 keyboard backlight down
   KEYBOARD_KEY_96=!                                      # Fn+F1 performance mode (?)
--- 
-1.8.4.652.g0d6e0ce
-

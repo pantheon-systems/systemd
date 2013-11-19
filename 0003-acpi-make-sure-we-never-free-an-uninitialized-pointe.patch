@@ -20,6 +20,3 @@ index a7c83ed..af58c7c 100644
          struct acpi_table_header *tbl;
          size_t l;
          struct acpi_fpdt_header *rec;
--- 
-1.8.4.652.g0d6e0ce
-

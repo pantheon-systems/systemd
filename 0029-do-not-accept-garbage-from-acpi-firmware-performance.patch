@@ -28,6 +28,3 @@ index af58c7c..75648b4 100644
          if (loader_start)
                  *loader_start = brec.startup_start / 1000;
          if (loader_exit)
--- 
-1.8.4.652.g0d6e0ce
-

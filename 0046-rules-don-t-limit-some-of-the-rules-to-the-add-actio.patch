@@ -33,6 +33,3 @@ index 3c99475..307f18f 100644
 +SUBSYSTEM=="module", KERNEL=="configfs", TAG+="systemd", ENV{SYSTEMD_WANTS}+="sys-kernel-config.mount"
  
  LABEL="systemd_end"
--- 
-1.8.4.652.g0d6e0ce
-

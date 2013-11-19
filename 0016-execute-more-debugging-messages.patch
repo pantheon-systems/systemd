@@ -119,6 +119,3 @@ index 49296b5..973daf7 100644
  
          /* Make this a NOP on non-logind systems */
          if (!logind_running())
--- 
-1.8.4.652.g0d6e0ce
-

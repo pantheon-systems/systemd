@@ -44,6 +44,3 @@ index 0407609..04e735e 100644
                  <allow receive_sender="org.freedesktop.login1"/>
          </policy>
  
--- 
-1.8.4.652.g0d6e0ce
-

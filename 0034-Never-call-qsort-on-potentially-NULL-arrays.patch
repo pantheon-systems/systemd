@@ -380,6 +380,3 @@ index d75281f..036828b 100644
  
          for (u = unit_infos; u < unit_infos + c; u++) {
                  _cleanup_free_ char *p = NULL;
--- 
-1.8.4.652.g0d6e0ce
-

@@ -38,6 +38,3 @@ index f764789..679dfdf 100644
  KERNEL=="tun", MODE="0666", OPTIONS+="static_node=net/tun"
  
  KERNEL=="fuse", MODE="0666", OPTIONS+="static_node=fuse"
--- 
-1.8.4.652.g0d6e0ce
-

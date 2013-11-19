@@ -35,6 +35,3 @@ index 98b1599..96ed2d3 100644
                  else
                          s->forbid_restart = b;
          } else
--- 
-1.8.4.652.g0d6e0ce
-

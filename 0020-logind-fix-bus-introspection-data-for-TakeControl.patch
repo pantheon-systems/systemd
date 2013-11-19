@@ -20,6 +20,3 @@ index 5f6bafb..be4e01c 100644
          "   <arg name=\"force\" type=\"b\"/>\n"                         \
          "  </method>\n"                                                 \
          "  <method name=\"ReleaseControl\"/>\n"                         \
--- 
-1.8.4.652.g0d6e0ce
-

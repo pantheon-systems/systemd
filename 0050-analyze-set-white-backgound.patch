@@ -31,6 +31,3 @@ index a4f15eb..9a69795 100644
          svg("<text x=\"20\" y=\"50\">%s</text>", pretty_times);
          svg("<text x=\"20\" y=\"30\">%s %s (%s %s) %s</text>",
              isempty(osname) ? "Linux" : osname,
--- 
-1.8.4.652.g0d6e0ce
-

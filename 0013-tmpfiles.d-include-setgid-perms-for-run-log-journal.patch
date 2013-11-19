@@ -21,6 +21,3 @@ index b630440..a05c657 100644
  m /var/log/journal/%m 2755 root systemd-journal - -
 +m /run/log/journal 2755 root systemd-journal - -
 +m /run/log/journal/%m 2755 root systemd-journal - -
--- 
-1.8.4.652.g0d6e0ce
-

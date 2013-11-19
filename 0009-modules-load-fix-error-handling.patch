@@ -22,6 +22,3 @@ index 7b19ee0..49ee420 100644
                  }
  
                  r = conf_files_list_nulstr(&files, ".conf", NULL, conf_file_dirs);
--- 
-1.8.4.652.g0d6e0ce
-

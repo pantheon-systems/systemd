@@ -43,6 +43,3 @@ index 22b5eea..769c3e4 100644
  
                  free(opt_hash);
                  opt_hash = t;
--- 
-1.8.4.652.g0d6e0ce
-

@@ -33,6 +33,3 @@ index cc44ab4..aa0f017 100644
  
          if(flags & OUTPUT_FULL_WIDTH)
                  n_columns = 0;
--- 
-1.8.4.652.g0d6e0ce
-

@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,6 +36,7 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
+# i=1; for p in 00*patch;do printf "Patch%02d:        %s\n" $i $p; ((i++));done
 Patch01:        0001-acpi-fptd-fix-memory-leak-in-acpi_get_boot_usec.patch
 Patch02:        0002-fix-lingering-references-to-var-lib-backlight-random.patch
 Patch03:        0003-acpi-make-sure-we-never-free-an-uninitialized-pointe.patch
@@ -87,6 +88,54 @@ Patch48:        0048-hwdb-update.patch
 Patch49:        0049-rules-remove-pointless-MODE-settings.patch
 Patch50:        0050-analyze-set-white-backgound.patch
 Patch51:        0051-shell-completion-dump-has-moved-to-systemd-analyze.patch
+Patch52:        0052-systemd-use-unit-name-in-PrivateTmp-directories.patch
+Patch53:        0053-catalog-remove-links-to-non-existent-wiki-pages.patch
+Patch54:        0054-journalctl-add-list-boots-to-show-boot-IDs-and-times.patch
+Patch55:        0055-udev-builtin-path_id-add-support-for-bcma-bus.patch
+Patch56:        0056-udev-ata_id-log-faling-ioctls-as-debug.patch
+Patch57:        0057-libudev-default-log_priority-to-INFO.patch
+Patch58:        0058-nspawn-only-pass-in-slice-setting-if-it-is-set.patch
+Patch59:        0059-zsh-completion-add-systemd-run.patch
+Patch60:        0060-man-explain-NAME-in-systemctl-man-page.patch
+Patch61:        0061-virt-move-caching-of-virtualization-check-results-in.patch
+Patch62:        0062-systemctl-fix-typo-in-help-text.patch
+Patch63:        0063-analyze-plot-place-the-text-on-the-side-with-most-sp.patch
+Patch64:        0064-detect_virtualization-returns-NULL-pass-empty-string.patch
+Patch65:        0065-rules-load-path_id-on-DRM-devices.patch
+Patch66:        0066-rules-simply-60-drm.rules.patch
+Patch67:        0067-udev-builtin-keyboard-Fix-large-scan-codes-on-32-bit.patch
+Patch68:        0068-nspawn-log-out-of-memory-errors.patch
+Patch69:        0069-Configurable-Timeouts-Restarts-default-values.patch
+Patch70:        0070-man-fix-typo.patch
+Patch71:        0071-man-do-not-use-term-in-para.patch
+Patch72:        0072-cgroup-run-PID-1-in-the-root-cgroup.patch
+Patch73:        0073-shutdown-trim-the-cgroup-tree-on-loop-iteration.patch
+Patch74:        0074-nspawn-split-out-pty-forwaring-logic-into-ptyfwd.c.patch
+Patch75:        0075-nspawn-explicitly-terminate-machines-when-we-exit-ns.patch
+Patch76:        0076-run-support-system-to-match-other-commands-even-if-r.patch
+Patch77:        0077-acpi-fpdt-break-on-zero-or-negative-length-read.patch
+Patch78:        0078-man-add-rationale-into-systemd-halt-8.patch
+Patch79:        0079-systemd-python-convert-keyword-value-to-string.patch
+Patch80:        0080-systemctl-make-LOAD-column-width-dynamic.patch
+Patch81:        0081-Make-hibernation-test-work-for-swap-files.patch
+Patch82:        0082-man-add-docs-for-sd_is_special-and-some-man-page-sym.patch
+Patch83:        0083-systemctl-return-r-instead-of-always-returning-0.patch
+Patch84:        0084-journal-fix-minor-memory-leak.patch
+Patch85:        0085-manager-configurable-StartLimit-default-values.patch
+Patch86:        0086-man-units-fix-installation-of-systemd-nspawn-.servic.patch
+Patch87:        0087-systemd-fix-memory-leak-in-cgroup-code.patch
+Patch88:        0088-button-don-t-exit-if-we-cannot-handle-a-button-press.patch
+Patch89:        0089-timer-properly-format-relative-timestamps-in-the-fut.patch
+Patch90:        0090-timer-consider-usec_t-1-an-invalid-timestamp.patch
+Patch91:        0091-udev-usb_id-remove-obsoleted-bInterfaceSubClass-5-ma.patch
+Patch92:        0092-Add-support-for-saving-restoring-keyboard-backlights.patch
+Patch93:        0093-static-nodes-don-t-call-mkdir.patch
+Patch94:        0094-Fix-kmod-error-message-to-have-correct-version-requi.patch
+Patch95:        0095-systemd-python-fix-booted-and-add-two-functions-to-d.patch
+Patch96:        0096-activate-mention-E-in-the-help-text.patch
+Patch97:        0097-activate-fix-crash-when-s-is-passed.patch
+Patch98:        0098-journal-timestamp-support-on-console-messages.patch
+Patch99:        0099-man-add-bootctl-8.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -134,7 +183,7 @@ Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
-Requires:       kmod >= 14
+Requires:       kmod >= 15
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -735,6 +784,21 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Nov 19 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-5
+- Use unit name in PrivateTmp= directories (#957439)
+- Update manual pages, completion scripts, and hardware database
+- Configurable Timeouts/Restarts default values
+- Support printing of timestamps on the console
+- Fix some corner cases in detecting when writing to the console is safe
+- Python API: convert keyword values to string, fix sd_is_booted() wrapper
+- Do not tread missing /sbin/fsck.btrfs as an error (#1015467)
+- Allow masking of fsck units
+- Advertise hibernation to swap files
+- Fix SO_REUSEPORT settings
+- Prefer converted xkb keymaps to legacy keymaps (#981805, #1026872)
+- Make use of newer kmod
+- Assorted bugfixes: #1017161, #967521, #988883, #1027478, #821723, #1014303
+
 * Tue Oct 22 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-4
 - Add temporary fix for #1002806
 

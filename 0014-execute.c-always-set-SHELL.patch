@@ -164,6 +164,3 @@ index 3718a57..3f8b59d 100644
  ExecStart=-@rootlibexecdir@/systemd --user
  Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%I/dbus/user_bus_socket
  Slice=user-%i.slice
--- 
-1.8.4.652.g0d6e0ce
-

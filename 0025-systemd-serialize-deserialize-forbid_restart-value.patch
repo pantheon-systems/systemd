@@ -46,6 +46,3 @@ index 6792024..98b1599 100644
          } else
                  log_debug_unit(u->id, "Unknown serialization key '%s'", key);
  
--- 
-1.8.4.652.g0d6e0ce
-
