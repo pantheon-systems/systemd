@@ -22,13 +22,3 @@ index 6b84fb8..f0ab16f 100644
                  return NULL;
  
          return PyBool_FromLong(r);
-diff --git a/src/python-systemd/docs/daemon.rst b/src/python-systemd/docs/daemon.rst
-index 72280ca..0ad11ed 100644
---- a/src/python-systemd/docs/daemon.rst
-+++ b/src/python-systemd/docs/daemon.rst
-@@ -14,3 +14,5 @@
-    .. autofunction:: _is_socket_unix
-    .. autofunction:: _is_socket_inet
-    .. autofunction:: _is_mq
-+   .. autofunction:: notify
-+   .. autofunction:: booted
