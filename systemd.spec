@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -129,8 +129,8 @@ Patch089:       0089-timer-properly-format-relative-timestamps-in-the-fut.patch
 Patch090:       0090-timer-consider-usec_t-1-an-invalid-timestamp.patch
 Patch091:       0091-udev-usb_id-remove-obsoleted-bInterfaceSubClass-5-ma.patch
 Patch092:       0092-Add-support-for-saving-restoring-keyboard-backlights.patch
-Patch093:       0093-static-nodes-don-t-call-mkdir.patch
-Patch094:       0094-Fix-kmod-error-message-to-have-correct-version-requi.patch
+#Patch093:       0093-static-nodes-don-t-call-mkdir.patch
+#Patch094:       0094-Fix-kmod-error-message-to-have-correct-version-requi.patch
 Patch095:       0095-systemd-python-fix-booted-and-add-two-functions-to-d.patch
 Patch096:       0096-activate-mention-E-in-the-help-text.patch
 Patch097:       0097-activate-fix-crash-when-s-is-passed.patch
@@ -199,7 +199,7 @@ Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
-Requires:       kmod >= 15
+Requires:       kmod >= 14
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -800,6 +800,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Nov 19 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-6
+- Back kmod dependency version bump out
+
 * Tue Nov 19 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-5
 - Use unit name in PrivateTmp= directories (#957439)
 - Update manual pages, completion scripts, and hardware database
