@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -97,7 +97,7 @@ Patch057:       0057-libudev-default-log_priority-to-INFO.patch
 Patch058:       0058-nspawn-only-pass-in-slice-setting-if-it-is-set.patch
 Patch059:       0059-zsh-completion-add-systemd-run.patch
 Patch060:       0060-man-explain-NAME-in-systemctl-man-page.patch
-Patch061:       0061-virt-move-caching-of-virtualization-check-results-in.patch
+#Patch061:       0061-virt-move-caching-of-virtualization-check-results-in.patch
 Patch062:       0062-systemctl-fix-typo-in-help-text.patch
 Patch063:       0063-analyze-plot-place-the-text-on-the-side-with-most-sp.patch
 Patch064:       0064-detect_virtualization-returns-NULL-pass-empty-string.patch
@@ -152,13 +152,13 @@ Patch112:       0112-tmpfiles-adjust-excludes-for-the-new-per-service-pri.patch
 Patch113:       0113-core-socket-fix-SO_REUSEPORT.patch
 Patch114:       0114-localed-match-converted-keymaps-before-legacy.patch
 Patch115:       0115-keymap-Add-Toshiba-Satellite-U940.patch
-Patch116:       0116-calendar-support-yearly-and-annually-names-the-same-.patch
-Patch117:       0117-hashmap-be-a-bit-more-conservative-with-pre-allocati.patch
-Patch118:       0118-manager-don-t-do-plymouth-in-a-container.patch
-Patch119:       0119-nspawn-add-new-drop-capability-switch.patch
-Patch120:       0120-valgrind-make-running-PID-1-in-valgrind-useful.patch
-Patch121:       0121-efi-boot-generator-don-t-mount-boot-eagerly.patch
-Patch122:       0122-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+#Patch116:       0116-calendar-support-yearly-and-annually-names-the-same-.patch
+#Patch117:       0117-hashmap-be-a-bit-more-conservative-with-pre-allocati.patch
+#Patch118:       0118-manager-don-t-do-plymouth-in-a-container.patch
+#Patch119:       0119-nspawn-add-new-drop-capability-switch.patch
+#Patch120:       0120-valgrind-make-running-PID-1-in-valgrind-useful.patch
+#Patch121:       0121-efi-boot-generator-don-t-mount-boot-eagerly.patch
+#Patch122:       0122-hwdb-Update-database-of-Bluetooth-company-identifier.patch
 Patch123:       0123-journal-when-appending-to-journal-file-allocate-larg.patch
 Patch124:       0124-journal-make-table-const.patch
 Patch125:       0125-journald-keep-statistics-on-how-of-we-hit-miss-the-m.patch
@@ -167,15 +167,15 @@ Patch127:       0127-journal-fix-iteration-when-we-go-backwards-from-the-.patch
 Patch128:       0128-journal-allow-journal_file_copy_entry-to-work-on-non.patch
 Patch129:       0129-journal-simplify-pre-allocation-logic.patch
 Patch130:       0130-journald-mention-how-long-we-needed-to-flush-to-var-.patch
-Patch131:       0131-automount-log-info-about-triggering-process.patch
-Patch132:       0132-virt-split-detect_vm-into-separate-functions.patch
-Patch133:       0133-hwdb-Update-database-of-Bluetooth-company-identifier.patch
-Patch134:       0134-sysfs-show.c-return-negative-error.patch
-Patch135:       0135-util.c-check-if-return-value-from-ttyname_r-is-0-ins.patch
-Patch136:       0136-docs-remove-unneeded-the-s-in-gudev-docs.patch
-Patch137:       0137-man-explicitly-say-when-multiple-units-can-be-specif.patch
-Patch138:       0138-systemd-treat-reload-failure-as-failure.patch
-Patch139:       0139-journal-fail-silently-in-sd_j_sendv-if-journal-is-un.patch
+#Patch131:       0131-automount-log-info-about-triggering-process.patch
+#Patch132:       0132-virt-split-detect_vm-into-separate-functions.patch
+#Patch133:       0133-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+#Patch134:       0134-sysfs-show.c-return-negative-error.patch
+#Patch135:       0135-util.c-check-if-return-value-from-ttyname_r-is-0-ins.patch
+#Patch136:       0136-docs-remove-unneeded-the-s-in-gudev-docs.patch
+#Patch137:       0137-man-explicitly-say-when-multiple-units-can-be-specif.patch
+#Patch138:       0138-systemd-treat-reload-failure-as-failure.patch
+#Patch139:       0139-journal-fail-silently-in-sd_j_sendv-if-journal-is-un.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -824,6 +824,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-8
+- Back out patches for bugs which are not freeze-excepted (only #1006386?
+  remains)
+
 * Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-7
 - Backport patches (#1023041, #1036845, #1006386?)
 - HWDB update
