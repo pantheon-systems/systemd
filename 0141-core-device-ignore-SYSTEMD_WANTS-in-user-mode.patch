@@ -1,0 +1,28 @@
+From bd819c6a6761827adc05f15ebc20bd78a1c751dc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 5 Dec 2013 16:06:04 -0500
+Subject: [PATCH] core/device: ignore SYSTEMD_WANTS= in user mode
+
+---
+ src/core/device.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/device.c b/src/core/device.c
+index 610fe88..e02c207 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -275,8 +275,9 @@ static int device_update_unit(Manager *m, struct udev_device *dev, const char *p
+                         }
+                 }
+ 
+-                wants = udev_device_get_property_value(dev, "SYSTEMD_WANTS");
+-                if (wants) {
++                if (u->manager->running_as == SYSTEMD_SYSTEM &&
++                    (wants = udev_device_get_property_value(dev, "SYSTEMD_WANTS"))) {
++
+                         char *state, *w;
+                         size_t l;
+ 
+-- 
+1.8.4.2
+
