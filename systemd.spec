@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -176,8 +176,7 @@ Patch130:       0130-journald-mention-how-long-we-needed-to-flush-to-var-.patch
 #Patch137:       0137-man-explicitly-say-when-multiple-units-can-be-specif.patch
 #Patch138:       0138-systemd-treat-reload-failure-as-failure.patch
 #Patch139:       0139-journal-fail-silently-in-sd_j_sendv-if-journal-is-un.patch
-Patch140:       0140-systemd-add-a-start-job-for-all-units-specified-with.patch
-Patch141:       0141-core-device-ignore-SYSTEMD_WANTS-in-user-mode.patch
+Patch140:       0141-core-device-ignore-SYSTEMD_WANTS-in-user-mode.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -244,6 +243,8 @@ Provides:       systemd-analyze = 198
 # systemd-sysv-convert was removed in f20: https://fedorahosted.org/fpc/ticket/308
 Obsoletes:      systemd-sysv < 206
 Provides:       systemd-sysv = 206
+# https://bugzilla.redhat.com/show_bug.cgi?id=1026860
+Conflicts:      lvm2 < 2.02.103-4
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -826,6 +827,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-10
+- Remove patch for #1026860 now that LVM rules have been updated
+
 * Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-9
 - Apply two patches for #1026860
 
