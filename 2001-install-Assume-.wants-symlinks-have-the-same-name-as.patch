@@ -1,0 +1,18 @@
+From: David Strauss <david@davidstrauss.net>
+---
+diff --git a/src/shared/install.c b/src/shared/install.c
+index b9c85b7..78321d8 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -423,6 +423,11 @@ static int find_symlinks_fd(
+                         bool found_path, found_dest, b = false;
+                         int q;
+ 
++                        /* Skip symlinks with a different basename than
++                         * the target unit */
++                        if (!streq(basename(de->d_name), name))
++                                continue;
++
+                         /* Acquire symlink name */
+                         p = path_make_absolute(de->d_name, path);
+                         if (!p)
