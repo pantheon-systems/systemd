@@ -225,6 +225,7 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 14
+Requires:       diffutils
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
