@@ -23,6 +23,3 @@ index 610fe88..e02c207 100644
                          char *state, *w;
                          size_t l;
  
--- 
-1.8.4.2
-

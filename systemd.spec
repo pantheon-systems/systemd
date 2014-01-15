@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -178,6 +178,103 @@ Patch138:       0138-systemd-treat-reload-failure-as-failure.patch
 Patch139:       0139-journal-fail-silently-in-sd_j_sendv-if-journal-is-un.patch
 Patch140:       0140-systemd-add-a-start-job-for-all-units-specified-with.patch
 Patch141:       0141-core-device-ignore-SYSTEMD_WANTS-in-user-mode.patch
+Patch142:       0142-Fix-memory-leak-in-stdout-journal-streams.patch
+Patch143:       0143-man-document-is-enabled-output.patch
+Patch144:       0144-hostnamed-avoid-using-NULL-in-error-path.patch
+Patch145:       0145-logind-use-correct-who-enum-values-with-KillUnit.patch
+Patch146:       0146-Revert-systemd-add-a-start-job-for-all-units-specifi.patch
+Patch147:       0147-core-do-not-segfault-if-swap-activity-happens-when-p.patch
+Patch148:       0148-kernel-install-add-h-help.patch
+Patch149:       0149-kernel-install-fix-help-output.patch
+Patch150:       0150-man-improve-wording-and-comma-usage-in-systemd.journ.patch
+Patch151:       0151-drop-several-entries-from-kbd-model-map-whose-kbd-la.patch
+Patch152:       0152-correct-name-of-Tajik-kbd-layout-in-kbd-model-map.patch
+Patch153:       0153-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch154:       0154-Ensure-unit-is-journaled-for-short-lived-or-oneshot-.patch
+Patch155:       0155-libudev-hwdb-use-libudev-not-systemd-logging.patch
+Patch156:       0156-core-manager-remove-infinite-loop.patch
+Patch157:       0157-util-check-for-overflow-in-greedy_realloc.patch
+Patch158:       0158-journald-use-a-bit-more-cleanup-magic.patch
+Patch159:       0159-journald-malloc-less-when-streaming-messages.patch
+Patch160:       0160-activate-clean-up-inherited-descriptors.patch
+Patch161:       0161-man-explain-in-more-detail-how-SYSTEMD_READY-influen.patch
+Patch162:       0162-units-don-t-run-readahead-done-timers-in-containers.patch
+Patch163:       0163-test-fileio-replace-mktemp-with-mkstemp-to-avoid-war.patch
+Patch164:       0164-journal-pipe-journalctl-help-output-into-a-pager.patch
+Patch165:       0165-nspawn-complain-and-continue-if-machine-has-same-id.patch
+Patch166:       0166-man-beef-up-ExecStart-description.patch
+Patch167:       0167-man-remove-advice-to-avoid-setting-the-same-var-more.patch
+Patch168:       0168-systemctl-add-the-plain-option-to-the-help-message.patch
+Patch169:       0169-Fix-a-few-resource-leaks-in-error-paths.patch
+Patch170:       0170-Fix-a-few-signed-unsigned-format-string-issues.patch
+Patch171:       0171-util-try-harder-to-increase-the-send-recv-buffers-of.patch
+Patch172:       0172-execute-also-set-SO_SNDBUF-when-spawning-a-service-w.patch
+Patch173:       0173-journal-file-protect-against-alloca-0.patch
+Patch174:       0174-man-describe-journalctl-show-cursor.patch
+Patch175:       0175-journal-fix-against-theoretical-undefined-behavior.patch
+Patch176:       0176-journald-downgrade-warning-message-when-dev-kmsg-doe.patch
+Patch177:       0177-journal-file.c-remove-redundant-assignment-of-variab.patch
+Patch178:       0178-login-Don-t-stop-a-running-user-manager-from-garbage.patch
+Patch179:       0179-libudev-devices-received-from-udev-are-always-initia.patch
+Patch180:       0180-log-don-t-reopen-dev-console-each-time-we-call-log_o.patch
+Patch181:       0181-log-when-we-log-to-dev-console-and-got-disconnected-.patch
+Patch182:       0182-loginctl-when-showing-device-tree-of-seats-with-no-d.patch
+Patch183:       0183-man-be-more-explicit-about-option-arguments-that-tak.patch
+Patch184:       0184-man-add-DOI-for-refereed-article-on-Forward-Secure-S.patch
+Patch185:       0185-journalctl-zsh-completion-fix-several-issues-in-help.patch
+Patch186:       0186-keymap-Refactor-Acer-tables.patch
+Patch187:       0187-logging-reduce-send-timeout-to-something-more-sensib.patch
+Patch188:       0188-DEFAULT_PATH_SPLIT_USR-macro.patch
+Patch189:       0189-fstab-generator-Do-not-try-to-fsck-non-devices.patch
+Patch190:       0190-logind-remove-dead-variable.patch
+Patch191:       0191-hwdb-update.patch
+Patch192:       0192-delta-replace-readdir_r-with-readdir.patch
+Patch193:       0193-delta-fix-delta-for-drop-ins.patch
+Patch194:       0194-delta-if-prefix-is-specified-only-show-overrides-the.patch
+Patch195:       0195-log-log_error-and-friends-add-a-newline-after-each-l.patch
+Patch196:       0196-man-units-tmpfiles.d-5-cleanup.patch
+Patch197:       0197-tmpfiles-introduce-the-concept-of-unsafe-operations.patch
+Patch198:       0198-sleep-config-fix-useless-check-for-swapfile-type.patch
+Patch199:       0199-journalctl-make-sure-b-foobar-cannot-be-misunderstoo.patch
+Patch200:       0200-man-resolve-word-omissions.patch
+Patch201:       0201-man-improvements-to-comma-placement.patch
+Patch202:       0202-man-grammar-and-wording-improvements.patch
+Patch203:       0203-man-document-fail-nofail-auto-noauto.patch
+Patch204:       0204-man-fix-description-of-is-enabled-returned-value.patch
+Patch205:       0205-man-fix-Type-reference.patch
+Patch206:       0206-man-fix-Type-reference-v2.patch
+Patch207:       0207-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch208:       0208-man-add-a-note-about-propagating-signals.patch
+Patch209:       0209-man-include-autoconf-snippet-in-daemon-7.patch
+Patch210:       0210-systemd-python-fix-setting-of-exception-codes.patch
+Patch211:       0211-systemd-python-fix-listen_fds-under-Python-2.patch
+Patch212:       0212-man-expand-on-some-more-subtle-points-in-systemd.soc.patch
+Patch213:       0213-tmpfiles-rename-unsafe-to-boot.patch
+Patch214:       0214-sleep-config-Dereference-pointer-before-check-for-NU.patch
+Patch215:       0215-sleep-config-fix-double-free.patch
+Patch216:       0216-rules-drivers-do-not-reset-RUN-list.patch
+Patch217:       0217-core-manager-print-info-about-interesting-signals.patch
+Patch218:       0218-core-service-check-if-mainpid-matches-only-if-it-is-.patch
+Patch219:       0219-man-typo-fix.patch
+Patch220:       0220-swap-remove-if-else-with-the-same-data-path.patch
+Patch221:       0221-hwdb-update.patch
+Patch222:       0222-journal-Add-missing-byte-order-conversions.patch
+Patch223:       0223-hwdb-change-key-mappings-for-Samsung-90X3A.patch
+Patch224:       0224-hwdb-add-Samsung-700G.patch
+Patch225:       0225-hwdb-remove-duplicate-entry-for-Samsung-700Z.patch
+Patch226:       0226-hwdb-fix-match-for-Thinkpad-X201-tablet.patch
+Patch227:       0227-keymap-Recognize-different-Toshiba-Satellite-capital.patch
+Patch228:       0228-sleep.c-fix-typo.patch
+Patch229:       0229-delta-ensure-that-d_type-will-be-set-on-every-fs.patch
+Patch230:       0230-tmpfiles-don-t-allow-label_fix-to-print-ENOENT-when-.patch
+Patch231:       0231-man-mention-which-variables-will-be-expanded-in-Exec.patch
+Patch232:       0232-hwdb-Add-support-for-Toshiba-Satellite-P75-A7200-key.patch
+Patch233:       0233-journal-fix-access-to-munmapped-memory-in-sd_journal.patch
+Patch234:       0234-gpt-auto-generator-skip-nonexistent-devices.patch
+Patch235:       0235-gpt-auto-generator-use-EBADSLT-code-when-unable-to-d.patch
+Patch236:       0236-journald-do-not-free-space-when-disk-space-runs-low.patch
+Patch237:       0237-man-add-busctl-1.patch
+Patch238:       0238-journalctl-flip-to-full-by-default.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -704,6 +801,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_prefix}/lib/systemd/system-generators/systemd-efi-boot-generator
 %{_prefix}/lib/systemd/system-generators/systemd-gpt-auto-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
+%{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
@@ -827,6 +925,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-11
+- Backport a few fixes, relevant documentation updates, and HWDB changes
+  (#1051797, #1051768, #1047335, #1047304, #1047186, #1045849, #1043304,
+   #1043212, #1039351, #1031325, #1023820, #1017509, #953077)
+- Flip journalctl to --full by default (#984758)
+
 * Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-9
 - Apply two patches for #1026860
 
