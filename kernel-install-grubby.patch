@@ -1,6 +1,6 @@
-From dd33348393551411885397ff7d88a3a908eeb018 Mon Sep 17 00:00:00 2001
+From 0fe97bc02e3108efdb844feb1b367a89ba995d83 Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
-Date: Wed, 13 Mar 2013 07:57:53 +0100
+Date: Tue, 14 Jan 2014 17:48:08 -0500
 Subject: [PATCH] kernel-install: add fedora specific callouts to
  new-kernel-pkg
 
@@ -9,7 +9,7 @@ Subject: [PATCH] kernel-install: add fedora specific callouts to
  1 file changed, 21 insertions(+)
 
 diff --git a/src/kernel-install/kernel-install b/src/kernel-install/kernel-install
-index fb2ee57..31e988a 100644
+index 3ae1d77..3a2ac56 100644
 --- a/src/kernel-install/kernel-install
 +++ b/src/kernel-install/kernel-install
 @@ -19,6 +19,27 @@
@@ -39,7 +39,4 @@ index fb2ee57..31e988a 100644
 +
  usage()
  {
-     echo "Usage:" >&2
--- 
-1.8.3.1
-
+     echo "Usage:"
