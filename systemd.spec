@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        12%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -722,8 +722,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
+%dir %{_prefix}/lib/kernel
+%dir %{_prefix}/lib/kernel/install.d
 %dir %{_datadir}/systemd
 %dir %{_datadir}/pkgconfig
+%dir %{_datadir}/zsh
+%dir %{_datadir}/zsh/site-functions
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
@@ -925,6 +929,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sat Jan 25 2014 Ville Skyttä <ville.skytta@iki.fi> - 208-12
+- Own the %%{_prefix}/lib/kernel(/*) and %%{_datadir}/zsh(/*) dirs.
+
 * Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-11
 - Backport a few fixes, relevant documentation updates, and HWDB changes
   (#1051797, #1051768, #1047335, #1047304, #1047186, #1045849, #1043304,
