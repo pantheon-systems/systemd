@@ -68,6 +68,9 @@ enable dkms.service
 enable ipmi.service
 enable ipmievd.service
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1039351
+enable x509watch.timer
+
 # Hardware
 enable gpm.*
 enable gpsd.*

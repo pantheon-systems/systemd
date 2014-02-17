@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        13%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,6 +36,8 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
+# Patch series is available as http://kawka.in.waw.pl/git/systemd/shortlog/refs/heads/v208-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v208..v208-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
 Patch001:       0001-acpi-fptd-fix-memory-leak-in-acpi_get_boot_usec.patch
 Patch002:       0002-fix-lingering-references-to-var-lib-backlight-random.patch
@@ -274,6 +276,35 @@ Patch234:       0234-gpt-auto-generator-skip-nonexistent-devices.patch
 Patch235:       0235-gpt-auto-generator-use-EBADSLT-code-when-unable-to-d.patch
 Patch236:       0236-journald-do-not-free-space-when-disk-space-runs-low.patch
 Patch237:       0237-man-add-busctl-1.patch
+#Patch238:       0238-journalctl-flip-to-full-by-default.patch
+Patch239:       0239-coredumpctl-in-case-of-error-free-pattern-after-prin.patch
+Patch240:       0240-shell-completion-remove-load-from-systemctl.patch
+Patch241:       0241-units-drop-Install-section-from-multi-user.target-an.patch
+Patch242:       0242-systemctl-skip-native-unit-file-handling-if-sysv-fil.patch
+Patch243:       0243-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch244:       0244-udev-static_node-do-not-exit-rule-after-first-static.patch
+#Patch245:       0245-cryptsetup-Support-key-slot-option.patch
+Patch246:       0246-pam_systemd-Ignore-vtnr-when-seat-seat0.patch
+Patch247:       0247-keymap-Add-HP-Chromebook-14-Falco.patch
+Patch248:       0248-keymap-Add-release-quirk-for-Acer-AOA-switchvideomod.patch
+Patch249:       0249-keymap-Add-Sony-Vaio-VGN-FW250.patch
+Patch250:       0250-keymap-Add-Toshiba-EQUIUM.patch
+Patch251:       0251-tmpfiles-fix-memory-leak-of-exclude_prefixes.patch
+Patch252:       0252-analyze-fix-plot-issues-when-using-gummiboot.patch
+Patch253:       0253-udev-add-zram-to-the-list-of-devices-inappropriate-f.patch
+Patch254:       0254-bash-completion-fix-completion-of-complete-verbs.patch
+Patch255:       0255-shell-completion-fix-completion-of-localectl-set-loc.patch
+Patch256:       0256-zsh-completions-kernel-install-only-show-existing-ke.patch
+Patch257:       0257-core-fix-crashes-if-locale.conf-contains-invalid-utf.patch
+Patch258:       0258-core-do-not-print-invalid-utf-8-in-error-messages.patch
+Patch259:       0259-cryptsetup-generator-auto-add-deps-for-device-as-pas.patch
+Patch260:       0260-man-fix-reference-in-systemd-inhibit-1.patch
+Patch261:       0261-man-fix-another-reference-in-systemd-inhibit-1.patch
+Patch262:       0262-fstab-generator-Create-fsck-root-symlink-with-correc.patch
+Patch263:       0263-efi-fix-Undefined-reference-efi_loader_get_boot_usec.patch
+Patch264:       0264-core-make-StopWhenUnneeded-work-in-conjunction-with-.patch
+Patch265:       0265-man-always-place-programlisting-and-programlisting-i.patch
+Patch266:       0266-Temporary-work-around-for-slow-shutdown-due-to-unter.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -723,8 +754,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
+%dir %{_prefix}/lib/kernel
+%dir %{_prefix}/lib/kernel/install.d
 %dir %{_datadir}/systemd
 %dir %{_datadir}/pkgconfig
+%dir %{_datadir}/zsh
+%dir %{_datadir}/zsh/site-functions
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
@@ -926,6 +961,16 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Feb 16 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-13
+- A different fix for #1023820 taken from Mageia
+- Backported fix for #997031
+- Hardward database updates, man pages improvements, a few small memory
+  leaks, utf-8 correctness and completion fixes
+- Support for key-slot option in crypttab
+
+* Sat Jan 25 2014 Ville Skyttä <ville.skytta@iki.fi> - 208-12
+- Own the %%{_prefix}/lib/kernel(/*) and %%{_datadir}/zsh(/*) dirs.
+
 * Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-11
 - Backport a few fixes, relevant documentation updates, and HWDB changes
   (#1051797, #1051768, #1047335, #1047304, #1047186, #1045849, #1043304,
