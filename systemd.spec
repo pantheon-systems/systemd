@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        13%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        14%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -216,7 +216,7 @@ Patch174:       0174-man-describe-journalctl-show-cursor.patch
 Patch175:       0175-journal-fix-against-theoretical-undefined-behavior.patch
 Patch176:       0176-journald-downgrade-warning-message-when-dev-kmsg-doe.patch
 Patch177:       0177-journal-file.c-remove-redundant-assignment-of-variab.patch
-Patch178:       0178-login-Don-t-stop-a-running-user-manager-from-garbage.patch
+#Patch178:       0178-login-Don-t-stop-a-running-user-manager-from-garbage.patch
 Patch179:       0179-libudev-devices-received-from-udev-are-always-initia.patch
 Patch180:       0180-log-don-t-reopen-dev-console-each-time-we-call-log_o.patch
 Patch181:       0181-log-when-we-log-to-dev-console-and-got-disconnected-.patch
@@ -961,6 +961,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Feb 17 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-14
+- Back out patch which causes user manager to be destroyed when unneeded
+  and spams logs (#1053315)
+
 * Sun Feb 16 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-13
 - A different fix for #1023820 taken from Mageia
 - Backported fix for #997031
