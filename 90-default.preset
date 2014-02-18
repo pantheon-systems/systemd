@@ -73,7 +73,7 @@ enable x509watch.timer
 
 # Hardware
 enable gpm.*
-enable gpsd.*
+enable gpsd.socket
 enable irqbalance.service
 enable lm_sensors.service
 enable mcelog.*
