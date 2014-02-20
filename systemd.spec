@@ -487,6 +487,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_prefix}/lib/systemd/system-shutdown
 %dir %{_prefix}/lib/systemd/system-sleep
 %dir %{_prefix}/lib/systemd/catalog
+%dir %{_prefix}/lib/systemd/network
 %dir %{_prefix}/lib/systemd/ntp-units.d
 %dir %{_prefix}/lib/tmpfiles.d
 %dir %{_prefix}/lib/sysctl.d
@@ -505,7 +506,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %ghost %dir %{_localstatedir}/lib/systemd/backlight
 %ghost %{_localstatedir}/lib/systemd/random-seed
 %ghost %{_localstatedir}/lib/systemd/catalog/database
-
 %{_localstatedir}/log/README
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
@@ -543,6 +543,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_bindir}/loginctl
 %{_bindir}/journalctl
 %{_bindir}/machinectl
+%{_bindir}/busctl
 %{_bindir}/systemd-tmpfiles
 %{_bindir}/systemd-nspawn
 %{_bindir}/systemd-stdio-bridge
@@ -627,7 +628,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/systemd-analyze
 %{_datadir}/bash-completion/completions/kernel-install
 %{_datadir}/bash-completion/completions/systemd-run
+%{_datadir}/bash-completion/completions/busctl
+%{_datadir}/bash-completion/completions/machinectl
+%{_datadir}/bash-completion/completions/systemd-delta
 %{_datadir}/zsh/site-functions/*
+%{_prefix}/lib/systemd/catalog/systemd.*.catalog
+%{_prefix}/lib/systemd/network/99-default.link
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -639,30 +645,34 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %files libs
 %{_libdir}/security/pam_systemd.so
 %{_libdir}/libnss_myhostname.so.2
+%{_libdir}/libudev.so.*
+%{_libdir}/libsystemd.so.*
 %{_libdir}/libsystemd-daemon.so.*
 %{_libdir}/libsystemd-login.so.*
 %{_libdir}/libsystemd-journal.so.*
 %{_libdir}/libsystemd-id128.so.*
-%{_libdir}/libudev.so.*
 
 %files devel
 %dir %{_includedir}/systemd
+%{_libdir}/libudev.so
+%{_libdir}/libsystemd.so
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
 %{_libdir}/libsystemd-journal.so
 %{_libdir}/libsystemd-id128.so
-%{_libdir}/libudev.so
 %{_includedir}/systemd/sd-daemon.h
 %{_includedir}/systemd/sd-login.h
 %{_includedir}/systemd/sd-journal.h
 %{_includedir}/systemd/sd-id128.h
 %{_includedir}/systemd/sd-messages.h
+%{_includedir}/systemd/_sd-common.h
 %{_includedir}/libudev.h
+%{_libdir}/pkgconfig/libudev.pc
+%{_libdir}/pkgconfig/libsystemd.pc
 %{_libdir}/pkgconfig/libsystemd-daemon.pc
 %{_libdir}/pkgconfig/libsystemd-login.pc
 %{_libdir}/pkgconfig/libsystemd-journal.pc
 %{_libdir}/pkgconfig/libsystemd-id128.pc
-%{_libdir}/pkgconfig/libudev.pc
 %{_mandir}/man3/*
 %dir %{_datadir}/gtk-doc/html/libudev
 %{_datadir}/gtk-doc/html/libudev/*
