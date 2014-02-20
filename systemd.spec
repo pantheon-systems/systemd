@@ -373,6 +373,8 @@ install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.co
 # this can replace Fedora's current core dump handling.
 rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 
+%find_lang %{name}
+
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
@@ -466,7 +468,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %postun journal-gateway
 %systemd_postun_with_restart systemd-journal-gatewayd.service
 
-%files
+%files -f %{name}.lang
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
