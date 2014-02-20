@@ -704,6 +704,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Feb 20 2014 Lennart Poettering <lpoetter@redhat.com> - 209-1
+- new upstream release
+
 * Tue Feb 18 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-15
 - Make gpsd lazily activated (#1066421)
 
