@@ -66,6 +66,8 @@ BuildRequires:  gawk
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
 BuildRequires:  python3-devel
+BuildRequires:  python-lxml
+BuildRequires:  python3-lxml
 BuildRequires:  libseccomp-devel
 %if %{defined gitcommit}%{num_patches}
 BuildRequires:  automake
