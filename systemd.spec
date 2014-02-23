@@ -1,4 +1,4 @@
-#global gitcommit e7aee75
+%global gitcommit f01de96
 
 # PIE is broken on s390 (#868839, #872148)
 %ifnarch s390 s390x
@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        209
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -238,7 +238,7 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
     ./autogen.sh
 %else
     %if %{num_patches}
-        autoreconf
+        autoreconf -i
     %endif
 %endif
 
@@ -629,11 +629,13 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/kernel-install
 %{_datadir}/bash-completion/completions/systemd-run
 %{_datadir}/bash-completion/completions/busctl
+%{_datadir}/bash-completion/completions/bootctl
 %{_datadir}/bash-completion/completions/machinectl
 %{_datadir}/bash-completion/completions/systemd-delta
 %{_datadir}/zsh/site-functions/*
 %{_prefix}/lib/systemd/catalog/systemd.*.catalog
 %{_prefix}/lib/systemd/network/99-default.link
+%{_prefix}/lib/systemd/network/80-container-host0.network
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -704,6 +706,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Feb 23 2014 Kay Sievers <kay@redhat.com> - 209-2.gitf01de96
+- git snapshot to sort out ARM build issues
+
 * Thu Feb 20 2014 Lennart Poettering <lpoetter@redhat.com> - 209-1
 - new upstream release
 
