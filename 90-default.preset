@@ -71,9 +71,15 @@ enable ipmievd.service
 # https://bugzilla.redhat.com/show_bug.cgi?id=1039351
 enable x509watch.timer
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1060754
+enable dnssec-triggerd.service
+
 # Hardware
 enable gpm.*
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1066421
 enable gpsd.socket
+
 enable irqbalance.service
 enable lm_sensors.service
 enable mcelog.*

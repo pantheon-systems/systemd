@@ -706,6 +706,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Feb 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 209-2.gitf01de96
+- Enable dnssec-triggerd.service by default (#1060754)
+
 * Sun Feb 23 2014 Kay Sievers <kay@redhat.com> - 209-2.gitf01de96
 - git snapshot to sort out ARM build issues
 
