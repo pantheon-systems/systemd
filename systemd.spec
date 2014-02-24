@@ -1,4 +1,4 @@
-%global gitcommit f01de96
+#global gitcommit f01de96
 
 # PIE is broken on s390 (#868839, #872148)
 %ifnarch s390 s390x
@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        209
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        210
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -706,6 +706,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Feb 24 2014 Lennart Poettering <lpoetter@redhat.com> - 210-1
+- new upstream release
+
 * Sun Feb 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 209-2.gitf01de96
 - Enable dnssec-triggerd.service by default (#1060754)
 
