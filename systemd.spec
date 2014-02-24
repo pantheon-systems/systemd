@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        210
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -410,7 +410,12 @@ if [ $1 -eq 1 ] ; then
                 getty@tty1.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service >/dev/null 2>&1 || :
+                systemd-readahead-collect.service \
+                systemd-networkd.service \
+                console-getty.service \
+                console-shell.service \
+                debug-shell.service \
+                >/dev/null 2>&1 || :
 fi
 
 # sed-fu to add myhostname to the hosts line of /etc/nsswitch.conf
@@ -437,7 +442,12 @@ if [ $1 -eq 0 ] ; then
                 getty@.service \
                 remote-fs.target \
                 systemd-readahead-replay.service \
-                systemd-readahead-collect.service >/dev/null 2>&1 || :
+                systemd-readahead-collect.service \
+                systemd-networkd.service \
+                console-getty.service \
+                console-shell.service \
+                debug-shell.service \
+                >/dev/null 2>&1 || :
 
         rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 
@@ -706,6 +716,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Feb 24 2014 Lennart Poettering <lpoetter@redhat.com> - 210-2
+- Check more services against preset list and enable by default
+
 * Mon Feb 24 2014 Lennart Poettering <lpoetter@redhat.com> - 210-1
 - new upstream release
 
