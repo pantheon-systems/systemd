@@ -1,4 +1,4 @@
-From 67ab7e43a7c5623af367193817f5b562d635b0aa Mon Sep 17 00:00:00 2001
+From 6b838ee990970947770ea7458b036d4cd1af5a09 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
 Date: Sat, 21 Dec 2013 11:22:37 +0100
 Subject: [PATCH] fstab-generator: Do not try to fsck non-devices
@@ -6,6 +6,8 @@ Subject: [PATCH] fstab-generator: Do not try to fsck non-devices
 This fixes a regression introduced in 64e70e4 where the mount fails
 when fstab is misconfigured with fs_passno > 0 on a virtual file
 system like nfs, and the type is specified as "auto".
+
+(cherry picked from commit e2f123b97b9af34f39cb18ce0c1c5ef6cb89117e)
 ---
  src/fstab-generator/fstab-generator.c | 5 +++++
  1 file changed, 5 insertions(+)

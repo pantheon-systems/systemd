@@ -1,4 +1,4 @@
-From a72c398b5af558d231decbbf12c7990dbd38c682 Mon Sep 17 00:00:00 2001
+From e45377cca2eeeef018cfe457e29becc77bf80eb8 Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Thu, 10 Oct 2013 13:09:37 +0200
 Subject: [PATCH] login: fix invalid free() in sd_session_get_vt()

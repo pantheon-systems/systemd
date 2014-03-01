@@ -1,4 +1,4 @@
-From 0a1d15d3b802128cc9be10c849c29b76a8fae3ed Mon Sep 17 00:00:00 2001
+From ead2d686d9c9145fef59ce737e91515d9b42f845 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 2 Oct 2013 13:23:10 +0200
 Subject: [PATCH] execute.c: always set $SHELL

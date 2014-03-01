@@ -1,9 +1,10 @@
-From 45e44dd49cafc1befdc1fb6d948071520335964a Mon Sep 17 00:00:00 2001
+From 4d73c5f38ac3b6515d6a4871405ee47dd948fb73 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 19 Dec 2013 14:16:46 -0500
 Subject: [PATCH] logind: remove dead variable
 
 Noticed-by: Jan Alexander Steffens <jan.steffens@gmail.com>
+(cherry picked from commit eb53c37e2eb1ff9e2dbf370985dd53c62a98fa66)
 ---
  src/login/logind-user.c | 3 ---
  src/login/logind-user.h | 1 -

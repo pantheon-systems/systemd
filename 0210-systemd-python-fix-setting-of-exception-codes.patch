@@ -1,4 +1,4 @@
-From 2a683cff7e7ac4f94ce545a0907d5b5b883c2a36 Mon Sep 17 00:00:00 2001
+From 50b9110bad80771869c9dd68978e0272e8bdf0c8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 29 Dec 2013 23:39:28 -0500
 Subject: [PATCH] systemd-python: fix setting of exception codes
@@ -7,6 +7,8 @@ The return value of 0 would be treated as failure by mistake,
 resulting in " SystemError: error return without exception set".
 The way that set_error() is used is changed to be the same
 everywhere.
+
+(cherry picked from commit b560cc1c45006a98c7652435df13c96b39827f22)
 ---
  src/python-systemd/_daemon.c | 14 +++++-----
  src/python-systemd/_reader.c | 63 ++++++++++++++++++++------------------------

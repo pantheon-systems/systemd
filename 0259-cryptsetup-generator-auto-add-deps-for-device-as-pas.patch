@@ -1,10 +1,12 @@
-From caf058da753c7aae6fbf03feb68e689a8d8265c6 Mon Sep 17 00:00:00 2001
+From ebf9ef1bbc71f05a762ee76e7c9d97987c9b3216 Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Sat, 8 Feb 2014 12:54:58 -0500
 Subject: [PATCH] cryptsetup-generator: auto add deps for device as password
 
 If the password is a device file, we can add Requires/After dependencies
 on the device rather than requiring the user to do so.
+
+(cherry picked from commit 66a5dbdf282435403f947c2caadd04bb0cdec752)
 ---
  src/cryptsetup/cryptsetup-generator.c | 20 +++++++++++++++-----
  1 file changed, 15 insertions(+), 5 deletions(-)

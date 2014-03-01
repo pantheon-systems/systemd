@@ -1,4 +1,4 @@
-From 4e1d571d8564b6383ced03316f0d84b96e1299a4 Mon Sep 17 00:00:00 2001
+From a038f23862a327fb52a93f3d41287b83a67ae527 Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Wed, 2 Oct 2013 15:35:16 -0400
 Subject: [PATCH] tmpfiles.d: include setgid perms for /run/log/journal

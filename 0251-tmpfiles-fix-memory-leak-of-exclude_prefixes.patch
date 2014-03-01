@@ -1,9 +1,11 @@
-From 85e9236488cfad07cc0aa4d23610bc25039dda27 Mon Sep 17 00:00:00 2001
+From e57f9c025955228a856f1329d6facd510074d8c0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 30 Jan 2014 21:40:27 -0500
 Subject: [PATCH] tmpfiles: fix memory leak of exclude_prefixes
 
 Missed in 5c795114.
+
+(cherry picked from commit 498f8a39e66a62d015ac78e67e2504658bbba5f2)
 ---
  src/tmpfiles/tmpfiles.c | 7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)

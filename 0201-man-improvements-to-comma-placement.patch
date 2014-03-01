@@ -1,4 +1,4 @@
-From 4a1155c88d295e81037fd8a48b585a00fbf43cbc Mon Sep 17 00:00:00 2001
+From c8fbfc50732a45c0d644e4b4949088657c47c18f Mon Sep 17 00:00:00 2001
 From: Jan Engelhardt <jengelh@inai.de>
 Date: Thu, 26 Dec 2013 02:47:44 +0100
 Subject: [PATCH] man: improvements to comma placement

@@ -1,4 +1,4 @@
-From ea46250058d413de21a38d29290eb90f453af72d Mon Sep 17 00:00:00 2001
+From d229aed1cb6af297523724ee77e95844b0665830 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 12 Nov 2013 00:53:59 -0500
 Subject: [PATCH] fsck,fstab-generator: be lenient about missing fsck.<type>

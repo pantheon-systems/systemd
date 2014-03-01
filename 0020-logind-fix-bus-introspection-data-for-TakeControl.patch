@@ -1,4 +1,4 @@
-From e25723afe5ebc4b05d5330a935bb654904eaf2f0 Mon Sep 17 00:00:00 2001
+From 10ec3c93c8e17f317339ca453986767c2f2bdb30 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 4 Oct 2013 21:16:40 +0200
 Subject: [PATCH] logind: fix bus introspection data for TakeControl()

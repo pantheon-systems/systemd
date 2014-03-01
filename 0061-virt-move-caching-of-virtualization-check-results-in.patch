@@ -1,4 +1,4 @@
-From 48a66a7f6a23ee71bcf54da5bd0bbd69a0710582 Mon Sep 17 00:00:00 2001
+From 99af0b814cc849298a7acf9236bfa9847a38685d Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 31 Oct 2013 16:23:06 +0100
 Subject: [PATCH] virt: move caching of virtualization check results into

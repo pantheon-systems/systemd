@@ -1,9 +1,11 @@
-From 815422d1be5fab4acaa8c1c752342752a0935e3a Mon Sep 17 00:00:00 2001
+From 2d4310a9280f9f4dfa4e331b512275551c8edaa4 Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Mon, 27 Jan 2014 09:04:22 +0100
 Subject: [PATCH] keymap: Add HP Chromebook 14 (Falco)
 
 Thanks to Stefan Nagy <public@stefan-nagy.at>.
+
+(cherry picked from commit 82cd413782cca6de3088c2705f839ff31abec7f9)
 ---
  hwdb/60-keyboard.hwdb | 16 ++++++++++++++++
  1 file changed, 16 insertions(+)

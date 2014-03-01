@@ -1,9 +1,10 @@
-From 204a710b647527c35cee26962bbd324e6cebc822 Mon Sep 17 00:00:00 2001
+From 058e00e289847654cf8ceabf24703ea49eda08f5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 30 Dec 2013 00:11:30 -0500
 Subject: [PATCH] man: expand on some more subtle points in systemd.socket(5)
 
 http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=727708#1694
+(cherry picked from commit 3cf148f307e6450aa3411968f59a2563fe9cb154)
 ---
  man/systemd.socket.xml | 67 ++++++++++++++++++++++++++++++++++++--------------
  1 file changed, 49 insertions(+), 18 deletions(-)

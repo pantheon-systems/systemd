@@ -1,4 +1,4 @@
-From a460644e808ed7671e28ef8231ee590317371fed Mon Sep 17 00:00:00 2001
+From 4dfb6b49da44fb646c83939b73713a453bf09133 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 26 Nov 2013 20:37:53 +0100
 Subject: [PATCH] journal: optimize bisection logic a bit by caching the last

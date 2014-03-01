@@ -1,4 +1,4 @@
-From c74cf7621353d765a89e800c5a040fefa79e7915 Mon Sep 17 00:00:00 2001
+From 9ddf775ac3cc784af3439b212616aaac5a088cc0 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 20 Nov 2013 03:44:11 +0100
 Subject: [PATCH] manager: don't do plymouth in a container

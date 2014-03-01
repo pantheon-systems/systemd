@@ -1,8 +1,9 @@
-From bc0cbe40cbfde7e8194f6f4b9b17e7102efa35c7 Mon Sep 17 00:00:00 2001
+From 062bbced2336dea9b3d24aec7fdf8fcab0de766d Mon Sep 17 00:00:00 2001
 From: Adam Williamson <awilliam@redhat.com>
 Date: Mon, 9 Dec 2013 22:02:25 -0800
 Subject: [PATCH] correct name of Tajik kbd layout in kbd-model-map
 
+(cherry picked from commit 18c92a4958361f333d63507c67a35bbcfd0aa925)
 ---
  src/locale/kbd-model-map | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

@@ -1,10 +1,12 @@
-From 424e80301de3b39d8641a49a7755af6dc3d6b4e8 Mon Sep 17 00:00:00 2001
+From 2b360c18dbbd03ef2cbf4d251099e1317a9341a8 Mon Sep 17 00:00:00 2001
 From: Jan Engelhardt <jengelh@inai.de>
 Date: Thu, 26 Dec 2013 02:47:43 +0100
 Subject: [PATCH] man: resolve word omissions
 
 This is a recurring submission and includes corrections to:
 word omissions and word class choice.
+
+(cherry picked from commit 494a66821815e8109afa136bd42818b85da38c09)
 
 Conflicts:
 	man/sd_bus_message_get_cookie.xml

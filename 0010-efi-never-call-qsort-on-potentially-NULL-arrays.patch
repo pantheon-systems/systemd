@@ -1,4 +1,4 @@
-From e0cbed4dbb7c21798b5eecf3d326fb778c4d0be2 Mon Sep 17 00:00:00 2001
+From 0bf9388b5c3df03a217ec0300cfbba8bbe53b045 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:38:09 +0200
 Subject: [PATCH] efi: never call qsort on potentially NULL arrays

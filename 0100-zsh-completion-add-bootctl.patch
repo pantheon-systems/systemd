@@ -1,4 +1,4 @@
-From 99f96571a3a7667ab6f3a46944c267bcc7c980e6 Mon Sep 17 00:00:00 2001
+From f262a262c871e0bd35f41339464337820320a7c9 Mon Sep 17 00:00:00 2001
 From: Marko Myllynen <myllynen@redhat.com>
 Date: Wed, 13 Nov 2013 23:02:23 -0500
 Subject: [PATCH] zsh-completion: add bootctl

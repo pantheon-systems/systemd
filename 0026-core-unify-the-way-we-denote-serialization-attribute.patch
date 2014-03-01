@@ -1,4 +1,4 @@
-From 7d1f35a5838363c2d1981fc62f5bbcb43cbdc57c Mon Sep 17 00:00:00 2001
+From 026ff192dda3f05ac592b7421375c6447e334dc7 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 9 Oct 2013 00:13:55 +0200
 Subject: [PATCH] core: unify the way we denote serialization attributes

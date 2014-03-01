@@ -1,7 +1,9 @@
-From 4f4e72a317126e9d41db675ddae27a0942cd23bf Mon Sep 17 00:00:00 2001
+From 492427208b00f716de6f6d1bab8969b20ab6bf5e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 9 Jan 2014 22:23:32 -0500
 Subject: [PATCH] man: mention which variables will be expanded in ExecStart
+
+(cherry picked from commit c5b37953b7835562348d71ad5514faefa4cfb10b)
 
 Conflicts:
 	man/systemd.service.xml

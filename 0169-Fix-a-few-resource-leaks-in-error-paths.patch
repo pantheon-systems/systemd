@@ -1,9 +1,10 @@
-From 010d6c4909ed75c247ff91a555c7942f9c2ce1c5 Mon Sep 17 00:00:00 2001
+From 57856f3da469a06b5ef863c0d14a36b2b3befd87 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 15 Dec 2013 16:25:04 -0500
 Subject: [PATCH] Fix a few resource leaks in error paths
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1043304
+(cherry picked from commit 2fd069b18e525860514a70d3ea08410ca122d3e2)
 
 Conflicts:
 	src/libsystemd-bus/bus-objects.c

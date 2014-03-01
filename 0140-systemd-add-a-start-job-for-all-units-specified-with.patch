@@ -1,4 +1,4 @@
-From 043a559ff3732439fc61872a6320ee0a05dd088f Mon Sep 17 00:00:00 2001
+From aadac335f8f9ab693fb671f2ad9490ceb33c820a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 5 Dec 2013 00:41:12 -0500
 Subject: [PATCH] systemd: add a start job for all units specified with

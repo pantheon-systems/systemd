@@ -1,10 +1,12 @@
-From 622dfd7a6553cc27b6f75653481dd8808f717c49 Mon Sep 17 00:00:00 2001
+From 1027958557a7155b83afe8dc596b9a94d7e7bf82 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Thu, 12 Dec 2013 00:06:30 +0100
 Subject: [PATCH] test-fileio: replace mktemp with mkstemp to avoid warnings
 
 This is a fairly useless thing to do but it makes the compilers
 and analyzers shut up about the use of mktemp.
+
+(cherry picked from commit d514feaa872820d5cb4e9321ad32673c09fbb3f4)
 ---
  src/test/test-fileio.c | 8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)

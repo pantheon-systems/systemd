@@ -1,8 +1,9 @@
-From cb5fd30c9ca64024335129d393c15a9586433ca2 Mon Sep 17 00:00:00 2001
+From e393b85d62f02206ca52ac3de3debf9249f7777e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 8 Dec 2013 07:46:46 -0500
 Subject: [PATCH] kernel-install: add -h/--help
 
+(cherry picked from commit a6c3d202b14939006f39e22179a058159a8512fb)
 ---
  src/kernel-install/kernel-install | 21 ++++++++++++++-------
  1 file changed, 14 insertions(+), 7 deletions(-)

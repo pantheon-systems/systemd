@@ -1,10 +1,12 @@
-From 07e7e0378c3f2b73e56e886f7a4b59068dbbbc55 Mon Sep 17 00:00:00 2001
+From 79ce71419652f093842d4d27a88662742a57aa0c Mon Sep 17 00:00:00 2001
 From: "Jason St. John" <jstjohn@purdue.edu>
 Date: Tue, 10 Dec 2013 00:10:03 -0500
 Subject: [PATCH] man: improve wording and comma usage in
  systemd.journal-fields(7)
 
 Improve wording under "Description" and "_KERNEL_DEVICE="
+
+(cherry picked from commit 8c9552c6b417c8dc8d66019bc8e412c8d736454d)
 ---
  man/systemd.journal-fields.xml | 16 ++++++++--------
  1 file changed, 8 insertions(+), 8 deletions(-)

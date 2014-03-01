@@ -1,4 +1,4 @@
-From 7583c92b266cd632712ced40be837f52a8de9715 Mon Sep 17 00:00:00 2001
+From 148eee542c3274fdcb9b3233f00532ea17d34e42 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Fri, 11 Oct 2013 11:23:34 +0200
 Subject: [PATCH] udev: usb_id - remove obsoleted bInterfaceSubClass == 5 match

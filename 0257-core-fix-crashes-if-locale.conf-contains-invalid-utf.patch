@@ -1,4 +1,4 @@
-From 43ccd990b8478b5aaf9b1618e0a5c3dd8924a9ee Mon Sep 17 00:00:00 2001
+From 08ad3cb42d0c075d5b51127e9f867907b42fccbb Mon Sep 17 00:00:00 2001
 From: Goffredo Baroncelli <kreijack@libero.it>
 Date: Thu, 6 Feb 2014 19:09:59 +0100
 Subject: [PATCH] core: fix crashes if locale.conf contains invalid utf-8
@@ -22,6 +22,8 @@ systemd doesn't crash anymore and logs the error.
 
 [1] parse_env_file_internal(), invoked by load_env_file() and
 parse_env_file()
+
+(cherry picked from commit f27f0e2177ac0a4b96585aed7db3a080e27a2f00)
 ---
  src/shared/fileio.c | 77 ++++++++++++++++++++++++++++++-----------------------
  1 file changed, 43 insertions(+), 34 deletions(-)

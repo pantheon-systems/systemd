@@ -1,7 +1,9 @@
-From 0e075f4d98a653cc0b468fc786fcd869075a75e1 Mon Sep 17 00:00:00 2001
+From 17524d5fe60c683a6f937424a112cd2259edb0f8 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Wed, 18 Dec 2013 16:49:19 +0100
 Subject: [PATCH] libudev: devices received from udev are always initialized
+
+(cherry picked from commit f6613dd959a1ab49bf061555ada77903397569ad)
 
 Conflicts:
 	TODO

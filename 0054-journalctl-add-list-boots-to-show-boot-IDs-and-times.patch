@@ -1,4 +1,4 @@
-From e94957b964380c0c9b0f3264ba5e35166d543ca7 Mon Sep 17 00:00:00 2001
+From 7c185c94af054145b3621e11ad4c3359931ca8fa Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 28 Oct 2013 23:43:57 -0400
 Subject: [PATCH] journalctl: add --list-boots to show boot IDs and times

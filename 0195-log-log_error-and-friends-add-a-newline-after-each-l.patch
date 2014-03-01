@@ -1,8 +1,10 @@
-From 316d1c573345d8d13a289ce38cbe2fd683a75d98 Mon Sep 17 00:00:00 2001
+From f66138e444da2361be0dad9a034efd13a37e7001 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 24 Dec 2013 16:39:37 +0100
 Subject: [PATCH] log: log_error() and friends add a newline after each line
  anyway, so avoid including it in the log strings
+
+(cherry picked from commit 9f6445e34a57c270f013c9416c123e56261553dd)
 
 Conflicts:
 	src/bus-driverd/bus-driverd.c

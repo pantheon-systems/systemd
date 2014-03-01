@@ -1,4 +1,4 @@
-From e8d2aa2c8d3533a2dc6f0db5ed22453a16bcf1ee Mon Sep 17 00:00:00 2001
+From 4eb924cb2ffc7c53737e268a2dfffebc459f4acc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 31 Dec 2013 11:23:58 -0500
 Subject: [PATCH] sleep-config: fix double free
@@ -9,6 +9,8 @@ free was performed.
 
 Rework the whole function to be easier to understand, and also replace
 strv_split_nulstr with strv_new, since we know the strings anyway.
+
+(cherry picked from commit dabeaa460d9fa01db645116775f53e3071977503)
 ---
  src/shared/sleep-config.c | 38 ++++++++++++++++++++------------------
  1 file changed, 20 insertions(+), 18 deletions(-)

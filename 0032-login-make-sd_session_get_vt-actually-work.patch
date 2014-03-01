@@ -1,4 +1,4 @@
-From 88a16dc6bd64267e4a0fbe58f2e8d273c096f1e5 Mon Sep 17 00:00:00 2001
+From 680b2b091623ed5b3dd616e98669afff97e22025 Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Thu, 10 Oct 2013 13:11:27 +0200
 Subject: [PATCH] login: make sd_session_get_vt() actually work

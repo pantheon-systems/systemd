@@ -1,8 +1,9 @@
-From 2d46a006393fe823e119a14794a931bd9bc25f74 Mon Sep 17 00:00:00 2001
+From 282f8934fe5c19471bea64bf72bfe413b216cfed Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 16 Dec 2013 23:40:00 -0500
 Subject: [PATCH] man: describe journalctl --show-cursor
 
+(cherry picked from commit 7fd97d7829de4e62690b5fb8d41de81bcde24db2)
 ---
  man/journalctl.xml | 22 +++++++++++++++++-----
  1 file changed, 17 insertions(+), 5 deletions(-)

@@ -1,10 +1,12 @@
-From 3d2c847396cf348ef1ee55f5d4211045a6202efc Mon Sep 17 00:00:00 2001
+From fbf992e84452e101ec70957646ed3a460a421445 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 30 Dec 2013 13:00:38 -0500
 Subject: [PATCH] tmpfiles: rename --unsafe to --boot
 
 As suggested by Kay, it is better to describe what is done,
 not what might happen.
+
+(cherry picked from commit 818156512411835a4a7f070e6fec3d7b80e1f629)
 ---
  man/systemd-tmpfiles.xml                |  2 +-
  man/tmpfiles.d.xml                      |  4 ++--

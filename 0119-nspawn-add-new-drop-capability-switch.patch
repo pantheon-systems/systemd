@@ -1,4 +1,4 @@
-From c3f82c64d86432c7d4b0c3abf61b70fd88f1d9dd Mon Sep 17 00:00:00 2001
+From e421712a2283e22ae4bfbdf7085194dcf223b614 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 20 Nov 2013 22:10:42 +0100
 Subject: [PATCH] nspawn: add new --drop-capability= switch

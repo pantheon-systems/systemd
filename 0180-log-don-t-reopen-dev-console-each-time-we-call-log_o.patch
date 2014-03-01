@@ -1,9 +1,11 @@
-From df5013c79d99848730abe4585dd93f77409a95c0 Mon Sep 17 00:00:00 2001
+From 95dc0bbe007d9625b763bb73742d9d3a9dce4c44 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 18 Dec 2013 05:07:34 +0100
 Subject: [PATCH] log: don't reopen /dev/console each time we call log_open()
 
 Instead, force reopen it only if we really really have to.
+
+(cherry picked from commit 99f098257f5e4135609edc3df965ebf27975df18)
 ---
  src/core/main.c     | 1 +
  src/core/shutdown.c | 1 +

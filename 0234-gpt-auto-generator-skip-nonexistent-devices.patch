@@ -1,4 +1,4 @@
-From 182a32427b50aed5812833e3ecb8a6078160a501 Mon Sep 17 00:00:00 2001
+From 518e59833ad33561788f56b7ea624c6094b8b94f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?=C5=81ukasz=20Stelmach?= <l.stelmach@samsung.com>
 Date: Tue, 7 Jan 2014 15:00:22 +0100
 Subject: [PATCH] gpt-auto-generator: skip nonexistent devices
@@ -12,6 +12,8 @@ are presented by the kernel as children of the latter. That relationship
 makes gpt-auto-generator try to peek them but since they are not GPT
 partitions blkid_do_safeprobe() returns -2 making verify_gpt_parition()
 function return -ENODEV.
+
+(cherry picked from commit 843f737ade9c73609a2280dd3dd16e18222a5dcb)
 ---
  src/gpt-auto-generator/gpt-auto-generator.c | 3 +++
  1 file changed, 3 insertions(+)

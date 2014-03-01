@@ -1,4 +1,4 @@
-From f00ffd4f0ab82c38125d2292f8f429aa22865dc3 Mon Sep 17 00:00:00 2001
+From 1bb3ed6816bf287d2cd30bd5b2c7b97786cd65c8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 6 Feb 2014 00:31:22 -0500
 Subject: [PATCH] bash-completion: fix completion of complete verbs
@@ -7,6 +7,7 @@ When doing 'command verb<TAB>', the arguments for verb would be
 proposed, but it is too early. We should complete verb first.
 
 https://bugs.freedesktop.org/show_bug.cgi?id=74596
+(cherry picked from commit 3ce09b7da2eb8b888066468663b2b5c81a05a03c)
 
 Conflicts:
 	shell-completion/bash/busctl

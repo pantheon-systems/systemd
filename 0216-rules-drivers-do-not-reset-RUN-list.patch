@@ -1,8 +1,9 @@
-From eb882aa36d9c700b7b5469df3f2bf43092d5c68b Mon Sep 17 00:00:00 2001
+From a218015bbd267992a8d9dd37110945f47c0656ca Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Fri, 3 Jan 2014 01:32:03 +0100
 Subject: [PATCH] rules: drivers - do not reset RUN list
 
+(cherry picked from commit b11d8d199334494d3434875e63856540cec7f8d1)
 ---
  rules/80-drivers.rules | 14 +++++++-------
  1 file changed, 7 insertions(+), 7 deletions(-)

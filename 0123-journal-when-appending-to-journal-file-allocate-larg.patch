@@ -1,4 +1,4 @@
-From c0658e1948c301177b1527227be0c18932cd7cce Mon Sep 17 00:00:00 2001
+From bf3a7f42544b8ca31062f032f067294d41897613 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 26 Nov 2013 18:39:42 +0100
 Subject: [PATCH] journal: when appending to journal file, allocate larger

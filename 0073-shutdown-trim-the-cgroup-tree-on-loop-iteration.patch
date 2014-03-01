@@ -1,4 +1,4 @@
-From db296e9f3e78b9694464dbde956d04f6621125ed Mon Sep 17 00:00:00 2001
+From f7feb791d476d2248c3f8df089092996262e9a23 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 5 Nov 2013 22:17:03 +0100
 Subject: [PATCH] shutdown: trim the cgroup tree on loop iteration

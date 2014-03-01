@@ -1,9 +1,11 @@
-From 8b690dd3c8d28ff107a9992e7405126a02ee7ae2 Mon Sep 17 00:00:00 2001
+From 454d0a0a60c4fb6d921950742b27cc06f5c5d30e Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Wed, 29 Jan 2014 16:13:22 +0100
 Subject: [PATCH] keymap: Add Toshiba EQUIUM
 
 Thanks Aleksander Kowalski <aleksander.kowalski.1@gmail.com>!
+
+(cherry picked from commit c9cf047362cd8e4530c10bc7c2d6db988452305d)
 ---
  hwdb/60-keyboard.hwdb | 1 +
  1 file changed, 1 insertion(+)

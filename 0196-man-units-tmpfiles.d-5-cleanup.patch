@@ -1,4 +1,4 @@
-From 6972095a2b6eb919b622a89d11e0dc823ed60efb Mon Sep 17 00:00:00 2001
+From a4f5607fb79ce51d1be905da6dec7f9e8d514e2a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 24 Dec 2013 10:21:45 -0500
 Subject: [PATCH] man,units: tmpfiles.d(5) cleanup
@@ -9,6 +9,8 @@ Some changes which were done in tmpfiles.d(5) were not carried over to
 systemd-tmpfiles(1).
 
 Also use markup where possible.
+
+(cherry picked from commit ef72c1f06e2bc696a799cd31a1e0ed25cc999ea4)
 
 Conflicts:
 	man/tmpfiles.d.xml

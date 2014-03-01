@@ -1,8 +1,9 @@
-From c818ae0c9288afac78a1761de3bd65007448558a Mon Sep 17 00:00:00 2001
+From 5bf271d8433e6e98e8b4fc94a812bf0570d4f098 Mon Sep 17 00:00:00 2001
 From: Djalal Harouni <tixxdz@opendz.org>
 Date: Sun, 15 Dec 2013 00:05:38 +0100
 Subject: [PATCH] systemctl: add the --plain option to the help message
 
+(cherry picked from commit 815ebc540daf5cede58570bbeb0a4106e201c52e)
 ---
  src/systemctl/systemctl.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)

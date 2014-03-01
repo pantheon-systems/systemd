@@ -1,4 +1,4 @@
-From ad792a7d7a407e2bcdf3553290c97d3642fdaf01 Mon Sep 17 00:00:00 2001
+From 2e4d2f542ccf95bec04d8144ef348257474586dc Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 19 Nov 2013 01:13:42 +0100
 Subject: [PATCH] calendar: support 'yearly' and 'annually' names the same way

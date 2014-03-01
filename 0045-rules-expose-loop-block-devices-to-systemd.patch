@@ -1,4 +1,4 @@
-From 78846d19d3569cf637d2e37c10e75395ebcf9d06 Mon Sep 17 00:00:00 2001
+From 342a404f2a09afd6c957116052f15fc99ce4de27 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 16 Oct 2013 02:49:54 +0200
 Subject: [PATCH] rules: expose loop block devices to systemd

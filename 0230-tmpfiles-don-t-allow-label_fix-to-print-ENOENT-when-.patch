@@ -1,9 +1,10 @@
-From 3bef88018c93e77d50d3206e84f6fa2fe8c2fb99 Mon Sep 17 00:00:00 2001
+From 20de07b19d30ac0ca69aba491ce7c8558a4a0c96 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Thu, 9 Jan 2014 18:00:50 +0100
 Subject: [PATCH] tmpfiles: don't allow label_fix to print ENOENT when we want
  to ignore it
 
+(cherry picked from commit f58ceb21e9cdc4b79586283743351750ae35c175)
 ---
  src/tmpfiles/tmpfiles.c | 5 +----
  1 file changed, 1 insertion(+), 4 deletions(-)

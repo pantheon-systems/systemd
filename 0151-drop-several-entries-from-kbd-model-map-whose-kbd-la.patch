@@ -1,4 +1,4 @@
-From 26dcf06766bc1fc533d301831838e9e302315134 Mon Sep 17 00:00:00 2001
+From 5abb54b9398799f83f7df303b5da85a8e59d6bb9 Mon Sep 17 00:00:00 2001
 From: Adam Williamson <awilliam@redhat.com>
 Date: Mon, 9 Dec 2013 21:58:34 -0800
 Subject: [PATCH] drop several entries from kbd-model-map whose kbd layouts do
@@ -14,6 +14,8 @@ entry or other in that field.
 For systemd, the only function of kbd-model-map is to 'match' kbd and xkb
 configurations, so it does not make any sense to maintain entries for cases
 where only one or the other exists in this context.
+
+(cherry picked from commit 70dc36d17fbd81eead01fb73cc231c83c6d977e9)
 ---
  src/locale/kbd-model-map | 12 ------------
  1 file changed, 12 deletions(-)

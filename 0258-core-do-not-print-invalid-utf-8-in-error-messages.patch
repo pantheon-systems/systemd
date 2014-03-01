@@ -1,7 +1,9 @@
-From e8321526823f2b7b945aeb04e5cdb1367e3d5b94 Mon Sep 17 00:00:00 2001
+From bbc51fd471fd92a40458e4ba667799b9dfaa67f0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 17 Jan 2014 21:28:41 -0500
 Subject: [PATCH] core: do not print invalid utf-8 in error messages
+
+(cherry picked from commit 550a40eceb7d1917152fc9317bf2696708d52bc2)
 
 Conflicts:
 	TODO

@@ -1,10 +1,12 @@
-From 371ce08fb9814a39ca2f984d6040aaf0f6c172e8 Mon Sep 17 00:00:00 2001
+From a345f4c7f5868d27f3c23515055ae6fa0565689d Mon Sep 17 00:00:00 2001
 From: Dan McGee <dan@archlinux.org>
 Date: Sun, 8 Dec 2013 14:33:45 -0600
 Subject: [PATCH] Fix memory leak in stdout journal streams
 
 Just as 'identifier' is strdup-ed and freed, we need to do the same for
 unit_id.
+
+(cherry picked from commit f92ae4968f070ef0ada61ba7cd585794fac404dd)
 ---
  src/journal/journald-stream.c | 1 +
  1 file changed, 1 insertion(+)

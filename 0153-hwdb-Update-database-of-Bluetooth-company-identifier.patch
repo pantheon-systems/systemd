@@ -1,8 +1,9 @@
-From 4ee475e4786ac69b74a75fd668f0bb8e07bdde2d Mon Sep 17 00:00:00 2001
+From a06c63e5cf60a585166f11dbefa0dad3f64814cc Mon Sep 17 00:00:00 2001
 From: Marcel Holtmann <marcel@holtmann.org>
 Date: Tue, 10 Dec 2013 03:17:39 -0800
 Subject: [PATCH] hwdb: Update database of Bluetooth company identifiers
 
+(cherry picked from commit 0234c599218518b1eb478d64d9883ba46e4ce5d8)
 ---
  hwdb/20-bluetooth-vendor-product.hwdb | 18 ++++++++++++++++++
  1 file changed, 18 insertions(+)

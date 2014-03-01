@@ -1,4 +1,4 @@
-From ce626319c273383a8f8d1a7d9f549f4d487699ea Mon Sep 17 00:00:00 2001
+From d41f56e59b48e1e05f917e97f27d0931c492a60f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 14 Oct 2013 19:15:24 -0400
 Subject: [PATCH] Fix bad assert in show_pid_array

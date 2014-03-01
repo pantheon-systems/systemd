@@ -1,4 +1,4 @@
-From 491712eabdbdb0693a8b04dfee02665094eb7576 Mon Sep 17 00:00:00 2001
+From e81566523ee61473daab8cdad95007f151825bab Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 17 Jan 2014 20:27:35 +0100
 Subject: [PATCH] units: drop [Install] section from multi-user.target and
@@ -9,6 +9,8 @@ to these targets, but this was never advertised and we have a better
 command for this now in "systemctl set-default". Since the install
 section makes the output of "systemctl list-unit-files" confusing (since
 it makes the units appear as "disabled"), let's drop the sections.
+
+(cherry picked from commit 02ebe178a2bd6b2448d4fbfa4a1f7fa98e9e82b1)
 ---
  units/graphical.target  | 3 ---
  units/multi-user.target | 3 ---

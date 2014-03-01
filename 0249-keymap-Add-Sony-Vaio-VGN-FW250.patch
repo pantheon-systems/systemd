@@ -1,9 +1,10 @@
-From cf981a6c17d44d00c385fe8a9ed7b8259533006d Mon Sep 17 00:00:00 2001
+From e3d72aa78b6e86432f9ff6c3f6b5f77ebfacd01e Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Tue, 28 Jan 2014 18:14:18 +0100
 Subject: [PATCH] keymap: Add Sony Vaio VGN-FW250
 
 https://launchpad.net/bugs/1271163
+(cherry picked from commit 7b36bf82c4deeadef6d914cef750b4a51ff2ed48)
 ---
  hwdb/60-keyboard.hwdb | 3 +++
  1 file changed, 3 insertions(+)

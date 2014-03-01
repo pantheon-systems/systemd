@@ -1,8 +1,9 @@
-From 353a5553a38d002a69a4fbafabf1e9ab50ff32c2 Mon Sep 17 00:00:00 2001
+From 6042e2c1dd87374edeb4763461b242a3015c63b8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 30 Dec 2013 00:01:00 -0500
 Subject: [PATCH] systemd-python: fix listen_fds under Python 2
 
+(cherry picked from commit 819c7e4fa4422af1298a0bf074b1f5644e46fa13)
 ---
  src/python-systemd/_daemon.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

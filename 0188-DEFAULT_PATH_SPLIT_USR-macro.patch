@@ -1,8 +1,9 @@
-From e02f70c30b2ad98e5547faebd1304d5273eb0fe6 Mon Sep 17 00:00:00 2001
+From 52410883d28cb05012ddbc892bc73071bdd2145b Mon Sep 17 00:00:00 2001
 From: Shawn Landden <shawn@churchofgit.com>
 Date: Fri, 20 Dec 2013 15:35:38 -0800
 Subject: [PATCH] DEFAULT_PATH_SPLIT_USR macro
 
+(cherry picked from commit e10a55fd72b5246cec1bbd09135d544db32e0414)
 ---
  src/nspawn/nspawn.c    | 2 +-
  src/shared/path-util.h | 7 +++++--

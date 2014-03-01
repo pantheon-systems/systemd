@@ -1,10 +1,12 @@
-From e0902bd55deee738f3d6e33b8744364ef922caa2 Mon Sep 17 00:00:00 2001
+From 928b0d1e7555ce4b3dc897c8cc80c97406e69931 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 22 Dec 2013 19:45:02 -0500
 Subject: [PATCH] delta: fix delta for drop-ins
 
 Also, fix highlighting, add more debug statements, make const tables
 static and global, run path_kill_slashes only at entry.
+
+(cherry picked from commit f939e9a47c54ac37504e8517f316cbec46864d14)
 
 Conflicts:
 	src/delta/delta.c

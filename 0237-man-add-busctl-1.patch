@@ -1,7 +1,9 @@
-From 7cfdb4b03c310e9bb55609a98eb70356e4c50148 Mon Sep 17 00:00:00 2001
+From 5ac6fce073ab60cc8efa29dec0c9e7462da1b3be Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 11 Jan 2014 23:44:34 -0500
 Subject: [PATCH] man: add busctl(1)
+
+(cherry picked from commit 708c143c7cd2bbd748ac0fa993496ff44e72701c)
 
 Conflicts:
 	Makefile-man.am

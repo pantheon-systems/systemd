@@ -1,8 +1,9 @@
-From 524147c1ef991edf4432aac51c880b363b4402df Mon Sep 17 00:00:00 2001
+From 07138cd2967a6a56ca8b17267d054758ff53fd4c Mon Sep 17 00:00:00 2001
 From: Marius Vollmer <mvollmer@redhat.com>
 Date: Thu, 31 Oct 2013 15:55:07 +0200
 Subject: [PATCH] logind: use correct "who" enum values with KillUnit.
 
+NB This is already fixed differently in systemd 209 with the port to kdbus
 ---
  src/login/logind-dbus.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

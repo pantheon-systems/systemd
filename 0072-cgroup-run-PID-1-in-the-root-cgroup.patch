@@ -1,4 +1,4 @@
-From 298f884a265c1c4b30cce7467650cc4a165a284e Mon Sep 17 00:00:00 2001
+From f9de310f2d0e4394c2cb084f95dfa64a5f58b9a0 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 5 Nov 2013 22:14:52 +0100
 Subject: [PATCH] cgroup: run PID 1 in the root cgroup

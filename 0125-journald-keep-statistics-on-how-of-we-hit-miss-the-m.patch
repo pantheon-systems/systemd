@@ -1,4 +1,4 @@
-From dd186998dd408c54ffe30df1cc35422e645e0ca2 Mon Sep 17 00:00:00 2001
+From 6f1c85d5ce89fdee924a45ec31cc9510f61b18c0 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 26 Nov 2013 18:58:44 +0100
 Subject: [PATCH] journald: keep statistics on how of we hit/miss the mmap

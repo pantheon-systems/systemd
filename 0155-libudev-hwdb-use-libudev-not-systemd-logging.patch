@@ -1,8 +1,9 @@
-From 4c5b792c88c81d0595a1273804d2cd405140f81d Mon Sep 17 00:00:00 2001
+From 64a880e7637f875ef144404ce291634f0a50fb4b Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Tue, 10 Dec 2013 16:36:45 +0100
 Subject: [PATCH] libudev: hwdb - use libudev not systemd logging
 
+(cherry picked from commit 85719154e7412de2d84f64b50b6b98b13981b65f)
 ---
  src/libudev/libudev-hwdb.c | 20 ++++++++++----------
  1 file changed, 10 insertions(+), 10 deletions(-)

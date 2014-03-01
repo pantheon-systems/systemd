@@ -1,4 +1,4 @@
-From bb653097a1e0c5c2228cafda144814c42cd05da2 Mon Sep 17 00:00:00 2001
+From fdf7d22045e74adbe0e3ad0a5df4607d31c158d2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 12 Oct 2013 13:43:07 -0400
 Subject: [PATCH] Make sure that we don't dereference NULL

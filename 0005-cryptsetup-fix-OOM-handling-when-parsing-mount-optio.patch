@@ -1,4 +1,4 @@
-From 0f1ed3485115fd6bc7217658412ea6d7be511b5a Mon Sep 17 00:00:00 2001
+From 0843dfcfcdf541d02387bc466c957ca84ad2a746 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:36:28 +0200
 Subject: [PATCH] cryptsetup: fix OOM handling when parsing mount options

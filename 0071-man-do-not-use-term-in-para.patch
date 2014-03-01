@@ -1,4 +1,4 @@
-From 6547d848002537063bf0d5457e56ebd15ed947b0 Mon Sep 17 00:00:00 2001
+From 771b7c8755ff3ce69e26bacf9487a8ec1b859093 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Tue, 5 Nov 2013 21:34:50 +0100
 Subject: [PATCH] man: do not use <term> in <para>

@@ -1,4 +1,4 @@
-From dca7710c31218a2292c8e3987d1e906b27bed4e9 Mon Sep 17 00:00:00 2001
+From f9b744fd6ecb4a993571ac25f9726585f309ae15 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 15 Dec 2013 16:26:27 -0500
 Subject: [PATCH] Fix a few signed/unsigned format string issues
@@ -6,6 +6,7 @@ Subject: [PATCH] Fix a few signed/unsigned format string issues
 Since numbers involved are all small, behaviour was correct already.
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1043304
+(cherry picked from commit b5dd8148730db080b48b874c214f8f74ae787d6b)
 ---
  src/shared/time-util.c         |  2 +-
  src/udev/udev-builtin-net_id.c | 21 +++++++--------------

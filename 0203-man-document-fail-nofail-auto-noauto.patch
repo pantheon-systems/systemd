@@ -1,4 +1,4 @@
-From 6566f27fc123e1b2fd14e5177dcb21c6b3598d5d Mon Sep 17 00:00:00 2001
+From 904fa7d6cde45ea7cb70a177317911f3f174e6c0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 25 Dec 2013 23:20:57 -0500
 Subject: [PATCH] man: document fail/nofail, auto/noauto

@@ -1,8 +1,9 @@
-From feaaf9358a0bd619ef77dca732aa08e21f5c1a56 Mon Sep 17 00:00:00 2001
+From f201bcae8477da321d396f58595ef743034aa2aa Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 10 Dec 2013 06:17:01 -0500
 Subject: [PATCH] journald: malloc less when streaming messages
 
+(cherry picked from commit e3bfb7be07d9b1f4ebb12eb22c4c8bcd2a988d51)
 ---
  src/journal/journald-stream.c | 23 ++++++++++++-----------
  src/journal/journald-syslog.c |  4 ++--

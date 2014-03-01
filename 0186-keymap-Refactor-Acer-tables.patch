@@ -1,10 +1,12 @@
-From 7bf8a20c2f52a3684deef37098f7a73a873da93c Mon Sep 17 00:00:00 2001
+From 01b1101571ff332816a171f037fff1b41ae7b246 Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Thu, 19 Dec 2013 08:33:32 +0100
 Subject: [PATCH] keymap: Refactor Acer tables
 
 Move common keys into generic Acer table, and factorize the model specific
 exceptions.
+
+(cherry picked from commit c5b7838ddeae1fcd5c613ea15f04918b945823e5)
 ---
  hwdb/60-keyboard.hwdb | 101 ++++++++++++++++++--------------------------------
  1 file changed, 36 insertions(+), 65 deletions(-)

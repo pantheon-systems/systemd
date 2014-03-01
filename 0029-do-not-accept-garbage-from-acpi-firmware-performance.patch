@@ -1,4 +1,4 @@
-From 44d7510b31f3e9331a2c6b5518438697404655c6 Mon Sep 17 00:00:00 2001
+From 8a6e544444b3e78c2139952de46dcde45c2afeae Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Thu, 10 Oct 2013 01:38:11 +0200
 Subject: [PATCH] do not accept "garbage" from acpi firmware performance data

@@ -1,4 +1,4 @@
-From 71ff575fffcd22db42de59abbeaf150bcf6ac144 Mon Sep 17 00:00:00 2001
+From e639baf54ba664aee4c679d24a8337c90da37713 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:36:43 +0200
 Subject: [PATCH] journald: add missing error check

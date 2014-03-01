@@ -1,4 +1,4 @@
-From 05175fd678f6f7f09ff9543cd11bbd7ebf14fe58 Mon Sep 17 00:00:00 2001
+From 5da5aaac9f474db371e1f0121fbbbc36fbd9bc83 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Sat, 30 Nov 2013 23:45:31 +0100
 Subject: [PATCH] util.c: check if return value from ttyname_r is > 0 instead

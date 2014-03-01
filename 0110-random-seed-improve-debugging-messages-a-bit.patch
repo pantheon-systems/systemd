@@ -1,4 +1,4 @@
-From 2fee90a7564f87472c39238b3345025dd383ce60 Mon Sep 17 00:00:00 2001
+From f84f575e8b7e1477fee0ed771ff50725f944f4ca Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 12 Nov 2013 22:05:16 -0500
 Subject: [PATCH] random-seed: improve debugging messages a bit

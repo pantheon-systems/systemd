@@ -1,4 +1,4 @@
-From 15ef380be7e38898fe2aef4ae3aa6fb0ce804564 Mon Sep 17 00:00:00 2001
+From b195fe269dc40f483dd0c525f1f23d96e694d17b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 11 Jan 2014 16:45:29 -0500
 Subject: [PATCH] gpt-auto-generator: use EBADSLT code when unable to detect
@@ -6,6 +6,8 @@ Subject: [PATCH] gpt-auto-generator: use EBADSLT code when unable to detect
 
 ENODEV suggests that something is missing, which is be misleading
 here.
+
+(cherry picked from commit b94801803417c23d099cb7e508754181ecd27f9c)
 ---
  src/gpt-auto-generator/gpt-auto-generator.c | 8 +++-----
  1 file changed, 3 insertions(+), 5 deletions(-)

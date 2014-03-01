@@ -1,4 +1,4 @@
-From 9b618fb2369046434ced28fe1420d8d5c75cd46e Mon Sep 17 00:00:00 2001
+From 4aaa35d08f4942e28a1046b46a853b170c9d8858 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 10 Dec 2013 21:52:11 -0500
 Subject: [PATCH] activate: clean up inherited descriptors
@@ -16,6 +16,8 @@ Subject: [PATCH] activate: clean up inherited descriptors
 systemd-activate should be robust against the shell (or anything else) leaking
 descriptors. Now everything except stdin/stdout/stderr and received sockets
 will be closed.
+
+(cherry picked from commit c099716487df4a4f5394e57e7ca14da1d358166a)
 ---
  src/activate/activate.c | 23 +++++++++++++++++++----
  1 file changed, 19 insertions(+), 4 deletions(-)

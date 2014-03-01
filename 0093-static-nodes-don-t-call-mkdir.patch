@@ -1,4 +1,4 @@
-From fada68e9f922a3a6a176092a7abdeec0b58408e8 Mon Sep 17 00:00:00 2001
+From 0e3ff7da8e53b30ae0a5534beceee46adc14b3ef Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Thu, 17 Oct 2013 19:49:19 +0200
 Subject: [PATCH] static-nodes: don't call mkdir

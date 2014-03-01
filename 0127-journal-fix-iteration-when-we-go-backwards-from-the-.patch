@@ -1,4 +1,4 @@
-From 6ddc0196df2400e440e4bddbcc4ce32c636a7ec1 Mon Sep 17 00:00:00 2001
+From dafc0cfabbbe6f53e41f48c7a867db5dd0c16d6b Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 27 Nov 2013 00:58:39 +0100
 Subject: [PATCH] journal: fix iteration when we go backwards from the

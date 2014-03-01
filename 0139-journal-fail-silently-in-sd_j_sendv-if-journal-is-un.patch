@@ -1,4 +1,4 @@
-From 9c6964b0a23852353aaa0ca0c30586c3f19502b7 Mon Sep 17 00:00:00 2001
+From cbc55cc2e7ac0e4214315dc91af5d7d34e3f878e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 3 Dec 2013 08:07:32 -0500
 Subject: [PATCH] journal: fail silently in sd_j_sendv() if journal is

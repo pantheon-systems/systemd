@@ -1,4 +1,4 @@
-From 319b9f00eb3d84744453ae70bf9c89c37131124b Mon Sep 17 00:00:00 2001
+From 14934e15ab96b3bd1932d257ec7e62a53fcbe35a Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Fri, 1 Nov 2013 22:57:47 +0100
 Subject: [PATCH] analyze: plot: place the text on the side with most space

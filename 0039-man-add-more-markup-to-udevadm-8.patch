@@ -1,4 +1,4 @@
-From 83a4e0160b3756222b0c8e8d220c5cc07cc76a40 Mon Sep 17 00:00:00 2001
+From 2fefc1a2891620d57aff93ac5c9f486b441ffbbe Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 13 Oct 2013 19:43:19 -0400
 Subject: [PATCH] man: add more markup to udevadm(8)

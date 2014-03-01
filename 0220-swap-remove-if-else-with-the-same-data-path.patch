@@ -1,4 +1,4 @@
-From d61f36a7ef07c252b49cc8015fe37b69bffb1a35 Mon Sep 17 00:00:00 2001
+From 753aeaee0bdaecf804e6c750051fe094f03b9c84 Mon Sep 17 00:00:00 2001
 From: Stefan Beller <stefanbeller@googlemail.com>
 Date: Fri, 3 Jan 2014 20:33:20 +0100
 Subject: [PATCH] swap: remove if/else with the same data path
@@ -7,6 +7,8 @@ This was introduced in e1770af812 (2012-02-03, swap: replace failure
 boolean by result enum).
 
 This just removes unneeded lines of code, no functional change.
+
+(cherry picked from commit 7bb01eff62aa7b612e33fe0e512a4d97862050c4)
 ---
  src/core/swap.c | 5 +----
  1 file changed, 1 insertion(+), 4 deletions(-)

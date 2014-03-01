@@ -1,4 +1,4 @@
-From 6ff7db9dcee918b020f6c50e2785785b2b9ca854 Mon Sep 17 00:00:00 2001
+From 7a06ad3ac70904983ef1f2add835dab74124bf6c Mon Sep 17 00:00:00 2001
 From: David Strauss <david@davidstrauss.net>
 Date: Thu, 17 Oct 2013 13:19:29 -0700
 Subject: [PATCH] Fix kmod error message to have correct version requirement

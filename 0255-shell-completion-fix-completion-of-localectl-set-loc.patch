@@ -1,9 +1,10 @@
-From 827591e3b789844ec103338573cf8ed82231c0ad Mon Sep 17 00:00:00 2001
+From 14cf8f97d162a2f117f9ebd227a9f86567ad6bc7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 6 Feb 2014 11:59:33 -0500
 Subject: [PATCH] shell-completion: fix completion of localectl set-locale
 
 https://bugs.freedesktop.org/show_bug.cgi?id=74157
+(cherry picked from commit 627a98d39844a1ac10fde1f72cf18b4f08be4990)
 ---
  shell-completion/bash/localectl | 20 ++++++++++++++++++--
  shell-completion/zsh/_localectl | 13 +++++++++----

@@ -1,4 +1,4 @@
-From 24f0323b41612b3170ce1ed84917bdb6c60f0b78 Mon Sep 17 00:00:00 2001
+From 6a60d6b627d8bc8602b46c29bb89ddcb92f08efd Mon Sep 17 00:00:00 2001
 From: Olivier Brunel <jjk@jjacky.com>
 Date: Thu, 14 Nov 2013 15:52:54 +0100
 Subject: [PATCH] Fix RemainAfterExit services keeping a hold on console

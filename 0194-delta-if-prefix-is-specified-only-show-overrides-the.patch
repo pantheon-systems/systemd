@@ -1,10 +1,12 @@
-From 31ce1352b687551d62d3b7d4dc1276b2dff1d65a Mon Sep 17 00:00:00 2001
+From 8193cf614082dc3ed42895bbae963cf5d134e191 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 22 Dec 2013 22:53:23 -0500
 Subject: [PATCH] delta: if prefix is specified, only show overrides there
 
 systemd-delta /run/systemd/system will show all unit overrides
 in /run, etc.
+
+(cherry picked from commit 6096dfd6167f8520be3a359c1fd0e6f2e76a4dc1)
 ---
  man/systemd-delta.xml | 80 +++++++++++++++++++++++++++++++++++++++++----------
  src/delta/delta.c     | 71 ++++++++++++++++++++++++++++-----------------

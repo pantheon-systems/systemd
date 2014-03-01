@@ -1,4 +1,4 @@
-From ba087745bca7eea8f62cc529c3e6c5eaf6bf2904 Mon Sep 17 00:00:00 2001
+From 01b42c7fc7476814ff2e87327ff6e02ed4c8b55c Mon Sep 17 00:00:00 2001
 From: Stefan Beller <stefanbeller@googlemail.com>
 Date: Mon, 30 Dec 2013 17:43:52 +0100
 Subject: [PATCH] sleep-config: Dereference pointer before check for NULL
@@ -28,6 +28,8 @@ code in question.
 As we access *modes and *states before the check in the changed line of
 this patch, I assume the line to be wrong and we actually wanted to check
 for *modes and *states being both non null.
+
+(cherry picked from commit 34a3baa4dbd8a4032ae74cb5947b9494bf3ec106)
 ---
  src/shared/sleep-config.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

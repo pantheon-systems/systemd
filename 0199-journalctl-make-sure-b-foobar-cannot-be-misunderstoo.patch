@@ -1,8 +1,10 @@
-From 2c3dd6140293fb09b4c78b5db2dbcad35ee7d002 Mon Sep 17 00:00:00 2001
+From a36b4264aa9de5f796fb43af9e14e889c90db52d Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 26 Dec 2013 01:52:01 +0100
 Subject: [PATCH] journalctl: make sure -b --foobar cannot be misunderstood as
  --boot=--foobar
+
+(cherry picked from commit 442e2def7938435481eed34cd7331e34ebc8d9e0)
 
 Conflicts:
 	src/journal/journalctl.c

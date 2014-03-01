@@ -1,4 +1,4 @@
-From 8debc611398abf60d16e73982c9d56b5ea957e15 Mon Sep 17 00:00:00 2001
+From 89402dc49ef5dd48b302b62658843712b952ec29 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 24 Dec 2013 22:57:15 -0500
 Subject: [PATCH] man: fix description of is-enabled returned value

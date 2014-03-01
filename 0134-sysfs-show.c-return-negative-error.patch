@@ -1,4 +1,4 @@
-From cd0e1552ad5d5dffdd0f8a01fa9b451d3e14a60d Mon Sep 17 00:00:00 2001
+From 5805da2b4fd807e566d2c7a743a2da3e43ddabf6 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Sat, 30 Nov 2013 21:59:40 +0100
 Subject: [PATCH] sysfs-show.c: return negative error

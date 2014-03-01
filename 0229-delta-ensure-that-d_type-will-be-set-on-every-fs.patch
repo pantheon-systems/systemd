@@ -1,8 +1,9 @@
-From 35fbb83e322dfe14771d0c84b623b423a38b1200 Mon Sep 17 00:00:00 2001
+From 62393e23d43a25622261a0f1b5d81af1bd7f287f Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Thu, 9 Jan 2014 16:43:00 +0100
 Subject: [PATCH] delta: ensure that d_type will be set on every fs
 
+(cherry picked from commit 277f2f75f69bbd5868c74991011c804ce00dfed9)
 ---
  src/delta/delta.c | 2 ++
  1 file changed, 2 insertions(+)

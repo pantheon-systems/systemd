@@ -1,4 +1,4 @@
-From d22ea78deff9fe2c87a3a90381ae2d4e8234d1ca Mon Sep 17 00:00:00 2001
+From 4253b511b986b2e37735a79885effd871b9a07f3 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Sat, 26 Oct 2013 12:22:04 +0200
 Subject: [PATCH] udev-builtin: path_id - add support for bcma bus

@@ -1,4 +1,4 @@
-From 643f82598b69d3b3002294a456a459cceb075cd3 Mon Sep 17 00:00:00 2001
+From ae03512503e7ac6c948449d3c32e01d2cee24e8f Mon Sep 17 00:00:00 2001
 From: "Jason St. John" <jstjohn@purdue.edu>
 Date: Tue, 17 Dec 2013 21:36:27 -0500
 Subject: [PATCH] journalctl,zsh-completion: fix several issues in --help
@@ -14,6 +14,8 @@ both sections
 [zj: perform similar changes to zsh completions]
 
 squash! journalctl: fix several issues in --help message text
+
+(cherry picked from commit c736283bfb81f5b00756e08a13946c113a41527f)
 
 Conflicts:
 	src/journal/journalctl.c

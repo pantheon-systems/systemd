@@ -1,4 +1,4 @@
-From 65f2e8e1f7a86e62630fd36e34609dc7fc09b474 Mon Sep 17 00:00:00 2001
+From 5746ed2343512d5b94c9ce19b74972f835d5e2ed Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 11 Oct 2013 19:33:20 -0400
 Subject: [PATCH] dbus-common: avoid leak in error path

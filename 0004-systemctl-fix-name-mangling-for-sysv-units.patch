@@ -1,4 +1,4 @@
-From 5103e16f5e12e1754a2dcfabafb7618eb15ccf98 Mon Sep 17 00:00:00 2001
+From f9bd829cb9858015ad7c4c09ad5fa6584362e884 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?V=C3=A1clav=20Pavl=C3=ADn?= <vpavlin@redhat.com>
 Date: Wed, 2 Oct 2013 16:42:42 +0200
 Subject: [PATCH] systemctl: fix name mangling for sysv units

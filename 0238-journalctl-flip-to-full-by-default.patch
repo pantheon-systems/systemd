@@ -1,4 +1,4 @@
-From 25bebb7cc2b1b0d4ffc9ed02c348ae96b49c4572 Mon Sep 17 00:00:00 2001
+From 9425c5d1440fe5ffaa8f56b0ef91f17d97475706 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 6 Oct 2013 21:55:18 -0400
 Subject: [PATCH] journalctl: flip to --full by default
@@ -14,6 +14,7 @@ but aren't advertised as much. This change applies only to jornalctl,
 not to systemctl, when ellipsization is useful to keep the layout.
 
 https://bugzilla.redhat.com/show_bug.cgi?id=984758
+(cherry picked from commit 2b8f6883a17b9386299b7690869ccd8e20fe0347)
 ---
  man/journalctl.xml       | 15 ++++++++++++---
  src/journal/journalctl.c | 12 +++++++++---

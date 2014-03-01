@@ -1,4 +1,4 @@
-From bbf5b0815c2561c3a98903160f3193953ba962c6 Mon Sep 17 00:00:00 2001
+From 574bcb12b19559d75e0ddde83bc0d07fcb407d87 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 30 Nov 2013 20:27:54 -0500
 Subject: [PATCH] docs: remove unneeded the's in gudev docs

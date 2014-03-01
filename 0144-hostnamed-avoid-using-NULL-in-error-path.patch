@@ -1,4 +1,4 @@
-From d4ae9b53caa77d17528d36610ad70dd2eb1bb54c Mon Sep 17 00:00:00 2001
+From 04bbe7a7e009d3129e6956af8beb08a6e975e60b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 6 Jan 2014 12:16:55 +0000
 Subject: [PATCH] hostnamed: avoid using NULL in error path

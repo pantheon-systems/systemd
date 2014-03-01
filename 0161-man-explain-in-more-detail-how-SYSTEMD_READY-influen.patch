@@ -1,10 +1,11 @@
-From bb9c2f82137bb6d1a352341eb81ed2a0ac96d4cb Mon Sep 17 00:00:00 2001
+From 0036c02a84e5322f2ee57a728c478c00097a6c3c Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 11 Dec 2013 18:38:51 +0100
 Subject: [PATCH] man: explain in more detail how SYSTEMD_READY= influences
  SYSTEMD_WANTS= in udev rules
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1026860
+(cherry picked from commit 419173e60a05424008fcd312f6df4b59b2ce8e62)
 ---
  man/systemd.device.xml | 45 +++++++++++++++++++++++++++++++--------------
  1 file changed, 31 insertions(+), 14 deletions(-)

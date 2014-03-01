@@ -1,4 +1,4 @@
-From ab3ada57a761fde9050d7452f6bd9d897b9067ec Mon Sep 17 00:00:00 2001
+From 18d0ef3a1135c430370ae6ebf3ebe5b6e567284d Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 27 Nov 2013 01:44:52 +0100
 Subject: [PATCH] journal: simplify pre-allocation logic

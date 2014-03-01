@@ -1,9 +1,10 @@
-From 602fa0f30e4770b1f45e005a7ed9417065b0d640 Mon Sep 17 00:00:00 2001
+From 0501945504cdc3b81f01d565e95be71c91ec9696 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 17 Dec 2013 19:56:06 +0100
 Subject: [PATCH] journald: downgrade warning message when /dev/kmsg does not
  exist
 
+(cherry picked from commit 445ea9be520b9549aee45d0b6427cf48b446987f)
 ---
  src/journal/journald-kmsg.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)

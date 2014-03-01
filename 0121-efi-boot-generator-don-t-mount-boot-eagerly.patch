@@ -1,4 +1,4 @@
-From 1530d333580859301dc57ca1a602d1ccd9cd594f Mon Sep 17 00:00:00 2001
+From b5201dca3f5f3513feeac74656684a3ac2843913 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Thu, 21 Nov 2013 12:35:46 +0100
 Subject: [PATCH] efi-boot-generator: don't mount /boot eagerly

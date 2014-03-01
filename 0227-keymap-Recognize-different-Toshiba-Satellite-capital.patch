@@ -1,9 +1,10 @@
-From 5ed0efb00ec5cf103debcb4fc5f38398c59cc619 Mon Sep 17 00:00:00 2001
+From 924df1ee06dddb47c153ebfc29ac0612293e89fd Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Tue, 7 Jan 2014 09:40:01 +0100
 Subject: [PATCH] keymap: Recognize different Toshiba Satellite capitalizations
 
 https://launchpad.net/bugs/665918
+(cherry picked from commit c79af123de72cdb70f122c7fda5b2401acc5ea7b)
 ---
  hwdb/60-keyboard.hwdb | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

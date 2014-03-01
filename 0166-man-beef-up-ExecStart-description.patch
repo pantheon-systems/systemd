@@ -1,4 +1,4 @@
-From a6ba849c002fc991a290d2792573a9145f02aaf6 Mon Sep 17 00:00:00 2001
+From 36c301992db7d3538ef2f58d5b32183da6b55f31 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Dec 2013 17:21:55 -0500
 Subject: [PATCH] man: beef up ExecStart description
@@ -8,6 +8,7 @@ here, so let's be very explicit what is allowed and what is not. A few
 examples should also help.
 
 http://bugs.debian.org/732156
+(cherry picked from commit ec6039bc08f8e77f92427afec048e4f8ac4b81a8)
 ---
  man/systemd.service.xml | 97 ++++++++++++++++++++++++++++++++++++++++---------
  1 file changed, 80 insertions(+), 17 deletions(-)

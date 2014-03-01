@@ -1,8 +1,9 @@
-From 3c0667a5ed5bc7043499f176d68f77dea6bae944 Mon Sep 17 00:00:00 2001
+From ac5bf29c46514c1370cbc3a70f90a83b07ca8183 Mon Sep 17 00:00:00 2001
 From: Florian Weimer <fweimer@redhat.com>
 Date: Thu, 19 Dec 2013 11:16:12 +0100
 Subject: [PATCH] delta: replace readdir_r with readdir
 
+(cherry picked from commit 6887ec4f00d7c10cd70da3e10d570684bf32d28d)
 ---
  src/delta/delta.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)

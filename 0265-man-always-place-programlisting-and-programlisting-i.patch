@@ -1,9 +1,11 @@
-From 8ea4ccf4ef7d3bc4c12ba008d270534257fb88b7 Mon Sep 17 00:00:00 2001
+From 8d467dc76e470298b384d104be9822c528b81c2e Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 14 Feb 2014 15:56:19 +0100
 Subject: [PATCH] man: always place <programlisting> and </programlisting> in a
  line with actual sources, so that we don't get spurious newlines in the man
  page output
+
+(cherry picked from commit 9fccdb0f64d12bc09a71442dd0af2248c1aa3e89)
 
 Conflicts:
 	man/systemd-socket-proxyd.xml

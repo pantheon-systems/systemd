@@ -1,4 +1,4 @@
-From 0fa446efab8593abc726a7c2438549098db4cc70 Mon Sep 17 00:00:00 2001
+From f3656789f8c0d5255809b4057f609247d440ef79 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
 Date: Sun, 15 Dec 2013 12:06:37 +0100
 Subject: [PATCH] login: Don't stop a running user manager from
@@ -7,6 +7,8 @@ Subject: [PATCH] login: Don't stop a running user manager from
 With the current logic, a user will never be garbage-collected, since its
 manager will always be around. Change the logic such that a user is
 garbage-collected when it has no sessions and linger is disabled.
+
+(cherry picked from commit 63966da86d8e71b1f3f2b57d5448770d526421f9)
 
 Conflicts:
 	src/login/logind-user.c

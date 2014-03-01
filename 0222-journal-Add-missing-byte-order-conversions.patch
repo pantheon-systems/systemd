@@ -1,4 +1,4 @@
-From 43539d6b60ef0db3e98d00bef0024614c8c1807a Mon Sep 17 00:00:00 2001
+From 655462b69ccd87c4634a8c202c98efdedcf2192d Mon Sep 17 00:00:00 2001
 From: George McCollister <george.mccollister@gmail.com>
 Date: Tue, 31 Dec 2013 14:37:32 -0600
 Subject: [PATCH] journal: Add missing byte order conversions
@@ -9,6 +9,7 @@ chain_cache_put().
 [zj: also use le64toh in journal-verify.c]
 
 https://bugs.freedesktop.org/show_bug.cgi?id=73194
+(cherry picked from commit af13a6b0606f166c93cafc9892343f167f880281)
 ---
  src/journal/journal-file.c   | 4 ++--
  src/journal/journal-verify.c | 6 +++---

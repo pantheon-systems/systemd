@@ -1,10 +1,12 @@
-From 7f10373aa0b75725edb66917fc31a17c65750a7c Mon Sep 17 00:00:00 2001
+From 91602b7c82cb12dd3d11840a8b2ea4520cbf1bb5 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Thu, 6 Feb 2014 18:15:47 +0100
 Subject: [PATCH] zsh-completions: kernel-install - only show existing kernels
  for 'remove'
 
 When we remove a kernel, we don't remove the modules, so don't look at the modules directory to find installed kernels.
+
+(cherry picked from commit d72143bad46b51fc0bbedf01ff92aea8b07afac6)
 ---
  shell-completion/zsh/_kernel-install | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

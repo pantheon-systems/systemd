@@ -1,4 +1,4 @@
-From 96dc1b72f3fb5d344538984121e11e5804905145 Mon Sep 17 00:00:00 2001
+From 7fed327890e10c38d89df2c7913f906d76e515e7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 13 Nov 2013 00:42:22 -0500
 Subject: [PATCH] journald: do not free space when disk space runs low
@@ -25,6 +25,8 @@ and sets the limit based on the current usage, so if disk remains to
 be filled, journald might use one journal-file-size less on each
 restart, if restarts happen just after rotation. This seems like a
 reasonable compromise between implementation complexity and robustness.
+
+(cherry picked from commit 348ced909724a1331b85d57aede80a102a00e428)
 ---
  man/journald.conf.xml                   | 39 +++++++++++++++++++++++----------
  src/journal/journal-file.h              |  1 +

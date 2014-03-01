@@ -1,4 +1,4 @@
-From 48ee0228ec2bcfcb48866b717ac8a5a8dbbd506e Mon Sep 17 00:00:00 2001
+From 7fc6e478fe20b0f6e16cd6be6d707068fab7334b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 12 Oct 2013 20:28:21 -0400
 Subject: [PATCH] Introduce udev object cleanup functions

@@ -1,4 +1,4 @@
-From 1f3128aec84ea40d54423386384ad28a789cb381 Mon Sep 17 00:00:00 2001
+From cfb8ec6045ca2f99e2d800e0ee605390f12046af Mon Sep 17 00:00:00 2001
 From: "Jason St. John" <jstjohn@purdue.edu>
 Date: Tue, 17 Dec 2013 19:40:02 -0500
 Subject: [PATCH] man: add DOI for refereed article on Forward Secure Sealing
@@ -6,6 +6,8 @@ Subject: [PATCH] man: add DOI for refereed article on Forward Secure Sealing
 
 In journalctl(1), be more explicit about the reference to "Seal=" in
 journald.conf(5) and what information can be found there.
+
+(cherry picked from commit 06d9d3efa554ffc63b5977f1d86e393edeef8ad1)
 ---
  man/journalctl.xml    |  8 ++++++--
  man/journald.conf.xml | 10 +++++-----

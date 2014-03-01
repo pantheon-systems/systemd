@@ -1,8 +1,9 @@
-From 906a89f8e60c9a39610afd7edbc41f79a3c711e7 Mon Sep 17 00:00:00 2001
+From f980d7eccb5a25a174454dd7ba7d4ebc8a9b5a42 Mon Sep 17 00:00:00 2001
 From: Shawn Landden <shawn@churchofgit.com>
 Date: Tue, 10 Dec 2013 09:28:26 -0800
 Subject: [PATCH] core/manager: remove infinite loop
 
+(cherry picked from commit 145b1f799ff6712f333cef92c44218254a1320c5)
 ---
  src/core/manager.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)

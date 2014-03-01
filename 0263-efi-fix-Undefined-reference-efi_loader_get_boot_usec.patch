@@ -1,9 +1,10 @@
-From fe56ff349838e5dfbc523db1c4d5625f5c69e2a9 Mon Sep 17 00:00:00 2001
+From d086399f4181ef1506f6de38efa4735500776d0a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Cristian=20Rodr=C3=ADguez?= <crrodriguez@opensuse.org>
 Date: Tue, 11 Feb 2014 09:54:49 -0300
 Subject: [PATCH] efi: fix Undefined reference efi_loader_get_boot_usec when
  EFI support is disabled
 
+(cherry picked from commit 70d9b9fc0a4fa1698ff00e364c61bb875244efa1)
 ---
  src/shared/boot-timestamps.c | 2 ++
  1 file changed, 2 insertions(+)

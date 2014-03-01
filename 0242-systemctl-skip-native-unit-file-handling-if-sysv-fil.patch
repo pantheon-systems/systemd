@@ -1,10 +1,12 @@
-From d953cda9e6b3e41f419b63a35632edc8f769a7d0 Mon Sep 17 00:00:00 2001
+From 345151292fb48647cb9e9d5c6b4cd5dff0d0452a Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 20 Jan 2014 13:43:20 +0100
 Subject: [PATCH] systemctl: skip native unit file handling if sysv file
  handling already handled everything
 
 Issue pointed out by Colin Guthrie.
+
+(cherry picked from commit 67d6621059085963a2a908a3ea99ced3b0ca789e)
 ---
  src/systemctl/systemctl.c | 5 +++++
  1 file changed, 5 insertions(+)

@@ -1,4 +1,4 @@
-From bedb539662380d6a120db1e8dbb63b55d2ecac2c Mon Sep 17 00:00:00 2001
+From 005982c6cd05cf0e9474e0790a92eabefd05a1d1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 11 Dec 2013 22:00:33 -0500
 Subject: [PATCH] nspawn: complain and continue if machine has same id
@@ -12,6 +12,7 @@ filesystem as the host. Since other things mostly function correctly,
 let's allow that.
 
 https://bugs.freedesktop.org/show_bug.cgi?id=68369
+(cherry picked from commit 4d680aeea1e479f08f3dbdb7430def5d9eefe2ee)
 ---
  src/nspawn/nspawn.c | 23 +++++++++++++++++++----
  1 file changed, 19 insertions(+), 4 deletions(-)

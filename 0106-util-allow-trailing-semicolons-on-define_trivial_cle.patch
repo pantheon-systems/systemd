@@ -1,4 +1,4 @@
-From 925af552121e7028d432685948c2e061d86955e5 Mon Sep 17 00:00:00 2001
+From a33c431f6792e66efc0e1df082cbbb684d83b4df Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 14 Oct 2013 04:59:26 +0200
 Subject: [PATCH] util: allow trailing semicolons on

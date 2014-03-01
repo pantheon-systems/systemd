@@ -1,7 +1,9 @@
-From b7b1af75b9f76f3bff35369b0c1666890c586144 Mon Sep 17 00:00:00 2001
+From f0c730c5407ec42ff2f416a71f6519cd0e2c0afe Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 10 Dec 2013 18:53:03 +0000
 Subject: [PATCH] util: check for overflow in greedy_realloc()
+
+(cherry picked from commit 98088803bb2a9f89b7bbc063123dda3343138f18)
 
 Conflicts:
 	src/shared/util.c

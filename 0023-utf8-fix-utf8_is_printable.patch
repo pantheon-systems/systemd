@@ -1,4 +1,4 @@
-From 5b5f505ab485dd60fb608ffb2eecd755537f039f Mon Sep 17 00:00:00 2001
+From b3a5ca3c5b12569743c8fc9326c73b17b95752a3 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 5 Oct 2013 22:47:52 -0400
 Subject: [PATCH] utf8: fix utf8_is_printable

@@ -1,4 +1,4 @@
-From 9b9103a07cc32fa76be4c71fcd9a93b5d946edd4 Mon Sep 17 00:00:00 2001
+From 9e6366a959cefc30b941ebf1611ada7e47949c8e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 28 Dec 2013 19:33:23 -0500
 Subject: [PATCH] journal: fix access to munmapped memory in
@@ -15,6 +15,8 @@ be increased and decreased. Other callers which set keep_always=true
 are unmodified: their references are never released but are ignored
 when the whole file is closed, which happens at some point. keep_always
 is increased in sd_j_e_u and later on released.
+
+(cherry picked from commit ae97089d49d1795a35a443b7b830ee666028e733)
 ---
  src/journal/journal-file.c   |  5 +---
  src/journal/journal-file.h   | 24 +++++++++++++++++++

@@ -1,4 +1,4 @@
-From e64e35b2f24f0a2979d435a752d2ab141c5a0cc2 Mon Sep 17 00:00:00 2001
+From 62b2f75aa55f78dd6e2fcb9433c46ee809bbb898 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Thu, 28 Nov 2013 01:25:10 +0100
 Subject: [PATCH] automount: log info about triggering process

@@ -1,4 +1,4 @@
-From 87041721ccfc9472d9c4f229402e342ba6c855b0 Mon Sep 17 00:00:00 2001
+From 78645cfb57f854a8715782c502e458b51b92b74b Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Wed, 22 Jan 2014 10:47:48 +0100
 Subject: [PATCH] udev: static_node - do not exit rule after first static_node
@@ -6,6 +6,8 @@ Subject: [PATCH] udev: static_node - do not exit rule after first static_node
 
 The nodes usually do not exist, so handle the next item instead of
 skipping the entire rule.
+
+(cherry picked from commit d6f116a7b18f8bd3c6507c803217991235c7f1bb)
 ---
  src/udev/udev-rules.c | 21 ++++++++++-----------
  1 file changed, 10 insertions(+), 11 deletions(-)

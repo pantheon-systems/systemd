@@ -1,4 +1,4 @@
-From bd819c6a6761827adc05f15ebc20bd78a1c751dc Mon Sep 17 00:00:00 2001
+From bc979de36a9523ffe907e610f28719d44c364f49 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 5 Dec 2013 16:06:04 -0500
 Subject: [PATCH] core/device: ignore SYSTEMD_WANTS= in user mode

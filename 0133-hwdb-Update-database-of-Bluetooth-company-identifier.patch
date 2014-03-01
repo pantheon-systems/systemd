@@ -1,4 +1,4 @@
-From 123cc4b594188a5caed955e77228a37001ee451f Mon Sep 17 00:00:00 2001
+From c8a4465338cec4a8ff005e824611df30cb2e31cd Mon Sep 17 00:00:00 2001
 From: Marcel Holtmann <marcel@holtmann.org>
 Date: Fri, 29 Nov 2013 07:26:47 -0800
 Subject: [PATCH] hwdb: Update database of Bluetooth company identifiers

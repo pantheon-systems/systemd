@@ -1,8 +1,9 @@
-From 16142c7f1f24c58af1388608f1efb382a094bcb5 Mon Sep 17 00:00:00 2001
+From 81277768f5c70ade9d7a35868b3bb76d9f61724e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 27 Dec 2013 15:27:24 -0500
 Subject: [PATCH] man: add a note about propagating signals
 
+(cherry picked from commit a9a305332b7faf0d0d16db04909badaf6a095fef)
 ---
  man/systemd.service.xml | 39 +++++++++++++++++++++++++--------------
  1 file changed, 25 insertions(+), 14 deletions(-)

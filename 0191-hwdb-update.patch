@@ -1,7 +1,9 @@
-From 59f89c783a3dd29bc024be457dfd7ad664d55358 Mon Sep 17 00:00:00 2001
+From 18f18b6b5f397024ce31ae80d8e30edfe11138e8 Mon Sep 17 00:00:00 2001
 From: Marcel Holtmann <marcel@holtmann.org>
 Date: Sun, 22 Dec 2013 11:32:11 -0800
 Subject: [PATCH] hwdb: update
+
+(cherry picked from commit c309c17df4e9ecb548bf437159b3cdc2cbfe6ef1)
 
 Conflicts:
 	hwdb/20-sdio-vendor-model.hwdb

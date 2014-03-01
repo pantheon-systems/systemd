@@ -1,9 +1,10 @@
-From 8d872d28194f58da2311ca88072084458dc2eb15 Mon Sep 17 00:00:00 2001
+From 415dd375cf6850c3c8c6dd07be2ce95b789c46e5 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 16 Dec 2013 20:00:09 +0100
 Subject: [PATCH] execute: also set SO_SNDBUF when spawning a service with
  stdout/stderr connected to journald
 
+(cherry picked from commit 531dca789ea6b4c269ca2646515b42962f83d64a)
 ---
  src/core/execute.c | 4 ++++
  1 file changed, 4 insertions(+)

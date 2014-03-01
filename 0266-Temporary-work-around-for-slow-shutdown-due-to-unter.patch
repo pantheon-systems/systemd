@@ -1,4 +1,4 @@
-From 29e00416bbef0e8073373fde25347d139749d949 Mon Sep 17 00:00:00 2001
+From a2ca1771f9f8f2b8b5f08ab181e5cd9e6935f695 Mon Sep 17 00:00:00 2001
 From: Colin Guthrie <colin@mageia.org>
 Date: Mon, 27 Jan 2014 17:54:29 +0000
 Subject: [PATCH] Temporary work around for slow shutdown due to unterminated

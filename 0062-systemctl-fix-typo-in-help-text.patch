@@ -1,4 +1,4 @@
-From 93a311b380a9c7367efe46fbc1d45902a9abcff5 Mon Sep 17 00:00:00 2001
+From ce33b14b1dcf1837618aa42bddf46994eb6b1af1 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Fri, 1 Nov 2013 20:46:49 +0100
 Subject: [PATCH] systemctl: fix typo in help text

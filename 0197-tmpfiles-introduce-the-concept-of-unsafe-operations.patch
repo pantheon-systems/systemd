@@ -1,4 +1,4 @@
-From 66b1ee20b814b02cd0fb73fec4a2a9b11defc607 Mon Sep 17 00:00:00 2001
+From 98712c792cea68c76a0c8383476c366d2ad0df20 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 20 Dec 2013 20:25:39 -0500
 Subject: [PATCH] tmpfiles: introduce the concept of unsafe operations
@@ -24,6 +24,7 @@ easy to override.
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1043212
 https://bugzilla.redhat.com/show_bug.cgi?id=1045849
+(cherry picked from commit c4708f132381e4bbc864d5241381b5cde4f54878)
 ---
  Makefile.am                             |  1 +
  man/systemd-tmpfiles.xml                |  6 ++++++

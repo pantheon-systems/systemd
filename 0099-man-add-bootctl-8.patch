@@ -1,4 +1,4 @@
-From 30712bf9c2baefc73ce110854c40be354a60bd78 Mon Sep 17 00:00:00 2001
+From 4daec5fdd05a1e646aa43c8073c7157114f9ce7e Mon Sep 17 00:00:00 2001
 From: Marko Myllynen <myllynen@redhat.com>
 Date: Wed, 13 Nov 2013 11:06:13 +0200
 Subject: [PATCH] man: add bootctl(8)

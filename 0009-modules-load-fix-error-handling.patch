@@ -1,4 +1,4 @@
-From 3afab028b6bdeadd32e2c87b6f5a64019945358f Mon Sep 17 00:00:00 2001
+From 48fdd931a8403093e091189f84eb190796475e2e Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:37:44 +0200
 Subject: [PATCH] modules-load: fix error handling

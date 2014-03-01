@@ -1,4 +1,4 @@
-From 06c5b7a9f3d47834ea4dbbfb24f169b6893dd338 Mon Sep 17 00:00:00 2001
+From 029e3233b8634cb99052c3142aa1889f562398b7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 30 Nov 2013 21:23:01 -0500
 Subject: [PATCH] man: explicitly say when multiple units can be specified

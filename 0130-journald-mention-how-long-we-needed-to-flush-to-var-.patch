@@ -1,4 +1,4 @@
-From f201d0f2ca7adcfcbb854a83ff9a75b40ace7967 Mon Sep 17 00:00:00 2001
+From 7d64f9468da3cb18390e971e685efba9fa225cf7 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 27 Nov 2013 01:54:25 +0100
 Subject: [PATCH] journald: mention how long we needed to flush to /var in the

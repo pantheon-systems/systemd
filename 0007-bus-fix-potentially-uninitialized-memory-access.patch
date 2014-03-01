@@ -1,4 +1,4 @@
-From f20403c231e9c7f5446066f01f2f5245238d978c Mon Sep 17 00:00:00 2001
+From 1b2ebabf88dbe45e1186156549ff94ce86c33400 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:37:11 +0200
 Subject: [PATCH] bus: fix potentially uninitialized memory access

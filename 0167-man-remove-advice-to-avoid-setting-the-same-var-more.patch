@@ -1,4 +1,4 @@
-From 7c6c28dca3b75b7d0c2d067752ed917b113d90d2 Mon Sep 17 00:00:00 2001
+From 4a042534a6883898ebf83a185e8801fc1eb85a50 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Dec 2013 17:30:25 -0500
 Subject: [PATCH] man: remove advice to avoid setting the same var more than
@@ -7,6 +7,8 @@ Subject: [PATCH] man: remove advice to avoid setting the same var more than
 So far the compatibility with .desktop settings hasn't been imporant
 at all, and we do not want people to write convoluted unit
 files.
+
+(cherry picked from commit 6baf995c17a95ca0d6b5ad0b1f1667c956574816)
 ---
  man/systemd.service.xml |  6 +-----
  man/systemd.unit.xml    | 11 +++++++++++

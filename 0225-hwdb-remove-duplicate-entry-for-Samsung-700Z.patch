@@ -1,4 +1,4 @@
-From 1bfc778f2c82180873407f2da8a8c3335ae37b07 Mon Sep 17 00:00:00 2001
+From 89351766335b8ebf07e53658c32c622f490a902c Mon Sep 17 00:00:00 2001
 From: Dmitry Pisklov <dpisklov@gmail.com>
 Date: Mon, 6 Jan 2014 20:08:21 -0500
 Subject: [PATCH] hwdb: remove duplicate entry for Samsung 700Z
@@ -6,6 +6,7 @@ Subject: [PATCH] hwdb: remove duplicate entry for Samsung 700Z
 keyboardbrightnessup/down are not even real keys.
 
 https://bugs.freedesktop.org/show_bug.cgi?id=72311
+(cherry picked from commit 245dc22920d6592e50265c82c8def8e4bbf0e665)
 ---
  hwdb/60-keyboard.hwdb | 5 -----
  1 file changed, 5 deletions(-)

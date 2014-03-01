@@ -1,4 +1,4 @@
-From 66065b8d9cd1bb7e488fd84d4f19d34487bf29a7 Mon Sep 17 00:00:00 2001
+From 9693c7f0bf20471ae91cc975f2e08fc5fd4a88ad Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?J=C3=B3hann=20B=2E=20Gu=C3=B0mundsson?= <johannbg@gmail.com>
 Date: Sun, 2 Feb 2014 13:29:19 +0000
 Subject: [PATCH] udev: add zram to the list of devices inappropriate for
@@ -7,6 +7,8 @@ Subject: [PATCH] udev: add zram to the list of devices inappropriate for
 udev seems to have a race condition with swapon to see which can open
 /dev/zram0 first, causing swapon to fail. Seems to be most noticeable
 on arm devices one out of every 7 times or something.
+
+(cherry picked from commit 99bd4af0c7034f425b4d334986b03e632ab71718)
 ---
  rules/60-persistent-storage.rules | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

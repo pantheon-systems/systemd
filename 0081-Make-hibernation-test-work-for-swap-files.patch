@@ -1,4 +1,4 @@
-From a5fd1d54d63e9e5861113fd30911949a148921e1 Mon Sep 17 00:00:00 2001
+From 4c6e52522bc1264949f346e0607eb145011728ff Mon Sep 17 00:00:00 2001
 From: Jan Janssen <medhefgo@web.de>
 Date: Thu, 31 Oct 2013 17:22:03 +0100
 Subject: [PATCH] Make hibernation test work for swap files

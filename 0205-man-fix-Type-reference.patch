@@ -1,4 +1,4 @@
-From c32611c5388de404cf4b169fa3d757c2603e597d Mon Sep 17 00:00:00 2001
+From 2ce57c2ad34d90ba9a3487457742e73e70b38d19 Mon Sep 17 00:00:00 2001
 From: Marcos Felipe Rasia de Mello <marcosfrm@gmail.com>
 Date: Thu, 26 Dec 2013 17:47:57 -0200
 Subject: [PATCH] man: fix Type= reference

@@ -1,9 +1,10 @@
-From 21804157ff0e60508fd128310505381f7b3ec2b0 Mon Sep 17 00:00:00 2001
+From d550c0b83e0c01c7fb2a185ce91627285c350ca1 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 18 Dec 2013 16:49:15 +0100
 Subject: [PATCH] log: when we log to /dev/console and got disconnected (maybe
  due to vhangup) reconnect
 
+(cherry picked from commit 0e6eaa2d98fffa86d29a9616485b7ade5c160638)
 ---
  src/shared/log.c | 21 +++++++++++++++++++--
  1 file changed, 19 insertions(+), 2 deletions(-)

@@ -1,4 +1,4 @@
-From c47bbfc9af040f1b0fce2edced4136ee921d9e70 Mon Sep 17 00:00:00 2001
+From 5be51230458adb52f23b2053900b94521a425584 Mon Sep 17 00:00:00 2001
 From: Raudi <mpell@web.de>
 Date: Mon, 6 Jan 2014 19:44:08 -0500
 Subject: [PATCH] hwdb: change key mappings for Samsung 90X3A
@@ -7,6 +7,7 @@ The Key codes didn't match with the described key. Also the key
 identifier strings were missing. I hope I chose appropriate ones.
 
 https://bugs.freedesktop.org/show_bug.cgi?id=70296
+(cherry picked from commit dfa2ea215df5f1e78084de862a54c0f1f321a13a)
 ---
  hwdb/60-keyboard.hwdb | 8 +++++++-
  1 file changed, 7 insertions(+), 1 deletion(-)

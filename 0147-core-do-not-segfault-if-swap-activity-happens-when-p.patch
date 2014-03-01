@@ -1,4 +1,4 @@
-From 85a77eea8d7114675602a33d2e067fd7c4ad0624 Mon Sep 17 00:00:00 2001
+From f84b1b1ff9b1261cc9ee339fe0e5447f1573f807 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 12 Jan 2014 11:38:56 -0500
 Subject: [PATCH] core: do not segfault if swap activity happens when

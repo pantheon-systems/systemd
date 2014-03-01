@@ -1,9 +1,10 @@
-From 9bcaa50d2eb1f99fcb7393d52b53b95cdc193d30 Mon Sep 17 00:00:00 2001
+From 0b180f851f5da6571a9f4655f706497cf8088b15 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 9 Feb 2014 01:34:20 -0500
 Subject: [PATCH] man: fix another reference in systemd-inhibit(1)
 
 http://bugs.debian.org/738316
+(cherry picked from commit bbf261b75fda04ea6c1278d5e427f7c47eea9a6b)
 ---
  man/systemd-inhibit.xml | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

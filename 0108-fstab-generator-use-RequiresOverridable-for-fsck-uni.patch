@@ -1,4 +1,4 @@
-From a787829ac3db6a0f34c59180c796dfa49f46d34c Mon Sep 17 00:00:00 2001
+From 09325ab3bb438caae9aca719ee329023a7ff4d82 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 12 Nov 2013 22:01:10 -0500
 Subject: [PATCH] fstab-generator: use RequiresOverridable for fsck units

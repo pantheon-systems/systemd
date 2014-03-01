@@ -1,4 +1,4 @@
-From 106c98f6b08d3b9254b419b09bc4ceed1963d7aa Mon Sep 17 00:00:00 2001
+From 5d976fa2fa07dbf77bef23f1789e6d7389d4acea Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 14 Jan 2014 17:31:00 -0500
 Subject: [PATCH] Revert "systemd: add a start job for all units specified with

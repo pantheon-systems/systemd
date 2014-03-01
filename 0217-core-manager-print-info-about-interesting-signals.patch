@@ -1,4 +1,4 @@
-From 0e09a7e4c14e6b1d31a9a56b80d02b52c9583ab1 Mon Sep 17 00:00:00 2001
+From 8d8d64b5a542e9530dc0e06e7bd4e6f47aee56e5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 27 Dec 2013 22:12:38 -0500
 Subject: [PATCH] core/manager: print info about interesting signals
@@ -6,6 +6,8 @@ Subject: [PATCH] core/manager: print info about interesting signals
 Information about signals which are not routinely received by systemd
 are printed at info level. This should make it easier to see what is
 happening in the system.
+
+(cherry picked from commit a9244623f785f504f799407b0228dea9655e24cb)
 ---
  src/core/manager.c | 18 ++++++++++++------
  1 file changed, 12 insertions(+), 6 deletions(-)

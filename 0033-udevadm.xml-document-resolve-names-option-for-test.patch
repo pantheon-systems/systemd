@@ -1,4 +1,4 @@
-From 2ef8bf3f6b44d2860b149ad09cf8aea3a4f1bd42 Mon Sep 17 00:00:00 2001
+From e464afe5229d177fa19f5ed91312e4a62515e7a2 Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Sun, 13 Oct 2013 17:42:51 -0400
 Subject: [PATCH] udevadm.xml: document --resolve-names option for test

@@ -1,4 +1,4 @@
-From 5e86ba530ae6f7a4c9aec4069b0b8481003094c6 Mon Sep 17 00:00:00 2001
+From 873186b8f64a8c1e37300e9e82876a21244bf9cf Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Tue, 24 Dec 2013 16:42:06 -0500
 Subject: [PATCH] sleep-config: fix useless check for swapfile type
@@ -9,6 +9,8 @@ ever only write "partition" or "file" there.
 OTOH, it is possible that "\\040(deleted)" (escaped " (deleted)")
 will be added for removed files. This should not happen, so add
 a warning to detect those cases.
+
+(cherry picked from commit db69869f264af2d1afcdd3e573e0e9fdd5bef065)
 ---
  src/shared/sleep-config.c | 10 +++-------
  1 file changed, 3 insertions(+), 7 deletions(-)

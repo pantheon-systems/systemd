@@ -1,10 +1,11 @@
-From 5c2e6a05a8b4bcb05c88872eec27f848caf30722 Mon Sep 17 00:00:00 2001
+From ee7dd7eacf1e618fd292a7b791124263ebb97ed9 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 13 Feb 2014 02:12:27 +0100
 Subject: [PATCH] core: make StopWhenUnneeded work in conjunction with units
  that fail during their start job
 
 https://bugzilla.redhat.com/show_bug.cgi?id=997031
+(cherry picked from commit b33918c210a9b7a651e4e91cf7429967f1df6c25)
 ---
  src/core/unit.c | 9 +++++----
  1 file changed, 5 insertions(+), 4 deletions(-)

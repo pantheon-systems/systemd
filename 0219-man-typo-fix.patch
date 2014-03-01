@@ -1,8 +1,9 @@
-From dfb3a987b160406fb4cf6cc3935cf54571d7c373 Mon Sep 17 00:00:00 2001
+From d9149a1f3756500dc44d959bd8c14321897cb140 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Sat, 4 Jan 2014 23:21:13 +0100
 Subject: [PATCH] man: typo fix
 
+(cherry picked from commit 3563b896da77bb2e6abc2ca0f03d8e2f570f1cc7)
 ---
  man/systemd.time.xml | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

@@ -1,8 +1,9 @@
-From 0fb47635e6db4d27b821388274c0c83d612fc0bb Mon Sep 17 00:00:00 2001
+From 637e74f351bff40968e74cd12e47e210b9994f57 Mon Sep 17 00:00:00 2001
 From: Unai Uribarri <unaiur@gmail.com>
 Date: Sat, 11 Jan 2014 09:19:41 -0500
 Subject: [PATCH] hwdb: Add support for Toshiba Satellite P75-A7200 keyboard
 
+(cherry picked from commit 2a61aaac6607d998e981481c34ae06e3e3ace4fe)
 ---
  hwdb/60-keyboard.hwdb | 8 ++++++++
  1 file changed, 8 insertions(+)

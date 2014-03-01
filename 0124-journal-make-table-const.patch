@@ -1,4 +1,4 @@
-From 1ae9614a4373029f3f2464cf4d8e61641f1a50a6 Mon Sep 17 00:00:00 2001
+From 0a79ae6f36f4d93c7c9166d8ba541618567f8b1b Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 26 Nov 2013 18:40:23 +0100
 Subject: [PATCH] journal: make table const

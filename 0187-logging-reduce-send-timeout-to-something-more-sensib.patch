@@ -1,4 +1,4 @@
-From f1a638c065df3432bb69cc664b5425b96de13325 Mon Sep 17 00:00:00 2001
+From b7f2e5ac769ca4d9b7d28050ec662104635a7822 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Dec 2013 11:54:26 -0500
 Subject: [PATCH] logging: reduce send timeout to something more sensible
@@ -6,6 +6,8 @@ Subject: [PATCH] logging: reduce send timeout to something more sensible
 For a user, the timeout of 1 min per message seems equivalent to a hang.
 If journald cannot process a message from PID1 for 10 ms then something
 is significantly wrong. It's better to lose the message and continue.
+
+(cherry picked from commit 4d89874af6a798744a32deb314001a13a28f0559)
 ---
  src/shared/log.c       | 5 ++++-
  src/shared/time-util.c | 7 +++----

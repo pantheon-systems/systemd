@@ -1,10 +1,12 @@
-From 2373386db2501528c74e2f547c2c5d27d81be35b Mon Sep 17 00:00:00 2001
+From 4939be5d981f0839458ec88f7d29bd5a0d1d71c0 Mon Sep 17 00:00:00 2001
 From: Matthew Monaco <matthew.monaco@0x01b.net>
 Date: Fri, 24 Jan 2014 11:23:01 -0700
 Subject: [PATCH] pam_systemd: Ignore vtnr when seat != seat0
 
 logind considers it an error for a seat other than seat0 to have a
 non-zero vtnr for CreateSession
+
+(cherry picked from commit d7353ef6095f5e7db63d9cc898c7134b64482550)
 ---
  src/login/pam-module.c | 6 ++++++
  1 file changed, 6 insertions(+)

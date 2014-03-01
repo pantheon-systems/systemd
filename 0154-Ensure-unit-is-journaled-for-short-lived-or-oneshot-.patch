@@ -1,4 +1,4 @@
-From d8b3047ccb52c2b55683f2fe12f0674f63d746cb Mon Sep 17 00:00:00 2001
+From 66d0783137db1d37f0cdc904773087878da469ce Mon Sep 17 00:00:00 2001
 From: Dan McGee <dan@archlinux.org>
 Date: Sun, 8 Dec 2013 13:27:05 -0600
 Subject: [PATCH] Ensure unit is journaled for short-lived or oneshot processes
@@ -13,6 +13,8 @@ Add an else if case that allows the passed in unit_id to be logged even
 if we couldn't capture cgroup information. This ensures a command like
 `journalctl -u run-XXX` will return all log messages from a oneshot
 process.
+
+(cherry picked from commit 2d43b190901902dbd98ccea77c1d1ddc9e2a9955)
 ---
  src/journal/journald-server.c | 3 +++
  1 file changed, 3 insertions(+)

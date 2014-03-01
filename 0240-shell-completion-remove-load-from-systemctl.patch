@@ -1,7 +1,9 @@
-From 4028b4cf18191ca958d2ef6cced1d5087aeea976 Mon Sep 17 00:00:00 2001
+From e96f97ae440a6ceda973584fa8c613bc4e92d890 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 15 Jan 2014 15:31:07 +0100
 Subject: [PATCH] shell-completion: remove load from systemctl
+
+(cherry picked from commit f89a4474e05307e45992e1f30b6b1b26900d91bd)
 
 Conflicts:
 	shell-completion/bash/systemctl

@@ -1,4 +1,4 @@
-From 6bd96f28f8d67cb5cb77057e60badb4550ae35f3 Mon Sep 17 00:00:00 2001
+From 64aa27e512f01f95f91d7e20dc2107b287220fcc Mon Sep 17 00:00:00 2001
 From: "Jason St. John" <jstjohn@purdue.edu>
 Date: Tue, 17 Dec 2013 18:48:43 -0500
 Subject: [PATCH] man: be more explicit about option arguments that take
@@ -6,6 +6,8 @@ Subject: [PATCH] man: be more explicit about option arguments that take
 
 It may not be immediately obvious to the reader what "ID128" is, so replace the
 example option argument "ID128" with "128-bit-ID".
+
+(cherry picked from commit 9a7adc9a0ed53d6e422321e9196eb83d18afcba5)
 ---
  man/journalctl.xml | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)

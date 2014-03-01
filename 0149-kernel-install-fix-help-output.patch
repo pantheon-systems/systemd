@@ -1,4 +1,4 @@
-From 245b830c77bfbac0346bd1df3fa5d6b81d77014a Mon Sep 17 00:00:00 2001
+From 7c189d8c6bdab161c14ac616b0c292255005becd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?S=C3=A9bastien=20Luttringer?= <seblu@seblu.net>
 Date: Thu, 5 Dec 2013 02:55:05 +0100
 Subject: [PATCH] kernel-install: fix help output
@@ -6,6 +6,8 @@ Subject: [PATCH] kernel-install: fix help output
 Kernel install doesn't need the second argument on his command line when
 removing.
 This is correctly documented in the man page.
+
+(cherry picked from commit d838db0d3b1369639ed7572f4f838eda58b8d858)
 ---
  src/kernel-install/kernel-install | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

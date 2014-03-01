@@ -1,4 +1,4 @@
-From 00a827da3737dc95c2561292c03468fc96f53f14 Mon Sep 17 00:00:00 2001
+From 86959e45dccb4c69b96cf2cef15af691d01edcc7 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 27 Nov 2013 00:59:07 +0100
 Subject: [PATCH] journal: allow journal_file_copy_entry() to work on non-local

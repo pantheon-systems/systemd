@@ -1,10 +1,12 @@
-From 59f2f4cfd399275c3da061212fc25636ee72367f Mon Sep 17 00:00:00 2001
+From d6cb5d101b096d5a8115d8861b18ac1808a5420e Mon Sep 17 00:00:00 2001
 From: Djalal Harouni <tixxdz@opendz.org>
 Date: Thu, 12 Dec 2013 00:22:48 +0100
 Subject: [PATCH] journal: pipe journalctl help output into a pager
 
 journalctl help output might run off the screen, so be consistent
 as other systemd tools do and pipe it into a pager.
+
+(cherry picked from commit faf5077f891aa249270b2a3d9f0104c3eec02da6)
 ---
  src/journal/journalctl.c | 14 ++++++++++++--
  1 file changed, 12 insertions(+), 2 deletions(-)

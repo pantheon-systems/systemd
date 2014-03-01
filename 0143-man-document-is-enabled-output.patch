@@ -1,9 +1,10 @@
-From 77e9da01ad6383aab4d50a00b705ec96f16cb55e Mon Sep 17 00:00:00 2001
+From e88356c9651b2257ecb6aa51dfe55c42b1ddf130 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 8 Dec 2013 18:56:16 -0500
 Subject: [PATCH] man: document 'is-enabled' output
 
 https://bugzilla.redhat.com/show_bug.cgi?id=953077
+(cherry picked from commit 171754aa4ae37a6ab626878256f7b664da78ef55)
 ---
  man/systemctl.xml | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
  1 file changed, 59 insertions(+), 5 deletions(-)

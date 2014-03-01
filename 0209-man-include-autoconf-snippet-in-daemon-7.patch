@@ -1,9 +1,10 @@
-From cc5b9c30f5e8312ee8905f7882da7ab79fef571c Mon Sep 17 00:00:00 2001
+From 2a57e30e2dede0fc218110710cd947e925b9bd17 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Micha=C5=82=20G=C3=B3rny?= <mgorny@gentoo.org>
 Date: Fri, 27 Dec 2013 23:44:27 -0500
 Subject: [PATCH] man: include autoconf snippet in daemon(7)
 
 https://bugs.freedesktop.org/show_bug.cgi?id=40446
+(cherry picked from commit 5486855f7d9748684633a96bf646d29080d5a28d)
 ---
  man/daemon.xml | 20 ++++++++++++++------
  1 file changed, 14 insertions(+), 6 deletions(-)

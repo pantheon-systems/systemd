@@ -1,9 +1,10 @@
-From d34a6029e4a59c75d9826e0aa57e548a86b08bba Mon Sep 17 00:00:00 2001
+From 10131437ac7d636966f5419fc52af19b85cb409c Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 18 Dec 2013 17:16:33 +0100
 Subject: [PATCH] loginctl: when showing device tree of seats with no devices
  show something useful
 
+(cherry picked from commit ddae67fa1bdd86b480a60ad6fc1d90d6f35a03d0)
 ---
  src/login/sysfs-show.c | 2 ++
  1 file changed, 2 insertions(+)
