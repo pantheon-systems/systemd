@@ -36,6 +36,27 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
+# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v210-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v210..v210-stable
+# i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
+Patch001:       0001-login-fix-pos-array-allocation.patch
+Patch002:       0002-login-set-pos-slot-to-fallback-on-pos-eviction.patch
+Patch003:       0003-login-Allow-calling-org.freedesktop.login1.Seat.Swit.patch
+Patch004:       0004-fix-typo-in-iDRAC-network-interface-name-irdac-idrac.patch
+Patch005:       0005-Replace-var-run-with-run-in-remaining-places.patch
+Patch006:       0006-Revert-back-to-var-run-at-a-couple-of-problems.patch
+Patch007:       0007-README-document-that-var-run-must-be-a-symlink-run.patch
+Patch008:       0008-Use-var-run-dbus-system_bus_socket-for-the-D-Bus-soc.patch
+Patch009:       0009-mount-don-t-send-out-PropertiesChanged-message-if-ac.patch
+Patch010:       0010-mount-don-t-fire-PropertiesChanged-signals-for-mount.patch
+Patch011:       0011-logs-show-fix-corrupt-output-with-empty-messages.patch
+Patch012:       0012-journalctl-refuse-extra-arguments-with-verify-and-si.patch
+Patch013:       0013-cdrom_id-use-the-old-MMC-fallback.patch
+Patch014:       0014-udev-rules-setup-tty-permissions-and-group-for-sclp_.patch
+Patch015:       0015-architecture-Add-tilegx.patch
+Patch016:       0016-nspawn-fix-detection-of-missing-proc-self-loginuid.patch
+Patch017:       0017-bash-add-completion-for-systemd-nspawn.patch
+
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
 
@@ -233,6 +254,7 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
         --exclude test/.gitignore \
         --exclude units/.gitignore \
         --exclude units/user/.gitignore \
+        --exclude src/libsystemd/sd-bus/PORTING-DBUS1 \
         %{patches}
 %endif
 %ifarch ppc ppc64
@@ -635,21 +657,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
-%{_datadir}/bash-completion/completions/hostnamectl
-%{_datadir}/bash-completion/completions/journalctl
-%{_datadir}/bash-completion/completions/localectl
-%{_datadir}/bash-completion/completions/loginctl
-%{_datadir}/bash-completion/completions/systemctl
-%{_datadir}/bash-completion/completions/systemd-coredumpctl
-%{_datadir}/bash-completion/completions/timedatectl
-%{_datadir}/bash-completion/completions/udevadm
-%{_datadir}/bash-completion/completions/systemd-analyze
-%{_datadir}/bash-completion/completions/kernel-install
-%{_datadir}/bash-completion/completions/systemd-run
-%{_datadir}/bash-completion/completions/busctl
-%{_datadir}/bash-completion/completions/bootctl
-%{_datadir}/bash-completion/completions/machinectl
-%{_datadir}/bash-completion/completions/systemd-delta
+%{_datadir}/bash-completion/completions/*
 %{_datadir}/zsh/site-functions/*
 %{_prefix}/lib/systemd/catalog/systemd.*.catalog
 %{_prefix}/lib/systemd/network/99-default.link
@@ -724,6 +732,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sat Mar 01 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-3
+- Backport a few patches, add completion for systemd-nspawn.
+
 * Fri Feb 28 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-3
 - Apply work-arounds for ppc/ppc64 for bugs 1071278 and 1071284
 
