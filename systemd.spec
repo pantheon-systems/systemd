@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        210
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -68,7 +68,10 @@ BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python-lxml
 BuildRequires:  python3-lxml
+%ifnarch ppc ppc64
+# https://bugzilla.redhat.com/show_bug.cgi?id=1071284
 BuildRequires:  libseccomp-devel
+%endif
 %if %{defined gitcommit}%{num_patches}
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -232,6 +235,11 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
         --exclude units/user/.gitignore \
         %{patches}
 %endif
+%ifarch ppc ppc64
+# https://bugzilla.redhat.com/show_bug.cgi?id=1071278
+# Disable link warnings, somehow they cause the link to fail.
+sed -r -i 's/\blibsystemd-(login|journal|id128|daemon).c \\/\\/' Makefile.am
+%endif
 
 %build
 %if %{defined gitcommit}
@@ -268,7 +276,7 @@ pushd build2
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --enable-compat-libs \
         --disable-kdbus
-make %{?_smp_mflags} V=1
+make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
 %install
@@ -716,6 +724,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Feb 28 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-3
+- Apply work-arounds for ppc/ppc64 for bugs 1071278 and 1071284
+
 * Mon Feb 24 2014 Lennart Poettering <lpoetter@redhat.com> - 210-2
 - Check more services against preset list and enable by default
 
