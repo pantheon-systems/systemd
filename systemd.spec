@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        210
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -257,8 +257,9 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
         --exclude src/libsystemd/sd-bus/PORTING-DBUS1 \
         %{patches}
 %endif
-%ifarch ppc ppc64
+%ifarch ppc ppc64 ppc64le
 # https://bugzilla.redhat.com/show_bug.cgi?id=1071278
+# https://bugzilla.redhat.com/show_bug.cgi?id=1073647
 # Disable link warnings, somehow they cause the link to fail.
 sed -r -i 's/\blibsystemd-(login|journal|id128|daemon).c \\/\\/' Makefile.am
 %endif
@@ -732,6 +733,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Mar 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-4
+- Apply work-around for ppc64le too (#1073647).
+
 * Sat Mar 01 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-3
 - Backport a few patches, add completion for systemd-nspawn.
 
