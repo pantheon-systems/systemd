@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        210
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -111,7 +111,8 @@ BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python-lxml
 BuildRequires:  python3-lxml
-%ifnarch ppc ppc64
+%ifnarch ppc ppc64 ppc64le
+# https://bugzilla.redhat.com/show_bug.cgi?id=1073647
 # https://bugzilla.redhat.com/show_bug.cgi?id=1071284
 BuildRequires:  libseccomp-devel
 %endif
@@ -279,9 +280,8 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
         --exclude src/libsystemd/sd-bus/PORTING-DBUS1 \
         %{patches}
 %endif
-%ifarch ppc ppc64 ppc64le
+%ifarch ppc ppc64
 # https://bugzilla.redhat.com/show_bug.cgi?id=1071278
-# https://bugzilla.redhat.com/show_bug.cgi?id=1073647
 # Disable link warnings, somehow they cause the link to fail.
 sed -r -i 's/\blibsystemd-(login|journal|id128|daemon).c \\/\\/' Makefile.am
 %endif
@@ -755,6 +755,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Mar 07 2014 Karsten Hopp <karsten@redhat.com> 210-6
+- move ifarch ppc64le to correct place (libseccomp req)
+
 * Fri Mar 07 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-5
 - Bugfixes: #1047568, #1047039, #1071128, #1073402
 - Bash completions for more systemd tools
