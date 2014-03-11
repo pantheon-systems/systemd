@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        210
-Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        211
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,60 +36,9 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v210-stable
-# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v210..v210-stable
+# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v211-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v211..v211-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
-Patch001:       0001-login-fix-pos-array-allocation.patch
-Patch002:       0002-login-set-pos-slot-to-fallback-on-pos-eviction.patch
-Patch003:       0003-login-Allow-calling-org.freedesktop.login1.Seat.Swit.patch
-Patch004:       0004-fix-typo-in-iDRAC-network-interface-name-irdac-idrac.patch
-Patch005:       0005-Replace-var-run-with-run-in-remaining-places.patch
-Patch006:       0006-Revert-back-to-var-run-at-a-couple-of-problems.patch
-Patch007:       0007-README-document-that-var-run-must-be-a-symlink-run.patch
-Patch008:       0008-Use-var-run-dbus-system_bus_socket-for-the-D-Bus-soc.patch
-Patch009:       0009-mount-don-t-send-out-PropertiesChanged-message-if-ac.patch
-Patch010:       0010-mount-don-t-fire-PropertiesChanged-signals-for-mount.patch
-Patch011:       0011-logs-show-fix-corrupt-output-with-empty-messages.patch
-Patch012:       0012-journalctl-refuse-extra-arguments-with-verify-and-si.patch
-Patch013:       0013-cdrom_id-use-the-old-MMC-fallback.patch
-Patch014:       0014-udev-rules-setup-tty-permissions-and-group-for-sclp_.patch
-Patch015:       0015-architecture-Add-tilegx.patch
-Patch016:       0016-nspawn-fix-detection-of-missing-proc-self-loginuid.patch
-Patch017:       0017-bash-add-completion-for-systemd-nspawn.patch
-Patch018:       0018-add-bash-completion-for-systemd-cgls.patch
-Patch019:       0019-hwdb-Update-database-of-Bluetooth-company-identifier.patch
-Patch020:       0020-Allow-fractional-parts-in-disk-sizes.patch
-Patch021:       0021-add-bash-completion-for-systemd-cgtop.patch
-Patch022:       0022-Fix-systemd-stdio-bridge-symlink.patch
-Patch023:       0023-execute-free-directory-path-if-we-fail-to-remove-it-.patch
-Patch024:       0024-update-bash-completion-for-systemd-analyze.patch
-Patch025:       0025-add-bash-completion-for-systemd-detect-virt.patch
-Patch026:       0026-Do-not-print-invalid-UTF-8-in-error-messages.patch
-Patch027:       0027-architecture-Add-cris.patch
-Patch028:       0028-add-bash-completion-for-systemd-cat.patch
-Patch029:       0029-man-document-missing-options-of-systemd-run.patch
-Patch030:       0030-systemd-run-add-some-extra-safety-checks.patch
-Patch031:       0031-journal-assume-that-next-entry-is-after-previous-ent.patch
-Patch032:       0032-journal-forget-file-after-encountering-an-error.patch
-Patch033:       0033-core-correctly-unregister-PIDs-from-PID-hashtables.patch
-Patch034:       0034-logind-fix-reference-to-systemd-user-sessions.servic.patch
-Patch035:       0035-man-update-link-to-LSB.patch
-Patch036:       0036-man-systemd-bootchart-fix-spacing-in-command.patch
-Patch037:       0037-man-add-missing-comma.patch
-Patch038:       0038-build-sys-Don-t-distribute-generated-udev-rule.patch
-Patch039:       0039-units-Do-not-unescape-instance-name-in-systemd-backl.patch
-Patch040:       0040-util-add-timeout-to-generator-execution.patch
-Patch041:       0041-core-busname-add-lookup-string-for-BUSNAME_FAILURE_S.patch
-Patch042:       0042-busname-don-t-drop-service-from-the-result-string.patch
-Patch043:       0043-manager-flush-memory-stream-before-using-the-buffer.patch
-Patch044:       0044-networkd-link-degrade-failed-UP-to-warning.patch
-Patch045:       0045-networkd-fix-confusion-from-missing-braces.patch
-Patch046:       0046-fix-off-by-one-error-in-array-index-assertion.patch
-Patch047:       0047-input_id-Recognize-buttonless-joystick-types.patch
-Patch048:       0048-logind-fix-policykit-checks.patch
-Patch049:       0049-nspawn-don-t-try-mknod-of-dev-console-with-the-corre.patch
-Patch050:       0050-build-sys-Find-the-tools-for-users-with-no-sbin-usr-.patch
-Patch051:       0051-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -767,6 +716,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Mar 11 2014 Lennart Poettering <lpoetter@redhat.com> - 211-1
+- New upstream release
+
 * Mon Mar 10 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-8
 - Fix logind unpriviledged reboot issue and a few other minor fixes
 - Limit generator execution time
