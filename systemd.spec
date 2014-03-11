@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        210
-Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -78,6 +78,18 @@ Patch036:       0036-man-systemd-bootchart-fix-spacing-in-command.patch
 Patch037:       0037-man-add-missing-comma.patch
 Patch038:       0038-build-sys-Don-t-distribute-generated-udev-rule.patch
 Patch039:       0039-units-Do-not-unescape-instance-name-in-systemd-backl.patch
+Patch040:       0040-util-add-timeout-to-generator-execution.patch
+Patch041:       0041-core-busname-add-lookup-string-for-BUSNAME_FAILURE_S.patch
+Patch042:       0042-busname-don-t-drop-service-from-the-result-string.patch
+Patch043:       0043-manager-flush-memory-stream-before-using-the-buffer.patch
+Patch044:       0044-networkd-link-degrade-failed-UP-to-warning.patch
+Patch045:       0045-networkd-fix-confusion-from-missing-braces.patch
+Patch046:       0046-fix-off-by-one-error-in-array-index-assertion.patch
+Patch047:       0047-input_id-Recognize-buttonless-joystick-types.patch
+Patch048:       0048-logind-fix-policykit-checks.patch
+Patch049:       0049-nspawn-don-t-try-mknod-of-dev-console-with-the-corre.patch
+Patch050:       0050-build-sys-Find-the-tools-for-users-with-no-sbin-usr-.patch
+Patch051:       0051-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -755,6 +767,11 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Mar 10 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 210-8
+- Fix logind unpriviledged reboot issue and a few other minor fixes
+- Limit generator execution time
+- Recognize buttonless joystick types
+
 * Fri Mar 07 2014 Karsten Hopp <karsten@redhat.com> 210-7
 - ppc64le needs link warnings disabled, too
 
