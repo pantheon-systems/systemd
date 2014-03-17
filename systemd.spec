@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        211
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -72,7 +72,8 @@ BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python-lxml
 BuildRequires:  python3-lxml
-%ifnarch ppc ppc64 ppc64le
+# libseccomp is currently explicitly only supported on x86/armv7
+%ifarch %{arm} %{ix86} x86_64
 # https://bugzilla.redhat.com/show_bug.cgi?id=1071278
 # https://bugzilla.redhat.com/show_bug.cgi?id=1073647
 # https://bugzilla.redhat.com/show_bug.cgi?id=1071284
@@ -716,6 +717,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Mar 17 2014 Peter Robinson <pbrobinson@fedoraproject.org> 211-2
+- Explicitly define which upstream platforms support libseccomp
+
 * Tue Mar 11 2014 Lennart Poettering <lpoetter@redhat.com> - 211-1
 - New upstream release
 
