@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        211
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        212
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -411,6 +411,9 @@ journalctl --update-catalog >/dev/null 2>&1 || :
 chgrp systemd-journal /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
 chmod g+s /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
 
+# Apply ACL to the journal directory
+setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
+
 # Move old stuff around in /var/lib
 mv %{_localstatedir}/lib/random-seed %{_localstatedir}/lib/systemd/random-seed >/dev/null 2>&1 || :
 mv %{_localstatedir}/lib/backlight %{_localstatedir}/lib/systemd/backlight >/dev/null 2>&1 || :
@@ -441,9 +444,6 @@ if [ -f /etc/nsswitch.conf ] ; then
                 s/[[:blank:]]*$/ myhostname/
                 ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
-
-# Apply ACL to the journal directory
-setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
 
 %postun
 if [ $1 -ge 1 ] ; then
@@ -717,6 +717,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Mar 25 2014 Lennart Poettering <lpoetter@redhat.com> - 212-1
+- New upstream release
+
 * Mon Mar 17 2014 Peter Robinson <pbrobinson@fedoraproject.org> 211-2
 - Explicitly define which upstream platforms support libseccomp
 
