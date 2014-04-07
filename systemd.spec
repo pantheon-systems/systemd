@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        15%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        16%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -365,6 +365,58 @@ Patch323:       0323-add-bash-completion-for-systemd-cat.patch
 Patch324:       0324-journal-assume-that-next-entry-is-after-previous-ent.patch
 Patch325:       0325-journal-forget-file-after-encountering-an-error.patch
 Patch326:       0326-logind-ignore-failing-close-on-session-devices.patch
+Patch327:       0327-core-introduce-new-stop-protocol-for-unit-scopes.patch
+Patch328:       0328-core-watch-SIGCHLD-more-closely-to-track-processes-o.patch
+Patch329:       0329-logind-rework-session-shutdown-logic.patch
+Patch330:       0330-logind-order-all-scopes-after-both-systemd-logind.se.patch
+Patch331:       0331-logind-given-that-we-can-now-relatively-safely-shutd.patch
+Patch332:       0332-logind-fix-reference-to-systemd-user-sessions.servic.patch
+Patch333:       0333-logind-add-forgotten-call-to-user_send_changed.patch
+Patch334:       0334-logind-save-session-after-setting-the-stopping-flag.patch
+Patch335:       0335-logind-save-user-state-after-stopping-the-session.patch
+Patch336:       0336-logind-initialize-timer_fd.patch
+Patch337:       0337-logind-pass-pointer-to-User-object-to-user_save.patch
+Patch338:       0338-core-allow-PIDs-to-be-watched-by-two-units-at-the-sa.patch
+Patch339:       0339-core-correctly-unregister-PIDs-from-PID-hashtables.patch
+Patch340:       0340-logind-uninitialized-timer_fd-is-set-to-1.patch
+Patch341:       0341-logind-add-forgotten-return-statement.patch
+Patch342:       0342-core-fix-detection-of-dead-processes.patch
+Patch343:       0343-Fix-prototype-of-get_process_state.patch
+Patch344:       0344-core-check-for-return-value-from-get_process_state.patch
+Patch345:       0345-man-update-link-to-LSB.patch
+Patch346:       0346-man-systemd-bootchart-fix-spacing-in-command.patch
+Patch347:       0347-man-add-missing-comma.patch
+Patch348:       0348-build-sys-Don-t-distribute-generated-udev-rule.patch
+Patch349:       0349-units-Do-not-unescape-instance-name-in-systemd-backl.patch
+Patch350:       0350-util-add-timeout-to-generator-execution.patch
+Patch351:       0351-input_id-Recognize-buttonless-joystick-types.patch
+Patch352:       0352-logind-fix-policykit-checks.patch
+Patch353:       0353-nspawn-don-t-try-mknod-of-dev-console-with-the-corre.patch
+Patch354:       0354-build-sys-Find-the-tools-for-users-with-no-sbin-usr-.patch
+Patch355:       0355-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
+Patch356:       0356-man-multiple-sleep-modes-are-to-be-separated-by-whit.patch
+Patch357:       0357-man-fix-description-of-systemctl-after-before.patch
+Patch358:       0358-udev-properly-detect-reference-to-unexisting-part-of.patch
+Patch359:       0359-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch360:       0360-gpt-auto-generator-don-t-return-OOM-on-parentless-de.patch
+Patch361:       0361-man-improve-wording-of-systemctl-s-after-before.patch
+Patch362:       0362-cgroup-it-s-not-OK-to-invoke-alloca-in-loops.patch
+Patch363:       0363-hwdb-update.patch
+Patch364:       0364-core-don-t-try-to-relabel-mounts-before-we-loaded-th.patch
+Patch365:       0365-man-explain-that-the-journal-field-SYSLOG_IDENTIFIER.patch
+Patch366:       0366-man-be-more-specific-when-EnvironmentFile-is-read.patch
+Patch367:       0367-systemctl-kill-mode-is-long-long-gone-don-t-mention-.patch
+Patch368:       0368-systemctl-add-more-verbose-explanation-of-kill-who-a.patch
+Patch369:       0369-ask-password-when-the-user-types-a-overly-long-passw.patch
+Patch370:       0370-util-consider-both-fuse.glusterfs-and-glusterfs-netw.patch
+Patch371:       0371-core-do-not-read-system-boot-timestamps-in-systemd-u.patch
+Patch372:       0372-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch373:       0373-Add-hwdb-entry-for-Samsung-Series-7-Ultra.patch
+Patch374:       0374-udev-do-not-export-static-node-tags-for-non-existing.patch
+Patch375:       0375-journalctl-free-arg_file-on-exit.patch
+Patch376:       0376-journal-fix-export-of-messages-containing-newlines.patch
+Patch377:       0377-tty-ask-password-agent-return-negative-errno.patch
+Patch378:       0378-systemd-python-use-.hex-instead-of-.get_hex.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1012,6 +1064,21 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Apr 07 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-16
+- Rework systemd-logind shutdown logic (#1032695)
+- Fix saving of logind session state and change notifications
+- Enable timeouts for generator execution
+- Recognize buttonless joystick types
+  (https://bugs.freedesktop.org/show_bug.cgi?id=70734)
+- Fix policykit check for reboot
+- Fix udev behaviour for unconnected loop devices
+- Fix overflow on password entry (#1084286)
+- Update hardware database
+- Consider glusterfs and fuse.glusterfs to be networked filesystems
+- Fix journalctl -o export for multiline messages
+- Fix get_catalog() in systemd-python for UUID arguments under Python 3
+- Documentation updates
+
 * Sun Feb 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-15
 - Backport some small patches, mostly completion updates and
   documentation fixes (#1069393, #1047568, #1047039, #1070970, #1061031)
