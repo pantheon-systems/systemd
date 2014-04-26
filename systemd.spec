@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        212
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -272,7 +272,7 @@ pushd build3
         --enable-compat-libs \
         --disable-kdbus \
         PYTHON=%{__python3}
-make %{?_smp_mflags} GCC_COLORS="" V=1
+make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
 popd
 
 pushd build2
@@ -283,7 +283,7 @@ pushd build2
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --enable-compat-libs \
         --disable-kdbus
-make %{?_smp_mflags} GCC_COLORS="" V=1
+make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
 popd
 
 %install
@@ -717,6 +717,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sat Apr 26 2014 Peter Robinson <pbrobinson@fedoraproject.org> 212-2
+- Disable building with -flto for the moment due to gcc 4.9 issues (RHBZ 1091611)
+
 * Tue Mar 25 2014 Lennart Poettering <lpoetter@redhat.com> - 212-1
 - New upstream release
 
