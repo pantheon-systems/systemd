@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        212
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -717,6 +717,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed May 07 2014 Michal Sekletar <msekleta@redhat.com> - 212-3
+- enable uuidd.socket by default (#1095353)
+
 * Sat Apr 26 2014 Peter Robinson <pbrobinson@fedoraproject.org> 212-2
 - Disable building with -flto for the moment due to gcc 4.9 issues (RHBZ 1091611)
 

@@ -74,6 +74,9 @@ enable x509watch.timer
 # https://bugzilla.redhat.com/show_bug.cgi?id=1060754
 enable dnssec-triggerd.service
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1095353
+enable uuidd.socket
+
 # Hardware
 enable gpm.*
 
