@@ -1,4 +1,4 @@
-From 4294dcefec5bd85c17d671612fac3b4b8cd20eac Mon Sep 17 00:00:00 2001
+From 248c3f3b5c2d1f0cc68eed831bc28b2369856544 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 14:03:56 +0200
 Subject: [PATCH] acpi: make sure we never free an uninitialized pointer

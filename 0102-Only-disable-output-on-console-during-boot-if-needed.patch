@@ -1,4 +1,4 @@
-From 00fac3c4c2ef02d5f0056a47a2ae29b048ed4d74 Mon Sep 17 00:00:00 2001
+From 91562e90166756d00c5e30817506921656de8769 Mon Sep 17 00:00:00 2001
 From: Olivier Brunel <jjk@jjacky.com>
 Date: Fri, 20 Sep 2013 22:18:29 +0200
 Subject: [PATCH] Only disable output on console during boot if needed

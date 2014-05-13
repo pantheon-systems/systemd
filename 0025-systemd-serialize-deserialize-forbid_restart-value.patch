@@ -1,4 +1,4 @@
-From adb4105cf7f0018d05696f96a1058041037c9243 Mon Sep 17 00:00:00 2001
+From 36d752d26f949a001b56f9ed26d48f5391a86dd2 Mon Sep 17 00:00:00 2001
 From: Sylvia Else <sylviabz1@cryogenic.net>
 Date: Sun, 6 Oct 2013 23:06:35 -0400
 Subject: [PATCH] systemd: serialize/deserialize forbid_restart value

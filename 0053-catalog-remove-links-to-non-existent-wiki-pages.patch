@@ -1,4 +1,4 @@
-From 5048d22d69d889d17eaea99f223fd9369eadc919 Mon Sep 17 00:00:00 2001
+From ee48fe63b1dac38cbc80a733b1ef8bcc53d8b1fd Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 24 Oct 2013 00:45:10 -0400
 Subject: [PATCH] catalog: remove links to non-existent wiki pages

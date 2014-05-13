@@ -1,4 +1,4 @@
-From d5910017f2cfaea144f766a3fb772b53f8d9dcbf Mon Sep 17 00:00:00 2001
+From 8883cb66c96692625916d4350b93c557d3b86b88 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 11 Nov 2013 03:02:52 +0100
 Subject: [PATCH] timer: properly format relative timestamps in the future

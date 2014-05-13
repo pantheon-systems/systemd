@@ -1,4 +1,4 @@
-From 7aa2bfdb3b0c3babc6bb8c4a9534a328b8ac37ab Mon Sep 17 00:00:00 2001
+From 8574653382521a2100b0ef22ed3b3cdd341a6425 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 30 Oct 2013 18:40:21 +0100
 Subject: [PATCH] nspawn: only pass in slice setting if it is set

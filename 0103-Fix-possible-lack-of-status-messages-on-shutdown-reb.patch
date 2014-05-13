@@ -1,4 +1,4 @@
-From 4131de47cae7e769b6cabb4894830efd3476fc0b Mon Sep 17 00:00:00 2001
+From 57ef8dcd5d572fcdb7a347b8979002a065984121 Mon Sep 17 00:00:00 2001
 From: Olivier Brunel <jjk@jjacky.com>
 Date: Fri, 20 Sep 2013 22:18:30 +0200
 Subject: [PATCH] Fix possible lack of status messages on shutdown/reboot

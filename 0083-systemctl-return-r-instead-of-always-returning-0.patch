@@ -1,4 +1,4 @@
-From 94c73ca7e22de4355f8ef32ea30ddf1ef8dae662 Mon Sep 17 00:00:00 2001
+From 6b867443d99feefaa911ac55e9a6b16ed7c1b811 Mon Sep 17 00:00:00 2001
 From: Michal Sekletar <msekleta@redhat.com>
 Date: Wed, 6 Nov 2013 11:18:02 +0100
 Subject: [PATCH] systemctl: return r instead of always returning 0

@@ -1,4 +1,4 @@
-From 12a195707153882b1df1b1503b51703a81c85de6 Mon Sep 17 00:00:00 2001
+From 4a0c09ccb4ba02fca9730c8e7cb68e41deb181ca Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Sun, 10 Nov 2013 23:05:08 +0100
 Subject: [PATCH] button: don't exit if we cannot handle a button press

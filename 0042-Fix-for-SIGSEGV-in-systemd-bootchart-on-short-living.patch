@@ -1,4 +1,4 @@
-From cd1338b7abe6d300ce66051f3490f35c8b4d1443 Mon Sep 17 00:00:00 2001
+From 6a5ca4af4911b8dee459ab409e73929ab57f6c82 Mon Sep 17 00:00:00 2001
 From: Igor Zhbanov <i.zhbanov@samsung.com>
 Date: Tue, 15 Oct 2013 14:35:13 +0400
 Subject: [PATCH] Fix for SIGSEGV in systemd-bootchart on short-living

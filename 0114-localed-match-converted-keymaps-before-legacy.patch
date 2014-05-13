@@ -1,4 +1,4 @@
-From 3f3485b6bc8995f0e51e6725d1a4d99d825c8188 Mon Sep 17 00:00:00 2001
+From 1bd1c389f923d324e7e37076d4b7747d215c8796 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 18 Nov 2013 13:42:57 -0500
 Subject: [PATCH] localed: match converted keymaps before legacy

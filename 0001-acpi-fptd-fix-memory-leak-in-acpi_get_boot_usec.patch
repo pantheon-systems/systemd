@@ -1,4 +1,4 @@
-From 3e4aca291a6ab914e08108acbd5d96600370c20d Mon Sep 17 00:00:00 2001
+From 0951e738eb1e46a5ef5ca22e2bc81986aeafa005 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 2 Oct 2013 13:39:49 +0200
 Subject: [PATCH] acpi-fptd: fix memory leak in acpi_get_boot_usec

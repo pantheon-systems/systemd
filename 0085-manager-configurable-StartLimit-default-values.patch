@@ -1,4 +1,4 @@
-From 9e694cd271f7bce2ad7a77de03b66d493ca5dd61 Mon Sep 17 00:00:00 2001
+From a113780cce01ad0ebd3c3b54bcbd0756b1eb9482 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Fri, 8 Nov 2013 16:01:22 +0100
 Subject: [PATCH] manager: configurable StartLimit default values

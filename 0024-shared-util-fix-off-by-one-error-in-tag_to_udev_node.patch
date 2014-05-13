@@ -1,4 +1,4 @@
-From c3d2db4dd65bf5127cbddec2edd931399ce5ebce Mon Sep 17 00:00:00 2001
+From f9389c058f7b52b33a4281b2d7653819486b7569 Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Sun, 6 Oct 2013 18:26:23 -0400
 Subject: [PATCH] shared/util: fix off-by-one error in tag_to_udev_node

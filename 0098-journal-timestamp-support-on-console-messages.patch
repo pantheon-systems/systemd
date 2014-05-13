@@ -1,4 +1,4 @@
-From d787844df7f23a079c8bab893a8412550848bb6a Mon Sep 17 00:00:00 2001
+From f65a1b58e8f88b00cff82fe609ca83f55b166518 Mon Sep 17 00:00:00 2001
 From: Umut Tezduyar Lindskog <umut.tezduyar@axis.com>
 Date: Wed, 13 Nov 2013 15:27:19 +0100
 Subject: [PATCH] journal: timestamp support on console messages

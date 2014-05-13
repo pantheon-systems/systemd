@@ -1,4 +1,4 @@
-From 3dca881397af86883639ab25f27dfb605acc2a2c Mon Sep 17 00:00:00 2001
+From 48a7472dbd791622bd97d7e211207e014c526705 Mon Sep 17 00:00:00 2001
 From: Jan Engelhardt <jengelh@inai.de>
 Date: Tue, 15 Oct 2013 08:58:50 +0200
 Subject: [PATCH] man: document the -b special boot option

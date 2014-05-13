@@ -1,4 +1,4 @@
-From f1d712f9028cec81748102a4b05b09a98cddfc79 Mon Sep 17 00:00:00 2001
+From 230860d86571d9cf240a7b2d171f5ceffa9d89fe Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 16 Nov 2013 17:29:28 -0500
 Subject: [PATCH] tmpfiles: adjust excludes for the new per-service private

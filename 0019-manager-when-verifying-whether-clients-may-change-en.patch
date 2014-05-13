@@ -1,4 +1,4 @@
-From 8f84713d297fcba39b65e7409ec114009896c3ff Mon Sep 17 00:00:00 2001
+From 8c19b420bba6a9aeb120b85c986798762065bb33 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 4 Oct 2013 17:01:37 +0200
 Subject: [PATCH] manager: when verifying whether clients may change

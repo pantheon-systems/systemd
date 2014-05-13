@@ -1,4 +1,4 @@
-From 85f4505eab750835fdfe022012bf7d33123bc940 Mon Sep 17 00:00:00 2001
+From 74002ad108e92b482448ec2f8075d68f7d17c789 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 9 Oct 2013 04:03:45 +0200
 Subject: [PATCH] journald: fix minor memory leak

@@ -1,4 +1,4 @@
-From e46b85ec8f333d1bdd0e66b99530965c7781110b Mon Sep 17 00:00:00 2001
+From 2bef355ec58002ffec2b1a72e7373dc72f175bf6 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 8 Nov 2013 13:53:25 +0100
 Subject: [PATCH] journal: fix minor memory leak

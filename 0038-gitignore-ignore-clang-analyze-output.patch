@@ -1,4 +1,4 @@
-From 8d2f7d0ecc3b949f7f15934f3adb73e812866c59 Mon Sep 17 00:00:00 2001
+From 91a4412a44af07985048a664472388ed27482d0f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 12 Oct 2013 19:50:54 -0400
 Subject: [PATCH] gitignore: ignore clang --analyze output

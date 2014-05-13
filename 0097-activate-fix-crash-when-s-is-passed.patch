@@ -1,4 +1,4 @@
-From 767d458826e99cc55aeccb65c469124be61851a0 Mon Sep 17 00:00:00 2001
+From 0065eb89fd172f6e2014a8efd952d29bc0c7a5e0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Mantas=20Mikul=C4=97nas?= <grawity@gmail.com>
 Date: Wed, 13 Nov 2013 13:36:16 +0200
 Subject: [PATCH] activate: fix crash when -s is passed

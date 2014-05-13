@@ -1,4 +1,4 @@
-From 4f0d2ef232fe578576a2bec5076fda19de15ff27 Mon Sep 17 00:00:00 2001
+From 470bfa21f6213565126f8447de6126b5b2377e7b Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Mon, 4 Nov 2013 07:25:45 +0100
 Subject: [PATCH] udev-builtin-keyboard: Fix large scan codes on 32 bit

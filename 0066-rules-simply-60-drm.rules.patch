@@ -1,4 +1,4 @@
-From 5700379e437756e1e7a2508b238c8220367292bc Mon Sep 17 00:00:00 2001
+From 56fd14a7e3671e1d9163fffd378a1985d42b1b4d Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Sun, 3 Nov 2013 16:17:14 +0100
 Subject: [PATCH] rules: simply 60-drm.rules

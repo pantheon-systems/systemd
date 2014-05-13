@@ -1,4 +1,4 @@
-From f1b1f3bab4764964d12a62aba1cdbd71ec6415ae Mon Sep 17 00:00:00 2001
+From ea46660942050162d9fcf8ec9582272d5fa68203 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 30 Oct 2013 18:58:59 +0100
 Subject: [PATCH] nspawn: split out pty forwaring logic into ptyfwd.c

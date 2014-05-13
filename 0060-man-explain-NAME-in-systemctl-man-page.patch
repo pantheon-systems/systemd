@@ -1,4 +1,4 @@
-From 04547df8f2b71ec3fb4e18e9363da583264a3915 Mon Sep 17 00:00:00 2001
+From 457490196dbf2ad0cd1a31cfd63b8eb9606e9981 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?V=C3=A1clav=20Pavl=C3=ADn?= <vpavlin@redhat.com>
 Date: Thu, 31 Oct 2013 14:36:41 +0100
 Subject: [PATCH] man: explain NAME in systemctl man page

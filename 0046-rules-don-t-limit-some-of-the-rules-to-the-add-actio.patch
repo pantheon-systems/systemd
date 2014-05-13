@@ -1,4 +1,4 @@
-From 9a3296571683a6a3eaee44d18db91ca113841da6 Mon Sep 17 00:00:00 2001
+From 7c6ed28afab4cf2a7ab0fbdf7cd8f95fd99a5529 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 16 Oct 2013 02:51:24 +0200
 Subject: [PATCH] rules: don't limit some of the rules to the "add" action

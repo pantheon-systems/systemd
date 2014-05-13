@@ -1,4 +1,4 @@
-From ed1c300e6bd7d27d3dde228a3bb0f73fe8e00ca6 Mon Sep 17 00:00:00 2001
+From 4fa456e244ebb30c6fb1792c811b87822d2c5264 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 11 Nov 2013 23:32:31 -0500
 Subject: [PATCH] fsck: modernization

@@ -1,4 +1,4 @@
-From e7e2208e73ccc4a93dc87d1fc4624be0dbe3e747 Mon Sep 17 00:00:00 2001
+From 4c7c750f00de1f8649f8397c0579e47868d380f2 Mon Sep 17 00:00:00 2001
 From: Bastien Nocera <hadess@hadess.net>
 Date: Fri, 11 Oct 2013 09:45:32 +0200
 Subject: [PATCH] Add support for saving/restoring keyboard backlights

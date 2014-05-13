@@ -1,4 +1,4 @@
-From 6381c0c4adc2d637ad53dd81cfeb73d7b4a2cbcb Mon Sep 17 00:00:00 2001
+From c9eb4cbe6f8f7acfc42f97a99e1f0212c278d79c Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martinpitt@gnome.org>
 Date: Wed, 9 Oct 2013 16:05:15 +0200
 Subject: [PATCH] keymap: Fix Samsung 900X[34]C

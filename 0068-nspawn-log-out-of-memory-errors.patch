@@ -1,4 +1,4 @@
-From 30304d0fd69e703992c62ab3bcabcc6239f5fe1c Mon Sep 17 00:00:00 2001
+From 4f54a2da178f683d7c7b86df6aa3b873802dcea0 Mon Sep 17 00:00:00 2001
 From: Djalal Harouni <tixxdz@opendz.org>
 Date: Tue, 5 Nov 2013 15:26:37 +0100
 Subject: [PATCH] nspawn: log out of memory errors

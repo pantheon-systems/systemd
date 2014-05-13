@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}.pantheon3
+Release:        16%{?gitcommit:.git%{gitcommit}}%{?dist}.pantheon1
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,6 +36,8 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
+# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v208-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v208..v208-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
 Patch001:       0001-acpi-fptd-fix-memory-leak-in-acpi_get_boot_usec.patch
 Patch002:       0002-fix-lingering-references-to-var-lib-backlight-random.patch
@@ -97,7 +99,7 @@ Patch057:       0057-libudev-default-log_priority-to-INFO.patch
 Patch058:       0058-nspawn-only-pass-in-slice-setting-if-it-is-set.patch
 Patch059:       0059-zsh-completion-add-systemd-run.patch
 Patch060:       0060-man-explain-NAME-in-systemctl-man-page.patch
-#Patch061:       0061-virt-move-caching-of-virtualization-check-results-in.patch
+Patch061:       0061-virt-move-caching-of-virtualization-check-results-in.patch
 Patch062:       0062-systemctl-fix-typo-in-help-text.patch
 Patch063:       0063-analyze-plot-place-the-text-on-the-side-with-most-sp.patch
 Patch064:       0064-detect_virtualization-returns-NULL-pass-empty-string.patch
@@ -152,6 +154,270 @@ Patch112:       0112-tmpfiles-adjust-excludes-for-the-new-per-service-pri.patch
 Patch113:       0113-core-socket-fix-SO_REUSEPORT.patch
 Patch114:       0114-localed-match-converted-keymaps-before-legacy.patch
 Patch115:       0115-keymap-Add-Toshiba-Satellite-U940.patch
+Patch116:       0116-calendar-support-yearly-and-annually-names-the-same-.patch
+Patch117:       0117-hashmap-be-a-bit-more-conservative-with-pre-allocati.patch
+Patch118:       0118-manager-don-t-do-plymouth-in-a-container.patch
+Patch119:       0119-nspawn-add-new-drop-capability-switch.patch
+Patch120:       0120-valgrind-make-running-PID-1-in-valgrind-useful.patch
+Patch121:       0121-efi-boot-generator-don-t-mount-boot-eagerly.patch
+Patch122:       0122-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch123:       0123-journal-when-appending-to-journal-file-allocate-larg.patch
+Patch124:       0124-journal-make-table-const.patch
+Patch125:       0125-journald-keep-statistics-on-how-of-we-hit-miss-the-m.patch
+Patch126:       0126-journal-optimize-bisection-logic-a-bit-by-caching-th.patch
+Patch127:       0127-journal-fix-iteration-when-we-go-backwards-from-the-.patch
+Patch128:       0128-journal-allow-journal_file_copy_entry-to-work-on-non.patch
+Patch129:       0129-journal-simplify-pre-allocation-logic.patch
+Patch130:       0130-journald-mention-how-long-we-needed-to-flush-to-var-.patch
+Patch131:       0131-automount-log-info-about-triggering-process.patch
+Patch132:       0132-virt-split-detect_vm-into-separate-functions.patch
+Patch133:       0133-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch134:       0134-sysfs-show.c-return-negative-error.patch
+Patch135:       0135-util.c-check-if-return-value-from-ttyname_r-is-0-ins.patch
+Patch136:       0136-docs-remove-unneeded-the-s-in-gudev-docs.patch
+Patch137:       0137-man-explicitly-say-when-multiple-units-can-be-specif.patch
+Patch138:       0138-systemd-treat-reload-failure-as-failure.patch
+Patch139:       0139-journal-fail-silently-in-sd_j_sendv-if-journal-is-un.patch
+Patch140:       0140-systemd-add-a-start-job-for-all-units-specified-with.patch
+Patch141:       0141-core-device-ignore-SYSTEMD_WANTS-in-user-mode.patch
+Patch142:       0142-Fix-memory-leak-in-stdout-journal-streams.patch
+Patch143:       0143-man-document-is-enabled-output.patch
+Patch144:       0144-hostnamed-avoid-using-NULL-in-error-path.patch
+Patch145:       0145-logind-use-correct-who-enum-values-with-KillUnit.patch
+Patch146:       0146-Revert-systemd-add-a-start-job-for-all-units-specifi.patch
+Patch147:       0147-core-do-not-segfault-if-swap-activity-happens-when-p.patch
+Patch148:       0148-kernel-install-add-h-help.patch
+Patch149:       0149-kernel-install-fix-help-output.patch
+Patch150:       0150-man-improve-wording-and-comma-usage-in-systemd.journ.patch
+Patch151:       0151-drop-several-entries-from-kbd-model-map-whose-kbd-la.patch
+Patch152:       0152-correct-name-of-Tajik-kbd-layout-in-kbd-model-map.patch
+Patch153:       0153-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch154:       0154-Ensure-unit-is-journaled-for-short-lived-or-oneshot-.patch
+Patch155:       0155-libudev-hwdb-use-libudev-not-systemd-logging.patch
+Patch156:       0156-core-manager-remove-infinite-loop.patch
+Patch157:       0157-util-check-for-overflow-in-greedy_realloc.patch
+Patch158:       0158-journald-use-a-bit-more-cleanup-magic.patch
+Patch159:       0159-journald-malloc-less-when-streaming-messages.patch
+Patch160:       0160-activate-clean-up-inherited-descriptors.patch
+Patch161:       0161-man-explain-in-more-detail-how-SYSTEMD_READY-influen.patch
+Patch162:       0162-units-don-t-run-readahead-done-timers-in-containers.patch
+Patch163:       0163-test-fileio-replace-mktemp-with-mkstemp-to-avoid-war.patch
+Patch164:       0164-journal-pipe-journalctl-help-output-into-a-pager.patch
+Patch165:       0165-nspawn-complain-and-continue-if-machine-has-same-id.patch
+Patch166:       0166-man-beef-up-ExecStart-description.patch
+Patch167:       0167-man-remove-advice-to-avoid-setting-the-same-var-more.patch
+Patch168:       0168-systemctl-add-the-plain-option-to-the-help-message.patch
+Patch169:       0169-Fix-a-few-resource-leaks-in-error-paths.patch
+Patch170:       0170-Fix-a-few-signed-unsigned-format-string-issues.patch
+Patch171:       0171-util-try-harder-to-increase-the-send-recv-buffers-of.patch
+Patch172:       0172-execute-also-set-SO_SNDBUF-when-spawning-a-service-w.patch
+Patch173:       0173-journal-file-protect-against-alloca-0.patch
+Patch174:       0174-man-describe-journalctl-show-cursor.patch
+Patch175:       0175-journal-fix-against-theoretical-undefined-behavior.patch
+Patch176:       0176-journald-downgrade-warning-message-when-dev-kmsg-doe.patch
+Patch177:       0177-journal-file.c-remove-redundant-assignment-of-variab.patch
+Patch178:       0178-login-Don-t-stop-a-running-user-manager-from-garbage.patch
+Patch179:       0179-libudev-devices-received-from-udev-are-always-initia.patch
+Patch180:       0180-log-don-t-reopen-dev-console-each-time-we-call-log_o.patch
+Patch181:       0181-log-when-we-log-to-dev-console-and-got-disconnected-.patch
+Patch182:       0182-loginctl-when-showing-device-tree-of-seats-with-no-d.patch
+Patch183:       0183-man-be-more-explicit-about-option-arguments-that-tak.patch
+Patch184:       0184-man-add-DOI-for-refereed-article-on-Forward-Secure-S.patch
+Patch185:       0185-journalctl-zsh-completion-fix-several-issues-in-help.patch
+Patch186:       0186-keymap-Refactor-Acer-tables.patch
+Patch187:       0187-logging-reduce-send-timeout-to-something-more-sensib.patch
+Patch188:       0188-DEFAULT_PATH_SPLIT_USR-macro.patch
+Patch189:       0189-fstab-generator-Do-not-try-to-fsck-non-devices.patch
+Patch190:       0190-logind-remove-dead-variable.patch
+Patch191:       0191-hwdb-update.patch
+Patch192:       0192-delta-replace-readdir_r-with-readdir.patch
+Patch193:       0193-delta-fix-delta-for-drop-ins.patch
+Patch194:       0194-delta-if-prefix-is-specified-only-show-overrides-the.patch
+Patch195:       0195-log-log_error-and-friends-add-a-newline-after-each-l.patch
+Patch196:       0196-man-units-tmpfiles.d-5-cleanup.patch
+Patch197:       0197-tmpfiles-introduce-the-concept-of-unsafe-operations.patch
+Patch198:       0198-sleep-config-fix-useless-check-for-swapfile-type.patch
+Patch199:       0199-journalctl-make-sure-b-foobar-cannot-be-misunderstoo.patch
+Patch200:       0200-man-resolve-word-omissions.patch
+Patch201:       0201-man-improvements-to-comma-placement.patch
+Patch202:       0202-man-grammar-and-wording-improvements.patch
+Patch203:       0203-man-document-fail-nofail-auto-noauto.patch
+Patch204:       0204-man-fix-description-of-is-enabled-returned-value.patch
+Patch205:       0205-man-fix-Type-reference.patch
+Patch206:       0206-man-fix-Type-reference-v2.patch
+Patch207:       0207-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch208:       0208-man-add-a-note-about-propagating-signals.patch
+Patch209:       0209-man-include-autoconf-snippet-in-daemon-7.patch
+Patch210:       0210-systemd-python-fix-setting-of-exception-codes.patch
+Patch211:       0211-systemd-python-fix-listen_fds-under-Python-2.patch
+Patch212:       0212-man-expand-on-some-more-subtle-points-in-systemd.soc.patch
+Patch213:       0213-tmpfiles-rename-unsafe-to-boot.patch
+Patch214:       0214-sleep-config-Dereference-pointer-before-check-for-NU.patch
+Patch215:       0215-sleep-config-fix-double-free.patch
+Patch216:       0216-rules-drivers-do-not-reset-RUN-list.patch
+Patch217:       0217-core-manager-print-info-about-interesting-signals.patch
+Patch218:       0218-core-service-check-if-mainpid-matches-only-if-it-is-.patch
+Patch219:       0219-man-typo-fix.patch
+Patch220:       0220-swap-remove-if-else-with-the-same-data-path.patch
+Patch221:       0221-hwdb-update.patch
+Patch222:       0222-journal-Add-missing-byte-order-conversions.patch
+Patch223:       0223-hwdb-change-key-mappings-for-Samsung-90X3A.patch
+Patch224:       0224-hwdb-add-Samsung-700G.patch
+Patch225:       0225-hwdb-remove-duplicate-entry-for-Samsung-700Z.patch
+Patch226:       0226-hwdb-fix-match-for-Thinkpad-X201-tablet.patch
+Patch227:       0227-keymap-Recognize-different-Toshiba-Satellite-capital.patch
+Patch228:       0228-sleep.c-fix-typo.patch
+Patch229:       0229-delta-ensure-that-d_type-will-be-set-on-every-fs.patch
+Patch230:       0230-tmpfiles-don-t-allow-label_fix-to-print-ENOENT-when-.patch
+Patch231:       0231-man-mention-which-variables-will-be-expanded-in-Exec.patch
+Patch232:       0232-hwdb-Add-support-for-Toshiba-Satellite-P75-A7200-key.patch
+Patch233:       0233-journal-fix-access-to-munmapped-memory-in-sd_journal.patch
+Patch234:       0234-gpt-auto-generator-skip-nonexistent-devices.patch
+Patch235:       0235-gpt-auto-generator-use-EBADSLT-code-when-unable-to-d.patch
+Patch236:       0236-journald-do-not-free-space-when-disk-space-runs-low.patch
+Patch237:       0237-man-add-busctl-1.patch
+Patch238:       0238-journalctl-flip-to-full-by-default.patch
+Patch239:       0239-coredumpctl-in-case-of-error-free-pattern-after-prin.patch
+Patch240:       0240-shell-completion-remove-load-from-systemctl.patch
+Patch241:       0241-units-drop-Install-section-from-multi-user.target-an.patch
+Patch242:       0242-systemctl-skip-native-unit-file-handling-if-sysv-fil.patch
+Patch243:       0243-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch244:       0244-udev-static_node-do-not-exit-rule-after-first-static.patch
+Patch245:       0245-cryptsetup-Support-key-slot-option.patch
+Patch246:       0246-pam_systemd-Ignore-vtnr-when-seat-seat0.patch
+Patch247:       0247-keymap-Add-HP-Chromebook-14-Falco.patch
+Patch248:       0248-keymap-Add-release-quirk-for-Acer-AOA-switchvideomod.patch
+Patch249:       0249-keymap-Add-Sony-Vaio-VGN-FW250.patch
+Patch250:       0250-keymap-Add-Toshiba-EQUIUM.patch
+Patch251:       0251-tmpfiles-fix-memory-leak-of-exclude_prefixes.patch
+Patch252:       0252-analyze-fix-plot-issues-when-using-gummiboot.patch
+Patch253:       0253-udev-add-zram-to-the-list-of-devices-inappropriate-f.patch
+Patch254:       0254-bash-completion-fix-completion-of-complete-verbs.patch
+Patch255:       0255-shell-completion-fix-completion-of-localectl-set-loc.patch
+Patch256:       0256-zsh-completions-kernel-install-only-show-existing-ke.patch
+Patch257:       0257-core-fix-crashes-if-locale.conf-contains-invalid-utf.patch
+Patch258:       0258-core-do-not-print-invalid-utf-8-in-error-messages.patch
+Patch259:       0259-cryptsetup-generator-auto-add-deps-for-device-as-pas.patch
+Patch260:       0260-man-fix-reference-in-systemd-inhibit-1.patch
+Patch261:       0261-man-fix-another-reference-in-systemd-inhibit-1.patch
+Patch262:       0262-fstab-generator-Create-fsck-root-symlink-with-correc.patch
+Patch263:       0263-efi-fix-Undefined-reference-efi_loader_get_boot_usec.patch
+Patch264:       0264-core-make-StopWhenUnneeded-work-in-conjunction-with-.patch
+Patch265:       0265-man-always-place-programlisting-and-programlisting-i.patch
+Patch266:       0266-Temporary-work-around-for-slow-shutdown-due-to-unter.patch
+Patch267:       0267-pam-module-fix-warning-about-ignoring-vtnr.patch
+Patch268:       0268-pam_systemd-do-not-set-XDG_RUNTIME_DIR-if-the-sessio.patch
+Patch269:       0269-core-do-not-segfault-if-proc-swaps-cannot-be-opened.patch
+Patch270:       0270-Revert-login-Don-t-stop-a-running-user-manager-from-.patch
+Patch271:       0271-Revert-journalctl-flip-to-full-by-default.patch
+Patch272:       0272-util-fix-handling-of-trailing-whitespace-in-split_qu.patch
+Patch273:       0273-udev-net_id-Introduce-predictable-network-names-for-.patch
+Patch274:       0274-utils-silence-the-compiler-warning.patch
+Patch275:       0275-fix-SELinux-check-for-transient-units.patch
+Patch276:       0276-s390-getty-generator-initialize-essential-system-ter.patch
+Patch277:       0277-pam-use-correct-log-level.patch
+Patch278:       0278-nspawn-if-we-don-t-find-bash-try-sh.patch
+Patch279:       0279-units-systemd-logind-fails-hard-without-dbus.patch
+Patch280:       0280-man-fix-grammatical-errors-and-other-formatting-issu.patch
+Patch281:       0281-man-replace-STDOUT-with-standard-output-etc.patch
+Patch282:       0282-man-use-spaces-instead-of-tabs.patch
+Patch283:       0283-macro-add-a-macro-to-test-whether-a-value-is-in-a-sp.patch
+Patch284:       0284-core-fix-property-changes-in-transient-units.patch
+Patch285:       0285-core-more-exact-test-on-the-procfs-special-string-de.patch
+Patch286:       0286-doc-update-punctuation.patch
+Patch287:       0287-doc-resolve-missing-extraneous-words-or-inappropriat.patch
+Patch288:       0288-doc-choose-different-words-to-improve-clarity.patch
+Patch289:       0289-doc-properly-use-XML-entities.patch
+Patch290:       0290-man-machinectl-there-is-no-command-kill-machine.patch
+Patch291:       0291-load-modules-properly-return-a-failing-error-code-if.patch
+Patch292:       0292-machinectl-add-bash-completion.patch
+Patch293:       0293-delta-add-bash-completion.patch
+Patch294:       0294-man-document-MAINPID.patch
+Patch295:       0295-man-busctl-typo-fix.patch
+Patch296:       0296-journal-don-t-clobber-return-parameters-of-sd_journa.patch
+Patch297:       0297-udev-make-sure-we-always-return-a-valid-error-code-i.patch
+Patch298:       0298-bootctl-add-bash-completion.patch
+Patch299:       0299-selinux-Don-t-attempt-to-load-policy-in-initramfs-if.patch
+Patch300:       0300-man-there-is-no-ExecStopPre-for-service-units.patch
+Patch301:       0301-man-document-that-per-interface-sysctl-variables-are.patch
+Patch302:       0302-journal-downgrade-vaccuum-message-to-debug-level.patch
+Patch303:       0303-core-gc-half-created-stub-units.patch
+Patch304:       0304-getty-generator-verify-ttys-before-we-make-use-of-th.patch
+Patch305:       0305-units-serial-getty-.service-add-Install-section.patch
+Patch306:       0306-README-document-that-var-run-must-be-a-symlink-run.patch
+Patch307:       0307-Use-var-run-dbus-system_bus_socket-for-the-D-Bus-soc.patch
+Patch308:       0308-mount-don-t-send-out-PropertiesChanged-message-if-ac.patch
+Patch309:       0309-mount-don-t-fire-PropertiesChanged-signals-for-mount.patch
+Patch310:       0310-logs-show-fix-corrupt-output-with-empty-messages.patch
+Patch311:       0311-journalctl-refuse-extra-arguments-with-verify-and-si.patch
+Patch312:       0312-cdrom_id-use-the-old-MMC-fallback.patch
+Patch313:       0313-udev-rules-setup-tty-permissions-and-group-for-sclp_.patch
+Patch314:       0314-bash-add-completion-for-systemd-nspawn.patch
+Patch315:       0315-add-bash-completion-for-systemd-cgls.patch
+Patch316:       0316-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch317:       0317-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch318:       0318-Allow-fractional-parts-in-disk-sizes.patch
+Patch319:       0319-add-bash-completion-for-systemd-cgtop.patch
+Patch320:       0320-execute-free-directory-path-if-we-fail-to-remove-it-.patch
+Patch321:       0321-add-bash-completion-for-systemd-detect-virt.patch
+Patch322:       0322-Do-not-print-invalid-UTF-8-in-error-messages.patch
+Patch323:       0323-add-bash-completion-for-systemd-cat.patch
+Patch324:       0324-journal-assume-that-next-entry-is-after-previous-ent.patch
+Patch325:       0325-journal-forget-file-after-encountering-an-error.patch
+Patch326:       0326-logind-ignore-failing-close-on-session-devices.patch
+Patch327:       0327-core-introduce-new-stop-protocol-for-unit-scopes.patch
+Patch328:       0328-core-watch-SIGCHLD-more-closely-to-track-processes-o.patch
+Patch329:       0329-logind-rework-session-shutdown-logic.patch
+Patch330:       0330-logind-order-all-scopes-after-both-systemd-logind.se.patch
+Patch331:       0331-logind-given-that-we-can-now-relatively-safely-shutd.patch
+Patch332:       0332-logind-fix-reference-to-systemd-user-sessions.servic.patch
+Patch333:       0333-logind-add-forgotten-call-to-user_send_changed.patch
+Patch334:       0334-logind-save-session-after-setting-the-stopping-flag.patch
+Patch335:       0335-logind-save-user-state-after-stopping-the-session.patch
+Patch336:       0336-logind-initialize-timer_fd.patch
+Patch337:       0337-logind-pass-pointer-to-User-object-to-user_save.patch
+Patch338:       0338-core-allow-PIDs-to-be-watched-by-two-units-at-the-sa.patch
+Patch339:       0339-core-correctly-unregister-PIDs-from-PID-hashtables.patch
+Patch340:       0340-logind-uninitialized-timer_fd-is-set-to-1.patch
+Patch341:       0341-logind-add-forgotten-return-statement.patch
+Patch342:       0342-core-fix-detection-of-dead-processes.patch
+Patch343:       0343-Fix-prototype-of-get_process_state.patch
+Patch344:       0344-core-check-for-return-value-from-get_process_state.patch
+Patch345:       0345-man-update-link-to-LSB.patch
+Patch346:       0346-man-systemd-bootchart-fix-spacing-in-command.patch
+Patch347:       0347-man-add-missing-comma.patch
+Patch348:       0348-build-sys-Don-t-distribute-generated-udev-rule.patch
+Patch349:       0349-units-Do-not-unescape-instance-name-in-systemd-backl.patch
+Patch350:       0350-util-add-timeout-to-generator-execution.patch
+Patch351:       0351-input_id-Recognize-buttonless-joystick-types.patch
+Patch352:       0352-logind-fix-policykit-checks.patch
+Patch353:       0353-nspawn-don-t-try-mknod-of-dev-console-with-the-corre.patch
+Patch354:       0354-build-sys-Find-the-tools-for-users-with-no-sbin-usr-.patch
+Patch355:       0355-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
+Patch356:       0356-man-multiple-sleep-modes-are-to-be-separated-by-whit.patch
+Patch357:       0357-man-fix-description-of-systemctl-after-before.patch
+Patch358:       0358-udev-properly-detect-reference-to-unexisting-part-of.patch
+Patch359:       0359-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch360:       0360-gpt-auto-generator-don-t-return-OOM-on-parentless-de.patch
+Patch361:       0361-man-improve-wording-of-systemctl-s-after-before.patch
+Patch362:       0362-cgroup-it-s-not-OK-to-invoke-alloca-in-loops.patch
+Patch363:       0363-hwdb-update.patch
+Patch364:       0364-core-don-t-try-to-relabel-mounts-before-we-loaded-th.patch
+Patch365:       0365-man-explain-that-the-journal-field-SYSLOG_IDENTIFIER.patch
+Patch366:       0366-man-be-more-specific-when-EnvironmentFile-is-read.patch
+Patch367:       0367-systemctl-kill-mode-is-long-long-gone-don-t-mention-.patch
+Patch368:       0368-systemctl-add-more-verbose-explanation-of-kill-who-a.patch
+Patch369:       0369-ask-password-when-the-user-types-a-overly-long-passw.patch
+Patch370:       0370-util-consider-both-fuse.glusterfs-and-glusterfs-netw.patch
+Patch371:       0371-core-do-not-read-system-boot-timestamps-in-systemd-u.patch
+Patch372:       0372-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch373:       0373-Add-hwdb-entry-for-Samsung-Series-7-Ultra.patch
+Patch374:       0374-udev-do-not-export-static-node-tags-for-non-existing.patch
+Patch375:       0375-journalctl-free-arg_file-on-exit.patch
+Patch376:       0376-journal-fix-export-of-messages-containing-newlines.patch
+Patch377:       0377-tty-ask-password-agent-return-negative-errno.patch
+Patch378:       0378-systemd-python-use-.hex-instead-of-.get_hex.patch
+
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -204,6 +470,7 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 15
+Requires:       diffutils
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -222,6 +489,8 @@ Provides:       systemd-analyze = 198
 # systemd-sysv-convert was removed in f20: https://fedorahosted.org/fpc/ticket/308
 Obsoletes:      systemd-sysv < 206
 Provides:       systemd-sysv = 206
+# https://bugzilla.redhat.com/show_bug.cgi?id=1026860
+Conflicts:      lvm2 < 2.02.103-4
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -602,8 +871,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
+%dir %{_prefix}/lib/kernel
+%dir %{_prefix}/lib/kernel/install.d
 %dir %{_datadir}/systemd
 %dir %{_datadir}/pkgconfig
+%dir %{_datadir}/zsh
+%dir %{_datadir}/zsh/site-functions
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
@@ -681,6 +954,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_prefix}/lib/systemd/system-generators/systemd-efi-boot-generator
 %{_prefix}/lib/systemd/system-generators/systemd-gpt-auto-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
+%{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
@@ -725,17 +999,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
-%{_datadir}/bash-completion/completions/hostnamectl
-%{_datadir}/bash-completion/completions/journalctl
-%{_datadir}/bash-completion/completions/localectl
-%{_datadir}/bash-completion/completions/loginctl
-%{_datadir}/bash-completion/completions/systemctl
-%{_datadir}/bash-completion/completions/systemd-coredumpctl
-%{_datadir}/bash-completion/completions/timedatectl
-%{_datadir}/bash-completion/completions/udevadm
-%{_datadir}/bash-completion/completions/systemd-analyze
-%{_datadir}/bash-completion/completions/kernel-install
-%{_datadir}/bash-completion/completions/systemd-run
+%{_datadir}/bash-completion/completions/*
 %{_datadir}/zsh/site-functions/*
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
@@ -804,8 +1068,69 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Apr 07 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-16
+- Rework systemd-logind shutdown logic (#1032695)
+- Fix saving of logind session state and change notifications
+- Enable timeouts for generator execution
+- Recognize buttonless joystick types
+  (https://bugs.freedesktop.org/show_bug.cgi?id=70734)
+- Fix policykit check for reboot
+- Fix udev behaviour for unconnected loop devices
+- Fix overflow on password entry (#1084286)
+- Update hardware database
+- Consider glusterfs and fuse.glusterfs to be networked filesystems
+- Fix journalctl -o export for multiline messages
+- Fix get_catalog() in systemd-python for UUID arguments under Python 3
+- Documentation updates
+
+* Sun Feb 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-15
+- Backport some small patches, mostly completion updates and
+  documentation fixes (#1069393, #1047568, #1047039, #1070970, #1061031)
+- Make sclp_line, ttysclp and 3270/tty owned by group tty
+- Allow key-slot= in crypttab
+- Update database of bluetooth identifiers
+
+* Sun Feb 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-15
+- Enable dnssec-triggerd.service by default (#1060754)
+
+* Mon Feb 17 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-14
+- Back out patch which causes user manager to be destroyed when unneeded
+  and spams logs (#1053315)
+
+* Sun Feb 16 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-13
+- A different fix for #1023820 taken from Mageia
+- Backported fix for #997031
+- Hardward database updates, man pages improvements, a few small memory
+  leaks, utf-8 correctness and completion fixes
+- Support for key-slot option in crypttab
+
+* Sat Jan 25 2014 Ville Skyttä <ville.skytta@iki.fi> - 208-12
+- Own the %%{_prefix}/lib/kernel(/*) and %%{_datadir}/zsh(/*) dirs.
+
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-11
+- Backport a few fixes, relevant documentation updates, and HWDB changes
+  (#1051797, #1051768, #1047335, #1047304, #1047186, #1045849, #1043304,
+   #1043212, #1039351, #1031325, #1023820, #1017509, #953077)
+
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-10
+- Remove patch for #1026860 now that LVM rules have been updated
+
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-9
+- Apply two patches for #1026860
+
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-8
+- Back out patches for bugs which are not freeze-excepted (only #1006386?
+  remains)
+
+* Tue Dec 03 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-7
+- Backport patches (#1023041, #1036845, #1006386?)
+- HWDB update
+- Some small new features: nspawn --drop-capability=, running PID 1 under
+  valgrind, "yearly" and "annually" in calendar specifications
+- Some small documentation and logging updates
+
 * Tue Nov 19 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-6
-- Bump version to stay ahead of f20
+- Back kmod dependency version bump out
 
 * Tue Nov 19 2013 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-5
 - Use unit name in PrivateTmp= directories (#957439)

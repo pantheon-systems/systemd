@@ -1,4 +1,4 @@
-From 431e477b8e66ddbaba28a9f59fb8ae2e16d59cb5 Mon Sep 17 00:00:00 2001
+From 0e0e285f98abbce3763131ce95fecd68e15368d2 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Mon, 21 Oct 2013 03:49:03 +0200
 Subject: [PATCH] rules: remove pointless MODE= settings

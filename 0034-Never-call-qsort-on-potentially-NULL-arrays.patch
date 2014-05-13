@@ -1,4 +1,4 @@
-From 88bef035149080be5a83f90d91d5b13cec9749e8 Mon Sep 17 00:00:00 2001
+From 640e6b9ae24e6e8137f99687df66507b4130d5c8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 11 Oct 2013 19:33:13 -0400
 Subject: [PATCH] Never call qsort on potentially NULL arrays

@@ -1,4 +1,4 @@
-From bc3ae365890fa52f9beca1a67744a0fcbdcb5f82 Mon Sep 17 00:00:00 2001
+From fa5ad41f9931b378c7b6c95df433f39c9b9b36f4 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Thu, 17 Oct 2013 03:20:46 +0200
 Subject: [PATCH] tmpfiles: log unaccessible FUSE mount points only as debug

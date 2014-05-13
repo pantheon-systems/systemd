@@ -1,4 +1,4 @@
-From c9cceff90794d452b16a5dd8d1c53cdb44f4a002 Mon Sep 17 00:00:00 2001
+From a032e5652ae1dbf86ca668924a1a4e7ef4f94df4 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 9 Oct 2013 22:13:13 -0400
 Subject: [PATCH] journald: remove rotated file from hashmap when rotation

@@ -1,4 +1,4 @@
-From 82e54a15fa202a67c9a9d2e53aad660f8a5ff36c Mon Sep 17 00:00:00 2001
+From fbefdc24d1f9a4cecb85fbd42c3f027941a1c9fe Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 7 Nov 2013 17:51:09 +0100
 Subject: [PATCH] man: add docs for sd_is_special() and some man page symlinks

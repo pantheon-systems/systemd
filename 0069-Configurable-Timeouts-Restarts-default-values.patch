@@ -1,4 +1,4 @@
-From f9d232e896bec3301a20a33a38a87b102f0172bc Mon Sep 17 00:00:00 2001
+From 2b3474ddf48ce7fb4e04221f767b363a0706753d Mon Sep 17 00:00:00 2001
 From: Oleksii Shevchuk <alxchk@gmail.com>
 Date: Mon, 4 Nov 2013 18:47:43 +0200
 Subject: [PATCH] Configurable Timeouts/Restarts default values

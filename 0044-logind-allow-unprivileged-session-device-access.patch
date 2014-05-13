@@ -1,4 +1,4 @@
-From 6d3e661d97dd6157381ca1dd52b839e2049b86b5 Mon Sep 17 00:00:00 2001
+From 7f5331b7b4f945204c6a7efe24dd8c131e132f1d Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Tue, 15 Oct 2013 21:13:39 +0200
 Subject: [PATCH] logind: allow unprivileged session-device access

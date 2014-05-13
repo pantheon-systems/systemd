@@ -1,4 +1,4 @@
-From e323253480b01f0df71ee409cbf9aba88ec1a5e4 Mon Sep 17 00:00:00 2001
+From ecd905af9b322957712e23046baed1514aba5819 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Wed, 30 Oct 2013 14:34:58 +0100
 Subject: [PATCH] udev: ata_id: log faling ioctls as "debug"

@@ -1,4 +1,4 @@
-From 98f6a4dfe1d6e601ddd2b59c42e8fc16193d187b Mon Sep 17 00:00:00 2001
+From e3af95f3c8bf6f7e52cc848d7330d5d00deec35b Mon Sep 17 00:00:00 2001
 From: Pavel Holica <conscript89@gmail.com>
 Date: Wed, 6 Nov 2013 23:24:16 +0100
 Subject: [PATCH] acpi-fpdt: break on zero or negative length read

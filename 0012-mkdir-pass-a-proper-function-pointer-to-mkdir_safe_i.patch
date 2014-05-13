@@ -1,4 +1,4 @@
-From 77c2f8448bc13bb796b9b8dbc93c684428ab38c2 Mon Sep 17 00:00:00 2001
+From 77cd831bac1a3e086dc77e66614ec65f84e267b6 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:38:52 +0200
 Subject: [PATCH] mkdir: pass a proper function pointer to mkdir_safe_internal

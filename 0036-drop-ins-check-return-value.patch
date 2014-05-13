@@ -1,4 +1,4 @@
-From 187ff3e80b8d6b447e584708d88a1858e154a348 Mon Sep 17 00:00:00 2001
+From 1eb11fe0ff64239cea4fec250a9ca484867d81b1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 11 Oct 2013 19:33:36 -0400
 Subject: [PATCH] drop-ins: check return value

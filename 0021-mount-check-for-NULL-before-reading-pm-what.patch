@@ -1,4 +1,4 @@
-From 61ccd1762fa0f9a8ec9285a8a7367fc03bcc5982 Mon Sep 17 00:00:00 2001
+From 67e09a256f3cd235a22b71569711bc4f85f5e827 Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Fri, 4 Oct 2013 18:22:40 -0400
 Subject: [PATCH] mount: check for NULL before reading pm->what

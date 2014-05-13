@@ -1,4 +1,4 @@
-From 044615d3520fe1884b6d1c410b99c26c0b02d41a Mon Sep 17 00:00:00 2001
+From 395932dfebaa4d9b4ef91857802d222484fd610e Mon Sep 17 00:00:00 2001
 From: Richard Marko <rmarko@fedoraproject.org>
 Date: Tue, 5 Nov 2013 15:41:20 +0100
 Subject: [PATCH] systemd-python: convert keyword value to string

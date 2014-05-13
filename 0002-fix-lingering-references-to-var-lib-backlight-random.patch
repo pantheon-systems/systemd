@@ -1,4 +1,4 @@
-From 80c0a135afe5d801903ac742c386a5468837175c Mon Sep 17 00:00:00 2001
+From 50bc3a5d68b5595c4fecaab06dfd7842fb168a0b Mon Sep 17 00:00:00 2001
 From: Dave Reisner <dreisner@archlinux.org>
 Date: Wed, 2 Oct 2013 07:46:24 -0400
 Subject: [PATCH] fix lingering references to /var/lib/{backlight,random-seed}

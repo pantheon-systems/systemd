@@ -1,4 +1,4 @@
-From 546f518baf5c1cb083030fe2b3de751f160e5eea Mon Sep 17 00:00:00 2001
+From 34b8fd165b187dd271d92b6ecaef89b056b4f742 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 6 Nov 2013 02:05:06 +0100
 Subject: [PATCH] nspawn: explicitly terminate machines when we exit nspawn

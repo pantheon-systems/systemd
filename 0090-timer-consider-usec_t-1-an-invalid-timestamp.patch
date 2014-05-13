@@ -1,4 +1,4 @@
-From a0598047e4bfd308a25b9a516529ab49074fa527 Mon Sep 17 00:00:00 2001
+From d5a8cc7503ed9d54ed6b7e76e211deaa1b701125 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 11 Nov 2013 03:03:17 +0100
 Subject: [PATCH] timer: consider (usec_t) -1 an invalid timestamp

@@ -1,4 +1,4 @@
-From 27d066e733e369873328e7bc0b67d91f07687cb0 Mon Sep 17 00:00:00 2001
+From 15224c786eed91903665ed99b3a1b03c823ae1c8 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:37:30 +0200
 Subject: [PATCH] dbus: fix return value of dispatch_rqueue()

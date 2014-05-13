@@ -1,4 +1,4 @@
-From b430e6ff0580b962c0b36dd5817dac681c159a58 Mon Sep 17 00:00:00 2001
+From d79f41c58f17c12c21512fb59ad415c10877cc09 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 2 Oct 2013 19:38:28 +0200
 Subject: [PATCH] strv: don't access potentially NULL string arrays

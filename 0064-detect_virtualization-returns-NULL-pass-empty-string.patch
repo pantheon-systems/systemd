@@ -1,4 +1,4 @@
-From 855359a615a6002ac601a778f12e60970f18c64f Mon Sep 17 00:00:00 2001
+From ea98de45c8ba12898b83ae53907082b8a225cfc6 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Sat, 2 Nov 2013 00:01:32 +0100
 Subject: [PATCH] detect_virtualization() returns NULL; pass empty string to

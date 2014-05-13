@@ -1,4 +1,4 @@
-From 0f25880b6e0feea046923d2d796e6e10abdd7c6a Mon Sep 17 00:00:00 2001
+From 72a0befe3e1f4462afde44c1d4818241b58c8bc9 Mon Sep 17 00:00:00 2001
 From: Ronny Chevalier <chevalier.ronny@gmail.com>
 Date: Wed, 30 Oct 2013 21:57:44 +0100
 Subject: [PATCH] zsh-completion: add systemd-run

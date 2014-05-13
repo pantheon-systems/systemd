@@ -1,4 +1,4 @@
-From b5f796a636fed8b75fcfbb44f48b808743fca964 Mon Sep 17 00:00:00 2001
+From 203562872b07690556d196ef8980c3af41f1d21c Mon Sep 17 00:00:00 2001
 From: Olivier Brunel <jjk@jjacky.com>
 Date: Fri, 20 Sep 2013 22:18:28 +0200
 Subject: [PATCH] Resolve /dev/console to the active tty instead of just "tty0"
