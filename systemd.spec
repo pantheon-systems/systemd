@@ -1095,6 +1095,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 - Fix journalctl -o export for multiline messages
 - Fix get_catalog() in systemd-python for UUID arguments under Python 3
 - Documentation updates
+- Fix for #626477.
 
 * Sun Feb 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-15
 - Backport some small patches, mostly completion updates and
