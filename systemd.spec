@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        212
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -42,7 +42,6 @@ Source6:        yum-protect-systemd.conf
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
-Patch1001:      0001-udev-remove-seqnum-API-and-all-assumptions-about-seq.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -718,6 +717,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri May 23 2014 Adam Williamson <awilliam@redhat.com> - 212-5
+- revert change from 212-4, causes boot fail on single CPU boxes (RHBZ 1095891)
+
 * Wed May 07 2014 Kay Sievers <kay@redhat.com> - 212-4
 - add netns udev workaround
 
