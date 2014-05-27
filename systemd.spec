@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        212
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -717,6 +717,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue May 27 2014 Kalev Lember <kalevlember@gmail.com> - 212-6
+- Rebuilt for https://fedoraproject.org/wiki/Changes/Python_3.4
+
 * Fri May 23 2014 Adam Williamson <awilliam@redhat.com> - 212-5
 - revert change from 212-4, causes boot fail on single CPU boxes (RHBZ 1095891)
 
