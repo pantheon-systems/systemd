@@ -722,6 +722,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %changelog
 * Wed May 28 2014 Michal Sekletar <msekleta@redhat.com> - 213-2
 - Create temporary files after installation (#1101983)
+- Add sysstat-collect.timer, sysstat-summary.timer to preset policy (#1101621)
 
 * Wed May 28 2014 Kay Sievers <kay@redhat.com> - 213-1
 - New upstream release

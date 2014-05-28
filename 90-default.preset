@@ -102,6 +102,8 @@ enable ksm.service
 enable ksmtuned.service
 enable rootfs-resize.service
 enable sysstat.service
+enable sysstat-collect.timer
+enable sysstat-summary.timer
 enable uuidd.service
 enable xendomains.service
 enable xenstored.service
