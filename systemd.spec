@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        212
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        213
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -365,9 +365,6 @@ install -m 0644 %{SOURCE7} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
 
-# Make sure the NTP units dir exists
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
-
 # Make sure directories in /var exist
 mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/coredump
 mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
@@ -396,6 +393,7 @@ getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
 getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 || :
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
+getent group systemd-timesync >/dev/null 2>&1 || groupadd -r -g 190 systemd-timesync 2>&1 || :
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
@@ -543,6 +541,8 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %config(noreplace) %{_sysconfdir}/systemd/logind.conf
 %config(noreplace) %{_sysconfdir}/systemd/journald.conf
 %config(noreplace) %{_sysconfdir}/systemd/bootchart.conf
+%config(noreplace) %{_sysconfdir}/systemd/resolved.conf
+%config(noreplace) %{_sysconfdir}/systemd/timesyncd.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
@@ -645,8 +645,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/*
 %{_datadir}/zsh/site-functions/*
 %{_prefix}/lib/systemd/catalog/systemd.*.catalog
+%{_prefix}/lib/systemd/ntp-units.d/90-systemd.list
 %{_prefix}/lib/systemd/network/99-default.link
 %{_prefix}/lib/systemd/network/80-container-host0.network
+%{_prefix}/lib/systemd/network/80-container-ve.network
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -717,6 +719,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed May 28 2014 Kay Sievers <kay@redhat.com> - 213-1
+- New upstream release
+
 * Tue May 27 2014 Kalev Lember <kalevlember@gmail.com> - 212-6
 - Rebuilt for https://fedoraproject.org/wiki/Changes/Python_3.4
 
