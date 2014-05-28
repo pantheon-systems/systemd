@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        213
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -721,6 +721,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed May 28 2014 Kay Sievers <kay@redhat.com> - 213-3
+- fix systemd-timesync user creation
+
 * Wed May 28 2014 Michal Sekletar <msekleta@redhat.com> - 213-2
 - Create temporary files after installation (#1101983)
 - Add sysstat-collect.timer, sysstat-summary.timer to preset policy (#1101621)
