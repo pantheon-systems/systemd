@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        16%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        17%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -417,6 +417,17 @@ Patch375:       0375-journalctl-free-arg_file-on-exit.patch
 Patch376:       0376-journal-fix-export-of-messages-containing-newlines.patch
 Patch377:       0377-tty-ask-password-agent-return-negative-errno.patch
 Patch378:       0378-systemd-python-use-.hex-instead-of-.get_hex.patch
+Patch379:       0379-reduce-the-amount-of-messages-logged-to-dev-kmsg-whe.patch
+Patch380:       0380-journal-cleanup-up-error-handling-in-update_catalog.patch
+Patch381:       0381-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch382:       0382-bash-completion-fix-__get_startable_units.patch
+Patch383:       0383-hwdb-update.patch
+Patch384:       0384-hwdb-PCI-include-primary-model-string-in-subsystem-m.patch
+Patch385:       0385-sysctl-replaces-some-slashes-with-dots.patch
+Patch386:       0386-man-document-relationship-between-RequiresMountsFor-.patch
+Patch387:       0387-install-create_symlink-check-unlink-return-value.patch
+Patch388:       0388-delta-do-not-use-unicode-chars-in-C-locale.patch
+Patch389:       0389-core-print-debug-instead-of-error-message.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1064,6 +1075,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Jun 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-17
+- Log debug message when Abandon() fails (#1105857)
+- Reduce amount of messages logged to kmsg when debug in enabled
+- Hardware database updates
+- Misc fixes (systemd-delta, journald, bash completion, docs)
+
 * Sun Apr 07 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-16
 - Rework systemd-logind shutdown logic (#1032695)
 - Fix saving of logind session state and change notifications
