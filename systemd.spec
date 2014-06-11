@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        213
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        214
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -272,7 +272,7 @@ pushd build3
         --enable-compat-libs \
         --disable-kdbus \
         PYTHON=%{__python3}
-make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
+make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
 pushd build2
@@ -283,7 +283,7 @@ pushd build2
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --enable-compat-libs \
         --disable-kdbus
-make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
+make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
 %install
@@ -391,10 +391,15 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
-getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 || :
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
 getent group systemd-timesync >/dev/null 2>&1 || groupadd -r systemd-timesync 2>&1 || :
-getent passwd systemd-timesync >/dev/null 2>&1 || useradd -r -l -g systemd-timesync -d / -s /usr/sbin/nologin -c "Systemd Timesync" systemd-timesync >/dev/null 2>&1 || :
+getent passwd systemd-timesync >/dev/null 2>&1 || useradd -r -l -g systemd-timesync -d / -s /usr/sbin/nologin -c "systemd Time Synchronization" systemd-timesync >/dev/null 2>&1 || :
+getent group systemd-network >/dev/null 2>&1 || groupadd -r systemd-network 2>&1 || :
+getent passwd systemd-network >/dev/null 2>&1 || useradd -r -l -g systemd-network -d / -s /usr/sbin/nologin -c "systemd Network Management" systemd-network >/dev/null 2>&1 || :
+getent group systemd-resolve >/dev/null 2>&1 || groupadd -r systemd-resolve 2>&1 || :
+getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolve -d / -s /usr/sbin/nologin -c "systemd Resolver" systemd-resolve >/dev/null 2>&1 || :
+getent group systemd-bus-proxy >/dev/null 2>&1 || groupadd -r systemd-bus-proxy 2>&1 || :
+getent passwd systemd-bus-proxy >/dev/null 2>&1 || useradd -r -l -g systemd-bus-proxy -d / -s /usr/sbin/nologin -c "systemd Bus Proxy" systemd-bus-proxy >/dev/null 2>&1 || :
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
@@ -408,8 +413,8 @@ journalctl --update-catalog >/dev/null 2>&1 || :
 systemd-tmpfiles --create >/dev/null 2>&1 || :
 
 # Make sure new journal files will be owned by the "systemd-journal" group
-chgrp systemd-journal /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
-chmod g+s /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
+chgrp systemd-journal /run/log/journal/ /run/log/journal/`cat /etc/machine-id 2> /dev/null` /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
+chmod g+s /run/log/journal/ /run/log/journal/`cat /etc/machine-id 2> /dev/null` /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
 
 # Apply ACL to the journal directory
 setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
@@ -602,11 +607,13 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_prefix}/lib/systemd/system-generators/systemd-system-update-generator
 %{_prefix}/lib/systemd/system-generators/systemd-efi-boot-generator
 %{_prefix}/lib/systemd/system-generators/systemd-gpt-auto-generator
+%{_prefix}/lib/systemd/system-generators/systemd-sysv-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
 %{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
+%{_prefix}/lib/tmpfiles.d/var.conf
 %{_prefix}/lib/sysctl.d/50-default.conf
 %{_prefix}/lib/systemd/system-preset/85-display-manager.preset
 %{_prefix}/lib/systemd/system-preset/90-default.preset
@@ -721,6 +728,11 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Jun 11 2014 Lennart Poettering <lpoetter@redhat.com> - 214-1
+- New upstream release
+- Get rid of "floppy" group, since udev uses "disk" now
+- Reenable LTO
+
 * Sun Jun 08 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 213-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
