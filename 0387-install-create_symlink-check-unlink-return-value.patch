@@ -1,7 +1,7 @@
 From c96e341a0d317d6345dbf1f43a8ca0e0c31aaf7d Mon Sep 17 00:00:00 2001
 From: Djalal Harouni <tixxdz@opendz.org>
 Date: Thu, 17 Apr 2014 01:47:11 +0100
-Subject: [PATCH 387/389] install: create_symlink() check unlink() return value
+Subject: [PATCH] install: create_symlink() check unlink() return value
 
 create_symlink() do not check the return value of unlink(), this may
 confuse the user.
@@ -44,6 +44,3 @@ index b9c85b7..e6a61fa 100644
  
          if (symlink(old_path, new_path) >= 0) {
                  add_file_change(changes, n_changes, UNIT_FILE_UNLINK, new_path, NULL);
--- 
-1.8.3.1
-

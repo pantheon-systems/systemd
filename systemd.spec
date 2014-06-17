@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        17%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        18%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -428,6 +428,77 @@ Patch386:       0386-man-document-relationship-between-RequiresMountsFor-.patch
 Patch387:       0387-install-create_symlink-check-unlink-return-value.patch
 Patch388:       0388-delta-do-not-use-unicode-chars-in-C-locale.patch
 Patch389:       0389-core-print-debug-instead-of-error-message.patch
+Patch390:       0390-tmpfiles-fix-permissions-on-new-journal-files.patch
+Patch391:       0391-implement-a-union-to-pad-out-file_handle.patch
+Patch392:       0392-analyze-fix-plot-with-bad-y-size.patch
+Patch393:       0393-util-make-sure-all-our-name_to_handle_at-code-makes-.patch
+Patch394:       0394-Fix-keysize-handling-in-cryptsetup-bits-vs.-bytes.patch
+Patch395:       0395-udev-increase-the-size-of-RESULT-buffer.patch
+Patch396:       0396-job-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
+Patch397:       0397-machine-id-only-look-into-KVM-uuid-when-we-are-not-r.patch
+Patch398:       0398-hwdb-update.patch
+Patch399:       0399-core-check-the-right-variable-for-failed-open.patch
+Patch400:       0400-man-sd_journal_send-does-nothing-when-journald-is-no.patch
+Patch401:       0401-core-sysvcompat-network-should-be-equivalent-to-netw.patch
+Patch402:       0402-udev-do-not-skip-the-execution-of-RUN-when-renaming-.patch
+Patch403:       0403-udev-avoid-use-of-uninitialized-err.patch
+Patch404:       0404-shared-install-do-not-prefix-created-symlink-with-ro.patch
+Patch405:       0405-shared-include-root-when-canonicalizing-conf-paths.patch
+Patch406:       0406-Make-systemctl-root-look-for-files-in-the-proper-pla.patch
+Patch407:       0407-util-replace-close_nointr_nofail-by-a-more-useful-sa.patch
+Patch408:       0408-async-add-asynchronous-close-call.patch
+Patch409:       0409-core-close-socket-fds-asynchronously.patch
+Patch410:       0410-logind-bring-polkit-policy-for-hibernate-in-line-wit.patch
+Patch411:       0411-unit.c-Move-code-around-to-easy-cherrypicking.patch
+Patch412:       0412-core-make-sure-to-serialize-jobs-for-all-units.patch
+Patch413:       0413-man-clarify-that-the-ExecReload-command-should-be-sy.patch
+Patch414:       0414-man-readahead-fix-cmdline-switch-inconsistency-betwe.patch
+Patch415:       0415-build-sys-at-configure-check-for-verifying-that-ln-s.patch
+Patch416:       0416-man-update-journald-rate-limit-defaults.patch
+Patch417:       0417-nspawn-properly-format-container_uuid-in-UUID-format.patch
+Patch418:       0418-core-reindent-selinux-ima-smack-setup.c.patch
+Patch419:       0419-core-let-selinux_setup-load-policy-more-than-once.patch
+Patch420:       0420-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch421:       0421-hwdb-update.patch
+Patch422:       0422-nspawn-allow-to-bind-mount-journal-on-top-of-a-non-e.patch
+Patch423:       0423-nspawn-restore-journal-directory-is-empty-check.patch
+Patch424:       0424-machine-escape-fields-we-store-in-run-so-that-they-c.patch
+Patch425:       0425-logind-also-escape-external-data-when-saving-to-run.patch
+Patch426:       0426-man-drop-reference-to-file-locking-for-PID-file-crea.patch
+Patch427:       0427-man-update-URL-refernce-in-daemon-7.patch
+Patch428:       0428-conf-parser-never-consider-it-an-error-if-we-cannot-.patch
+Patch429:       0429-socket-properly-handle-if-our-service-vanished-durin.patch
+Patch430:       0430-keymap-Add-Lenovo-Enhanced-USB-Keyboard.patch
+Patch431:       0431-keymap-Asus-EeePC-touchpad-toggle-key.patch
+Patch432:       0432-udev-keyboard-also-hook-into-change-events.patch
+Patch433:       0433-Do-not-unescape-unit-names-in-Install-section.patch
+Patch434:       0434-util-ignore_file-should-not-allow-files-ending-with.patch
+Patch435:       0435-udev-builtin-keyboard-do-tell-on-which-device-EVIOCS.patch
+Patch436:       0436-tty-ask-password-agent-Do-tell-what-directory-we-fai.patch
+Patch437:       0437-keyboard-add-Plantronics-.Audio-mute-button.patch
+Patch438:       0438-hwdb-fix-case-sensitive-match.patch
+Patch439:       0439-man-fix-references-to-sd_journal_cutoff_realtime_use.patch
+Patch440:       0440-man-Searching-for-an-explanation-of-what-a-slice-uni.patch
+Patch441:       0441-systemd-detect-virt-only-discover-Xen-domU.patch
+Patch442:       0442-man-updates-to-the-passive-target-section.patch
+Patch443:       0443-label-when-clearing-selinux-context-don-t-mangle-err.patch
+Patch444:       0444-units-order-network-online.target-after-network.targ.patch
+Patch445:       0445-core-fix-invalid-free-in-killall.patch
+Patch446:       0446-install-fix-invalid-free-in-unit_file_mask.patch
+Patch447:       0447-rpm-don-t-hardcode-the-binary-paths-in-the-macros-re.patch
+Patch448:       0448-tmpfiles-set-up-selinux-label-proeprly-when-creating.patch
+Patch449:       0449-util-add-files_same-helper-function.patch
+Patch450:       0450-Add-strappenda3.patch
+Patch451:       0451-unit-name-fix-detection-of-unit-templates-instances.patch
+Patch452:       0452-conf-files-fix-when-for-root-logic.patch
+Patch453:       0453-bootchart-set-white-background.patch
+Patch454:       0454-backlight-always-prefer-firmware-platform-backlights.patch
+Patch455:       0455-install-various-modernizations.patch
+Patch456:       0456-install-simplify-and-clarify-disabling-logic-for-ins.patch
+Patch457:       0457-install-when-looking-for-a-unit-file-for-enabling-se.patch
+Patch458:       0458-install-make-sure-systemctl-disable-foobar-.service-.patch
+Patch459:       0459-install-make-sure-that-root-mode-doesn-t-make-us-con.patch
+Patch460:       0460-install-simplify-symlink-root-logic.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -623,6 +694,7 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
         --exclude test/.gitignore \
         --exclude units/.gitignore \
         --exclude units/user/.gitignore \
+        --exclude hwdb/ids-update.pl \
         %{patches}
 %endif
 
@@ -1075,13 +1147,30 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Jun 17 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-18
+- Fix permissions on new journal files
+- Fix some (potential) bad memory accesses
+- Fix cryptsetup keysize handling
+- Fix handling of jobs during systemd reload
+- Fix detection of container virtualization under KVM and Xen domU
+- Update hardware database
+- Some small documentation updates (#1096067)
+- Make SYSV $network be equivalent to network-online, not network target
+- Do not skip RUN execution when udev fails to rename network device
+- Minor overhaul of systmemctl install handling with symlinked units
+  and --root
+- Make systemd close sockets asynchronously to prevent stalls
+- Allow local users to hibernate
+- Fix selinux policy reload on switch-root
+- Restore backlight also for "raw" devices (#1108019)
+
 * Wed Jun 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-17
 - Log debug message when Abandon() fails (#1105857)
 - Reduce amount of messages logged to kmsg when debug in enabled
 - Hardware database updates
 - Misc fixes (systemd-delta, journald, bash completion, docs)
 
-* Sun Apr 07 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-16
+* Mon Apr 07 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-16
 - Rework systemd-logind shutdown logic (#1032695)
 - Fix saving of logind session state and change notifications
 - Enable timeouts for generator execution

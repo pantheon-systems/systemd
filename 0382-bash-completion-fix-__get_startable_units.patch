@@ -1,7 +1,7 @@
 From efa946235ef9e5b9c91f1f7ec085ace3d070a6af Mon Sep 17 00:00:00 2001
 From: Dan Kilman <dankilman@gmail.com>
 Date: Sun, 13 Apr 2014 18:06:13 +0300
-Subject: [PATCH 382/389] bash completion: fix __get_startable_units
+Subject: [PATCH] bash completion: fix __get_startable_units
 
 (cherry picked from commit a163b64c4b08e8a4ad39a9a295acf3d1634024a3)
 (cherry picked from commit cc9db03683d794e2894bb1a682724fb3493e0bf5)
@@ -22,6 +22,3 @@ index 857552d..1e4d07a 100644
  __get_failed_units   () { __systemctl $1 list-units       \
          | { while read -r a b c d; do [[ $c == "failed"   ]] && echo " $a"; done; }; }
  __get_enabled_units  () { __systemctl $1 list-unit-files  \
--- 
-1.8.3.1
-

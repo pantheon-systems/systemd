@@ -1,8 +1,7 @@
 From 3008e643b5b511a171e03a6f55444ea4ee0e6ee6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 11 Apr 2014 08:44:55 -0400
-Subject: [PATCH 380/389] journal: cleanup up error handling in
- update_catalog()
+Subject: [PATCH] journal: cleanup up error handling in update_catalog()
 
 - Negative/positive errno mixup caused duplicates not to be detected properly.
   Now we get a warning about some duplicate entries in our own catalogs...
@@ -103,6 +102,3 @@ index 5db5bed..f021dbf 100644
  
          test_catalog_importing();
  
--- 
-1.8.3.1
-

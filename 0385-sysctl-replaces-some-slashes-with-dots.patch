@@ -1,7 +1,7 @@
 From 8fe9940538c2dbf3b507e4f61146dabe48a6a840 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 16 Apr 2014 21:33:46 -0400
-Subject: [PATCH 385/389] sysctl: replaces some slashes with dots
+Subject: [PATCH] sysctl: replaces some slashes with dots
 
 It turns out that plain sysctl understands a.b/c syntax to write to
 /proc/sys/a/b.c. Support this for compatibility.
@@ -94,6 +94,3 @@ index 8fb0eb6..70c4d89 100644
  
          return s;
  }
--- 
-1.8.3.1
-

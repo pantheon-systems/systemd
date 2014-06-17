@@ -1,8 +1,8 @@
 From 8fa331022f479dbeb489558e6d1241e7738dd1c5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 16 Apr 2014 22:15:42 -0400
-Subject: [PATCH 386/389] man: document relationship between RequiresMountsFor
- and noauto
+Subject: [PATCH] man: document relationship between RequiresMountsFor and
+ noauto
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1088057
 (cherry picked from commit 5d2abc04fc95f5c5f6d0eaf2f9b06c70d504019f)
@@ -48,6 +48,3 @@ index 4704352..eb8b13d 100644
                          </varlistentry>
  
                          <varlistentry>
--- 
-1.8.3.1
-

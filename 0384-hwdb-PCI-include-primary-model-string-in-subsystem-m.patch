@@ -1,6 +1,6 @@
-From 6c61b5e7430ac37630f685469548a65000a49fdf Mon Sep 17 00:00:00 2001
+From 309dbc26cd900bbedf5bebde55dc79c4144a025f Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
-Date: Wed, 11 Jun 2014 18:16:10 +0200
+Date: Mon, 14 Apr 2014 07:54:35 -0700
 Subject: [PATCH] hwdb: PCI - include "primary" model string in subsystem model
  string
 
@@ -11,9 +11,13 @@ some "Network Card Model Foo" to show up as "Laptop Model Bar".
 
 Try to make the best out of this mess and concatenate both
 strings to describe the hardware.
+
+(cherry picked from commit d060b62fcb4746d3758c567e9379c6728a035b66)
+(cherry picked from commit 85f27e3b37972c7e123651d64abd8a305822d662)
 ---
  hwdb/20-pci-vendor-model.hwdb | 21356 ++++++++++++++++++++--------------------
- 1 file changed, 10678 insertions(+), 10678 deletions(-)
+ hwdb/ids-update.pl            |    11 +-
+ 2 files changed, 10685 insertions(+), 10682 deletions(-)
 
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
 index d54cb2a..14637d3 100644
@@ -51578,6 +51582,43 @@ index d54cb2a..14637d3 100644
  
  pci:v0000E159d00000002*
   ID_MODEL_FROM_DATABASE=Tiger100APC ISDN chipset
--- 
-1.8.3.1
-
+diff --git a/hwdb/ids-update.pl b/hwdb/ids-update.pl
+index 37d3556..8cfbeaa 100755
+--- a/hwdb/ids-update.pl
++++ b/hwdb/ids-update.pl
+@@ -107,6 +107,7 @@ sub usb_classes {
+ sub pci_vendor {
+         my $vendor;
+         my $device;
++        my $device_text;
+ 
+         open(IN, "<", "pci.ids");
+         open(OUT, ">", "20-pci-vendor-model.hwdb");
+@@ -130,10 +131,10 @@ sub pci_vendor {
+                 $line =~ m/^\t([0-9a-f]{4})\s*(.+)$/;
+                 if (defined $1) {
+                         $device = uc $1;
+-                        my $text = $2;
++                        $device_text = $2;
+                         print(OUT "\n");
+                         print(OUT "pci:v0000" . $vendor . "d0000" . $device . "*\n");
+-                        print(OUT " ID_MODEL_FROM_DATABASE=" . $text . "\n");
++                        print(OUT " ID_MODEL_FROM_DATABASE=" . $device_text . "\n");
+                         next;
+                 }
+ 
+@@ -141,10 +142,12 @@ sub pci_vendor {
+                 if (defined $1) {
+                         my $sub_vendor = uc $1;
+                         my $sub_device = uc $2;
+-                        my $text = $3;
++                        my $sub_text = $3;
++                        $sub_text =~ s/^\Q$device_text\E\s*//;
++                        $sub_text =~ s/(.+)/\ (\1\)/;
+                         print(OUT "\n");
+                         print(OUT "pci:v0000" . $vendor . "d0000" . $device . "sv0000" . $sub_vendor . "sd0000" . $sub_device . "*\n");
+-                        print(OUT " ID_MODEL_FROM_DATABASE=" . $text . "\n");
++                        print(OUT " ID_MODEL_FROM_DATABASE=" . $device_text . $sub_text . "\n");
+                 }
+         }
+ 

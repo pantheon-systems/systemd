@@ -1,7 +1,7 @@
 From f4b442a95d85a73cbe3a75fb20812942900c4307 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 16 Apr 2014 23:33:41 -0400
-Subject: [PATCH 388/389] delta: do not use unicode chars in C locale
+Subject: [PATCH] delta: do not use unicode chars in C locale
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1088418
 (cherry picked from commit 00a5cc3a63c125633e822f39efd9c32223169f62)
@@ -131,6 +131,3 @@ index a8dd57e..f1aea80 100644
                  free(hashmap_remove(bottom, basename(p)));
                  k = hashmap_put(bottom, basename(p), p);
                  if (k < 0) {
--- 
-1.8.3.1
-

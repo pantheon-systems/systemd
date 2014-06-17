@@ -1,8 +1,7 @@
 From 0daa5cf9308308e66216e32301a3a2f4f620ec5c Mon Sep 17 00:00:00 2001
 From: Marcel Holtmann <marcel@holtmann.org>
 Date: Sat, 12 Apr 2014 10:38:16 -0700
-Subject: [PATCH 381/389] hwdb: Update database of Bluetooth company
- identifiers
+Subject: [PATCH] hwdb: Update database of Bluetooth company identifiers
 
 (cherry picked from commit b189101727e80a09864c5e5880663ef565467f19)
 (cherry picked from commit 9b57078c6304b053f7a6a9eaef7a40a97dc096ec)
@@ -48,6 +47,3 @@ index b928f5a..28aa2a7 100644
 +
 +bluetooth:v013E*
 + ID_VENDOR_FROM_DATABASE=nimai
--- 
-1.8.3.1
-

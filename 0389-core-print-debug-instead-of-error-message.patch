@@ -1,7 +1,7 @@
 From f517790db5277fa71d6ae3617244f1acc4b62572 Mon Sep 17 00:00:00 2001
 From: Michal Sekletar <msekleta@redhat.com>
 Date: Wed, 14 May 2014 15:13:43 +0200
-Subject: [PATCH 389/389] core: print debug instead of error message
+Subject: [PATCH] core: print debug instead of error message
 
 In case that session scope is in some other state than SCOPE_RUNNING or
 SCOPE_ABANDONED we will not print error message. It might be the case
@@ -26,6 +26,3 @@ index 58dd9ff..71d6921 100644
  
                  reply = dbus_message_new_method_return(message);
                  if (!reply)
--- 
-1.8.3.1
-

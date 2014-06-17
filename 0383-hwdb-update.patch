@@ -1,7 +1,7 @@
 From fe126c66234ba110ffb4517f98a7190ea723d8c4 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Sun, 13 Apr 2014 23:46:27 -0700
-Subject: [PATCH 383/389] hwdb: update
+Subject: [PATCH] hwdb: update
 
 (cherry picked from commit dbe633cc027e31a0d4fb488a3c68b7762ef0e7b3)
 (cherry picked from commit 6ece7006e35a434b961cbed397e9f71bf3b5c47e)
@@ -2055,6 +2055,3 @@ index 371a685..d54cb2a 100644
  pci:v0000AA42*
   ID_VENDOR_FROM_DATABASE=Scitex Digital Video
  
--- 
-1.8.3.1
-
