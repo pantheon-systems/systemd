@@ -506,6 +506,9 @@ Patch464:       0464-backlight-do-nothing-if-max_brightness-is-0.patch
 Patch465:       0465-backlight-unify-error-messages.patch
 Patch466:       0466-backlight-handle-saved-brightness-exceeding-max-brig.patch
 Patch467:       0467-backlight-Do-not-clamp-brightness-for-LEDs.patch
+Patch468:       0468-cryptsetup-introduce-new-cryptsetup-pre.traget-unit-.patch
+Patch469:       0469-rules-add-loop-control-and-btrfs-control-to-disk-gro.patch
+Patch470:       0470-hwdb-Update-database-of-Bluetooth-company-identifier.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1155,13 +1158,14 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 
 %changelog
 * Tue Jun 17 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-18
-- Fix permissions on new journal files
+- Fix permissions on new journal files (#1047729)
+- Fix systemd-delta output (#1088418)
 - Fix some (potential) bad memory accesses
 - Fix cryptsetup keysize handling
 - Fix handling of jobs during systemd reload
 - Fix detection of container virtualization under KVM and Xen domU
 - Update hardware database
-- Some small documentation updates (#1096067)
+- Some small documentation updates (#1096067, #1073402, #1088057)
 - Make SYSV $network be equivalent to network-online, not network target
 - Do not skip RUN execution when udev fails to rename network device
 - Minor overhaul of systmemctl install handling with symlinked units
@@ -1172,6 +1176,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 - Restore backlight also for "raw" devices (#1108019)
 - Make backlight paths stable (backlight settings will probably by lost on
   update), and sanitize restored values (#1062638)
+- Add cryptsetup-pre.target (#1097938)
 
 * Wed Jun 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-17
 - Log debug message when Abandon() fails (#1105857)
