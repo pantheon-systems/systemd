@@ -1177,6 +1177,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 - Make backlight paths stable (backlight settings will probably by lost on
   update), and sanitize restored values (#1062638)
 - Add cryptsetup-pre.target (#1097938)
+- Make btrfs-control and loop-control owned by group 'disk' (#1045432)
 
 * Wed Jun 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-17
 - Log debug message when Abandon() fails (#1105857)
