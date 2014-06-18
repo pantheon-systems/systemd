@@ -499,6 +499,13 @@ Patch457:       0457-install-when-looking-for-a-unit-file-for-enabling-se.patch
 Patch458:       0458-install-make-sure-systemctl-disable-foobar-.service-.patch
 Patch459:       0459-install-make-sure-that-root-mode-doesn-t-make-us-con.patch
 Patch460:       0460-install-simplify-symlink-root-logic.patch
+Patch461:       0461-backlight-include-ID_PATH-in-file-names-for-backligh.patch
+Patch462:       0462-backlight-Fix-copy-paste-error-printing-an-unrelated.patch
+Patch463:       0463-backlight-Avoid-restoring-brightness-to-an-unreadabl.patch
+Patch464:       0464-backlight-do-nothing-if-max_brightness-is-0.patch
+Patch465:       0465-backlight-unify-error-messages.patch
+Patch466:       0466-backlight-handle-saved-brightness-exceeding-max-brig.patch
+Patch467:       0467-backlight-Do-not-clamp-brightness-for-LEDs.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1163,6 +1170,8 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 - Allow local users to hibernate
 - Fix selinux policy reload on switch-root
 - Restore backlight also for "raw" devices (#1108019)
+- Make backlight paths stable (backlight settings will probably by lost on
+  update), and sanitize restored values (#1062638)
 
 * Wed Jun 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-17
 - Log debug message when Abandon() fails (#1105857)
