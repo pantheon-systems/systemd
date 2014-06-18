@@ -1,4 +1,4 @@
-From 28bebf333d85c5c8e66d81bae2912ddb93115159 Mon Sep 17 00:00:00 2001
+From 266b214a3cae3f6e43bc176614fdb4f5fd8332ea Mon Sep 17 00:00:00 2001
 From: Alison Chaiken <alison_chaiken@mentor.com>
 Date: Fri, 16 May 2014 09:25:53 +0200
 Subject: [PATCH] man: readahead: fix cmdline switch inconsistency between

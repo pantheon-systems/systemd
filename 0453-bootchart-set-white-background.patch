@@ -1,4 +1,4 @@
-From f19ebb4146b22ede6315b3e5c4c3841f085f2f10 Mon Sep 17 00:00:00 2001
+From 8c6c6f50e9accdf3a8af8bcc58f9a2c5f7eb1516 Mon Sep 17 00:00:00 2001
 From: Frederic Crozat <fcrozat@suse.com>
 Date: Mon, 16 Jun 2014 18:49:12 +0200
 Subject: [PATCH] bootchart: set white background

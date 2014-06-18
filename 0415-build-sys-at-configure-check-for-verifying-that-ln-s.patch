@@ -1,4 +1,4 @@
-From aef39ea7f11682302fad514d57280b561c629ef7 Mon Sep 17 00:00:00 2001
+From 2ee1723d1faf907f5d699b717788fd1ec795cca1 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 16 May 2014 16:51:42 +0200
 Subject: [PATCH] build-sys: at configure check for verifying that ln supports

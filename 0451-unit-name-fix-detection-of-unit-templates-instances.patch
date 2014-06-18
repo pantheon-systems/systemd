@@ -1,4 +1,4 @@
-From 0d8027024c9ac692aaffe1823976aeea1f2ea84d Mon Sep 17 00:00:00 2001
+From b2c7ff14c280e166936e175fc44b3f1f0bf84f96 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 16 Jun 2014 17:01:26 +0200
 Subject: [PATCH] unit-name: fix detection of unit templates/instances

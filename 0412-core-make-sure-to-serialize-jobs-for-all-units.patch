@@ -1,4 +1,4 @@
-From d7b501f46d80de21cb1c0f1bd87a71b7978de5e4 Mon Sep 17 00:00:00 2001
+From 54fe753272e47c6fd39aa14854a83a94fa948850 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 16 May 2014 01:15:03 +0200
 Subject: [PATCH] core: make sure to serialize jobs for all units

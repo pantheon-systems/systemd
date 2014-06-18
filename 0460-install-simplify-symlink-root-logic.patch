@@ -1,4 +1,4 @@
-From 2b5c3edabb7e4e3465232a196bf7df62be48939d Mon Sep 17 00:00:00 2001
+From 5763621e1fafe630cfe98181792e7b556db72d21 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 17 Jun 2014 01:37:54 +0200
 Subject: [PATCH] install: simplify symlink --root= logic

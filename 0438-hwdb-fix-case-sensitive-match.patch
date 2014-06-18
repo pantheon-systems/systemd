@@ -1,4 +1,4 @@
-From 6a203eb0721d9a095dfcd86b89ac876ad3a1d710 Mon Sep 17 00:00:00 2001
+From 84f15607fd7dd611c307322689b0adb9186e9d41 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Wed, 4 Jun 2014 17:55:14 +0200
 Subject: [PATCH] hwdb: fix case-sensitive match

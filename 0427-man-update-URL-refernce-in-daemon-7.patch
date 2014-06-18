@@ -1,4 +1,4 @@
-From b7ae22f942dd031082fc5425a365ce258517759c Mon Sep 17 00:00:00 2001
+From 385c0cd3b0dbcfc6af2ff9173bc2feb519d610d6 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 16:22:48 +0900
 Subject: [PATCH] man: update URL refernce in daemon(7)

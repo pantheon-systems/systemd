@@ -1,4 +1,4 @@
-From bd541faf4f117a85f7567cfb7f41509824255571 Mon Sep 17 00:00:00 2001
+From 1d8327c497ffde68aca8d460253091345327e4a5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 1 Jun 2014 14:01:23 -0400
 Subject: [PATCH] keyboard: add Plantronics .Audio mute button

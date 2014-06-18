@@ -1,4 +1,4 @@
-From 69979668d98365c4862f0de067cf54aac759873f Mon Sep 17 00:00:00 2001
+From 0515a5d28d6f523328ef0ed883af00c6ff8ffd11 Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martin.pitt@ubuntu.com>
 Date: Sun, 25 May 2014 12:16:35 +0200
 Subject: [PATCH] keymap: Asus EeePC touchpad toggle key

@@ -1,4 +1,4 @@
-From cc662a6cadcc063bc54f1af54025e73e08aaca4d Mon Sep 17 00:00:00 2001
+From 89f16be75b0c520ea35116af64b69140d46e362b Mon Sep 17 00:00:00 2001
 From: Djalal Harouni <tixxdz@opendz.org>
 Date: Fri, 11 Apr 2014 01:45:52 +0100
 Subject: [PATCH] nspawn: allow to bind mount journal on top of a non empty

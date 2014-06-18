@@ -1,4 +1,4 @@
-From 225adb95284a04f7cbacbb44eedf63097ae73484 Mon Sep 17 00:00:00 2001
+From 78134b740f209d97c6f042c74c52f3b5f4ff026a Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 15 May 2014 18:30:07 +0200
 Subject: [PATCH] logind: bring polkit policy for hibernate in line with

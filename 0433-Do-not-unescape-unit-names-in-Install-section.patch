@@ -1,4 +1,4 @@
-From 5cc09ed951c574c5db646da49af575ee972ad15a Mon Sep 17 00:00:00 2001
+From b1710001dbf110ca5ec1a9599c957ab691b0cc55 Mon Sep 17 00:00:00 2001
 From: Michal Sekletar <msekleta@redhat.com>
 Date: Mon, 26 May 2014 20:09:45 +0200
 Subject: [PATCH] Do not unescape unit names in [Install] section

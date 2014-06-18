@@ -1,4 +1,4 @@
-From ca757fed07a2a6ce505a8b5761f9fd7da84ca176 Mon Sep 17 00:00:00 2001
+From d1c9c8fa18b2c3d16e9db90c6faf839b0d545887 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 16 Jun 2014 19:48:31 +0200
 Subject: [PATCH] install: simplify and clarify disabling logic for instanced

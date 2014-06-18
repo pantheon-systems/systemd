@@ -1,4 +1,4 @@
-From 9b26053ff0ed34351877548a89b803a7729bf855 Mon Sep 17 00:00:00 2001
+From 579be607d6f4081b29af978c0a5529e18e6b8baf Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 16 Jun 2014 13:20:38 +0200
 Subject: [PATCH] tmpfiles: set up selinux label proeprly when creating fifos

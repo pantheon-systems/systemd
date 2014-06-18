@@ -1,4 +1,4 @@
-From 6b96332ddae5adff2e73002ccea1c1a32f8fd679 Mon Sep 17 00:00:00 2001
+From f7da070b21c114d70d19e3e23e5c7d1c58837971 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 17 Jun 2014 15:04:08 -0400
 Subject: [PATCH] unit.c: Move code around to easy cherrypicking

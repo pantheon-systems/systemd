@@ -1,4 +1,4 @@
-From a95d58fe1724ea299b1038b74c454a53f2d43007 Mon Sep 17 00:00:00 2001
+From 86253df02285204e54621bb9bca99b45e56a691a Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 17 Jun 2014 01:56:44 +0200
 Subject: [PATCH] conf-files: fix when for --root= logic

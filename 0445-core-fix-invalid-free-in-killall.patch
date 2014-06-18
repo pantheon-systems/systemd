@@ -1,4 +1,4 @@
-From cd90b3170d09d95f391a10da15be7a0b2eac32ab Mon Sep 17 00:00:00 2001
+From 4acf355b1f266446651218f25904f210fe9433ee Mon Sep 17 00:00:00 2001
 From: Andreas Henriksson <andreas@fatal.se>
 Date: Fri, 13 Jun 2014 18:48:19 +0200
 Subject: [PATCH] core: fix invalid free() in killall()

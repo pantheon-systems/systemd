@@ -1,4 +1,4 @@
-From 7ab0e2491ff2d4bacf42c27c55957c36383fae5e Mon Sep 17 00:00:00 2001
+From 0a818dbae3218dd1beb80f287bb3ef47c583b150 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 13 Jun 2014 19:05:22 +0200
 Subject: [PATCH] rpm: don't hardcode the binary paths in the macros, rely on

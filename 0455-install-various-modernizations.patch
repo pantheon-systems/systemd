@@ -1,4 +1,4 @@
-From ed2629f9e62160c176507f56220a44fdbcb3c2f2 Mon Sep 17 00:00:00 2001
+From bed108402ded5dc88cf37ce48936453b15912027 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 16 Jun 2014 17:19:30 +0200
 Subject: [PATCH] install: various modernizations

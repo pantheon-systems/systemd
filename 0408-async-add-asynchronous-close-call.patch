@@ -1,4 +1,4 @@
-From d4a04f2dc731b9109b560f53e37a6ad54581227c Mon Sep 17 00:00:00 2001
+From 075d60ceb2efdafcdf5586653b912eeed84194e0 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 2 May 2014 17:56:05 +0200
 Subject: [PATCH] async: add asynchronous close() call

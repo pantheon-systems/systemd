@@ -1,4 +1,4 @@
-From 8333445a1902e157e54e54bc70038087fb0aa89a Mon Sep 17 00:00:00 2001
+From dfef23e1b6c0c89b17b7b52f6ec1537649a8c60b Mon Sep 17 00:00:00 2001
 From: Thomas Blume <Thomas.Blume@suse.com>
 Date: Fri, 6 Jun 2014 16:36:45 +0200
 Subject: [PATCH] systemd-detect-virt: only discover Xen domU

@@ -1,4 +1,4 @@
-From 4d0273b5fbb3151b73ce7299f810ffdc77e7db28 Mon Sep 17 00:00:00 2001
+From f1bfb88cea3730c921d7a1d466621c13cdb611ac Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 17 Jun 2014 00:33:39 +0200
 Subject: [PATCH] install: make sure "systemctl disable foobar@.service"

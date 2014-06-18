@@ -1,4 +1,4 @@
-From 2a3d6ea33611531c974b6c37c0685fc2178fab52 Mon Sep 17 00:00:00 2001
+From 52af6106165bb6521e0dab433e647878a33e901c Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 10 Jun 2014 22:48:56 +0200
 Subject: [PATCH] label: when clearing selinux context, don't mangle errno

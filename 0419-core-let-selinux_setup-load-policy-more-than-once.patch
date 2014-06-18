@@ -1,4 +1,4 @@
-From 0763f53c5228539328868ea0e2e186b633efaa6c Mon Sep 17 00:00:00 2001
+From ee83fe9779c6f1f1d082f7b8e91cb0cfd40201c9 Mon Sep 17 00:00:00 2001
 From: Will Woods <wwoods@redhat.com>
 Date: Fri, 25 Apr 2014 18:26:34 -0400
 Subject: [PATCH] core: let selinux_setup() load policy more than once

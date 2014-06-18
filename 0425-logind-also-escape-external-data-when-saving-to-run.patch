@@ -1,4 +1,4 @@
-From 5133a167daf7b62eb0e72f8cb51448cf8be194db Mon Sep 17 00:00:00 2001
+From c194931d2eac3d81cf5d0fd388ea1ae58cae0ebd Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 10:35:28 +0900
 Subject: [PATCH] logind: also escape external data when saving to /run
@@ -15,7 +15,7 @@ Conflicts:
  1 file changed, 33 insertions(+), 7 deletions(-)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 9de60af..77a9c66 100644
+index 13de549..9c87e43 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -202,7 +202,6 @@ int session_save(Session *s) {

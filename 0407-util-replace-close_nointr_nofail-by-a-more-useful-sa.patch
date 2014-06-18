@@ -1,4 +1,4 @@
-From 458383b9b0bc37dfc357b18cc88cb2ee7852ee90 Mon Sep 17 00:00:00 2001
+From a9c89505d8d70c167771dac30eef2a8d40adf077 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 18 Mar 2014 19:22:43 +0100
 Subject: [PATCH] util: replace close_nointr_nofail() by a more useful
@@ -58,7 +58,7 @@ Conflicts:
  src/core/automount.c                               | 40 ++++-------
  src/core/cgroup.c                                  |  8 +--
  src/core/dbus.c                                    | 10 ++-
- src/core/execute.c                                 | 48 +++++--------
+ src/core/execute.c                                 | 50 +++++--------
  src/core/ima-setup.c                               |  6 +-
  src/core/job.c                                     |  7 +-
  src/core/load-fragment.c                           |  2 +-
@@ -103,7 +103,7 @@ Conflicts:
  src/login/logind-dbus.c                            |  5 +-
  src/login/logind-inhibit.c                         |  6 +-
  src/login/logind-seat.c                            |  3 +-
- src/login/logind-session.c                         |  7 +-
+ src/login/logind-session.c                         |  6 +-
  src/login/logind.c                                 | 23 ++----
  src/login/pam-module.c                             |  3 +-
  src/login/sd-login.c                               |  8 +--
@@ -122,7 +122,7 @@ Conflicts:
  src/shared/log.c                                   | 25 ++-----
  src/shared/socket-label.c                          |  2 +-
  src/shared/spawn-polkit-agent.c                    |  4 +-
- src/shared/util.c                                  | 82 +++++++++++-----------
+ src/shared/util.c                                  | 84 +++++++++++-----------
  src/shared/util.h                                  |  6 +-
  src/shared/watchdog.c                              |  3 +-
  src/shutdownd/shutdownd.c                          |  3 +-
@@ -130,7 +130,7 @@ Conflicts:
  src/tmpfiles/tmpfiles.c                            |  6 +-
  .../tty-ask-password-agent.c                       | 25 +++----
  src/vconsole/vconsole-setup.c                      |  3 +-
- 76 files changed, 296 insertions(+), 481 deletions(-)
+ 76 files changed, 297 insertions(+), 483 deletions(-)
 
 diff --git a/src/core/audit-fd.c b/src/core/audit-fd.c
 index 5955bd8..4326d17 100644
@@ -336,7 +336,7 @@ index aa3d93b..b616a24 100644
  }
  
 diff --git a/src/core/execute.c b/src/core/execute.c
-index ee445d7..3d3e8e6 100644
+index ee445d7..add66ce 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -103,7 +103,7 @@ static int shift_fds(int fds[], unsigned n_fds) {
@@ -408,7 +408,7 @@ index ee445d7..3d3e8e6 100644
  
          *_saved_stdin = saved_stdin;
          *_saved_stdout = saved_stdout;
-@@ -503,14 +503,9 @@ static int setup_confirm_stdio(int *_saved_stdin,
+@@ -503,20 +503,15 @@ static int setup_confirm_stdio(int *_saved_stdin,
          return 0;
  
  fail:
@@ -426,6 +426,13 @@ index ee445d7..3d3e8e6 100644
  
          return r;
  }
+ 
+ _printf_attr_(1, 2) static int write_confirm_message(const char *format, ...) {
+-        int fd;
++        _cleanup_close_ int fd = -1;
+         va_list ap;
+ 
+         assert(format);
 @@ -529,8 +524,6 @@ _printf_attr_(1, 2) static int write_confirm_message(const char *format, ...) {
          vdprintf(fd, format, ap);
          va_end(ap);
@@ -1725,7 +1732,7 @@ index feebcf4..b581925 100644
          return r;
  }
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index ece222a..9de60af 100644
+index ece222a..13de549 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -375,8 +375,7 @@ int session_load(Session *s) {
@@ -1738,13 +1745,12 @@ index ece222a..9de60af 100644
          }
  
          if (realtime) {
-@@ -972,8 +971,8 @@ void session_remove_fifo(Session *s) {
+@@ -972,8 +971,7 @@ void session_remove_fifo(Session *s) {
          if (s->fifo_fd >= 0) {
                  assert_se(hashmap_remove(s->manager->session_fds, INT_TO_PTR(s->fifo_fd + 1)) == s);
                  assert_se(epoll_ctl(s->manager->epoll_fd, EPOLL_CTL_DEL, s->fifo_fd, NULL) == 0);
 -                close_nointr_nofail(s->fifo_fd);
 -                s->fifo_fd = -1;
-+                safe_close(s->fifo_fd);
 +                s->fifo_fd = safe_close(s->fifo_fd);
  
                  session_save(s);
@@ -2408,7 +2414,7 @@ index f9e52cd..fccf1e9 100644
          return r;
  }
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 533db92..9f5ee53 100644
+index 533db92..aa6242d 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -173,13 +173,22 @@ int close_nointr(int fd) {
@@ -2418,9 +2424,7 @@ index 533db92..9f5ee53 100644
 -void close_nointr_nofail(int fd) {
 -        PROTECT_ERRNO;
 +int safe_close(int fd) {
- 
--        /* like close_nointr() but cannot fail, and guarantees errno
--         * is unchanged */
++
 +        /*
 +         * Like close_nointr() but cannot fail. Guarantees errno is
 +         * unchanged. Is a NOP with negative fds passed, and returns
@@ -2429,12 +2433,14 @@ index 533db92..9f5ee53 100644
 +         * fd = safe_close(fd);
 +         */
  
--        assert_se(close_nointr(fd) == 0);
+-        /* like close_nointr() but cannot fail, and guarantees errno
+-         * is unchanged */
 +        if (fd >= 0) {
 +                PROTECT_ERRNO;
 +                assert_se(close_nointr(fd) == 0);
 +        }
-+
+ 
+-        assert_se(close_nointr(fd) == 0);
 +        return -1;
  }
  
@@ -2562,6 +2568,15 @@ index 533db92..9f5ee53 100644
                          return -EPERM;
                  }
          }
+@@ -3382,7 +3384,7 @@ char *ellipsize(const char *s, size_t length, unsigned percent) {
+ }
+ 
+ int touch(const char *path) {
+-        int fd;
++        _cleanup_close_ int fd;
+ 
+         assert(path);
+ 
 @@ -3394,7 +3396,6 @@ int touch(const char *path) {
          if (fd < 0)
                  return -errno;

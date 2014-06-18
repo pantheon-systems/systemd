@@ -1,4 +1,4 @@
-From c8f2171222a497a47b9f024e3c87bb0199eeb218 Mon Sep 17 00:00:00 2001
+From 134ffc71442b2817653520db01384f950232fc1a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Mantas=20Mikul=C4=97nas?= <grawity@gmail.com>
 Date: Wed, 30 Apr 2014 19:53:13 +0300
 Subject: [PATCH] man: update journald rate limit defaults

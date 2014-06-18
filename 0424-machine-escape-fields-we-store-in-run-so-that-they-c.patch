@@ -1,4 +1,4 @@
-From 05780644890a48d3de410dabef94159c50a8fa21 Mon Sep 17 00:00:00 2001
+From 621e4160e25b8e1154f5e1faa314ce86424b7102 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 10:26:23 +0900
 Subject: [PATCH] machine: escape fields we store in /run, so that they can be

@@ -1,4 +1,4 @@
-From 4fbf365ae4de8f1654ec41d852b3ca7aea2387ab Mon Sep 17 00:00:00 2001
+From 94dde9f7059c2a0b3710e77379db6f9d8281b6ec Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 16 May 2014 01:33:22 +0200
 Subject: [PATCH] man: clarify that the ExecReload= command should be

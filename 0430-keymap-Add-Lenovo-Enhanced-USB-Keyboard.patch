@@ -1,4 +1,4 @@
-From 3b0ae67b69835006cc828fca36732704bc7dbd48 Mon Sep 17 00:00:00 2001
+From 3771f1d5bd9f059c70d1e56503ef4eb029283eee Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martin.pitt@ubuntu.com>
 Date: Sun, 25 May 2014 11:57:22 +0200
 Subject: [PATCH] keymap: Add Lenovo Enhanced USB Keyboard

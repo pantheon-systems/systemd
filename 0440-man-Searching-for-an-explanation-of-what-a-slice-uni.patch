@@ -1,4 +1,4 @@
-From 0c888269f42b135c433d815af997747f130e5ffa Mon Sep 17 00:00:00 2001
+From a0883f2dc07479ffc6401d0068f19c32b1823773 Mon Sep 17 00:00:00 2001
 From: Mark Eichin <eichin@thok.org>
 Date: Mon, 9 Jun 2014 01:57:19 -0400
 Subject: [PATCH] man: Searching for an explanation of what a "slice unit" was,

@@ -1,4 +1,4 @@
-From fc1ec9f3c9e348a169772c872474d3ea208ac918 Mon Sep 17 00:00:00 2001
+From d026f2c46c679fe56145d37519ff760df9703f78 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 17 Jun 2014 00:13:48 +0200
 Subject: [PATCH] install: when looking for a unit file for enabling, search

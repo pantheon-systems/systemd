@@ -1,4 +1,4 @@
-From 32983c9617894c203ef4a604d407444f76195b67 Mon Sep 17 00:00:00 2001
+From 63aaa1f0d119840db3541f0db8139e90333beb4d Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 16 May 2014 19:37:19 +0200
 Subject: [PATCH] nspawn: properly format container_uuid in UUID format

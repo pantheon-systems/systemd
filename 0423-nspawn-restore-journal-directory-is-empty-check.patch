@@ -1,4 +1,4 @@
-From 99c831425b65770f43a833d603251c654ef459d8 Mon Sep 17 00:00:00 2001
+From 06e974ab63f9500d856c10dbcb84ea60045abe69 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 15:19:46 +0900
 Subject: [PATCH] nspawn: restore journal directory is empty check

@@ -1,4 +1,4 @@
-From da20acfc79c6f9cda31dfd37e0bd9eac61191970 Mon Sep 17 00:00:00 2001
+From ed15dbd87d0c6c18392bfa5b061320a8d318fd07 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 16:47:46 +0900
 Subject: [PATCH] conf-parser: never consider it an error if we cannot load a

@@ -1,4 +1,4 @@
-From a230a93aa21f2f5c8e1d6dd523714530ea4ab75e Mon Sep 17 00:00:00 2001
+From 01bd69736c3f2384dfa98d71d5380beaebdda3e4 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 16:56:21 +0900
 Subject: [PATCH] socket: properly handle if our service vanished during

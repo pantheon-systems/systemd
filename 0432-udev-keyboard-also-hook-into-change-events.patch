@@ -1,4 +1,4 @@
-From 9dc8d00250c7e28f8e1c6f4a4508247971097312 Mon Sep 17 00:00:00 2001
+From 2a9ec8c983dbe6127ab8d0e9ea638cf8fcc23bbd Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Mon, 26 May 2014 09:30:21 +0800
 Subject: [PATCH] udev: keyboard - also hook into "change" events

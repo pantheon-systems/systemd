@@ -1,4 +1,4 @@
-From 0ac1bf960367c9cfe941970b212353e4c10523e8 Mon Sep 17 00:00:00 2001
+From da9ec06bdc8b1898b33c78d855875245d9c38875 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Cristian=20Rodr=C3=ADguez?= <crrodriguez@opensuse.org>
 Date: Fri, 30 May 2014 13:16:56 -0400
 Subject: [PATCH] udev-builtin-keyboard: do tell on which device EVIOCSKEYCODE

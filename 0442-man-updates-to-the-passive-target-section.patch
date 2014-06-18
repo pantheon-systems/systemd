@@ -1,4 +1,4 @@
-From 9d41d5eb0664e3b7389b2f11fb8ab6aa0fc5c679 Mon Sep 17 00:00:00 2001
+From 4a8d7c028dea812fd6fbe27ed6ecc1e9beba2738 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 10 Jun 2014 18:52:28 +0200
 Subject: [PATCH] man: updates to the passive target section

@@ -1,4 +1,4 @@
-From c704373a42bff8615dc4467299ac4c42f5657f51 Mon Sep 17 00:00:00 2001
+From 2b970743216845d26ea21fbdc9e8ed485841e5c7 Mon Sep 17 00:00:00 2001
 From: Andreas Henriksson <andreas@fatal.se>
 Date: Fri, 13 Jun 2014 18:48:18 +0200
 Subject: [PATCH] install: fix invalid free() in unit_file_mask()

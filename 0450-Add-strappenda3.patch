@@ -1,4 +1,4 @@
-From 9f4a3dd335fc0b6121078c665ed1901e8f964229 Mon Sep 17 00:00:00 2001
+From f6c97dfac68184fd99a09ee6c048d7a859677fe5 Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Thu, 6 Mar 2014 16:35:02 +0100
 Subject: [PATCH] Add strappenda3

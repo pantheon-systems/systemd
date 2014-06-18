@@ -1,4 +1,4 @@
-From 11d7f271bd495d536f0e905ec7e16b6d22bac663 Mon Sep 17 00:00:00 2001
+From 977df069dc76174e5eee2e5e79728dd8a50a88ad Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Thu, 22 May 2014 16:15:56 +0900
 Subject: [PATCH] man: drop reference to file locking for PID file creation
