@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        18%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        19%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -509,6 +509,7 @@ Patch467:       0467-backlight-Do-not-clamp-brightness-for-LEDs.patch
 Patch468:       0468-cryptsetup-introduce-new-cryptsetup-pre.traget-unit-.patch
 Patch469:       0469-rules-add-loop-control-and-btrfs-control-to-disk-gro.patch
 Patch470:       0470-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch471:       0471-Fix-instance-argument-for-systemd-backlight-.service.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1157,6 +1158,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Jun 20 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-19
+- Fix patch
+
 * Tue Jun 17 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-18
 - Fix permissions on new journal files (#1047729)
 - Fix systemd-delta output (#1088418)
