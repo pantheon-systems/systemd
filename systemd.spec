@@ -510,6 +510,14 @@ Patch468:       0468-cryptsetup-introduce-new-cryptsetup-pre.traget-unit-.patch
 Patch469:       0469-rules-add-loop-control-and-btrfs-control-to-disk-gro.patch
 Patch470:       0470-hwdb-Update-database-of-Bluetooth-company-identifier.patch
 Patch471:       0471-Fix-instance-argument-for-systemd-backlight-.service.patch
+Patch472:       0472-socket-check-return-from-exec_spawn.patch
+Patch473:       0473-getty-generator-properly-escape-instance-names.patch
+Patch474:       0474-conf-files-include-root-in-returned-file-paths.patch
+Patch475:       0475-shared-add-root-argument-to-search_and_fopen.patch
+Patch476:       0476-shared-fix-search_and_fopen-with-alternate-roots.patch
+Patch477:       0477-Reset-signal-mask-on-re-exec-to-init.patch
+Patch478:       0478-core-clean-up-signal-reset-logic-when-reexec.patch
+Patch479:       0479-util-treat-fuse.sshfs-as-a-network-filesystem.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1160,6 +1168,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %changelog
 * Fri Jun 20 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-19
 - Fix patch
+- Some more --root support and other assorted fixes
 
 * Tue Jun 17 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-18
 - Fix permissions on new journal files (#1047729)
