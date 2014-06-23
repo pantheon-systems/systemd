@@ -453,7 +453,6 @@ fi
 %postun
 if [ $1 -ge 1 ] ; then
         systemctl daemon-reload > /dev/null 2>&1 || :
-        systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
 fi
 
 %preun
@@ -728,6 +727,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Jun 22 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-2
+- Do not restart systemd-logind on upgrades (#1110697)
+
 * Wed Jun 11 2014 Lennart Poettering <lpoetter@redhat.com> - 214-1
 - New upstream release
 - Get rid of "floppy" group, since udev uses "disk" now
