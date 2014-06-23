@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        214
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -438,6 +438,7 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
+getent group input >/dev/null 2>&1 || groupadd -r input >/dev/null 2>&1 || :
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
 getent group systemd-timesync >/dev/null 2>&1 || groupadd -r systemd-timesync 2>&1 || :
 getent passwd systemd-timesync >/dev/null 2>&1 || useradd -r -l -g systemd-timesync -d / -s /usr/sbin/nologin -c "systemd Time Synchronization" systemd-timesync >/dev/null 2>&1 || :
@@ -774,6 +775,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Jun 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-3
+- Actually create input group (#1054549)
+
 * Sun Jun 22 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-2
 - Do not restart systemd-logind on upgrades (#1110697)
 - Add some patches (#1081429, #1054549, #1108568, #928962)
