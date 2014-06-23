@@ -774,7 +774,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Sun Jun 22 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-2
+* Sun Jun 22 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-2
 - Do not restart systemd-logind on upgrades (#1110697)
 - Add some patches (#1081429, #1054549, #1108568, #928962)
 
