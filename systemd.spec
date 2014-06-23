@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        214
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,9 +36,56 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v211-stable
-# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v211..v211-stable
+# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v214-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v214..v214-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
+Patch001:       0001-NEWS-add-missing-comment-about-the-floppy-group.patch
+Patch002:       0002-NEWS-fix-directory-name.patch
+Patch003:       0003-udev-assign-group-input-to-all-input-devices.patch
+Patch004:       0004-cryptsetup-check-that-password-is-not-null.patch
+Patch005:       0005-core-fix-invalid-free-in-killall.patch
+Patch006:       0006-udev-fix-invalid-free-in-enable_name_policy.patch
+Patch007:       0007-install-fix-invalid-free-in-unit_file_mask.patch
+Patch008:       0008-rpm-don-t-hardcode-the-binary-paths-in-the-macros-re.patch
+Patch009:       0009-Fix-spelling-mistake-scirpt-script.patch
+Patch010:       0010-tmpfiles-set-up-selinux-label-proeprly-when-creating.patch
+Patch011:       0011-Reset-signal-mask-on-re-exec-to-init.patch
+Patch012:       0012-core-clean-up-signal-reset-logic-when-reexec.patch
+Patch013:       0013-journal-remote-fix-memleak.patch
+Patch014:       0014-unit-name-fix-detection-of-unit-templates-instances.patch
+Patch015:       0015-install-various-modernizations.patch
+Patch016:       0016-install-simplify-and-clarify-disabling-logic-for-ins.patch
+Patch017:       0017-install-various-modernizations.patch
+Patch018:       0018-install-use-symlink_atomic-instead-of-unlink-symlink.patch
+Patch019:       0019-install-when-looking-for-a-unit-file-for-enabling-se.patch
+Patch020:       0020-install-make-sure-systemctl-disable-foobar-.service-.patch
+Patch021:       0021-install-make-sure-that-root-mode-doesn-t-make-us-con.patch
+Patch022:       0022-log-don-t-downgrade-log-level-in-non-PID-1-if-quiet-.patch
+Patch023:       0023-install-simplify-symlink-root-logic.patch
+Patch024:       0024-conf-files-fix-when-for-root-logic.patch
+Patch025:       0025-networkd-don-t-pull-in-systemd-networkd-wait-online-.patch
+Patch026:       0026-bootchart-set-white-background.patch
+Patch027:       0027-build-sys-add-missing-backslash.patch
+Patch028:       0028-namespace-properly-label-device-nodes-we-create.patch
+Patch029:       0029-tmpfiles-create-directories-already-with-the-right-l.patch
+Patch030:       0030-cryptsetup-introduce-new-cryptsetup-pre.traget-unit-.patch
+Patch031:       0031-rules-add-loop-control-and-btrfs-control-to-disk-gro.patch
+Patch032:       0032-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch033:       0033-socket-check-return-from-exec_spawn.patch
+Patch034:       0034-man-fix-typo.patch
+Patch035:       0035-units-add-missing-caps-so-that-GetAddresses-can-work.patch
+Patch036:       0036-units-systemd-sysctl.service.in-run-after-load-modul.patch
+Patch037:       0037-man-document-statically-loading-modules-for-sysctl-s.patch
+Patch038:       0038-man-also-describe-an-udev-rule-for-bridge-sysctl.patch
+Patch039:       0039-getty-generator-properly-escape-instance-names.patch
+Patch040:       0040-shared-rename-path_strv_canonicalize_absolute-functi.patch
+Patch041:       0041-conf-files-include-root-in-returned-file-paths.patch
+Patch042:       0042-shared-fix-search_and_fopen-with-alternate-roots.patch
+Patch043:       0043-util-do-not-strip-dev-prefix-twice.patch
+Patch044:       0044-missing.h-add-various-network-enums.patch
+Patch045:       0045-util-treat-fuse.sshfs-as-a-network-filesystem.patch
+Patch046:       0046-build-sys-add-pthread-flag-for-libsystemd-shared.patch
+
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -729,6 +776,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %changelog
 * Sun Jun 22 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-2
 - Do not restart systemd-logind on upgrades (#1110697)
+- Add some patches (#1081429, #1054549, #1108568, #928962)
 
 * Wed Jun 11 2014 Lennart Poettering <lpoetter@redhat.com> - 214-1
 - New upstream release
