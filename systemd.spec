@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        214
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -85,6 +85,17 @@ Patch043:       0043-util-do-not-strip-dev-prefix-twice.patch
 Patch044:       0044-missing.h-add-various-network-enums.patch
 Patch045:       0045-util-treat-fuse.sshfs-as-a-network-filesystem.patch
 Patch046:       0046-build-sys-add-pthread-flag-for-libsystemd-shared.patch
+Patch047:       0047-fix-systemd-resolved-reference-in-man-page.patch
+Patch048:       0048-core-transaction-reindent-and-split-very-long-lines.patch
+Patch049:       0049-core-transaction-avoid-misleading-error-message-when.patch
+Patch050:       0050-core-snapshot-log-info-when-snapshots-are-created-an.patch
+Patch051:       0051-vconsole-also-copy-character-maps-not-just-fonts-fro.patch
+Patch052:       0052-core-make-sure-Environment-fields-passed-in-for-tran.patch
+Patch053:       0053-core-You-can-not-put-the-cached-result-of-use_smack-.patch
+Patch054:       0054-cryptsetup-don-t-add-unit-dependency-on-dev-null-dev.patch
+Patch055:       0055-man-fix-path-in-crypttab-5.patch
+Patch056:       0056-sysv-generator-rename-PidFile-to-PIDFile.patch
+Patch057:       0057-sysv-generator-fix-incorect-ordering-of-Wants.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -775,6 +786,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Jun 26 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-4
+- Bugfixes (#996133, #1112908)
+
 * Mon Jun 23 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-3
 - Actually create input group (#1054549)
 
