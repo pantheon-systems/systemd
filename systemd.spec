@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        214
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -330,7 +330,11 @@ pushd build3
         --enable-compat-libs \
         --disable-kdbus \
         PYTHON=%{__python3}
+%ifnarch aarch64
 make %{?_smp_mflags} GCC_COLORS="" V=1
+%else
+make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
+%endif
 popd
 
 pushd build2
@@ -341,7 +345,11 @@ pushd build2
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --enable-compat-libs \
         --disable-kdbus
+%ifnarch aarch64
 make %{?_smp_mflags} GCC_COLORS="" V=1
+%else
+make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
+%endif
 popd
 
 %install
@@ -786,6 +794,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Jun 29 2014 Peter Robinson <pbrobinson@fedoraproject.org> 214-5
+- On aarch64 disable LTO as it still has issues on that arch
+
 * Thu Jun 26 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 214-4
 - Bugfixes (#996133, #1112908)
 
