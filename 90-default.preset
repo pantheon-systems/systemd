@@ -1,11 +1,10 @@
 # Also see:
 # https://fedoraproject.org/wiki/Starting_services_by_default
 
-# systemd
-enable remote-fs.target
-enable getty@tty1.service
-enable systemd-readahead-replay.service
-enable systemd-readahead-collect.service
+# On Fedora we deviate from some upstream defaults
+disable systemd-timesyncd.service
+disable systemd-networkd.service
+disable systemd-resolved.service
 
 # System stuff
 enable sshd.service

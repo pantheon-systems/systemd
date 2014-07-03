@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        214
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        215
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,67 +36,9 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v214-stable
-# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v214..v214-stable
+# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v215..v215-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
-Patch001:       0001-NEWS-add-missing-comment-about-the-floppy-group.patch
-Patch002:       0002-NEWS-fix-directory-name.patch
-Patch003:       0003-udev-assign-group-input-to-all-input-devices.patch
-Patch004:       0004-cryptsetup-check-that-password-is-not-null.patch
-Patch005:       0005-core-fix-invalid-free-in-killall.patch
-Patch006:       0006-udev-fix-invalid-free-in-enable_name_policy.patch
-Patch007:       0007-install-fix-invalid-free-in-unit_file_mask.patch
-Patch008:       0008-rpm-don-t-hardcode-the-binary-paths-in-the-macros-re.patch
-Patch009:       0009-Fix-spelling-mistake-scirpt-script.patch
-Patch010:       0010-tmpfiles-set-up-selinux-label-proeprly-when-creating.patch
-Patch011:       0011-Reset-signal-mask-on-re-exec-to-init.patch
-Patch012:       0012-core-clean-up-signal-reset-logic-when-reexec.patch
-Patch013:       0013-journal-remote-fix-memleak.patch
-Patch014:       0014-unit-name-fix-detection-of-unit-templates-instances.patch
-Patch015:       0015-install-various-modernizations.patch
-Patch016:       0016-install-simplify-and-clarify-disabling-logic-for-ins.patch
-Patch017:       0017-install-various-modernizations.patch
-Patch018:       0018-install-use-symlink_atomic-instead-of-unlink-symlink.patch
-Patch019:       0019-install-when-looking-for-a-unit-file-for-enabling-se.patch
-Patch020:       0020-install-make-sure-systemctl-disable-foobar-.service-.patch
-Patch021:       0021-install-make-sure-that-root-mode-doesn-t-make-us-con.patch
-Patch022:       0022-log-don-t-downgrade-log-level-in-non-PID-1-if-quiet-.patch
-Patch023:       0023-install-simplify-symlink-root-logic.patch
-Patch024:       0024-conf-files-fix-when-for-root-logic.patch
-Patch025:       0025-networkd-don-t-pull-in-systemd-networkd-wait-online-.patch
-Patch026:       0026-bootchart-set-white-background.patch
-Patch027:       0027-build-sys-add-missing-backslash.patch
-Patch028:       0028-namespace-properly-label-device-nodes-we-create.patch
-Patch029:       0029-tmpfiles-create-directories-already-with-the-right-l.patch
-Patch030:       0030-cryptsetup-introduce-new-cryptsetup-pre.traget-unit-.patch
-Patch031:       0031-rules-add-loop-control-and-btrfs-control-to-disk-gro.patch
-Patch032:       0032-hwdb-Update-database-of-Bluetooth-company-identifier.patch
-Patch033:       0033-socket-check-return-from-exec_spawn.patch
-Patch034:       0034-man-fix-typo.patch
-Patch035:       0035-units-add-missing-caps-so-that-GetAddresses-can-work.patch
-Patch036:       0036-units-systemd-sysctl.service.in-run-after-load-modul.patch
-Patch037:       0037-man-document-statically-loading-modules-for-sysctl-s.patch
-Patch038:       0038-man-also-describe-an-udev-rule-for-bridge-sysctl.patch
-Patch039:       0039-getty-generator-properly-escape-instance-names.patch
-Patch040:       0040-shared-rename-path_strv_canonicalize_absolute-functi.patch
-Patch041:       0041-conf-files-include-root-in-returned-file-paths.patch
-Patch042:       0042-shared-fix-search_and_fopen-with-alternate-roots.patch
-Patch043:       0043-util-do-not-strip-dev-prefix-twice.patch
-Patch044:       0044-missing.h-add-various-network-enums.patch
-Patch045:       0045-util-treat-fuse.sshfs-as-a-network-filesystem.patch
-Patch046:       0046-build-sys-add-pthread-flag-for-libsystemd-shared.patch
-Patch047:       0047-fix-systemd-resolved-reference-in-man-page.patch
-Patch048:       0048-core-transaction-reindent-and-split-very-long-lines.patch
-Patch049:       0049-core-transaction-avoid-misleading-error-message-when.patch
-Patch050:       0050-core-snapshot-log-info-when-snapshots-are-created-an.patch
-Patch051:       0051-vconsole-also-copy-character-maps-not-just-fonts-fro.patch
-Patch052:       0052-core-make-sure-Environment-fields-passed-in-for-tran.patch
-Patch053:       0053-core-You-can-not-put-the-cached-result-of-use_smack-.patch
-Patch054:       0054-cryptsetup-don-t-add-unit-dependency-on-dev-null-dev.patch
-Patch055:       0055-man-fix-path-in-crypttab-5.patch
-Patch056:       0056-sysv-generator-rename-PidFile-to-PIDFile.patch
-Patch057:       0057-sysv-generator-fix-incorect-ordering-of-Wants.patch
-
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -104,7 +46,6 @@ Patch1000:      kernel-install-grubby.patch
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
 BuildRequires:  libcap-devel
-BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
@@ -434,10 +375,13 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-sleep/
 # Make sure directories in /var exist
 mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/coredump
 mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
+mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/backlight
+mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/rfkill
 mkdir -p %{buildroot}%{_localstatedir}/log/journal
 touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
 touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
 touch %{buildroot}%{_localstatedir}/lib/systemd/random-seed
+touch %{buildroot}%{_localstatedir}/lib/systemd/clock
 
 # Install rsyslog fragment
 mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
@@ -446,10 +390,6 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 # Install yum protection fragment
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
 install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
-
-# Don't package the kernel.core_pattern, we need minidumps working before
-# this can replace Fedora's current core dump handling.
-rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 
 %find_lang %{name}
 
@@ -497,14 +437,18 @@ ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service
 # Services we install by default, and which are controlled by presets.
 if [ $1 -eq 1 ] ; then
         systemctl preset \
-                getty@tty1.service \
                 remote-fs.target \
-                systemd-readahead-replay.service \
-                systemd-readahead-collect.service \
-                systemd-networkd.service \
+                getty@.service \
+                serial-getty@.service \
                 console-getty.service \
                 console-shell.service \
                 debug-shell.service \
+                systemd-readahead-replay.service \
+                systemd-readahead-collect.service \
+                systemd-timesyncd.service \
+                systemd-networkd.service \
+                systemd-networkd-wait-online.service \
+                systemd-resolved.service \
                 >/dev/null 2>&1 || :
 fi
 
@@ -525,14 +469,18 @@ fi
 %preun
 if [ $1 -eq 0 ] ; then
         systemctl disable \
-                getty@.service \
                 remote-fs.target \
-                systemd-readahead-replay.service \
-                systemd-readahead-collect.service \
-                systemd-networkd.service \
+                getty@.service \
+                serial-getty@.service \
                 console-getty.service \
                 console-shell.service \
                 debug-shell.service \
+                systemd-readahead-replay.service \
+                systemd-readahead-collect.service \
+                systemd-timesyncd.service \
+                systemd-networkd.service \
+                systemd-networkd-wait-online.service \
+                systemd-resolved.service \
                 >/dev/null 2>&1 || :
 
         rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
@@ -586,6 +534,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_prefix}/lib/systemd/network
 %dir %{_prefix}/lib/systemd/ntp-units.d
 %dir %{_prefix}/lib/tmpfiles.d
+%dir %{_prefix}/lib/sysusers.d
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
@@ -598,9 +547,11 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
-%dir %{_localstatedir}/lib/systemd/coredump
+%ghost %dir %{_localstatedir}/lib/systemd/coredump
 %ghost %dir %{_localstatedir}/lib/systemd/backlight
+%ghost %dir %{_localstatedir}/lib/systemd/rfkill
 %ghost %{_localstatedir}/lib/systemd/random-seed
+%ghost %{_localstatedir}/lib/systemd/clock
 %ghost %{_localstatedir}/lib/systemd/catalog/database
 %{_localstatedir}/log/README
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
@@ -616,6 +567,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %config(noreplace) %{_sysconfdir}/systemd/bootchart.conf
 %config(noreplace) %{_sysconfdir}/systemd/resolved.conf
 %config(noreplace) %{_sysconfdir}/systemd/timesyncd.conf
+%config(noreplace) %{_sysconfdir}/systemd/coredump.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
@@ -642,6 +594,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_bindir}/journalctl
 %{_bindir}/machinectl
 %{_bindir}/busctl
+%{_bindir}/coredumpctl
 %{_bindir}/systemd-tmpfiles
 %{_bindir}/systemd-nspawn
 %{_bindir}/systemd-stdio-bridge
@@ -650,8 +603,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_bindir}/systemd-cgtop
 %{_bindir}/systemd-delta
 %{_bindir}/systemd-run
-%caps(cap_dac_override,cap_sys_ptrace=pe) %{_bindir}/systemd-detect-virt
+%{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
+%{_bindir}/systemd-path
+%{_bindir}/systemd-sysusers
 %{_bindir}/hostnamectl
 %{_bindir}/localectl
 %{_bindir}/timedatectl
@@ -674,15 +629,21 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_prefix}/lib/systemd/system-generators/systemd-efi-boot-generator
 %{_prefix}/lib/systemd/system-generators/systemd-gpt-auto-generator
 %{_prefix}/lib/systemd/system-generators/systemd-sysv-generator
+%{_prefix}/lib/systemd/system-generators/systemd-debug-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
 %{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/tmpfiles.d/var.conf
+%{_prefix}/lib/tmpfiles.d/etc.conf
 %{_prefix}/lib/sysctl.d/50-default.conf
+%{_prefix}/lib/sysctl.d/50-coredump.conf
+%{_prefix}/lib/sysusers.d/basic.conf
+%{_prefix}/lib/sysusers.d/systemd.conf
 %{_prefix}/lib/systemd/system-preset/85-display-manager.preset
 %{_prefix}/lib/systemd/system-preset/90-default.preset
+%{_prefix}/lib/systemd/system-preset/90-systemd.preset
 %{_prefix}/lib/systemd/system-preset/99-default-disable.preset
 %{_prefix}/lib/systemd/catalog/systemd.catalog
 %{_prefix}/lib/kernel/install.d/50-depmod.install
@@ -794,6 +755,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Jul 3 2014 Lennart Poettering <lpoetter@redhat.com> - 215-1
+- New upstream release
+- Enable coredump logic (which abrt would normally override)
+
 * Sun Jun 29 2014 Peter Robinson <pbrobinson@fedoraproject.org> 214-5
 - On aarch64 disable LTO as it still has issues on that arch
 
