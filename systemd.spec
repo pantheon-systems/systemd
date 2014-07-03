@@ -755,7 +755,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Wed Jul 3 2014 Lennart Poettering <lpoetter@redhat.com> - 215-1
+* Thu Jul 3 2014 Lennart Poettering <lpoetter@redhat.com> - 215-1
 - New upstream release
 - Enable coredump logic (which abrt would normally override)
 
