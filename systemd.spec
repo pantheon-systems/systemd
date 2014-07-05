@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -303,6 +303,7 @@ pushd build2
 popd
 
 find %{buildroot} \( -name '*.a' -o -name '*.la' \) -delete
+sed -i 's/L+/#/' %{buildroot}/usr/lib/tmpfiles.d/etc.conf
 
 # udev links
 mkdir -p %{buildroot}/%{_sbindir}
@@ -619,6 +620,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
 %exclude %{_prefix}/lib/systemd/systemd-journal-gatewayd
+%exclude %{_prefix}/lib/systemd/systemd-journal-remote
 %{_prefix}/lib/systemd/systemd-*
 %{_prefix}/lib/udev
 %{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
@@ -660,6 +662,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %exclude %{_mandir}/man8/systemd-journal-gatewayd.*
+%exclude %{_mandir}/man8/systemd-journal-remote.*
 %{_mandir}/man8/*
 %{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
@@ -751,11 +754,17 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %files journal-gateway
 %{_prefix}/lib/systemd/system/systemd-journal-gatewayd.*
 %{_prefix}/lib/systemd/systemd-journal-gatewayd
+%{_prefix}/lib/systemd/systemd-journal-remote
 %{_mandir}/man8/systemd-journal-gatewayd.*
+%{_mandir}/man8/systemd-journal-remote.*
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Thu Jul 3 2014 Lennart Poettering <lpoetter@redhat.com> - 215-1
+* Sat Jul 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-2
+- Move systemd-journal-remote to systemd-journal-gateway package (#1114688)
+- Disable /etc/mtab handling temporarily (#1116158)
+
+* Thu Jul 03 2014 Lennart Poettering <lpoetter@redhat.com> - 215-1
 - New upstream release
 - Enable coredump logic (which abrt would normally override)
 
