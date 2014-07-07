@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -37,6 +37,11 @@ Source6:        yum-protect-systemd.conf
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v215..v215-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
+
+# Presently not accepted upstream, but we disable systemd-resolved in
+# the presets anyways, and this unbreaks anaconda/lorax/livecd-creator
+# etc.
+Patch0: 0001-resolved-Move-symlink-creation-from-tmpfiles-to-daem.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -799,6 +804,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Aug 21 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-2
+- Re-add patch to disable resolve.conf symlink (#1043119)
+
 * Wed Aug 20 2014 Lennart Poettering <lpoetter@redhat.com> - 216-1
 - New upstream release
 
