@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -39,6 +39,83 @@ Source6:        yum-protect-systemd.conf
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v215..v215-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
+Patch001:       0001-man-add-link-to-Open-Group-Base-Specifications.patch
+Patch002:       0002-sd-path-add-missing-header.patch
+Patch003:       0003-architecture-remove-cris-from-uname-list.patch
+Patch004:       0004-networkd-link-improve-link-tracking-logging.patch
+Patch005:       0005-networkd-properly-track-addresses-when-first-added.patch
+Patch006:       0006-man-netdev-mention-tun-and-tap.patch
+Patch007:       0007-units-conditionalize-static-device-node-logic-on-CAP.patch
+Patch008:       0008-units-conditionalize-configfs-and-debugfs-with-CAP_S.patch
+Patch009:       0009-main-change-check-whether-etc-is-unpopulated-to-look.patch
+Patch010:       0010-networkd-don-t-clear-dhcpv6-lease-timers-if-there-s-.patch
+Patch011:       0011-networkd-accept-section-DHCP-in-systemd.network-file.patch
+Patch012:       0012-machine-don-t-return-uninitialized-variable.patch
+Patch013:       0013-sysusers-fix-uninitialized-warning.patch
+Patch014:       0014-vconsole-setup-run-setfont-before-loadkeys.patch
+Patch015:       0015-coredumpctl-show-a-useful-error-on-permission-proble.patch
+Patch016:       0016-networkd-netdev-add-missing-refs.patch
+Patch017:       0017-vconsole-setup-fix-inverted-error-messages.patch
+Patch018:       0018-udev-link_config-ignore-errors-due-to-missing-MAC-ad.patch
+Patch019:       0019-util-consider-0x7F-a-control-chracter-which-it-is-DE.patch
+Patch020:       0020-main-explain-our-etc-empty-check-a-bit-in-a-comment.patch
+Patch021:       0021-man-add-missing-archs-to-ConditionArchitecture-descr.patch
+Patch022:       0022-man-chroot-jails-are-no-longer-detected-by-Condition.patch
+Patch023:       0023-architecture-add-string-table-entries-for-mips-le-ar.patch
+Patch024:       0024-service-flush-status-text-and-errno-values-each-time.patch
+Patch025:       0025-base-filesystem.c-terminate-string-array-elements-wi.patch
+Patch026:       0026-man-drop-references-to-the-priviliged-command-line-o.patch
+Patch027:       0027-fstab-generator-add-comma-when-removed-option-is-in-.patch
+Patch028:       0028-dropin-add-format-attribute-and-fix-a-wrong-caller.patch
+Patch029:       0029-add-new-systemd-escape-tool.patch
+Patch030:       0030-escape-beef-up-new-systemd-escape-tool.patch
+Patch031:       0031-man-document-systemd-escape-1.patch
+Patch032:       0032-shared-fix-format-string-for-usec_t-type.patch
+Patch033:       0033-logind-allow-switching-to-unused-VTs-via-SwitchTo.patch
+Patch034:       0034-systemctl-fix-visual-alignment-for-lines-prefixed-wi.patch
+Patch035:       0035-accelerometer-Don-t-wait-for-new-data-from-the-senso.patch
+Patch036:       0036-escape-move-to-rootbindir.patch
+Patch037:       0037-journal-compress-improve-xz-compression-performance.patch
+Patch038:       0038-hostnamed-add-a-new-chassis-type-for-watches.patch
+Patch039:       0039-hostnamed-update-documentation-with-new-watch-chassi.patch
+Patch040:       0040-units-make-ExecStopPost-action-part-of-ExecStart.patch
+Patch041:       0041-util-don-t-consider-tabs-special-in-string_has_cc-an.patch
+Patch042:       0042-util-fix-has-cc-check-and-add-test.patch
+Patch043:       0043-sysusers-don-t-allow-user-names-longer-than-UT_NAMES.patch
+Patch044:       0044-sysusers-don-t-allow-control-characters-in-gecos-fie.patch
+Patch045:       0045-sysusers-allow-overrides-in-etc-and-run.patch
+Patch046:       0046-man-document-x-systemd.device-timeout-for-crypttab.patch
+Patch047:       0047-shell-completion-man-beef-up-chassis-completions-and.patch
+Patch048:       0048-Revert-build-sys-include-PolicyKit-files-as-part-of-.patch
+Patch049:       0049-build-sys-Do-not-distribute-generated-emergency.serv.patch
+Patch050:       0050-sysusers-preserve-label-of-etc-passwd-group.patch
+Patch051:       0051-Add-function-to-open-temp-files-in-selinux-mode.patch
+Patch052:       0052-man-add-systemd-coredump-8-and-a-bunch-of-links.patch
+Patch053:       0053-man-sysusers.d-correct-default-user-shell.patch
+Patch054:       0054-man-mention-XDG_DATA_HOME-in-systemd.unit.patch
+Patch055:       0055-path-lookup-don-t-make-.local-share-systemd-user-a-s.patch
+Patch056:       0056-fileio-quote-more-shell-characters-in-envfiles.patch
+Patch057:       0057-man-systemd.netdev-make-it-clear-that-we-do-not-touc.patch
+Patch058:       0058-rules-consistently-use-instead-of.patch
+Patch059:       0059-timesyncd-suppress-resync-at-system-time-change-when.patch
+Patch060:       0060-timesyncd-only-listen-to-clock-changes-when-connecte.patch
+Patch061:       0061-shell-completion-restore-completion-for-p.patch
+Patch062:       0062-core-fix-oneshot-service-resource-control.patch
+Patch063:       0063-rules-uaccess-add-ID_SOFTWARE_RADIO.patch
+Patch064:       0064-journal-allow-files-with-no-data-whatsoever.patch
+Patch065:       0065-units-serial-getty-.service-use-the-default-RestartS.patch
+Patch066:       0066-build-sys-don-t-move-libgudev-to-lib.patch
+Patch067:       0067-shared-include-stdbool.h-in-mkdir.h.patch
+Patch068:       0068-missing.h-add-IFLA_MACVLAN_FLAGS.patch
+Patch069:       0069-man-document-yearly-and-annually-in-systemd.time-7.patch
+Patch070:       0070-core-nicer-message-when-inotify-watches-are-exhauste.patch
+Patch071:       0071-detect-virt-Fix-Xen-domU-discovery.patch
+Patch072:       0072-journal-reduce-test-journal-send-timeout-from-10s-to.patch
+Patch073:       0073-systemd-detect-virt-detect-s390-virtualization.patch
+Patch074:       0074-man-journal-add-note-about-sd_journal_get_cutoff_mon.patch
+Patch075:       0075-Be-more-verbose-when-bind-or-listen-fails.patch
+Patch076:       0076-core-show-timeouts-when-watchdog-howls.patch
+Patch077:       0077-escape-fix-return-code.patch
 
 # Presently not accepted upstream, but we disable systemd-resolved in
 # the presets anyways, and this unbreaks anaconda/lorax/livecd-creator
@@ -593,6 +670,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-analyze
+%{_bindir}/systemd-escape
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
@@ -765,10 +843,25 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sat Jul 19 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-4
+- Various man page updates
+- Static device node logic is conditionalized on CAP_SYS_MODULES instead of CAP_MKNOD
+  for better behaviour in containers
+- Some small networkd link handling fixes
+- vconsole-setup runs setfont before loadkeys (https://bugs.freedesktop.org/show_bug.cgi?id=80685)
+- New systemd-escape tool
+- XZ compression settings are tweaked to greatly improve journald performance
+- "watch" is accepted as chassis type
+- Various sysusers fixes, most importantly correct selinux labels
+- systemd-timesyncd bug fix (https://bugs.freedesktop.org/show_bug.cgi?id=80932)
+- Shell completion improvements
+- New udev tag ID_SOFTWARE_RADIO can be used to instruct logind to allow user access
+- XEN and s390 virtualization is properly detected
+
 * Mon Jul 07 2014 Colin Walters <walters@redhat.com> - 215-3
 - Add patch to disable resolve.conf symlink (#1043119)
 
-* Sat Jul 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-2
+* Sun Jul 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-2
 - Move systemd-journal-remote to systemd-journal-gateway package (#1114688)
 - Disable /etc/mtab handling temporarily (#1116158)
 
