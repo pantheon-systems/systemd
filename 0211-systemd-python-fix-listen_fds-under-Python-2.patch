@@ -9,7 +9,7 @@ Subject: [PATCH] systemd-python: fix listen_fds under Python 2
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/python-systemd/_daemon.c b/src/python-systemd/_daemon.c
-index c6db69f..3982e85 100644
+index c6db69fe26..3982e85426 100644
 --- a/src/python-systemd/_daemon.c
 +++ b/src/python-systemd/_daemon.c
 @@ -114,7 +114,7 @@ static PyObject* listen_fds(PyObject *self, PyObject *args, PyObject *keywds) {

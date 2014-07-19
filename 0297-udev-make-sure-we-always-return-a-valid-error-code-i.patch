@@ -13,7 +13,7 @@ Conflicts:
  1 file changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/src/udev/udevadm-hwdb.c b/src/udev/udevadm-hwdb.c
-index fe56758..141db57 100644
+index fe56758e3a..141db57284 100644
 --- a/src/udev/udevadm-hwdb.c
 +++ b/src/udev/udevadm-hwdb.c
 @@ -341,7 +341,7 @@ static int trie_store(struct trie *trie, const char *filename) {

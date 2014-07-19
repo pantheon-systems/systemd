@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 60 insertions(+), 51 deletions(-)
 
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index 1d66792..ccd96b2 100644
+index 1d66792708..ccd96b221a 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -72,7 +72,8 @@ static bool arg_no_tail = false;

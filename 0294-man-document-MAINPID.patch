@@ -9,7 +9,7 @@ Subject: [PATCH] man: document $MAINPID
  1 file changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
-index 630a28c..d8dab36 100644
+index 630a28cb54..d8dab36f3a 100644
 --- a/man/systemd.exec.xml
 +++ b/man/systemd.exec.xml
 @@ -472,7 +472,7 @@

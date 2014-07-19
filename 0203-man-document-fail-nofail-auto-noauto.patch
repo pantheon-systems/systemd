@@ -19,7 +19,7 @@ Conflicts:
  6 files changed, 32 insertions(+), 5 deletions(-)
 
 diff --git a/man/systemd-fsck@.service.xml b/man/systemd-fsck@.service.xml
-index e934352..c653dc5 100644
+index e934352f19..c653dc59d4 100644
 --- a/man/systemd-fsck@.service.xml
 +++ b/man/systemd-fsck@.service.xml
 @@ -62,7 +62,10 @@
@@ -35,7 +35,7 @@ index e934352..c653dc5 100644
                  <para><filename>systemd-fsck</filename> will
                  forward file system checking progress to the
 diff --git a/man/systemd-fstab-generator.xml b/man/systemd-fstab-generator.xml
-index 9ca16c7..e3cf5d2 100644
+index 9ca16c7ea1..e3cf5d2bfb 100644
 --- a/man/systemd-fstab-generator.xml
 +++ b/man/systemd-fstab-generator.xml
 @@ -61,6 +61,12 @@
@@ -52,7 +52,7 @@ index 9ca16c7..e3cf5d2 100644
                  <citerefentry><refentrytitle>systemd.mount</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                  and
 diff --git a/man/systemd-halt.service.xml b/man/systemd-halt.service.xml
-index 99457aa..bec2e36 100644
+index 99457aa721..bec2e36a56 100644
 --- a/man/systemd-halt.service.xml
 +++ b/man/systemd-halt.service.xml
 @@ -86,7 +86,7 @@
@@ -65,7 +65,7 @@ index 99457aa..bec2e36 100644
  
                  <para>Immediately before executing the actual system
 diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
-index 6f9f70c..cadf950 100644
+index 6f9f70c3eb..cadf95008a 100644
 --- a/man/systemd.mount.xml
 +++ b/man/systemd.mount.xml
 @@ -132,7 +132,10 @@
@@ -103,7 +103,7 @@ index 6f9f70c..cadf950 100644
                  <filename>/etc/fstab</filename> and a unit file that
                  is stored below <filename>/usr</filename>, the former
 diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
-index f6b4b24..4704352 100644
+index f6b4b24797..4704352e42 100644
 --- a/man/systemd.unit.xml
 +++ b/man/systemd.unit.xml
 @@ -232,7 +232,7 @@
@@ -116,7 +116,7 @@ index f6b4b24..4704352 100644
                  unit template that shares the same name but with the
                  instance string (i.e. the part between the <literal>@</literal> character
 diff --git a/man/udevadm.xml b/man/udevadm.xml
-index a1ffe42..ca3713f 100644
+index a1ffe4219c..ca3713f29c 100644
 --- a/man/udevadm.xml
 +++ b/man/udevadm.xml
 @@ -461,7 +461,7 @@

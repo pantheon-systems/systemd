@@ -14,7 +14,7 @@ use the API. Furthermore, only a single API user gets access at a time.
  1 file changed, 20 insertions(+)
 
 diff --git a/src/login/org.freedesktop.login1.conf b/src/login/org.freedesktop.login1.conf
-index 0407609..04e735e 100644
+index 0407609c19..04e735eb59 100644
 --- a/src/login/org.freedesktop.login1.conf
 +++ b/src/login/org.freedesktop.login1.conf
 @@ -148,6 +148,26 @@

@@ -9,7 +9,7 @@ Subject: [PATCH] Temporary work around for slow shutdown due to unterminated
  1 file changed, 7 insertions(+)
 
 diff --git a/units/user@.service.in b/units/user@.service.in
-index 3f8b59d..a7e0584 100644
+index 3f8b59d07f..a7e0584bf8 100644
 --- a/units/user@.service.in
 +++ b/units/user@.service.in
 @@ -14,5 +14,12 @@ User=%I

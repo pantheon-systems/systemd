@@ -17,7 +17,7 @@ kernel command line.
  1 file changed, 8 insertions(+)
 
 diff --git a/src/core/main.c b/src/core/main.c
-index 2a294c6..2f45485 100644
+index 2a294c67fb..2f4548502f 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -1748,6 +1748,7 @@ finish:

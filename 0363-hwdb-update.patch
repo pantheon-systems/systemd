@@ -12,7 +12,7 @@ Subject: [PATCH] hwdb: update
  3 files changed, 2330 insertions(+), 239 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index a51a00a..209b89e 100644
+index a51a00aa1e..209b89ed2b 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -13558,6 +13558,9 @@ OUI:40D8551CA*
@@ -2599,7 +2599,7 @@ index a51a00a..209b89e 100644
   ID_OUI_FROM_DATABASE=Intel Corporate
  
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index 7f833e3..371a685 100644
+index 7f833e3345..371a6858ef 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -890,6 +890,9 @@ pci:v00001000d0000005Bsv00001000sd00009295*
@@ -6260,7 +6260,7 @@ index 7f833e3..371a685 100644
   ID_VENDOR_FROM_DATABASE=Essence Technology, Inc.
  
 diff --git a/hwdb/20-usb-vendor-model.hwdb b/hwdb/20-usb-vendor-model.hwdb
-index 60dbcd2..014c628 100644
+index 60dbcd24bf..014c628ebb 100644
 --- a/hwdb/20-usb-vendor-model.hwdb
 +++ b/hwdb/20-usb-vendor-model.hwdb
 @@ -20,6 +20,12 @@ usb:v0003*

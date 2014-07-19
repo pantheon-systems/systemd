@@ -11,7 +11,7 @@ I forgot to update the tmpfiles config.
  1 file changed, 17 insertions(+)
 
 diff --git a/tmpfiles.d/tmp.conf b/tmpfiles.d/tmp.conf
-index 3b534a1..f0312ef 100644
+index 3b534a1f75..f0312efe90 100644
 --- a/tmpfiles.d/tmp.conf
 +++ b/tmpfiles.d/tmp.conf
 @@ -12,6 +12,23 @@ d /tmp 1777 root root 10d

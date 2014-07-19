@@ -14,7 +14,7 @@ the left to save the svg from being wider that it has to.
  1 file changed, 17 insertions(+), 12 deletions(-)
 
 diff --git a/src/analyze/systemd-analyze.c b/src/analyze/systemd-analyze.c
-index 9a69795..f4c7f68 100644
+index 9a69795906..f4c7f68fcd 100644
 --- a/src/analyze/systemd-analyze.c
 +++ b/src/analyze/systemd-analyze.c
 @@ -462,7 +462,7 @@ static int analyze_plot(DBusConnection *bus) {

@@ -26,7 +26,7 @@ path_strv_canonicalize with a list of absolute paths.
  6 files changed, 29 insertions(+), 24 deletions(-)
 
 diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
-index ed4070c..3d5b1df 100644
+index ed4070c662..3d5b1dfb39 100644
 --- a/src/shared/conf-files.c
 +++ b/src/shared/conf-files.c
 @@ -37,12 +37,8 @@
@@ -62,7 +62,7 @@ index ed4070c..3d5b1df 100644
                          hashmap_free_free(fh);
                          return r;
 diff --git a/src/shared/path-lookup.c b/src/shared/path-lookup.c
-index 1a47ea9..03c1380 100644
+index 1a47ea9ce7..03c1380076 100644
 --- a/src/shared/path-lookup.c
 +++ b/src/shared/path-lookup.c
 @@ -316,7 +316,7 @@ int lookup_paths_init(
@@ -88,7 +88,7 @@ index 1a47ea9..03c1380 100644
  
                  strv_uniq(p->sysvinit_path);
 diff --git a/src/shared/path-util.c b/src/shared/path-util.c
-index d8c14e8..36542cd 100644
+index d8c14e8b30..36542cdb8b 100644
 --- a/src/shared/path-util.c
 +++ b/src/shared/path-util.c
 @@ -165,7 +165,7 @@ char **path_strv_make_absolute_cwd(char **l) {
@@ -153,7 +153,7 @@ index d8c14e8..36542cd 100644
  
          return strv_uniq(l);
 diff --git a/src/shared/path-util.h b/src/shared/path-util.h
-index 1e58e1b..f867ab6 100644
+index 1e58e1b813..f867ab6d2a 100644
 --- a/src/shared/path-util.h
 +++ b/src/shared/path-util.h
 @@ -46,8 +46,8 @@ char* path_startswith(const char *path, const char *prefix) _pure_;
@@ -168,7 +168,7 @@ index 1e58e1b..f867ab6 100644
  int path_is_mount_point(const char *path, bool allow_symlink);
  int path_is_read_only_fs(const char *path);
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 617c3ac..533db92 100644
+index 617c3ac288..533db92918 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -5704,7 +5704,7 @@ static int search_and_fopen_internal(const char *path, const char *mode, char **
@@ -181,7 +181,7 @@ index 617c3ac..533db92 100644
  
          STRV_FOREACH(i, search) {
 diff --git a/src/udev/udev-rules.c b/src/udev/udev-rules.c
-index 366d870..7e6db81 100644
+index 366d8709bf..7e6db812c9 100644
 --- a/src/udev/udev-rules.c
 +++ b/src/udev/udev-rules.c
 @@ -1628,7 +1628,7 @@ struct udev_rules *udev_rules_new(struct udev *udev, int resolve_names)

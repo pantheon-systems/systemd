@@ -10,7 +10,7 @@ Subject: [PATCH] logind: fix policykit checks
  1 file changed, 6 insertions(+)
 
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index e1f0c9a..a5ab19c 100644
+index e1f0c9a0d7..a5ab19cd9e 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -1302,18 +1302,24 @@ static int bus_manager_do_shutdown_or_sleep(

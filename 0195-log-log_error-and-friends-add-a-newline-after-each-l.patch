@@ -46,7 +46,7 @@ Conflicts:
  23 files changed, 195 insertions(+), 195 deletions(-)
 
 diff --git a/src/binfmt/binfmt.c b/src/binfmt/binfmt.c
-index 5a42b3d..7ed1ae7 100644
+index 5a42b3dbef..7ed1ae7bfc 100644
 --- a/src/binfmt/binfmt.c
 +++ b/src/binfmt/binfmt.c
 @@ -94,7 +94,7 @@ static int apply_file(const char *path, bool ignore_enoent) {
@@ -59,7 +59,7 @@ index 5a42b3d..7ed1ae7 100644
                  char l[LINE_MAX], *p;
                  int k;
 diff --git a/src/bootchart/bootchart.c b/src/bootchart/bootchart.c
-index 14ccd3e..9f99c1f 100644
+index 14ccd3efe5..9f99c1f6b1 100644
 --- a/src/bootchart/bootchart.c
 +++ b/src/bootchart/bootchart.c
 @@ -262,12 +262,12 @@ static void do_journal_append(char *file)
@@ -78,7 +78,7 @@ index 14ccd3e..9f99c1f 100644
                  return;
          }
 diff --git a/src/journal/coredumpctl.c b/src/journal/coredumpctl.c
-index 75c96cc..560a91b 100644
+index 75c96cc081..560a91b620 100644
 --- a/src/journal/coredumpctl.c
 +++ b/src/journal/coredumpctl.c
 @@ -417,7 +417,7 @@ static int dump_core(sd_journal* j) {
@@ -91,7 +91,7 @@ index 75c96cc..560a91b 100644
          return 0;
  }
 diff --git a/src/journal/journal-authenticate.c b/src/journal/journal-authenticate.c
-index bd7100a..f416b79 100644
+index bd7100a8d5..f416b79a34 100644
 --- a/src/journal/journal-authenticate.c
 +++ b/src/journal/journal-authenticate.c
 @@ -60,7 +60,7 @@ int journal_file_append_tag(JournalFile *f) {
@@ -104,7 +104,7 @@ index bd7100a..f416b79 100644
                    FSPRG_GetEpoch(f->fsprg_state));
  
 diff --git a/src/modules-load/modules-load.c b/src/modules-load/modules-load.c
-index 49ee420..9789398 100644
+index 49ee4203dd..9789398e4e 100644
 --- a/src/modules-load/modules-load.c
 +++ b/src/modules-load/modules-load.c
 @@ -122,7 +122,7 @@ static int load_module(struct kmod_ctx *ctx, const char *m) {
@@ -126,7 +126,7 @@ index 49ee420..9789398 100644
                  char line[LINE_MAX], *l;
                  int k;
 diff --git a/src/sysctl/sysctl.c b/src/sysctl/sysctl.c
-index b5670db..8fb0eb6 100644
+index b5670dbb86..8fb0eb6570 100644
 --- a/src/sysctl/sysctl.c
 +++ b/src/sysctl/sysctl.c
 @@ -132,7 +132,7 @@ static int parse_file(Hashmap *sysctl_options, const char *path, bool ignore_eno
@@ -139,7 +139,7 @@ index b5670db..8fb0eb6 100644
                  char l[LINE_MAX], *p, *value, *new_value, *property, *existing;
                  void *v;
 diff --git a/src/test/test-udev.c b/src/test/test-udev.c
-index 17825f1..676669b 100644
+index 17825f12b4..676669ba88 100644
 --- a/src/test/test-udev.c
 +++ b/src/test/test-udev.c
 @@ -101,20 +101,20 @@ int main(int argc, char *argv[])
@@ -176,7 +176,7 @@ index 17825f1..676669b 100644
          }
  
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index e23847b..00f74c2 100644
+index e23847bbea..00f74c2535 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -359,7 +359,7 @@ static int dir_cleanup(
@@ -198,7 +198,7 @@ index e23847b..00f74c2 100644
                          if (unlinkat(dirfd(d), dent->d_name, 0) < 0) {
                                  if (errno != ENOENT) {
 diff --git a/src/udev/accelerometer/accelerometer.c b/src/udev/accelerometer/accelerometer.c
-index e611b48..9610d7c 100644
+index e611b48a42..9610d7c2b2 100644
 --- a/src/udev/accelerometer/accelerometer.c
 +++ b/src/udev/accelerometer/accelerometer.c
 @@ -334,7 +334,7 @@ int main (int argc, char** argv)
@@ -211,7 +211,7 @@ index e611b48..9610d7c 100644
          free(devnode);
          log_close();
 diff --git a/src/udev/ata_id/ata_id.c b/src/udev/ata_id/ata_id.c
-index d375d43..5e55f8d 100644
+index d375d43491..5e55f8dc28 100644
 --- a/src/udev/ata_id/ata_id.c
 +++ b/src/udev/ata_id/ata_id.c
 @@ -462,14 +462,14 @@ int main(int argc, char *argv[])
@@ -241,7 +241,7 @@ index d375d43..5e55f8d 100644
                          goto close;
                  }
 diff --git a/src/udev/cdrom_id/cdrom_id.c b/src/udev/cdrom_id/cdrom_id.c
-index 1ad0459..1fc0dfa 100644
+index 1ad0459236..1fc0dfa34f 100644
 --- a/src/udev/cdrom_id/cdrom_id.c
 +++ b/src/udev/cdrom_id/cdrom_id.c
 @@ -137,10 +137,10 @@ static bool is_mounted(const char *device)
@@ -758,7 +758,7 @@ index 1ad0459..1fc0dfa 100644
          }
  
 diff --git a/src/udev/udev-builtin-blkid.c b/src/udev/udev-builtin-blkid.c
-index b48dccc..c806bd6 100644
+index b48dccc2fb..c806bd6ad8 100644
 --- a/src/udev/udev-builtin-blkid.c
 +++ b/src/udev/udev-builtin-blkid.c
 @@ -190,7 +190,7 @@ static int builtin_blkid(struct udev_device *dev, int argc, char *argv[], bool t
@@ -771,7 +771,7 @@ index b48dccc..c806bd6 100644
                    noraid ? "no" : "", (unsigned long long) offset);
  
 diff --git a/src/udev/udev-builtin-firmware.c b/src/udev/udev-builtin-firmware.c
-index b80940b..8cfeed6 100644
+index b80940b6ef..8cfeed663b 100644
 --- a/src/udev/udev-builtin-firmware.c
 +++ b/src/udev/udev-builtin-firmware.c
 @@ -33,7 +33,7 @@ static bool set_loading(struct udev *udev, char *loadpath, const char *state)
@@ -820,7 +820,7 @@ index b80940b..8cfeed6 100644
                  rc = EXIT_FAILURE;
                  goto exit;
 diff --git a/src/udev/udev-builtin-input_id.c b/src/udev/udev-builtin-input_id.c
-index 445b602..4691fc0 100644
+index 445b602f9c..4691fc073d 100644
 --- a/src/udev/udev-builtin-input_id.c
 +++ b/src/udev/udev-builtin-input_id.c
 @@ -57,7 +57,7 @@ static void get_cap_mask(struct udev_device *dev,
@@ -882,7 +882,7 @@ index 445b602..4691fc0 100644
                                  break;
                          }
 diff --git a/src/udev/udev-builtin-kmod.c b/src/udev/udev-builtin-kmod.c
-index fc28121..097f881 100644
+index fc28121267..097f881133 100644
 --- a/src/udev/udev-builtin-kmod.c
 +++ b/src/udev/udev-builtin-kmod.c
 @@ -44,18 +44,18 @@ static int load_module(struct udev *udev, const char *alias)
@@ -950,7 +950,7 @@ index fc28121..097f881 100644
                  return false;
          return (kmod_validate_resources(ctx) != KMOD_RESOURCES_OK);
 diff --git a/src/udev/udev-builtin-usb_id.c b/src/udev/udev-builtin-usb_id.c
-index 3e2f43e..1b9f824 100644
+index 3e2f43e1a6..1b9f8246fb 100644
 --- a/src/udev/udev-builtin-usb_id.c
 +++ b/src/udev/udev-builtin-usb_id.c
 @@ -275,7 +275,7 @@ static int builtin_usb_id(struct udev_device *dev, int argc, char *argv[], bool
@@ -1047,7 +1047,7 @@ index 3e2f43e..1b9f824 100644
                  }
                  udev_util_encode_string(usb_vendor, vendor_str_enc, sizeof(vendor_str_enc));
 diff --git a/src/udev/udev-ctrl.c b/src/udev/udev-ctrl.c
-index e60da90..1898685 100644
+index e60da906c5..189868589d 100644
 --- a/src/udev/udev-ctrl.c
 +++ b/src/udev/udev-ctrl.c
 @@ -84,7 +84,7 @@ struct udev_ctrl *udev_ctrl_new_from_fd(struct udev *udev, int fd)
@@ -1138,7 +1138,7 @@ index e60da90..1898685 100644
          }
  
 diff --git a/src/udev/udev-node.c b/src/udev/udev-node.c
-index 1148a15..ca3d781 100644
+index 1148a1529c..ca3d781ff2 100644
 --- a/src/udev/udev-node.c
 +++ b/src/udev/udev-node.c
 @@ -65,7 +65,7 @@ static int node_symlink(struct udev_device *dev, const char *node, const char *s
@@ -1272,7 +1272,7 @@ index 1148a15..ca3d781 100644
  
          if (node_permissions_apply(dev, apply, mode, uid, gid) < 0)
 diff --git a/src/udev/udev-watch.c b/src/udev/udev-watch.c
-index 9b694c6..cbe0c37 100644
+index 9b694c6666..cbe0c37a4f 100644
 --- a/src/udev/udev-watch.c
 +++ b/src/udev/udev-watch.c
 @@ -40,7 +40,7 @@ int udev_watch_init(struct udev *udev)
@@ -1316,7 +1316,7 @@ index 9b694c6..cbe0c37 100644
  
          snprintf(filename, sizeof(filename), "/run/udev/watch/%d", wd);
 diff --git a/src/udev/udevadm-hwdb.c b/src/udev/udevadm-hwdb.c
-index d9dc73b..fe56758 100644
+index d9dc73bfc1..fe56758e3a 100644
 --- a/src/udev/udevadm-hwdb.c
 +++ b/src/udev/udevadm-hwdb.c
 @@ -389,17 +389,17 @@ static int trie_store(struct trie *trie, const char *filename) {
@@ -1426,7 +1426,7 @@ index d9dc73b..fe56758 100644
  
                  if (asprintf(&hwdb_bin, "%s/etc/udev/hwdb.bin", root) < 0) {
 diff --git a/src/udev/udevadm-settle.c b/src/udev/udevadm-settle.c
-index c4fc4ee..a131e3f 100644
+index c4fc4ee4e5..a131e3fba1 100644
 --- a/src/udev/udevadm-settle.c
 +++ b/src/udev/udevadm-settle.c
 @@ -113,20 +113,20 @@ static int adm_settle(struct udev *udev, int argc, char *argv[])
@@ -1486,7 +1486,7 @@ index c4fc4ee..a131e3f 100644
                                          udev_list_entry_foreach(list_entry, udev_queue_get_queued_list_entry(udev_queue))
                                                  printf("  %s (%s)\n",
 diff --git a/src/udev/udevadm-test.c b/src/udev/udevadm-test.c
-index df1409b..3aa3274 100644
+index df1409bff6..3aa3274bfc 100644
 --- a/src/udev/udevadm-test.c
 +++ b/src/udev/udevadm-test.c
 @@ -52,7 +52,7 @@ static int adm_test(struct udev *udev, int argc, char *argv[])
@@ -1508,7 +1508,7 @@ index df1409b..3aa3274 100644
                          }
                          break;
 diff --git a/src/udev/udevadm.c b/src/udev/udevadm.c
-index e14b3ca..dbca369 100644
+index e14b3ca27c..dbca369011 100644
 --- a/src/udev/udevadm.c
 +++ b/src/udev/udevadm.c
 @@ -79,7 +79,7 @@ static int run_command(struct udev *udev, const struct udevadm_cmd *cmd, int arg

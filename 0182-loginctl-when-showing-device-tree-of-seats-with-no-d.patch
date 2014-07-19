@@ -10,7 +10,7 @@ Subject: [PATCH] loginctl: when showing device tree of seats with no devices
  1 file changed, 2 insertions(+)
 
 diff --git a/src/login/sysfs-show.c b/src/login/sysfs-show.c
-index f7d11dd..cb12ebf 100644
+index f7d11ddc4c..cb12ebf4c7 100644
 --- a/src/login/sysfs-show.c
 +++ b/src/login/sysfs-show.c
 @@ -181,6 +181,8 @@ int show_sysfs(const char *seat, const char *prefix, unsigned n_columns) {

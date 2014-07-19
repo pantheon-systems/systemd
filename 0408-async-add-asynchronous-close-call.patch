@@ -11,7 +11,7 @@ Subject: [PATCH] async: add asynchronous close() call
  2 files changed, 24 insertions(+)
 
 diff --git a/src/core/async.c b/src/core/async.c
-index af527be..3876ded 100644
+index af527bea4e..3876deda70 100644
 --- a/src/core/async.c
 +++ b/src/core/async.c
 @@ -24,6 +24,7 @@
@@ -48,7 +48,7 @@ index af527be..3876ded 100644
 +        return -1;
 +}
 diff --git a/src/core/async.h b/src/core/async.h
-index 6601b4d..7f1ef79 100644
+index 6601b4dc4b..7f1ef79532 100644
 --- a/src/core/async.h
 +++ b/src/core/async.h
 @@ -22,4 +22,6 @@

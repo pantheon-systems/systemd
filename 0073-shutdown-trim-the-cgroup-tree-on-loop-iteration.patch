@@ -13,7 +13,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=988883
  1 file changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/src/core/shutdown.c b/src/core/shutdown.c
-index 4709746..ea02b60 100644
+index 4709746de4..ea02b60456 100644
 --- a/src/core/shutdown.c
 +++ b/src/core/shutdown.c
 @@ -46,6 +46,7 @@

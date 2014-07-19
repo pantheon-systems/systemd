@@ -14,7 +14,7 @@ journald.conf(5) and what information can be found there.
  2 files changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/man/journalctl.xml b/man/journalctl.xml
-index dced90f..d75c758 100644
+index dced90fa22..d75c758db5 100644
 --- a/man/journalctl.xml
 +++ b/man/journalctl.xml
 @@ -781,10 +781,14 @@
@@ -35,7 +35,7 @@ index dced90f..d75c758 100644
  
                          <varlistentry>
 diff --git a/man/journald.conf.xml b/man/journald.conf.xml
-index 7aa2e78..8e642a3 100644
+index 7aa2e78ed3..8e642a3f59 100644
 --- a/man/journald.conf.xml
 +++ b/man/journald.conf.xml
 @@ -130,15 +130,15 @@

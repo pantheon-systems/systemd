@@ -9,7 +9,7 @@ For some reason sphinx doesn't want to show inherited C functions.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/python-systemd/_daemon.c b/src/python-systemd/_daemon.c
-index 6b84fb8..f0ab16f 100644
+index 6b84fb81c7..f0ab16f659 100644
 --- a/src/python-systemd/_daemon.c
 +++ b/src/python-systemd/_daemon.c
 @@ -51,7 +51,7 @@ static PyObject* booted(PyObject *self, PyObject *args) {

@@ -11,7 +11,7 @@ Subject: [PATCH] add bash completion for systemd-cgls
  create mode 100644 shell-completion/bash/systemd-cgls
 
 diff --git a/Makefile.am b/Makefile.am
-index 03a1f91..d4a65e7 100644
+index 03a1f91bc0..d4a65e7f6b 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -342,6 +342,7 @@ dist_bashcompletion_DATA = \
@@ -24,7 +24,7 @@ index 03a1f91..d4a65e7 100644
  	shell-completion/bash/systemd-run \
 diff --git a/shell-completion/bash/systemd-cgls b/shell-completion/bash/systemd-cgls
 new file mode 100644
-index 0000000..0570438
+index 0000000000..0570438660
 --- /dev/null
 +++ b/shell-completion/bash/systemd-cgls
 @@ -0,0 +1,56 @@

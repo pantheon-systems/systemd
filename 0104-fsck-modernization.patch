@@ -8,7 +8,7 @@ Subject: [PATCH] fsck: modernization
  1 file changed, 18 insertions(+), 25 deletions(-)
 
 diff --git a/src/fsck/fsck.c b/src/fsck/fsck.c
-index f298cf7..e23ddc5 100644
+index f298cf7b9a..e23ddc58ac 100644
 --- a/src/fsck/fsck.c
 +++ b/src/fsck/fsck.c
 @@ -175,7 +175,7 @@ static double percent(int pass, unsigned long cur, unsigned long max) {

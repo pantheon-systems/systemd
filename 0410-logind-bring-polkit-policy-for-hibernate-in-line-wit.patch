@@ -14,7 +14,7 @@ suspendor poweroff, so sync the policies.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/org.freedesktop.login1.policy.in b/src/login/org.freedesktop.login1.policy.in
-index b96d32d..b8e90f1 100644
+index b96d32d526..b8e90f1938 100644
 --- a/src/login/org.freedesktop.login1.policy.in
 +++ b/src/login/org.freedesktop.login1.policy.in
 @@ -254,7 +254,7 @@

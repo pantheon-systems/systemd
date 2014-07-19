@@ -27,7 +27,7 @@ is not obvious that the count is non-zero.
  17 files changed, 74 insertions(+), 53 deletions(-)
 
 diff --git a/src/analyze/systemd-analyze.c b/src/analyze/systemd-analyze.c
-index 27d063c..a4f15eb 100644
+index 27d063c548..a4f15eb646 100644
 --- a/src/analyze/systemd-analyze.c
 +++ b/src/analyze/systemd-analyze.c
 @@ -768,7 +768,7 @@ static int list_dependencies_one(DBusConnection *bus, const char *name, unsigned
@@ -40,7 +40,7 @@ index 27d063c..a4f15eb 100644
          r = acquire_boot_times(bus, &boot);
          if (r < 0)
 diff --git a/src/cgtop/cgtop.c b/src/cgtop/cgtop.c
-index cacf705..293a211 100644
+index cacf705a0a..293a2113bd 100644
 --- a/src/cgtop/cgtop.c
 +++ b/src/cgtop/cgtop.c
 @@ -461,7 +461,7 @@ static int display(Hashmap *a) {
@@ -53,7 +53,7 @@ index cacf705..293a211 100644
          /* Find the longest names in one run */
          for (j = 0; j < n; j++) {
 diff --git a/src/core/namespace.c b/src/core/namespace.c
-index 16b132b..936f368 100644
+index 16b132ba56..936f36839b 100644
 --- a/src/core/namespace.c
 +++ b/src/core/namespace.c
 @@ -222,7 +222,7 @@ int setup_namespace(char** read_write_dirs,
@@ -113,7 +113,7 @@ index 16b132b..936f368 100644
             shows up in the parent */
          if (mount(NULL, "/", NULL, MS_SLAVE|MS_REC, NULL) < 0)
 diff --git a/src/journal/catalog.c b/src/journal/catalog.c
-index 7738d24..90ca008 100644
+index 7738d243a5..90ca008064 100644
 --- a/src/journal/catalog.c
 +++ b/src/journal/catalog.c
 @@ -399,7 +399,7 @@ int catalog_update(const char* database, const char* root, const char* const* di
@@ -126,7 +126,7 @@ index 7738d24..90ca008 100644
          r = write_catalog(database, h, sb, items, n);
          if (r < 0)
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 81c344f..425e38a 100644
+index 81c344fe5a..425e38a990 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -1344,7 +1344,7 @@ int journal_file_append_entry(JournalFile *f, const dual_timestamp *ts, const st
@@ -139,7 +139,7 @@ index 81c344f..425e38a 100644
          r = journal_file_append_entry_internal(f, ts, xor_hash, items, n_iovec, seqnum, ret, offset);
  
 diff --git a/src/journal/journal-vacuum.c b/src/journal/journal-vacuum.c
-index 8d5effb..d4a1c6c 100644
+index 8d5effb45c..d4a1c6c933 100644
 --- a/src/journal/journal-vacuum.c
 +++ b/src/journal/journal-vacuum.c
 @@ -299,8 +299,7 @@ int journal_directory_vacuum(
@@ -153,7 +153,7 @@ index 8d5effb..d4a1c6c 100644
          for (i = 0; i < n_list; i++) {
                  struct statvfs ss;
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index 9a2d255..0876ee6 100644
+index 9a2d255361..0876ee60f8 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -755,7 +755,7 @@ static int get_relative_boot_id(sd_journal *j, sd_id128_t *boot_id, int relative
@@ -166,7 +166,7 @@ index 9a2d255..0876ee6 100644
          if (sd_id128_equal(*boot_id, SD_ID128_NULL)) {
                  if (relative > (int) count || relative <= -(int)count)
 diff --git a/src/libsystemd-bus/bus-match.c b/src/libsystemd-bus/bus-match.c
-index 1411167..916682a 100644
+index 1411167a7f..916682aa62 100644
 --- a/src/libsystemd-bus/bus-match.c
 +++ b/src/libsystemd-bus/bus-match.c
 @@ -768,7 +768,7 @@ int bus_match_parse(
@@ -179,7 +179,7 @@ index 1411167..916682a 100644
          /* Check for duplicates */
          for (i = 0; i+1 < n_components; i++)
 diff --git a/src/libudev/libudev-enumerate.c b/src/libudev/libudev-enumerate.c
-index 8146f27..e71d766 100644
+index 8146f27e4f..e71d766c02 100644
 --- a/src/libudev/libudev-enumerate.c
 +++ b/src/libudev/libudev-enumerate.c
 @@ -276,7 +276,7 @@ _public_ struct udev_list_entry *udev_enumerate_get_list_entry(struct udev_enume
@@ -192,7 +192,7 @@ index 8146f27..e71d766 100644
                  max = udev_enumerate->devices_cur;
                  for (i = 0; i < max; i++) {
 diff --git a/src/nss-myhostname/netlink.c b/src/nss-myhostname/netlink.c
-index b1ef912..47a41f5 100644
+index b1ef912c8a..47a41f55e6 100644
 --- a/src/nss-myhostname/netlink.c
 +++ b/src/nss-myhostname/netlink.c
 @@ -197,7 +197,8 @@ finish:
@@ -206,7 +206,7 @@ index b1ef912..47a41f5 100644
          *_list = list;
          *_n_list = n_list;
 diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
-index 32888ad..6b74866 100644
+index 32888add01..6b748664c3 100644
 --- a/src/readahead/readahead-collect.c
 +++ b/src/readahead/readahead-collect.c
 @@ -536,8 +536,7 @@ done:
@@ -267,7 +267,7 @@ index 32888ad..6b74866 100644
  
          log_debug("Finalizing...");
 diff --git a/src/shared/cgroup-show.c b/src/shared/cgroup-show.c
-index e971f36..cc44ab4 100644
+index e971f36190..cc44ab4ea9 100644
 --- a/src/shared/cgroup-show.c
 +++ b/src/shared/cgroup-show.c
 @@ -44,6 +44,8 @@ static void show_pid_array(int pids[], unsigned n_pids, const char *prefix, unsi
@@ -280,7 +280,7 @@ index e971f36..cc44ab4 100644
          m = 0;
          for (i = 0; i < n_pids; i++) {
 diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
-index 6d99739..ed4070c 100644
+index 6d99739353..ed4070c662 100644
 --- a/src/shared/conf-files.c
 +++ b/src/shared/conf-files.c
 @@ -127,7 +127,7 @@ static int conf_files_list_strv_internal(char ***strv, const char *suffix, const
@@ -293,7 +293,7 @@ index 6d99739..ed4070c 100644
  
          hashmap_free(fh);
 diff --git a/src/shared/efivars.c b/src/shared/efivars.c
-index c015b16..f3eb6a6 100644
+index c015b16857..f3eb6a6e5d 100644
 --- a/src/shared/efivars.c
 +++ b/src/shared/efivars.c
 @@ -384,8 +384,7 @@ int efi_get_boot_options(uint16_t **options) {
@@ -307,7 +307,7 @@ index c015b16..f3eb6a6 100644
          *options = list;
          return count;
 diff --git a/src/shared/fileio.c b/src/shared/fileio.c
-index 603a1c7..733b320 100644
+index 603a1c7b38..733b320388 100644
 --- a/src/shared/fileio.c
 +++ b/src/shared/fileio.c
 @@ -662,6 +662,7 @@ int get_status_field(const char *filename, const char *pattern, char **field) {
@@ -319,7 +319,7 @@ index 603a1c7..733b320 100644
  
          r = read_full_file(filename, &status, NULL);
 diff --git a/src/shared/util.h b/src/shared/util.h
-index 1b845b3..222abe0 100644
+index 1b845b3803..222abe0018 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -764,3 +764,15 @@ bool id128_is_valid(const char *s) _pure_;
@@ -339,7 +339,7 @@ index 1b845b3..222abe0 100644
 +        }
 +}
 diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
-index d75281f..036828b 100644
+index d75281f5f6..036828b5dd 100644
 --- a/src/systemctl/systemctl.c
 +++ b/src/systemctl/systemctl.c
 @@ -471,7 +471,7 @@ static int list_units(DBusConnection *bus, char **args) {

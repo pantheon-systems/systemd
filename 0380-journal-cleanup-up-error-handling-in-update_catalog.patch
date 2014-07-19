@@ -15,7 +15,7 @@ Subject: [PATCH] journal: cleanup up error handling in update_catalog()
  2 files changed, 15 insertions(+), 13 deletions(-)
 
 diff --git a/src/journal/catalog.c b/src/journal/catalog.c
-index 90ca008..e5342be 100644
+index 90ca008064..e5342bee51 100644
 --- a/src/journal/catalog.c
 +++ b/src/journal/catalog.c
 @@ -109,7 +109,7 @@ static int finish_item(
@@ -89,7 +89,7 @@ index 90ca008..e5342be 100644
                  strbuf_cleanup(sb);
  
 diff --git a/src/journal/test-catalog.c b/src/journal/test-catalog.c
-index 5db5bed..f021dbf 100644
+index 5db5bed8de..f021dbfd54 100644
 --- a/src/journal/test-catalog.c
 +++ b/src/journal/test-catalog.c
 @@ -126,7 +126,8 @@ int main(int argc, char *argv[]) {

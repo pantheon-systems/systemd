@@ -11,7 +11,7 @@ would obscure the real error and is a bit sloppy.
  1 file changed, 3 insertions(+)
 
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 4b97710..1db7d06 100644
+index 4b9771076a..1db7d061c4 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -2908,6 +2908,9 @@ int unit_remove_drop_in(Unit *u, UnitSetPropertiesMode mode, const char *name) {

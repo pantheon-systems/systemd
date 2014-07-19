@@ -10,7 +10,7 @@ a container.
  1 file changed, 8 insertions(+)
 
 diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
-index ca54925..d2b4213 100644
+index ca54925da4..d2b4213af2 100644
 --- a/src/gpt-auto-generator/gpt-auto-generator.c
 +++ b/src/gpt-auto-generator/gpt-auto-generator.c
 @@ -38,6 +38,7 @@

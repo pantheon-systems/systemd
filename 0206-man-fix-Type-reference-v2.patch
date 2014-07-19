@@ -17,7 +17,7 @@ grawity:
  1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 898c19d..71bcfb4 100644
+index 898c19d881..71bcfb401d 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -139,9 +139,11 @@

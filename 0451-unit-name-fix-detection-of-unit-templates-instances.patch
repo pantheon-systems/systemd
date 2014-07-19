@@ -13,7 +13,7 @@ the suffix. Correct that.
  1 file changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
-index bc8094d..577f7e7 100644
+index bc8094d112..577f7e7731 100644
 --- a/src/shared/unit-name.c
 +++ b/src/shared/unit-name.c
 @@ -334,7 +334,7 @@ char *unit_name_path_unescape(const char *f) {

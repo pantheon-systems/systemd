@@ -10,7 +10,7 @@ Subject: [PATCH] DEFAULT_PATH_SPLIT_USR macro
  2 files changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 618f9c3..cafc306 100644
+index 618f9c3dc7..cafc306273 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -1227,7 +1227,7 @@ int main(int argc, char *argv[]) {
@@ -23,7 +23,7 @@ index 618f9c3..cafc306 100644
                                  NULL, /* TERM */
                                  NULL, /* HOME */
 diff --git a/src/shared/path-util.h b/src/shared/path-util.h
-index 0a42de7..1e58e1b 100644
+index 0a42de7e27..1e58e1b813 100644
 --- a/src/shared/path-util.h
 +++ b/src/shared/path-util.h
 @@ -25,10 +25,13 @@

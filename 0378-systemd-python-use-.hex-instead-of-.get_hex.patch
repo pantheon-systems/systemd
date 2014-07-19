@@ -13,7 +13,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=77086
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/python-systemd/journal.py b/src/python-systemd/journal.py
-index 9c7e004..dd1f229 100644
+index 9c7e0045e5..dd1f229973 100644
 --- a/src/python-systemd/journal.py
 +++ b/src/python-systemd/journal.py
 @@ -293,7 +293,7 @@ class Reader(_Reader):

@@ -31,7 +31,7 @@ of Linux on System z instances in LPAR mode.
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
-index a00ffed..1eaf0c1 100644
+index a00ffed4c0..1eaf0c115c 100644
 --- a/rules/99-systemd.rules.in
 +++ b/rules/99-systemd.rules.in
 @@ -7,7 +7,7 @@
@@ -44,7 +44,7 @@ index a00ffed..1eaf0c1 100644
  KERNEL=="vport*", TAG+="systemd"
  
 diff --git a/src/getty-generator/getty-generator.c b/src/getty-generator/getty-generator.c
-index 6c93806..40374b5 100644
+index 6c938062de..40374b525b 100644
 --- a/src/getty-generator/getty-generator.c
 +++ b/src/getty-generator/getty-generator.c
 @@ -91,7 +91,9 @@ int main(int argc, char *argv[]) {

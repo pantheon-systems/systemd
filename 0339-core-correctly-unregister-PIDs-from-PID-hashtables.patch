@@ -10,7 +10,7 @@ Conflicts:
  1 file changed, 18 insertions(+), 23 deletions(-)
 
 diff --git a/src/core/unit.c b/src/core/unit.c
-index dc88862..9a7720d 100644
+index dc88862343..9a7720da7b 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -1666,11 +1666,11 @@ int unit_watch_pid(Unit *u, pid_t pid) {

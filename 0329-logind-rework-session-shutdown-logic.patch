@@ -38,7 +38,7 @@ Based-on: 5f41d1f10fd97e93517b6a762b1bec247f4d1171
  8 files changed, 182 insertions(+), 65 deletions(-)
 
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index 6f3e442..63f0d3c 100644
+index 6f3e442efb..63f0d3c7a3 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -1746,13 +1746,7 @@ static DBusHandlerResult manager_message_handler(
@@ -121,7 +121,7 @@ index 6f3e442..63f0d3c 100644
          _cleanup_dbus_message_unref_ DBusMessage *reply = NULL;
          const char *w;
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 27aa335..78e6d74 100644
+index 27aa335142..78e6d74cda 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -24,6 +24,7 @@
@@ -378,7 +378,7 @@ index 27aa335..78e6d74 100644
                  return SESSION_ACTIVE;
  
 diff --git a/src/login/logind-session.h b/src/login/logind-session.h
-index f175a89..9b76582 100644
+index f175a8995e..9b76582c21 100644
 --- a/src/login/logind-session.h
 +++ b/src/login/logind-session.h
 @@ -98,11 +98,14 @@ struct Session {
@@ -405,7 +405,7 @@ index f175a89..9b76582 100644
  int session_load(Session *s);
  int session_kill(Session *s, KillWho who, int signo);
 diff --git a/src/login/logind-user.c b/src/login/logind-user.c
-index ddf19eb..3aeac13 100644
+index ddf19eb0b6..3aeac136e8 100644
 --- a/src/login/logind-user.c
 +++ b/src/login/logind-user.c
 @@ -529,6 +529,8 @@ int user_stop(User *u) {
@@ -454,7 +454,7 @@ index ddf19eb..3aeac13 100644
          if (user_check_linger_file(u) > 0)
                  return USER_LINGERING;
 diff --git a/src/login/logind-user.h b/src/login/logind-user.h
-index a36f456..a12532e 100644
+index a36f4565e8..a12532e229 100644
 --- a/src/login/logind-user.h
 +++ b/src/login/logind-user.h
 @@ -61,6 +61,7 @@ struct User {
@@ -466,7 +466,7 @@ index a36f456..a12532e 100644
          LIST_HEAD(Session, sessions);
          LIST_FIELDS(User, gc_queue);
 diff --git a/src/login/logind.c b/src/login/logind.c
-index 0628032..5180be7 100644
+index 0628032ae5..5180be7426 100644
 --- a/src/login/logind.c
 +++ b/src/login/logind.c
 @@ -80,10 +80,11 @@ Manager *manager_new(void) {
@@ -540,7 +540,7 @@ index 0628032..5180be7 100644
          int r;
          Seat *seat;
 diff --git a/src/login/logind.h b/src/login/logind.h
-index 9e6296c..0d2248f 100644
+index 9e6296cb7e..0d2248fa53 100644
 --- a/src/login/logind.h
 +++ b/src/login/logind.h
 @@ -88,6 +88,7 @@ struct Manager {
@@ -564,7 +564,7 @@ index 9e6296c..0d2248f 100644
  int manager_unit_is_active(Manager *manager, const char *unit);
  
 diff --git a/src/login/pam-module.c b/src/login/pam-module.c
-index 5baf1b7..6259450 100644
+index 5baf1b73c0..6259450025 100644
 --- a/src/login/pam-module.c
 +++ b/src/login/pam-module.c
 @@ -489,7 +489,7 @@ _public_ PAM_EXTERN int pam_sm_close_session(

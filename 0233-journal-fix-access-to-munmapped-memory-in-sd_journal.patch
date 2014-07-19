@@ -27,7 +27,7 @@ is increased in sd_j_e_u and later on released.
  6 files changed, 103 insertions(+), 23 deletions(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index ba65464..4d9787a 100644
+index ba654649b6..4d9787a1e1 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -419,7 +419,6 @@ int journal_file_move_to_object(JournalFile *f, int type, uint64_t offset, Objec
@@ -51,7 +51,7 @@ index ba65464..4d9787a 100644
                  return r;
  
 diff --git a/src/journal/journal-file.h b/src/journal/journal-file.h
-index 50bdb67..0bd23f7 100644
+index 50bdb67b4c..0bd23f7002 100644
 --- a/src/journal/journal-file.h
 +++ b/src/journal/journal-file.h
 @@ -128,6 +128,10 @@ int journal_file_open_reliably(
@@ -90,7 +90,7 @@ index 50bdb67..0bd23f7 100644
 +                                  offset, o->object.size);
 +}
 diff --git a/src/journal/journal-verify.c b/src/journal/journal-verify.c
-index 82b0f0a..f2422ff 100644
+index 82b0f0a98b..f2422ff841 100644
 --- a/src/journal/journal-verify.c
 +++ b/src/journal/journal-verify.c
 @@ -34,10 +34,6 @@
@@ -105,7 +105,7 @@ index 82b0f0a..f2422ff 100644
          uint64_t i;
  
 diff --git a/src/journal/mmap-cache.c b/src/journal/mmap-cache.c
-index 42a8a7d..24b2bb8 100644
+index 42a8a7df6f..24b2bb8f4c 100644
 --- a/src/journal/mmap-cache.c
 +++ b/src/journal/mmap-cache.c
 @@ -38,7 +38,7 @@ typedef struct FileDescriptor FileDescriptor;
@@ -238,7 +238,7 @@ index 42a8a7d..24b2bb8 100644
          FileDescriptor *f;
  
 diff --git a/src/journal/mmap-cache.h b/src/journal/mmap-cache.h
-index 912336d..647555a 100644
+index 912336d7c2..647555a73e 100644
 --- a/src/journal/mmap-cache.h
 +++ b/src/journal/mmap-cache.h
 @@ -31,7 +31,23 @@ MMapCache* mmap_cache_new(void);
@@ -267,7 +267,7 @@ index 912336d..647555a 100644
  void mmap_cache_close_context(MMapCache *m, unsigned context);
  
 diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
-index 52abbe9..46c3feb 100644
+index 52abbe9670..46c3feb45d 100644
 --- a/src/journal/sd-journal.c
 +++ b/src/journal/sd-journal.c
 @@ -2508,9 +2508,7 @@ _public_ int sd_journal_query_unique(sd_journal *j, const char *field) {

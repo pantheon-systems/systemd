@@ -10,7 +10,7 @@ Subject: [PATCH] log: when we log to /dev/console and got disconnected (maybe
  1 file changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/src/shared/log.c b/src/shared/log.c
-index bd918fb..de770ca 100644
+index bd918fb14c..de770caefa 100644
 --- a/src/shared/log.c
 +++ b/src/shared/log.c
 @@ -335,8 +335,25 @@ static int write_to_console(

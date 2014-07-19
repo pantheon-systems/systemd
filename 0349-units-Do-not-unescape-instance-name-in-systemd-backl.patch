@@ -16,7 +16,7 @@ This results in the following error message on Asus boards:
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/units/systemd-backlight@.service.in b/units/systemd-backlight@.service.in
-index 5caa5d5..e945d87 100644
+index 5caa5d531f..e945d8733f 100644
 --- a/units/systemd-backlight@.service.in
 +++ b/units/systemd-backlight@.service.in
 @@ -6,7 +6,7 @@

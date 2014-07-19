@@ -11,7 +11,7 @@ Subject: [PATCH] hwdb: update
  2 files changed, 751 insertions(+), 46 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index 209b89e..17794ed 100644
+index 209b89ed2b..17794ed58a 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -6929,7 +6929,7 @@ OUI:0050C2912*
@@ -941,7 +941,7 @@ index 209b89e..17794ed 100644
  OUI:FC4499*
   ID_OUI_FROM_DATABASE=Swarco LEA d.o.o.
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index 371a685..d54cb2a 100644
+index 371a6858ef..d54cb2a039 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -497,6 +497,9 @@ pci:v00000E11d0000F130*

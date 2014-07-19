@@ -21,7 +21,7 @@ where only one or the other exists in this context.
  1 file changed, 12 deletions(-)
 
 diff --git a/src/locale/kbd-model-map b/src/locale/kbd-model-map
-index 1fe9bca..78c7887 100644
+index 1fe9bca6ce..78c78874e6 100644
 --- a/src/locale/kbd-model-map
 +++ b/src/locale/kbd-model-map
 @@ -4,22 +4,18 @@ sg			ch	pc105		de_nodeadkeys	terminate:ctrl_alt_bksp

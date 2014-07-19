@@ -9,7 +9,7 @@ Subject: [PATCH] rules: drivers - do not reset RUN list
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/rules/80-drivers.rules b/rules/80-drivers.rules
-index 0b22d73..8551f47 100644
+index 0b22d73ce5..8551f47a4b 100644
 --- a/rules/80-drivers.rules
 +++ b/rules/80-drivers.rules
 @@ -2,12 +2,12 @@

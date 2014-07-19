@@ -20,7 +20,7 @@ both the load and save actions.
  1 file changed, 30 insertions(+), 14 deletions(-)
 
 diff --git a/src/backlight/backlight.c b/src/backlight/backlight.c
-index 2740b80..84bf51d 100644
+index 2740b80da3..84bf51dc3a 100644
 --- a/src/backlight/backlight.c
 +++ b/src/backlight/backlight.c
 @@ -192,30 +192,37 @@ static bool validate_device(struct udev *udev, struct udev_device *device) {

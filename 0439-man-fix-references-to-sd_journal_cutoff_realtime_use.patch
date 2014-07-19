@@ -10,7 +10,7 @@ Subject: [PATCH] man: fix references to sd_journal_cutoff_realtime_usec
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/man/sd-journal.xml b/man/sd-journal.xml
-index 832d584..83ee8f4 100644
+index 832d584579..83ee8f4c20 100644
 --- a/man/sd-journal.xml
 +++ b/man/sd-journal.xml
 @@ -78,7 +78,8 @@

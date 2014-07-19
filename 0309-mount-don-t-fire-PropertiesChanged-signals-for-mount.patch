@@ -10,7 +10,7 @@ Subject: [PATCH] mount: don't fire PropertiesChanged signals for mounts that
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/src/core/mount.c b/src/core/mount.c
-index 0a0ef82..65ea3f9 100644
+index 0a0ef82f17..65ea3f90fa 100644
 --- a/src/core/mount.c
 +++ b/src/core/mount.c
 @@ -1691,20 +1691,20 @@ void mount_fd_event(Manager *m, int events) {

@@ -8,7 +8,7 @@ Subject: [PATCH] man: fix typo
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/systemd-run.xml b/man/systemd-run.xml
-index e76a402..252335b 100644
+index e76a402003..252335b3c5 100644
 --- a/man/systemd-run.xml
 +++ b/man/systemd-run.xml
 @@ -60,7 +60,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.

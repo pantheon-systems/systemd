@@ -10,7 +10,7 @@ Subject: [PATCH] hwdb: Update database of Bluetooth company identifiers
  1 file changed, 18 insertions(+)
 
 diff --git a/hwdb/20-bluetooth-vendor-product.hwdb b/hwdb/20-bluetooth-vendor-product.hwdb
-index 7d86f10..b928f5a 100644
+index 7d86f10244..b928f5a716 100644
 --- a/hwdb/20-bluetooth-vendor-product.hwdb
 +++ b/hwdb/20-bluetooth-vendor-product.hwdb
 @@ -923,3 +923,21 @@ bluetooth:v0130*

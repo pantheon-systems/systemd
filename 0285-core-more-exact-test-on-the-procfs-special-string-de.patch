@@ -13,7 +13,7 @@ but in one instance, it did not (yet). Make it do the same.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/umount.c b/src/core/umount.c
-index 99dbe27..fbd7e1c 100644
+index 99dbe27c8f..fbd7e1c101 100644
 --- a/src/core/umount.c
 +++ b/src/core/umount.c
 @@ -170,7 +170,7 @@ static int swap_list_get(MountPoint **head) {

@@ -13,7 +13,7 @@ come *before* unit given as argument. Same for --before.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index d4048a8..03f2bc5 100644
+index d4048a8801..03f2bc5e51 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -176,8 +176,8 @@ systemctl start foo

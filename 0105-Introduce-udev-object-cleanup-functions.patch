@@ -29,7 +29,7 @@ Conflicts:
  create mode 100644 src/shared/udev-util.h
 
 diff --git a/Makefile.am b/Makefile.am
-index efe5aa3..910e780 100644
+index efe5aa3ebb..910e780fa2 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -648,6 +648,7 @@ libsystemd_shared_la_SOURCES = \
@@ -41,7 +41,7 @@ index efe5aa3..910e780 100644
  	src/shared/virt.h \
  	src/shared/efivars.c \
 diff --git a/src/backlight/backlight.c b/src/backlight/backlight.c
-index f22deed..c45b2d0 100644
+index f22deed4e0..c45b2d0b6b 100644
 --- a/src/backlight/backlight.c
 +++ b/src/backlight/backlight.c
 @@ -19,15 +19,15 @@
@@ -172,7 +172,7 @@ index f22deed..c45b2d0 100644
 +        return EXIT_SUCCESS;
  }
 diff --git a/src/core/umount.c b/src/core/umount.c
-index 1e95ad7..99dbe27 100644
+index 1e95ad70dd..99dbe27c8f 100644
 --- a/src/core/umount.c
 +++ b/src/core/umount.c
 @@ -27,7 +27,6 @@
@@ -403,7 +403,7 @@ index 1e95ad7..99dbe27 100644
  
  static int delete_loopback(const char *device) {
 diff --git a/src/cryptsetup/cryptsetup.c b/src/cryptsetup/cryptsetup.c
-index 769c3e4..39f7db7 100644
+index 769c3e4f31..39f7db7e3f 100644
 --- a/src/cryptsetup/cryptsetup.c
 +++ b/src/cryptsetup/cryptsetup.c
 @@ -25,7 +25,6 @@
@@ -477,7 +477,7 @@ index 769c3e4..39f7db7 100644
  
  static char *disk_mount_point(const char *label) {
 diff --git a/src/fsck/fsck.c b/src/fsck/fsck.c
-index e23ddc5..9b4e555 100644
+index e23ddc58ac..9b4e5558f7 100644
 --- a/src/fsck/fsck.c
 +++ b/src/fsck/fsck.c
 @@ -27,7 +27,6 @@
@@ -522,7 +522,7 @@ index e23ddc5..9b4e555 100644
  
          return r;
 diff --git a/src/journal/journal-internal.h b/src/journal/journal-internal.h
-index 5bc6535..1bc912c 100644
+index 5bc653537c..1bc912c977 100644
 --- a/src/journal/journal-internal.h
 +++ b/src/journal/journal-internal.h
 @@ -135,11 +135,8 @@ struct sd_journal {
@@ -540,7 +540,7 @@ index 5bc6535..1bc912c 100644
  #define JOURNAL_FOREACH_DATA_RETVAL(j, data, l, retval)                     \
          for (sd_journal_restart_data(j); ((retval) = sd_journal_enumerate_data((j), &(data), &(l))) > 0; )
 diff --git a/src/login/sysfs-show.c b/src/login/sysfs-show.c
-index 3c03bd1..7c1adfa 100644
+index 3c03bd1f2e..7c1adfaaca 100644
 --- a/src/login/sysfs-show.c
 +++ b/src/login/sysfs-show.c
 @@ -26,6 +26,7 @@
@@ -602,7 +602,7 @@ index 3c03bd1..7c1adfa 100644
          return r;
  }
 diff --git a/src/readahead/readahead-common.c b/src/readahead/readahead-common.c
-index a234a89..aea1fbe 100644
+index a234a89954..aea1fbeea4 100644
 --- a/src/readahead/readahead-common.c
 +++ b/src/readahead/readahead-common.c
 @@ -27,13 +27,14 @@
@@ -735,7 +735,7 @@ index a234a89..aea1fbe 100644
  
  bool enough_ram(void) {
 diff --git a/src/shared/fdset.h b/src/shared/fdset.h
-index a7bd5e2..d0dc875 100644
+index a7bd5e2b40..d0dc875a4e 100644
 --- a/src/shared/fdset.h
 +++ b/src/shared/fdset.h
 @@ -47,3 +47,6 @@ int fdset_iterate(FDSet *s, Iterator *i);
@@ -746,7 +746,7 @@ index a7bd5e2..d0dc875 100644
 +define_trivial_cleanup_func(FDSet*, fdset_free)
 +#define _cleanup_fdset_free_ _cleanup_(fdset_freep)
 diff --git a/src/shared/install.c b/src/shared/install.c
-index 9722ed4..b9c85b7 100644
+index 9722ed4e1c..b9c85b729c 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -44,10 +44,8 @@ typedef struct {
@@ -763,7 +763,7 @@ index 9722ed4..b9c85b7 100644
  static int lookup_paths_init_from_scope(LookupPaths *paths, UnitFileScope scope) {
          assert(paths);
 diff --git a/src/shared/set.h b/src/shared/set.h
-index e5d46e9..a291470 100644
+index e5d46e9a8f..a291470c19 100644
 --- a/src/shared/set.h
 +++ b/src/shared/set.h
 @@ -28,19 +28,13 @@
@@ -796,7 +796,7 @@ index e5d46e9..a291470 100644
  #define _cleanup_set_free_ _cleanup_(set_freep)
  #define _cleanup_set_free_free_ _cleanup_(set_free_freep)
 diff --git a/src/shared/strv.h b/src/shared/strv.h
-index d1f2a0e..4d117f8 100644
+index d1f2a0ef32..4d117f82c5 100644
 --- a/src/shared/strv.h
 +++ b/src/shared/strv.h
 @@ -24,16 +24,13 @@
@@ -820,7 +820,7 @@ index d1f2a0e..4d117f8 100644
  char **strv_copy(char * const *l);
 diff --git a/src/shared/udev-util.h b/src/shared/udev-util.h
 new file mode 100644
-index 0000000..bff8f5f
+index 0000000000..bff8f5fbf7
 --- /dev/null
 +++ b/src/shared/udev-util.h
 @@ -0,0 +1,37 @@
@@ -862,7 +862,7 @@ index 0000000..bff8f5f
 +#define _cleanup_udev_event_unref_ _cleanup_(udev_event_unrefp)
 +#define _cleanup_udev_rules_unref_ _cleanup_(udev_rules_unrefp)
 diff --git a/src/shared/util.h b/src/shared/util.h
-index 222abe0..2c41765 100644
+index 222abe0018..2c41765f6d 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -39,6 +39,7 @@
@@ -926,7 +926,7 @@ index 222abe0..2c41765 100644
  _malloc_  _alloc_(1, 2) static inline void *malloc_multiply(size_t a, size_t b) {
          if (_unlikely_(b == 0 || a > ((size_t) -1) / b))
 diff --git a/src/test/test-libudev.c b/src/test/test-libudev.c
-index 716767b..ab7d5a9 100644
+index 716767ba5f..ab7d5a9ab2 100644
 --- a/src/test/test-libudev.c
 +++ b/src/test/test-libudev.c
 @@ -29,6 +29,7 @@
@@ -971,7 +971,7 @@ index 716767b..ab7d5a9 100644
          return 0;
  }
 diff --git a/src/test/test-udev.c b/src/test/test-udev.c
-index 52b61b4..17825f1 100644
+index 52b61b4206..17825f12b4 100644
 --- a/src/test/test-udev.c
 +++ b/src/test/test-udev.c
 @@ -34,6 +34,7 @@
@@ -1023,7 +1023,7 @@ index 52b61b4..17825f1 100644
 +        return err ? EXIT_FAILURE : EXIT_SUCCESS;
  }
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 239e56b..7e873af 100644
+index 239e56ba9c..7e873af864 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -998,10 +998,7 @@ static void item_free(Item *i) {

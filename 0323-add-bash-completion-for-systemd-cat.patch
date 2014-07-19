@@ -11,7 +11,7 @@ Subject: [PATCH] add bash completion for systemd-cat
  create mode 100644 shell-completion/bash/systemd-cat
 
 diff --git a/Makefile.am b/Makefile.am
-index dafc428..df476ce 100644
+index dafc428b86..df476ce60e 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -342,6 +342,7 @@ dist_bashcompletion_DATA = \
@@ -24,7 +24,7 @@ index dafc428..df476ce 100644
  	shell-completion/bash/systemd-delta \
 diff --git a/shell-completion/bash/systemd-cat b/shell-completion/bash/systemd-cat
 new file mode 100644
-index 0000000..8d84042
+index 0000000000..8d84042af1
 --- /dev/null
 +++ b/shell-completion/bash/systemd-cat
 @@ -0,0 +1,57 @@

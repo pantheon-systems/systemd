@@ -17,7 +17,7 @@ Conflicts:
  1 file changed, 6 deletions(-)
 
 diff --git a/src/login/logind-user.c b/src/login/logind-user.c
-index adbe638..e2fce5c 100644
+index adbe638d46..e2fce5c831 100644
 --- a/src/login/logind-user.c
 +++ b/src/login/logind-user.c
 @@ -629,12 +629,6 @@ int user_check_gc(User *u, bool drop_not_started) {

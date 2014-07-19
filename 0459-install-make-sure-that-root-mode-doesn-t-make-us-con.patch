@@ -13,7 +13,7 @@ Subject: [PATCH] install: make sure that --root= mode doesn't make us consider
  3 files changed, 37 insertions(+), 21 deletions(-)
 
 diff --git a/src/shared/install.c b/src/shared/install.c
-index e772c45..5d93a2e 100644
+index e772c4500a..5d93a2eaf3 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -47,6 +47,37 @@ typedef struct {
@@ -107,7 +107,7 @@ index e772c45..5d93a2e 100644
                          r = q;
          }
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 1f83eb7..f034134 100644
+index 1f83eb7518..f034134949 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -4520,22 +4520,6 @@ int dirent_ensure_type(DIR *d, struct dirent *de) {
@@ -134,7 +134,7 @@ index 1f83eb7..f034134 100644
          _cleanup_closedir_ DIR *d = NULL;
          size_t bufsize = 0, n = 0;
 diff --git a/src/shared/util.h b/src/shared/util.h
-index 3f97663..f358362 100644
+index 3f9766339d..f358362a0b 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -477,7 +477,6 @@ int glob_extend(char ***strv, const char *path);

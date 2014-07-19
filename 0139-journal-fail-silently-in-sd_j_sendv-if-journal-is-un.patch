@@ -18,7 +18,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1023041
  1 file changed, 4 insertions(+)
 
 diff --git a/src/journal/journal-send.c b/src/journal/journal-send.c
-index d00e26f..d99ff0c 100644
+index d00e26f1eb..d99ff0c9cc 100644
 --- a/src/journal/journal-send.c
 +++ b/src/journal/journal-send.c
 @@ -305,6 +305,10 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {

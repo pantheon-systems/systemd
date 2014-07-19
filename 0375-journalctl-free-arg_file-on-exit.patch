@@ -10,7 +10,7 @@ Subject: [PATCH] journalctl: free arg_file on exit
  1 file changed, 2 insertions(+)
 
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index 6f52467..b991ae3 100644
+index 6f52467042..b991ae304d 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -1781,5 +1781,7 @@ int main(int argc, char *argv[]) {

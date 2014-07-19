@@ -20,7 +20,7 @@ strings to describe the hardware.
  2 files changed, 10685 insertions(+), 10682 deletions(-)
 
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index d54cb2a..14637d3 100644
+index d54cb2a039..14637d3087 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -15,10 +15,10 @@ pci:v0000001Cd00000001*
@@ -51583,7 +51583,7 @@ index d54cb2a..14637d3 100644
  pci:v0000E159d00000002*
   ID_MODEL_FROM_DATABASE=Tiger100APC ISDN chipset
 diff --git a/hwdb/ids-update.pl b/hwdb/ids-update.pl
-index 37d3556..8cfbeaa 100755
+index 37d3556382..8cfbeaa009 100755
 --- a/hwdb/ids-update.pl
 +++ b/hwdb/ids-update.pl
 @@ -107,6 +107,7 @@ sub usb_classes {

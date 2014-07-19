@@ -10,7 +10,7 @@ Subject: [PATCH] journald: mention how long we needed to flush to /var in the
  1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index e03e413..a0a8e9c 100644
+index e03e413aef..a0a8e9c468 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
 @@ -968,9 +968,12 @@ static int system_journal_open(Server *s) {

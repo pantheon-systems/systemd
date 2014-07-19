@@ -25,7 +25,7 @@ Conflicts:
  2 files changed, 24 insertions(+), 24 deletions(-)
 
 diff --git a/shell-completion/zsh/_journalctl b/shell-completion/zsh/_journalctl
-index 29ff3e3..8c3dbb0 100644
+index 29ff3e34ee..8c3dbb0758 100644
 --- a/shell-completion/zsh/_journalctl
 +++ b/shell-completion/zsh/_journalctl
 @@ -71,14 +71,14 @@ _arguments -s \
@@ -60,7 +60,7 @@ index 29ff3e3..8c3dbb0 100644
      '--verify[Verify journal file consistency]' \
      '--verify-key=[Specify FSS verification key]:FSS key' \
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index 71e28b0..1d66792 100644
+index 71e28b0a70..1d66792708 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -130,30 +130,30 @@ static int help(void) {

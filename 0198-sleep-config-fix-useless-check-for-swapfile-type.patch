@@ -16,7 +16,7 @@ a warning to detect those cases.
  1 file changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/src/shared/sleep-config.c b/src/shared/sleep-config.c
-index 2bb0493..d76e3ad 100644
+index 2bb0493812..d76e3ad036 100644
 --- a/src/shared/sleep-config.c
 +++ b/src/shared/sleep-config.c
 @@ -183,7 +183,7 @@ static int hibernation_partition_size(size_t *size, size_t *used) {

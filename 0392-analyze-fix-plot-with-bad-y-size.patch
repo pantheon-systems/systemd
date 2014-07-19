@@ -16,7 +16,7 @@ https://github.com/archlinuxarm/PKGBUILDs/issues/815
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/analyze/systemd-analyze.c b/src/analyze/systemd-analyze.c
-index 317baf9..25f8ad6 100644
+index 317baf9c05..25f8ad61e2 100644
 --- a/src/analyze/systemd-analyze.c
 +++ b/src/analyze/systemd-analyze.c
 @@ -41,7 +41,7 @@

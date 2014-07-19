@@ -16,7 +16,7 @@ slices.
  1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/src/core/cgroup.c b/src/core/cgroup.c
-index 8bf4d89..42c0b3f 100644
+index 8bf4d896de..42c0b3fb1f 100644
 --- a/src/core/cgroup.c
 +++ b/src/core/cgroup.c
 @@ -589,8 +589,8 @@ pid_t unit_search_main_pid(Unit *u) {

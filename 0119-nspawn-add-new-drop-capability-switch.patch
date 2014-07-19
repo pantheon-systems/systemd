@@ -9,7 +9,7 @@ Subject: [PATCH] nspawn: add new --drop-capability= switch
  2 files changed, 20 insertions(+), 2 deletions(-)
 
 diff --git a/man/systemd-nspawn.xml b/man/systemd-nspawn.xml
-index ba9e516..c1a5cad 100644
+index ba9e51686a..c1a5cad714 100644
 --- a/man/systemd-nspawn.xml
 +++ b/man/systemd-nspawn.xml
 @@ -304,6 +304,16 @@
@@ -30,7 +30,7 @@ index ba9e516..c1a5cad 100644
  
                                  <listitem><para>Control whether the
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 85bbadf..7346253 100644
+index 85bbadf811..734625321f 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -130,6 +130,7 @@ static int help(void) {

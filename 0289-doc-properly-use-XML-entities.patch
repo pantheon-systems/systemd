@@ -12,7 +12,7 @@ Conflicts:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/localtime.xml b/man/localtime.xml
-index b7fd1ba..dbf2379 100644
+index b7fd1ba15d..dbf2379e7d 100644
 --- a/man/localtime.xml
 +++ b/man/localtime.xml
 @@ -55,7 +55,7 @@

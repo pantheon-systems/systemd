@@ -14,7 +14,7 @@ is significantly wrong. It's better to lose the message and continue.
  2 files changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/src/shared/log.c b/src/shared/log.c
-index de770ca..2267764 100644
+index de770caefa..2267764859 100644
 --- a/src/shared/log.c
 +++ b/src/shared/log.c
 @@ -126,7 +126,10 @@ static int create_log_socket(int type) {
@@ -30,7 +30,7 @@ index de770ca..2267764 100644
  
          return fd;
 diff --git a/src/shared/time-util.c b/src/shared/time-util.c
-index d31401b..505b280 100644
+index d31401bb5c..505b280259 100644
 --- a/src/shared/time-util.c
 +++ b/src/shared/time-util.c
 @@ -141,12 +141,11 @@ struct timeval *timeval_store(struct timeval *tv, usec_t u) {

@@ -8,7 +8,7 @@ Subject: [PATCH] dbus: fix return value of dispatch_rqueue()
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/libsystemd-bus/sd-bus.c b/src/libsystemd-bus/sd-bus.c
-index 3f766fb..db0880f 100644
+index 3f766fb519..db0880f21c 100644
 --- a/src/libsystemd-bus/sd-bus.c
 +++ b/src/libsystemd-bus/sd-bus.c
 @@ -1215,11 +1215,11 @@ static int dispatch_rqueue(sd_bus *bus, sd_bus_message **m) {

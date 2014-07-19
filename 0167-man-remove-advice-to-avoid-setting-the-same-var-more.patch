@@ -15,7 +15,7 @@ files.
  2 files changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index ca297ba..8f9137c 100644
+index ca297ba303..8f9137c6ac 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -321,11 +321,7 @@
@@ -32,7 +32,7 @@ index ca297ba..8f9137c 100644
                                  <literal>\;</literal>. If the empty
                                  string is assigned to this option, the
 diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
-index 029392c..77127ff 100644
+index 029392cd5c..77127ffa86 100644
 --- a/man/systemd.unit.xml
 +++ b/man/systemd.unit.xml
 @@ -120,6 +120,17 @@

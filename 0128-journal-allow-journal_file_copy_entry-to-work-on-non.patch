@@ -10,7 +10,7 @@ Subject: [PATCH] journal: allow journal_file_copy_entry() to work on non-local
  1 file changed, 4 deletions(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 4e22e08..e0abddf 100644
+index 4e22e08017..e0abddfb9e 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -2739,10 +2739,6 @@ int journal_file_copy_entry(JournalFile *from, JournalFile *to, Object *o, uint6

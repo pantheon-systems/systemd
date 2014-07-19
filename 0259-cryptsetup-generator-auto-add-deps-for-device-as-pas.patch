@@ -12,7 +12,7 @@ on the device rather than requiring the user to do so.
  1 file changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
-index e1798a3..00891f1 100644
+index e1798a3e82..00891f1323 100644
 --- a/src/cryptsetup/cryptsetup-generator.c
 +++ b/src/cryptsetup/cryptsetup-generator.c
 @@ -131,11 +131,21 @@ static int create_disk(

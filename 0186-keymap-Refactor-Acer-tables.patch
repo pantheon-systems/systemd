@@ -12,7 +12,7 @@ exceptions.
  1 file changed, 36 insertions(+), 65 deletions(-)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index d4d948d..ab9e569 100644
+index d4d948d4a7..ab9e569d1d 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -46,52 +46,7 @@

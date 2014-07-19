@@ -15,7 +15,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=77466
  2 files changed, 37 insertions(+), 10 deletions(-)
 
 diff --git a/man/sysctl.d.xml b/man/sysctl.d.xml
-index 00a857b..db53b49 100644
+index 00a857b11a..db53b49599 100644
 --- a/man/sysctl.d.xml
 +++ b/man/sysctl.d.xml
 @@ -68,13 +68,26 @@
@@ -62,7 +62,7 @@ index 00a857b..db53b49 100644
                  <filename>net.ipv6.conf.*</filename>,
                  <filename>net.ipv4.neigh.*</filename> and <filename>net.ipv6.neigh.*</filename>)</para>
 diff --git a/src/sysctl/sysctl.c b/src/sysctl/sysctl.c
-index 8fb0eb6..70c4d89 100644
+index 8fb0eb6570..70c4d89f9e 100644
 --- a/src/sysctl/sysctl.c
 +++ b/src/sysctl/sysctl.c
 @@ -48,12 +48,26 @@ static const char conf_file_dirs[] =

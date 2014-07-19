@@ -12,7 +12,7 @@ so we never need to match on the latter.
  1 file changed, 16 insertions(+)
 
 diff --git a/src/udev/udev-builtin-path_id.c b/src/udev/udev-builtin-path_id.c
-index 0659967..763f3c3 100644
+index 0659967c68..763f3c3113 100644
 --- a/src/udev/udev-builtin-path_id.c
 +++ b/src/udev/udev-builtin-path_id.c
 @@ -452,6 +452,19 @@ static struct udev_device *handle_usb(struct udev_device *parent, char **path)

@@ -10,7 +10,7 @@ https://launchpad.net/bugs/1271163
  1 file changed, 3 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index 52d9a2a..ea206bb 100644
+index 52d9a2a04c..ea206bba2e 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -981,6 +981,9 @@ keyboard:name:Sony Vaio Keys:dmi:bvn*:bvr*:bd*:svnSony*:pnVGN-Z21*:pvr*

@@ -23,7 +23,7 @@ Failed to start local-fs.target: Unit systemd-fsck@xxx.service is masked.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
-index 795a24c..4137796 100644
+index 795a24c992..41377962fa 100644
 --- a/src/fstab-generator/fstab-generator.c
 +++ b/src/fstab-generator/fstab-generator.c
 @@ -184,7 +184,7 @@ static int add_fsck(FILE *f, const char *what, const char *where, const char *ty

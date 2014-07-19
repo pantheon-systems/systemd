@@ -11,7 +11,7 @@ This should have been part of ef5bfcf668e6029faa78534dfe.
  3 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/man/systemd-backlight@.service.xml b/man/systemd-backlight@.service.xml
-index 2b73625..4318964 100644
+index 2b73625e91..4318964dca 100644
 --- a/man/systemd-backlight@.service.xml
 +++ b/man/systemd-backlight@.service.xml
 @@ -58,7 +58,7 @@
@@ -24,7 +24,7 @@ index 2b73625..4318964 100644
                  saved/restored.</para>
          </refsect1>
 diff --git a/man/systemd-random-seed.service.xml b/man/systemd-random-seed.service.xml
-index 8cd14b7..e5cd037 100644
+index 8cd14b74cb..e5cd03719f 100644
 --- a/man/systemd-random-seed.service.xml
 +++ b/man/systemd-random-seed.service.xml
 @@ -61,7 +61,7 @@
@@ -37,7 +37,7 @@ index 8cd14b7..e5cd037 100644
  
          <refsect1>
 diff --git a/units/systemd-backlight@.service.in b/units/systemd-backlight@.service.in
-index b0e75db..5caa5d5 100644
+index b0e75db39e..5caa5d531f 100644
 --- a/units/systemd-backlight@.service.in
 +++ b/units/systemd-backlight@.service.in
 @@ -9,7 +9,7 @@

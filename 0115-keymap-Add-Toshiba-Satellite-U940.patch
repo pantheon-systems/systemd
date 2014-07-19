@@ -9,7 +9,7 @@ Signed-off-by: Martin Pitt <martinpitt@gnome.org>
  1 file changed, 7 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index b497f92..d4d948d 100644
+index b497f924a8..d4d948d4a7 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -1031,6 +1031,13 @@ keyboard:dmi:bvn*:bvr*:bd*:svnTOSHIBA*:pnSatellite*P75-A:pvr*

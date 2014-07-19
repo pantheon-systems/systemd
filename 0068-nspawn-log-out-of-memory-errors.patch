@@ -8,7 +8,7 @@ Subject: [PATCH] nspawn: log out of memory errors
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 9616dbf..db47fbd 100644
+index 9616dbf3c2..db47fbd3f4 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -224,6 +224,9 @@ static int parse_argv(int argc, char *argv[]) {

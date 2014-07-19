@@ -10,7 +10,7 @@ Subject: [PATCH] bash completion: fix __get_startable_units
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/shell-completion/bash/systemctl b/shell-completion/bash/systemctl
-index 857552d..1e4d07a 100644
+index 857552d570..1e4d07ac42 100644
 --- a/shell-completion/bash/systemctl
 +++ b/shell-completion/bash/systemctl
 @@ -56,7 +56,7 @@ __get_all_units      () { __systemctl $1 list-units --all \

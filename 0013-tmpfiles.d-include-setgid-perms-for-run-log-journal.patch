@@ -12,7 +12,7 @@ ref: https://bugs.archlinux.org/task/37170
  1 file changed, 2 insertions(+)
 
 diff --git a/tmpfiles.d/systemd.conf b/tmpfiles.d/systemd.conf
-index b630440..a05c657 100644
+index b6304401fe..a05c6577d2 100644
 --- a/tmpfiles.d/systemd.conf
 +++ b/tmpfiles.d/systemd.conf
 @@ -26,3 +26,5 @@ F /run/nologin 0644 - - - "System is booting up. See pam_nologin(8)"

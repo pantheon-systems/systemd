@@ -8,7 +8,7 @@ Subject: [PATCH] logind: save user state after stopping the session
  1 file changed, 2 insertions(+)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 3ab41e6..2a2a670 100644
+index 3ab41e6339..2a2a6704dd 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -685,6 +685,8 @@ int session_stop(Session *s) {

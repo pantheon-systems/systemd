@@ -9,7 +9,7 @@ Simple man page fix attached.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index e3a370f..898c19d 100644
+index e3a370f204..898c19d881 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -139,7 +139,7 @@

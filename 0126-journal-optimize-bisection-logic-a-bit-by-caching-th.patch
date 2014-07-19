@@ -13,7 +13,7 @@ jump around during the bisection process.
  1 file changed, 99 insertions(+), 35 deletions(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index d3bdaea..02f7554 100644
+index d3bdaea0e3..02f75548b7 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -1366,6 +1366,7 @@ typedef struct ChainCacheItem {

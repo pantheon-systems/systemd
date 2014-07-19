@@ -11,7 +11,7 @@ character to be escaped, e.g. "LABEL=/".
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 9be6acf..748f1bb 100644
+index 9be6acfc8f..748f1bbe02 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -3527,7 +3527,7 @@ static char *tag_to_udev_node(const char *tagvalue, const char *by) {
@@ -24,7 +24,7 @@ index 9be6acf..748f1bb 100644
          if (t == NULL)
                  return NULL;
 diff --git a/src/test/test-device-nodes.c b/src/test/test-device-nodes.c
-index 2f3dedb..59ba4be 100644
+index 2f3dedb90f..59ba4be087 100644
 --- a/src/test/test-device-nodes.c
 +++ b/src/test/test-device-nodes.c
 @@ -26,7 +26,7 @@

@@ -39,7 +39,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1045849
  create mode 100644 tmpfiles.d/systemd-nologin.conf
 
 diff --git a/Makefile.am b/Makefile.am
-index 16a5c3c..6233a7f 100644
+index 16a5c3cb3a..6233a7f7ff 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -1599,6 +1599,7 @@ nodist_systemunit_DATA += \
@@ -51,7 +51,7 @@ index 16a5c3c..6233a7f 100644
  	tmpfiles.d/x11.conf
  
 diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
-index 91c0372..495247e 100644
+index 91c0372396..495247e198 100644
 --- a/man/systemd-tmpfiles.xml
 +++ b/man/systemd-tmpfiles.xml
 @@ -133,6 +133,12 @@
@@ -68,7 +68,7 @@ index 91c0372..495247e 100644
                                  <listitem><para>Only apply rules that
                                  apply to paths with the specified
 diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
-index a00637b..39aa68d 100644
+index a00637beff..39aa68d92a 100644
 --- a/man/tmpfiles.d.xml
 +++ b/man/tmpfiles.d.xml
 @@ -113,6 +113,9 @@ L    /tmp/foobar -    -    -    -   /dev/null</programlisting>
@@ -111,7 +111,7 @@ index a00637b..39aa68d 100644
  
                  <refsect2>
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 00f74c2..30a8a55 100644
+index 00f74c2535..30a8a55d61 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -106,6 +106,7 @@ static Set *unix_sockets = NULL;
@@ -193,7 +193,7 @@ index 00f74c2..30a8a55 100644
                          if (strv_extend(&include_prefixes, optarg) < 0)
                                  return log_oom();
 diff --git a/tmpfiles.d/legacy.conf b/tmpfiles.d/legacy.conf
-index 3fff347..a165687 100644
+index 3fff347db4..a1656873da 100644
 --- a/tmpfiles.d/legacy.conf
 +++ b/tmpfiles.d/legacy.conf
 @@ -29,6 +29,6 @@ d /run/lock/lockdev 0775 root lock -
@@ -208,7 +208,7 @@ index 3fff347..a165687 100644
 +r! /forcequotacheck
 diff --git a/tmpfiles.d/systemd-nologin.conf b/tmpfiles.d/systemd-nologin.conf
 new file mode 100644
-index 0000000..d61232b
+index 0000000000..d61232b534
 --- /dev/null
 +++ b/tmpfiles.d/systemd-nologin.conf
 @@ -0,0 +1,11 @@
@@ -224,7 +224,7 @@ index 0000000..d61232b
 +
 +F! /run/nologin 0644 - - - "System is booting up. See pam_nologin(8)"
 diff --git a/tmpfiles.d/systemd.conf b/tmpfiles.d/systemd.conf
-index a05c657..7c6d6b9 100644
+index a05c6577d2..7c6d6b9099 100644
 --- a/tmpfiles.d/systemd.conf
 +++ b/tmpfiles.d/systemd.conf
 @@ -8,7 +8,7 @@
@@ -246,7 +246,7 @@ index a05c657..7c6d6b9 100644
  m /var/log/journal/%m 2755 root systemd-journal - -
  m /run/log/journal 2755 root systemd-journal - -
 diff --git a/tmpfiles.d/x11.conf b/tmpfiles.d/x11.conf
-index ece6a5c..4c96a54 100644
+index ece6a5ce98..4c96a54a13 100644
 --- a/tmpfiles.d/x11.conf
 +++ b/tmpfiles.d/x11.conf
 @@ -15,4 +15,4 @@ d /tmp/.font-unix 1777 root root 10d
@@ -256,7 +256,7 @@ index ece6a5c..4c96a54 100644
 -r /tmp/.X[0-9]*-lock
 +r! /tmp/.X[0-9]*-lock
 diff --git a/units/systemd-tmpfiles-setup.service.in b/units/systemd-tmpfiles-setup.service.in
-index 3405e28..c2dcae0 100644
+index 3405e2842c..c2dcae0e13 100644
 --- a/units/systemd-tmpfiles-setup.service.in
 +++ b/units/systemd-tmpfiles-setup.service.in
 @@ -6,7 +6,7 @@

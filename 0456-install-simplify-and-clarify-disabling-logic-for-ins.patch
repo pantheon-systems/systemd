@@ -13,7 +13,7 @@ Conflicts:
  1 file changed, 28 insertions(+), 22 deletions(-)
 
 diff --git a/src/shared/install.c b/src/shared/install.c
-index 1f3ea5b..ff0a2a4 100644
+index 1f3ea5b1c6..ff0a2a4d03 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -194,10 +194,10 @@ static int remove_marked_symlinks_fd(

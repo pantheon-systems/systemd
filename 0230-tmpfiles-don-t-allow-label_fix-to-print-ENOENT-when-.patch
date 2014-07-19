@@ -10,7 +10,7 @@ Subject: [PATCH] tmpfiles: don't allow label_fix to print ENOENT when we want
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 4dd1638..5e49cc8 100644
+index 4dd1638e44..5e49cc8ec4 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -435,8 +435,6 @@ finish:

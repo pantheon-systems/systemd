@@ -24,7 +24,7 @@ This is particularly useful for state machine enums.
  2 files changed, 24 insertions(+)
 
 diff --git a/src/shared/macro.h b/src/shared/macro.h
-index bc5b3c1..5f3e522 100644
+index bc5b3c1de8..5f3e52294b 100644
 --- a/src/shared/macro.h
 +++ b/src/shared/macro.h
 @@ -294,4 +294,17 @@ do {                                                                    \
@@ -46,7 +46,7 @@ index bc5b3c1..5f3e522 100644
 +
  #include "log.h"
 diff --git a/src/test/test-util.c b/src/test/test-util.c
-index c5762ed..7566adc 100644
+index c5762ede4b..7566adcc2f 100644
 --- a/src/test/test-util.c
 +++ b/src/test/test-util.c
 @@ -591,6 +591,16 @@ static void test_get_files_in_directory(void) {

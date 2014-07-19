@@ -12,7 +12,7 @@ Conflicts:
  3 files changed, 34 insertions(+)
 
 diff --git a/Makefile-man.am b/Makefile-man.am
-index c8a4342..b8c8acc 100644
+index c8a4342396..b8c8acc0b4 100644
 --- a/Makefile-man.am
 +++ b/Makefile-man.am
 @@ -138,6 +138,7 @@ MANPAGES_ALIAS += \
@@ -78,7 +78,7 @@ index c8a4342..b8c8acc 100644
  	$(html-alias)
  
 diff --git a/man/sd_is_fifo.xml b/man/sd_is_fifo.xml
-index 2bc860c..4d9cd79 100644
+index 2bc860c373..4d9cd79600 100644
 --- a/man/sd_is_fifo.xml
 +++ b/man/sd_is_fifo.xml
 @@ -48,6 +48,7 @@
@@ -120,7 +120,7 @@ index 2bc860c..4d9cd79 100644
  
          <refsect1>
 diff --git a/man/sd_seat_get_active.xml b/man/sd_seat_get_active.xml
-index 1610d3e..cd87696 100644
+index 1610d3efe8..cd8769698c 100644
 --- a/man/sd_seat_get_active.xml
 +++ b/man/sd_seat_get_active.xml
 @@ -46,6 +46,8 @@

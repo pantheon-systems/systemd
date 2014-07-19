@@ -23,7 +23,7 @@ Conflicts:
  2 files changed, 9 insertions(+), 13 deletions(-)
 
 diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
-index 4ec8bed..fc5f1fe 100644
+index 4ec8bede71..fc5f1fe61e 100644
 --- a/src/shared/conf-files.c
 +++ b/src/shared/conf-files.c
 @@ -37,20 +37,16 @@
@@ -62,7 +62,7 @@ index 4ec8bed..fc5f1fe 100644
                          hashmap_free_free(fh);
                          return r;
 diff --git a/src/shared/install.c b/src/shared/install.c
-index 86a05a4..f40be79 100644
+index 86a05a47a6..f40be798f8 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -1763,7 +1763,7 @@ UnitFileState unit_file_get_state(

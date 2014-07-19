@@ -10,7 +10,7 @@ journald mimics the kernel here: timestamps will be printed if
  1 file changed, 31 insertions(+), 3 deletions(-)
 
 diff --git a/src/journal/journald-console.c b/src/journal/journald-console.c
-index be55f94..1ee3afe 100644
+index be55f94878..1ee3afeacc 100644
 --- a/src/journal/journald-console.c
 +++ b/src/journal/journald-console.c
 @@ -19,13 +19,30 @@

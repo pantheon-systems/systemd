@@ -14,7 +14,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1036845
  3 files changed, 13 insertions(+), 6 deletions(-)
 
 diff --git a/src/core/job.c b/src/core/job.c
-index dc3bc12..7d2b994 100644
+index dc3bc1220e..7d2b994026 100644
 --- a/src/core/job.c
 +++ b/src/core/job.c
 @@ -528,7 +528,7 @@ int job_run_and_invalidate(Job *j) {
@@ -58,7 +58,7 @@ index dc3bc12..7d2b994 100644
  
  DEFINE_STRING_TABLE_LOOKUP(job_result, JobResult);
 diff --git a/src/core/job.h b/src/core/job.h
-index d90bc96..4237529 100644
+index d90bc96b76..4237529b09 100644
 --- a/src/core/job.h
 +++ b/src/core/job.h
 @@ -97,7 +97,8 @@ enum JobResult {
@@ -72,7 +72,7 @@ index d90bc96..4237529 100644
          _JOB_RESULT_INVALID = -1
  };
 diff --git a/src/core/unit.c b/src/core/unit.c
-index b65e798..6c2c4a0 100644
+index b65e798621..6c2c4a0ef0 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -1239,8 +1239,11 @@ int unit_reload(Unit *u) {

@@ -16,7 +16,7 @@ Conflicts:
  create mode 100644 src/shared/ptyfwd.h
 
 diff --git a/Makefile.am b/Makefile.am
-index 34de7f2..b4fc33b 100644
+index 34de7f2b58..b4fc33b203 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -724,7 +724,9 @@ libsystemd_shared_la_SOURCES = \
@@ -31,7 +31,7 @@ index 34de7f2..b4fc33b 100644
  #-------------------------------------------------------------------------------
  noinst_LTLIBRARIES += \
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index db47fbd..cda6c82 100644
+index db47fbd3f4..cda6c82050 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -63,6 +63,7 @@
@@ -302,7 +302,7 @@ index db47fbd..cda6c82 100644
                  if (saved_attr_valid)
 diff --git a/src/shared/ptyfwd.c b/src/shared/ptyfwd.c
 new file mode 100644
-index 0000000..1e2852b
+index 0000000000..1e2852b1af
 --- /dev/null
 +++ b/src/shared/ptyfwd.c
 @@ -0,0 +1,252 @@
@@ -560,7 +560,7 @@ index 0000000..1e2852b
 +}
 diff --git a/src/shared/ptyfwd.h b/src/shared/ptyfwd.h
 new file mode 100644
-index 0000000..8b65702
+index 0000000000..8b657023a9
 --- /dev/null
 +++ b/src/shared/ptyfwd.h
 @@ -0,0 +1,27 @@

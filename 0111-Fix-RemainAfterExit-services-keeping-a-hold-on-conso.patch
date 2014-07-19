@@ -12,7 +12,7 @@ didn't change.
  2 files changed, 19 insertions(+)
 
 diff --git a/src/core/service.c b/src/core/service.c
-index 5662180..62ae8f0 100644
+index 5662180381..62ae8f0119 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -1570,6 +1570,22 @@ static void service_set_state(Service *s, ServiceState state) {
@@ -39,7 +39,7 @@ index 5662180..62ae8f0 100644
                  log_debug_unit(UNIT(s)->id,
                                 "%s changed %s -> %s", UNIT(s)->id,
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 717ce84..b65e798 100644
+index 717ce849ea..b65e798621 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -1446,6 +1446,9 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su

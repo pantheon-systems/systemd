@@ -8,7 +8,7 @@ Subject: [PATCH] logind: fix bus introspection data for TakeControl()
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/logind-session-dbus.c b/src/login/logind-session-dbus.c
-index 5f6bafb..be4e01c 100644
+index 5f6bafbc6a..be4e01c5e3 100644
 --- a/src/login/logind-session-dbus.c
 +++ b/src/login/logind-session-dbus.c
 @@ -41,7 +41,7 @@

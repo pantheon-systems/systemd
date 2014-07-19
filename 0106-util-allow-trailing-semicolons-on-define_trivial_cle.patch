@@ -32,7 +32,7 @@ Conflicts:
  8 files changed, 78 insertions(+), 120 deletions(-)
 
 diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
-index d2b4213..25440e7 100644
+index d2b4213af2..25440e771e 100644
 --- a/src/gpt-auto-generator/gpt-auto-generator.c
 +++ b/src/gpt-auto-generator/gpt-auto-generator.c
 @@ -36,6 +36,7 @@
@@ -370,7 +370,7 @@ index d2b4213..25440e7 100644
          return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
  }
 diff --git a/src/journal/journal-internal.h b/src/journal/journal-internal.h
-index 1bc912c..3355fca 100644
+index 1bc912c977..3355fca6b8 100644
 --- a/src/journal/journal-internal.h
 +++ b/src/journal/journal-internal.h
 @@ -135,7 +135,7 @@ struct sd_journal {
@@ -383,7 +383,7 @@ index 1bc912c..3355fca 100644
  
  #define JOURNAL_FOREACH_DATA_RETVAL(j, data, l, retval)                     \
 diff --git a/src/shared/fdset.h b/src/shared/fdset.h
-index d0dc875..b91b430 100644
+index d0dc875a4e..b91b4309a7 100644
 --- a/src/shared/fdset.h
 +++ b/src/shared/fdset.h
 @@ -48,5 +48,5 @@ int fdset_iterate(FDSet *s, Iterator *i);
@@ -394,7 +394,7 @@ index d0dc875..b91b430 100644
 +DEFINE_TRIVIAL_CLEANUP_FUNC(FDSet*, fdset_free);
  #define _cleanup_fdset_free_ _cleanup_(fdset_freep)
 diff --git a/src/shared/set.h b/src/shared/set.h
-index a291470..5612478 100644
+index a291470c19..5612478d4e 100644
 --- a/src/shared/set.h
 +++ b/src/shared/set.h
 @@ -73,7 +73,7 @@ char **set_get_strv(Set *s);
@@ -408,7 +408,7 @@ index a291470..5612478 100644
  #define _cleanup_set_free_ _cleanup_(set_freep)
  #define _cleanup_set_free_free_ _cleanup_(set_free_freep)
 diff --git a/src/shared/strv.h b/src/shared/strv.h
-index 4d117f8..f6fb033 100644
+index 4d117f82c5..f6fb033a8c 100644
 --- a/src/shared/strv.h
 +++ b/src/shared/strv.h
 @@ -30,7 +30,7 @@ char *strv_find(char **l, const char *name) _pure_;
@@ -421,7 +421,7 @@ index 4d117f8..f6fb033 100644
  
  char **strv_copy(char * const *l);
 diff --git a/src/shared/udev-util.h b/src/shared/udev-util.h
-index bff8f5f..27677af 100644
+index bff8f5fbf7..27677af876 100644
 --- a/src/shared/udev-util.h
 +++ b/src/shared/udev-util.h
 @@ -24,11 +24,11 @@
@@ -442,7 +442,7 @@ index bff8f5f..27677af 100644
  #define _cleanup_udev_unref_ _cleanup_(udev_unrefp)
  #define _cleanup_udev_device_unref_ _cleanup_(udev_device_unrefp)
 diff --git a/src/shared/util.h b/src/shared/util.h
-index 2c41765..bdbdca3 100644
+index 2c41765f6d..bdbdca3b57 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -555,11 +555,12 @@ static inline void freep(void *p) {
@@ -479,7 +479,7 @@ index 2c41765..bdbdca3 100644
  #define _cleanup_free_ _cleanup_(freep)
  #define _cleanup_close_ _cleanup_(closep)
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 7e873af..e23847b 100644
+index 7e873af864..e23847bbea 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -998,7 +998,7 @@ static void item_free(Item *i) {

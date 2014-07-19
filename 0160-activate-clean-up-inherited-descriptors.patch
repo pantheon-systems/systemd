@@ -23,7 +23,7 @@ will be closed.
  1 file changed, 19 insertions(+), 4 deletions(-)
 
 diff --git a/src/activate/activate.c b/src/activate/activate.c
-index a9461bc..6aa8b9f 100644
+index a9461bc56b..6aa8b9fb91 100644
 --- a/src/activate/activate.c
 +++ b/src/activate/activate.c
 @@ -137,6 +137,17 @@ static int open_sockets(int *epoll_fd, bool accept) {

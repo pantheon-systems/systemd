@@ -22,7 +22,7 @@ Based-on: 2d4a39e759c4ab846ad8a546abeddd40bc8d736e
  7 files changed, 128 insertions(+), 3 deletions(-)
 
 diff --git a/src/core/dbus-scope.c b/src/core/dbus-scope.c
-index 783a969..b576f76 100644
+index 783a969fb3..b576f760ef 100644
 --- a/src/core/dbus-scope.c
 +++ b/src/core/dbus-scope.c
 @@ -31,10 +31,12 @@
@@ -110,7 +110,7 @@ index 783a969..b576f76 100644
 +        return dbus_connection_send(UNIT(s)->manager->api_bus, m, NULL);
 +}
 diff --git a/src/core/dbus-scope.h b/src/core/dbus-scope.h
-index e6836f1..34720f2 100644
+index e6836f13f0..34720f2b75 100644
 --- a/src/core/dbus-scope.h
 +++ b/src/core/dbus-scope.h
 @@ -30,4 +30,6 @@ DBusHandlerResult bus_scope_message_handler(Unit *u, DBusConnection *c, DBusMess
@@ -121,7 +121,7 @@ index e6836f1..34720f2 100644
 +
  extern const char bus_scope_interface[];
 diff --git a/src/core/scope.c b/src/core/scope.c
-index 41da3b9..e75fc2b 100644
+index 41da3b9378..e75fc2b58b 100644
 --- a/src/core/scope.c
 +++ b/src/core/scope.c
 @@ -64,6 +64,9 @@ static void scope_done(Unit *u) {
@@ -170,7 +170,7 @@ index 41da3b9..e75fc2b 100644
          if (r > 0) {
                  if (s->timeout_stop_usec > 0) {
 diff --git a/src/core/scope.h b/src/core/scope.h
-index 2a3dcb7..b4bafa7 100644
+index 2a3dcb73d7..b4bafa75bf 100644
 --- a/src/core/scope.h
 +++ b/src/core/scope.h
 @@ -55,6 +55,8 @@ struct Scope {
@@ -183,7 +183,7 @@ index 2a3dcb7..b4bafa7 100644
  
          Watch timer_watch;
 diff --git a/src/run/run.c b/src/run/run.c
-index a6abead..93e3f88 100644
+index a6abead8ba..93e3f88e6f 100644
 --- a/src/run/run.c
 +++ b/src/run/run.c
 @@ -315,6 +315,14 @@ static int start_transient_scope(
@@ -202,7 +202,7 @@ index a6abead..93e3f88 100644
          if (r < 0)
                  return r;
 diff --git a/src/shared/dbus-common.c b/src/shared/dbus-common.c
-index 3ba2d87..8a68708 100644
+index 3ba2d87c4d..8a6870868f 100644
 --- a/src/shared/dbus-common.c
 +++ b/src/shared/dbus-common.c
 @@ -1428,3 +1428,45 @@ const char *bus_message_get_sender_with_fallback(DBusMessage *m) {
@@ -252,7 +252,7 @@ index 3ba2d87..8a68708 100644
 +        return true;
 +}
 diff --git a/src/shared/dbus-common.h b/src/shared/dbus-common.h
-index 9752f08..8d01d14 100644
+index 9752f08c05..8d01d14045 100644
 --- a/src/shared/dbus-common.h
 +++ b/src/shared/dbus-common.h
 @@ -242,5 +242,7 @@ const char *bus_message_get_sender_with_fallback(DBusMessage *m);

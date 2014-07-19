@@ -23,7 +23,7 @@ load policy.
  1 file changed, 7 insertions(+)
 
 diff --git a/src/core/selinux-setup.c b/src/core/selinux-setup.c
-index 7a32ed5..9a5d6b2 100644
+index 7a32ed59a0..9a5d6b2a9d 100644
 --- a/src/core/selinux-setup.c
 +++ b/src/core/selinux-setup.c
 @@ -58,6 +58,13 @@ int selinux_setup(bool *loaded_policy) {

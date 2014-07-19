@@ -9,7 +9,7 @@ Subject: [PATCH] man: add a note about propagating signals
  1 file changed, 25 insertions(+), 14 deletions(-)
 
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 71bcfb4..af3e0f2 100644
+index 71bcfb401d..af3e0f2335 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -734,22 +734,33 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}

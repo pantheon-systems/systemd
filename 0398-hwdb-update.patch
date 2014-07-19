@@ -12,7 +12,7 @@ Subject: [PATCH] hwdb: update
  3 files changed, 1368 insertions(+), 93 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index 17794ed..afc0d90 100644
+index 17794ed58a..afc0d90350 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -13940,7 +13940,7 @@ OUI:000063*
@@ -1002,7 +1002,7 @@ index 17794ed..afc0d90 100644
   ID_OUI_FROM_DATABASE=QTS NETWORKS
  
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index 14637d3..2957774 100644
+index 14637d3087..2957774ef1 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -1673,6 +1673,9 @@ pci:v00001002d00001306*
@@ -1418,7 +1418,7 @@ index 14637d3..2957774 100644
  pci:v00008086d00001584*
   ID_MODEL_FROM_DATABASE=Ethernet Controller XL710 for 40GbE QSFP+
 diff --git a/hwdb/20-usb-vendor-model.hwdb b/hwdb/20-usb-vendor-model.hwdb
-index 014c628..52586bc 100644
+index 014c628ebb..52586bc973 100644
 --- a/hwdb/20-usb-vendor-model.hwdb
 +++ b/hwdb/20-usb-vendor-model.hwdb
 @@ -21,7 +21,7 @@ usb:v0004*

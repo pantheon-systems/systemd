@@ -9,7 +9,7 @@ Subject: [PATCH] kernel-install: add -h/--help
  1 file changed, 14 insertions(+), 7 deletions(-)
 
 diff --git a/src/kernel-install/kernel-install b/src/kernel-install/kernel-install
-index 9d3e75d..f5ff362 100644
+index 9d3e75db08..f5ff3622a4 100644
 --- a/src/kernel-install/kernel-install
 +++ b/src/kernel-install/kernel-install
 @@ -21,9 +21,9 @@

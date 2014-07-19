@@ -18,7 +18,7 @@ Conflicts:
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/man/systemd-readahead-replay.service.xml b/man/systemd-readahead-replay.service.xml
-index 806d460..8a1f47a 100644
+index 806d46093b..8a1f47a947 100644
 --- a/man/systemd-readahead-replay.service.xml
 +++ b/man/systemd-readahead-replay.service.xml
 @@ -124,7 +124,7 @@
@@ -31,7 +31,7 @@ index 806d460..8a1f47a 100644
                                  <listitem><para>Maximum number of
                                  files to read ahead. Only valid
 diff --git a/src/readahead/readahead.c b/src/readahead/readahead.c
-index 29255c9..78bf837 100644
+index 29255c9f07..78bf837851 100644
 --- a/src/readahead/readahead.c
 +++ b/src/readahead/readahead.c
 @@ -40,7 +40,7 @@ static int help(void) {

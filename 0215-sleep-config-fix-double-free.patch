@@ -16,7 +16,7 @@ strv_split_nulstr with strv_new, since we know the strings anyway.
  1 file changed, 20 insertions(+), 18 deletions(-)
 
 diff --git a/src/shared/sleep-config.c b/src/shared/sleep-config.c
-index b2a0787..70a0896 100644
+index b2a0787844..70a0896069 100644
 --- a/src/shared/sleep-config.c
 +++ b/src/shared/sleep-config.c
 @@ -28,11 +28,14 @@

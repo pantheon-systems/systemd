@@ -10,7 +10,7 @@ Subject: [PATCH] backlight: unify error messages
  1 file changed, 19 insertions(+), 10 deletions(-)
 
 diff --git a/src/backlight/backlight.c b/src/backlight/backlight.c
-index 84bf51d..34c01d9 100644
+index 84bf51dc3a..34c01d91df 100644
 --- a/src/backlight/backlight.c
 +++ b/src/backlight/backlight.c
 @@ -24,6 +24,7 @@

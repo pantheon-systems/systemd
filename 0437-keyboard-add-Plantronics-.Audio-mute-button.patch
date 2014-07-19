@@ -11,7 +11,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=79495
  1 file changed, 8 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index b407949..17f06e8 100644
+index b4079491de..17f06e823b 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -864,6 +864,14 @@ keyboard:dmi:bvn*:bvr*:bd*:svnOQO*Inc.*:pnOQO*Model*2*:pvr*

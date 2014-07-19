@@ -10,7 +10,7 @@ Subject: [PATCH] core: fix property changes in transient units
  2 files changed, 6 insertions(+), 10 deletions(-)
 
 diff --git a/src/core/dbus-unit.c b/src/core/dbus-unit.c
-index 2ea59b2..a185f5c 100644
+index 2ea59b2913..a185f5c0e1 100644
 --- a/src/core/dbus-unit.c
 +++ b/src/core/dbus-unit.c
 @@ -962,9 +962,6 @@ int bus_unit_set_properties(
@@ -24,7 +24,7 @@ index 2ea59b2..a185f5c 100644
           * if all passed data is valid, second run actually applies
           * it. This is to implement transaction-like behaviour without
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 49833d1..8e2a7c4 100644
+index 49833d1745..8e2a7c478c 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -2785,7 +2785,6 @@ static int drop_in_file(Unit *u, UnitSetPropertiesMode mode, const char *name, c

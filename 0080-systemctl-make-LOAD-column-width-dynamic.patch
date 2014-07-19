@@ -9,7 +9,7 @@ Otherwise 'not-found' overflows into the ACTIVE column.
  1 file changed, 11 insertions(+), 8 deletions(-)
 
 diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
-index 36040db..906982a 100644
+index 36040db1fa..906982a762 100644
 --- a/src/systemctl/systemctl.c
 +++ b/src/systemctl/systemctl.c
 @@ -287,14 +287,16 @@ static bool output_show_unit(const struct unit_info *u) {

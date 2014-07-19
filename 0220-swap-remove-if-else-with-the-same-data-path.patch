@@ -14,7 +14,7 @@ This just removes unneeded lines of code, no functional change.
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/src/core/swap.c b/src/core/swap.c
-index f295b65..727bb95 100644
+index f295b6543b..727bb95e7c 100644
 --- a/src/core/swap.c
 +++ b/src/core/swap.c
 @@ -959,10 +959,7 @@ static void swap_sigchld_event(Unit *u, pid_t pid, int code, int status) {

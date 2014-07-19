@@ -16,7 +16,7 @@ This patch is only for systemd-208
  3 files changed, 21 insertions(+), 7 deletions(-)
 
 diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
-index 536f2ea..6d16c2a 100644
+index 536f2ea4db..6d16c2a503 100644
 --- a/src/core/dbus-manager.c
 +++ b/src/core/dbus-manager.c
 @@ -1104,7 +1104,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
@@ -47,7 +47,7 @@ index 536f2ea..6d16c2a 100644
                  if (u->load_state != UNIT_NOT_FOUND || set_size(u->dependencies[UNIT_REFERENCED_BY]) > 0) {
                          dbus_set_error(&error, BUS_ERROR_UNIT_EXISTS, "Unit %s already exists.", name);
 diff --git a/src/core/selinux-access.c b/src/core/selinux-access.c
-index 0a3ee18..5d85b26 100644
+index 0a3ee18bb9..5d85b268ad 100644
 --- a/src/core/selinux-access.c
 +++ b/src/core/selinux-access.c
 @@ -374,8 +374,9 @@ int selinux_access_check(
@@ -75,7 +75,7 @@ index 0a3ee18..5d85b26 100644
                  if (r < 0) {
                          dbus_set_error(error, DBUS_ERROR_ACCESS_DENIED, "Failed to get current context.");
 diff --git a/src/core/selinux-access.h b/src/core/selinux-access.h
-index 2d7ac64..92acd69 100644
+index 2d7ac64c8f..92acd69eb9 100644
 --- a/src/core/selinux-access.h
 +++ b/src/core/selinux-access.h
 @@ -36,6 +36,18 @@ int selinux_access_check(DBusConnection *connection, DBusMessage *message, const

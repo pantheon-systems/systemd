@@ -8,7 +8,7 @@ Subject: [PATCH] bash-completion: journalctl --file
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/shell-completion/bash/journalctl b/shell-completion/bash/journalctl
-index 942a253..e4b2f4a 100644
+index 942a25357f..e4b2f4ac84 100644
 --- a/shell-completion/bash/journalctl
 +++ b/shell-completion/bash/journalctl
 @@ -43,7 +43,7 @@ _journalctl() {

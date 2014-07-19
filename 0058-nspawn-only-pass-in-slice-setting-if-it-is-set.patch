@@ -8,7 +8,7 @@ Subject: [PATCH] nspawn: only pass in slice setting if it is set
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index eb9605c..9616dbf 100644
+index eb9605c356..9616dbf3c2 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -1202,7 +1202,7 @@ static int register_machine(void) {

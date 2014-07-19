@@ -14,7 +14,7 @@ leave SIG_IGN set for some of them across reexec.
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/src/core/main.c b/src/core/main.c
-index 2f45485..8c994a8 100644
+index 2f4548502f..8c994a88a8 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -1748,7 +1748,7 @@ finish:

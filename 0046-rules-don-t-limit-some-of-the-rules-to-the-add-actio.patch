@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
-index 3c99475..307f18f 100644
+index 3c99475318..307f18f70d 100644
 --- a/rules/99-systemd.rules.in
 +++ b/rules/99-systemd.rules.in
 @@ -53,12 +53,12 @@ ACTION=="add", SUBSYSTEM=="net", KERNEL!="lo", RUN+="@rootlibexecdir@/systemd-sy

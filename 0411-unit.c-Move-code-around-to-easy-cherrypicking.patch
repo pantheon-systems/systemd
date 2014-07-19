@@ -8,7 +8,7 @@ Subject: [PATCH] unit.c: Move code around to easy cherrypicking
  1 file changed, 12 insertions(+), 13 deletions(-)
 
 diff --git a/src/core/unit.c b/src/core/unit.c
-index c05926a..29782aa 100644
+index c05926ad3b..29782aa684 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -2300,19 +2300,6 @@ int unit_serialize(Unit *u, FILE *f, FDSet *fds, bool serialize_jobs) {

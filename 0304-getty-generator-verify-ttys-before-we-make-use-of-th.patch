@@ -23,7 +23,7 @@ This should make Eric Paris happy!
  1 file changed, 28 insertions(+)
 
 diff --git a/src/getty-generator/getty-generator.c b/src/getty-generator/getty-generator.c
-index 40374b5..625a87e 100644
+index 40374b525b..625a87e1e8 100644
 --- a/src/getty-generator/getty-generator.c
 +++ b/src/getty-generator/getty-generator.c
 @@ -22,6 +22,7 @@

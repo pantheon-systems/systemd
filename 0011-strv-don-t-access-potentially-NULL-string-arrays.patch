@@ -8,7 +8,7 @@ Subject: [PATCH] strv: don't access potentially NULL string arrays
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/src/shared/env-util.c b/src/shared/env-util.c
-index 5e29629..7976881 100644
+index 5e29629efd..7976881ef6 100644
 --- a/src/shared/env-util.c
 +++ b/src/shared/env-util.c
 @@ -405,7 +405,9 @@ char **strv_env_clean_log(char **e, const char *message) {

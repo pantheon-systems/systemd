@@ -10,7 +10,7 @@ http://people.debian.org/~stapelberg/docs/systemd-dependencies.html
  1 file changed, 6 insertions(+)
 
 diff --git a/man/systemd-halt.service.xml b/man/systemd-halt.service.xml
-index 812281e..90b443f 100644
+index 812281e60d..90b443ffa8 100644
 --- a/man/systemd-halt.service.xml
 +++ b/man/systemd-halt.service.xml
 @@ -83,6 +83,12 @@

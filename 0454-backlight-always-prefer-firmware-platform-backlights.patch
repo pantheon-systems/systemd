@@ -16,7 +16,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1108019
  2 files changed, 212 insertions(+), 16 deletions(-)
 
 diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
-index 79a03cd..ff0e771 100644
+index 79a03cd227..ff0e771132 100644
 --- a/rules/99-systemd.rules.in
 +++ b/rules/99-systemd.rules.in
 @@ -54,10 +54,10 @@ SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_USB_INTERFACES}=="*:0701??:
@@ -34,7 +34,7 @@ index 79a03cd..ff0e771 100644
  
  # Asynchronously mount file systems implemented by these modules as
 diff --git a/src/backlight/backlight.c b/src/backlight/backlight.c
-index c45b2d0..51a67a0 100644
+index c45b2d0b6b..51a67a042a 100644
 --- a/src/backlight/backlight.c
 +++ b/src/backlight/backlight.c
 @@ -25,10 +25,178 @@

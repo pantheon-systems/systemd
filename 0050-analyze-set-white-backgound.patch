@@ -12,7 +12,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=70720
  1 file changed, 2 insertions(+)
 
 diff --git a/src/analyze/systemd-analyze.c b/src/analyze/systemd-analyze.c
-index a4f15eb..9a69795 100644
+index a4f15eb646..9a69795906 100644
 --- a/src/analyze/systemd-analyze.c
 +++ b/src/analyze/systemd-analyze.c
 @@ -507,6 +507,7 @@ static int analyze_plot(DBusConnection *bus) {

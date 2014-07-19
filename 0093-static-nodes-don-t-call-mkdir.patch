@@ -11,7 +11,7 @@ This is no longer necessary with kmod-15. Bump the requirement.
  3 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/README b/README
-index b39cd37..cf0a18d 100644
+index b39cd377df..cf0a18de2e 100644
 --- a/README
 +++ b/README
 @@ -95,7 +95,7 @@ REQUIREMENTS:
@@ -24,7 +24,7 @@ index b39cd37..cf0a18d 100644
          libcryptsetup (optional)
          libaudit (optional)
 diff --git a/configure.ac b/configure.ac
-index 4f26092..5bc31c5 100644
+index 4f26092e91..5bc31c519a 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -269,7 +269,7 @@ AC_ARG_ENABLE(kmod, AS_HELP_STRING([--disable-kmod], [disable loadable modules s
@@ -37,7 +37,7 @@ index 4f26092..5bc31c5 100644
                          AC_MSG_ERROR([*** kmod version >= 14 not found]))
          fi
 diff --git a/units/kmod-static-nodes.service.in b/units/kmod-static-nodes.service.in
-index ff4017b..368f980 100644
+index ff4017bada..368f980fd1 100644
 --- a/units/kmod-static-nodes.service.in
 +++ b/units/kmod-static-nodes.service.in
 @@ -15,5 +15,4 @@ ConditionPathExists=/lib/modules/%v/modules.devname

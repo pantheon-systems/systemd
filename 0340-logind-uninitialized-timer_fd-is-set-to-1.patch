@@ -8,7 +8,7 @@ Subject: [PATCH] logind: uninitialized timer_fd is set to -1
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index b0e4bf6..730f11d 100644
+index b0e4bf6da2..730f11de7b 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -657,7 +657,7 @@ static int session_unlink_x11_socket(Session *s) {

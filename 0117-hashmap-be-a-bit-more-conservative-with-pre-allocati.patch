@@ -9,7 +9,7 @@ Subject: [PATCH] hashmap: be a bit more conservative with pre-allocating hash
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/src/shared/hashmap.c b/src/shared/hashmap.c
-index f06fce6..8f5957b 100644
+index f06fce6ef3..8f5957b4ac 100644
 --- a/src/shared/hashmap.c
 +++ b/src/shared/hashmap.c
 @@ -66,13 +66,14 @@ static void *first_hashmap_tile = NULL;

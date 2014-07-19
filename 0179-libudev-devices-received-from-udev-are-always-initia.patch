@@ -13,7 +13,7 @@ Conflicts:
  2 files changed, 33 insertions(+), 31 deletions(-)
 
 diff --git a/src/libudev/libudev-device.c b/src/libudev/libudev-device.c
-index 161181a..b6c4e24 100644
+index 161181a592..b6c4e24156 100644
 --- a/src/libudev/libudev-device.c
 +++ b/src/libudev/libudev-device.c
 @@ -536,6 +536,8 @@ int udev_device_read_db(struct udev_device *udev_device, const char *dbfile)
@@ -26,7 +26,7 @@ index 161181a..b6c4e24 100644
  
          while (fgets(line, sizeof(line), f)) {
 diff --git a/src/libudev/libudev-monitor.c b/src/libudev/libudev-monitor.c
-index 0212792..ff89e14 100644
+index 0212792552..ff89e149dd 100644
 --- a/src/libudev/libudev-monitor.c
 +++ b/src/libudev/libudev-monitor.c
 @@ -324,9 +324,6 @@ _public_ int udev_monitor_enable_receiving(struct udev_monitor *udev_monitor)

@@ -13,7 +13,7 @@ example option argument "ID128" with "128-bit-ID".
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/man/journalctl.xml b/man/journalctl.xml
-index d936933..dced90f 100644
+index d936933d69..dced90fa22 100644
 --- a/man/journalctl.xml
 +++ b/man/journalctl.xml
 @@ -725,7 +725,7 @@

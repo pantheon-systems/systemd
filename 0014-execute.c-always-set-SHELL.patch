@@ -13,7 +13,7 @@ instead provide it to all units which have a user.
  4 files changed, 38 insertions(+), 42 deletions(-)
 
 diff --git a/TODO b/TODO
-index 07269f4..425f673 100644
+index 07269f47d2..425f6736c0 100644
 --- a/TODO
 +++ b/TODO
 @@ -54,8 +54,6 @@ CGroup Rework Completion:
@@ -26,7 +26,7 @@ index 07269f4..425f673 100644
  
  * move config_parse_path_strv() out of conf-parser.c
 diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
-index f50161f..e213ec4 100644
+index f50161f30c..e213ec4f3c 100644
 --- a/man/systemd.exec.xml
 +++ b/man/systemd.exec.xml
 @@ -1021,10 +1021,13 @@
@@ -67,7 +67,7 @@ index f50161f..e213ec4 100644
  
                  <para>Additional variables may be configured by the
 diff --git a/src/core/execute.c b/src/core/execute.c
-index a53ef48..3979f35 100644
+index a53ef48ef8..3979f35988 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -1094,7 +1094,7 @@ int exec_spawn(ExecCommand *command,
@@ -153,7 +153,7 @@ index a53ef48..3979f35 100644
                  final_env = strv_env_merge(5,
                                             environment,
 diff --git a/units/user@.service.in b/units/user@.service.in
-index 3718a57..3f8b59d 100644
+index 3718a57087..3f8b59d07f 100644
 --- a/units/user@.service.in
 +++ b/units/user@.service.in
 @@ -13,7 +13,6 @@ After=systemd-user-sessions.service

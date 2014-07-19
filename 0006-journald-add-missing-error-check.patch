@@ -8,7 +8,7 @@ Subject: [PATCH] journald: add missing error check
  1 file changed, 2 insertions(+)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 1236403..81c344f 100644
+index 12364030d9..81c344fe5a 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -907,6 +907,8 @@ static int journal_file_append_field(

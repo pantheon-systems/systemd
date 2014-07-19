@@ -8,7 +8,7 @@ Subject: [PATCH] gitignore: ignore clang --analyze output
  1 file changed, 1 insertion(+)
 
 diff --git a/.gitignore b/.gitignore
-index 5b38c0b..56e10a6 100644
+index 5b38c0b2e9..56e10a6962 100644
 --- a/.gitignore
 +++ b/.gitignore
 @@ -162,6 +162,7 @@

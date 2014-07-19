@@ -11,7 +11,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=49316
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
-index e206b5b..348a540 100644
+index e206b5b523..348a5407f4 100644
 --- a/src/shared/conf-parser.c
 +++ b/src/shared/conf-parser.c
 @@ -669,7 +669,7 @@ int config_parse_strv(const char *unit,

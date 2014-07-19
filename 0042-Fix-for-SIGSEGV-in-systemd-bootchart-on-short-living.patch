@@ -17,7 +17,7 @@ initialized structure returned.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/bootchart/store.c b/src/bootchart/store.c
-index f8c97c2..7f86cfe 100644
+index f8c97c2324..7f86cfe976 100644
 --- a/src/bootchart/store.c
 +++ b/src/bootchart/store.c
 @@ -275,7 +275,7 @@ schedstat_next:

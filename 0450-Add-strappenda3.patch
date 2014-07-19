@@ -16,7 +16,7 @@ Conflicts:
  1 file changed, 13 insertions(+)
 
 diff --git a/src/shared/util.h b/src/shared/util.h
-index 20d81e5..3f97663 100644
+index 20d81e5c80..3f9766339d 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -728,6 +728,19 @@ int unlink_noerrno(const char *path);

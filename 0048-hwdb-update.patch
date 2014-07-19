@@ -9,7 +9,7 @@ Subject: [PATCH] hwdb: update
  2 files changed, 578 insertions(+), 29 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index e913b28..5067167 100644
+index e913b28203..5067167cbb 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -12278,7 +12278,7 @@ OUI:40D85501B*
@@ -1113,7 +1113,7 @@ index e913b28..5067167 100644
   ID_OUI_FROM_DATABASE=Sunplus Technology Co., Ltd.
  
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index fdb534d..289f81c 100644
+index fdb534d7e8..289f81c738 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -4158,7 +4158,7 @@ pci:v00001002d00005F57*

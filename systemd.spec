@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        19%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        20%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -518,6 +518,48 @@ Patch476:       0476-shared-fix-search_and_fopen-with-alternate-roots.patch
 Patch477:       0477-Reset-signal-mask-on-re-exec-to-init.patch
 Patch478:       0478-core-clean-up-signal-reset-logic-when-reexec.patch
 Patch479:       0479-util-treat-fuse.sshfs-as-a-network-filesystem.patch
+Patch480:       0480-units-systemd-sysctl.service.in-run-after-load-modul.patch
+Patch481:       0481-man-document-statically-loading-modules-for-sysctl-s.patch
+Patch482:       0482-man-also-describe-an-udev-rule-for-bridge-sysctl.patch
+Patch483:       0483-util-do-not-strip-dev-prefix-twice.patch
+Patch484:       0484-core-transaction-avoid-misleading-error-message-when.patch
+Patch485:       0485-core-snapshot-log-info-when-snapshots-are-created-an.patch
+Patch486:       0486-vconsole-also-copy-character-maps-not-just-fonts-fro.patch
+Patch487:       0487-core-You-can-not-put-the-cached-result-of-use_smack-.patch
+Patch488:       0488-cryptsetup-don-t-add-unit-dependency-on-dev-null-dev.patch
+Patch489:       0489-man-fix-path-in-crypttab-5.patch
+Patch490:       0490-core-transaction-fix-cycle-break-attempts-outside-tr.patch
+Patch491:       0491-journald-make-MaxFileSec-really-default-to-1month.patch
+Patch492:       0492-rules-don-t-enable-usb-pm-for-Avocent-devices.patch
+Patch493:       0493-units-remove-RefuseManualStart-from-units-which-are-.patch
+Patch494:       0494-units-skip-mounting-tmp-if-it-is-a-symlink.patch
+Patch495:       0495-man-sd_journal_next-fix-argument-in-example.patch
+Patch496:       0496-man-sd_journal_get_data-fix-variable-naming-in-examp.patch
+Patch497:       0497-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch498:       0498-hwdb-update.patch
+Patch499:       0499-units-conditionalize-static-device-node-logic-on-CAP.patch
+Patch500:       0500-units-conditionalize-configfs-and-debugfs-with-CAP_S.patch
+Patch501:       0501-machine-don-t-return-uninitialized-variable.patch
+Patch502:       0502-vconsole-setup-run-setfont-before-loadkeys.patch
+Patch503:       0503-vconsole-setup-fix-inverted-error-messages.patch
+Patch504:       0504-util-consider-0x7F-a-control-chracter-which-it-is-DE.patch
+Patch505:       0505-service-flush-status-text-and-errno-values-each-time.patch
+Patch506:       0506-accelerometer-Don-t-wait-for-new-data-from-the-senso.patch
+Patch507:       0507-journal-compress-simplify-compress_blob.patch
+Patch508:       0508-journal-compress-add-stream-compression-decompressio.patch
+Patch509:       0509-journal-compress-improve-xz-compression-performance.patch
+Patch510:       0510-hostnamed-add-a-new-chassis-type-for-watches.patch
+Patch511:       0511-hostnamed-update-documentation-with-new-watch-chassi.patch
+Patch512:       0512-units-make-ExecStopPost-action-part-of-ExecStart.patch
+Patch513:       0513-shell-completion-man-beef-up-chassis-completions-and.patch
+Patch514:       0514-rules-consistently-use-instead-of.patch
+Patch515:       0515-rules-uaccess-add-ID_SOFTWARE_RADIO.patch
+Patch516:       0516-journal-allow-files-with-no-data-whatsoever.patch
+Patch517:       0517-units-serial-getty-.service-use-the-default-RestartS.patch
+Patch518:       0518-build-sys-don-t-move-libgudev-to-lib.patch
+Patch519:       0519-core-nicer-message-when-inotify-watches-are-exhauste.patch
+Patch520:       0520-journal-reduce-test-journal-send-timeout-from-10s-to.patch
+Patch521:       0521-socket-add-SocketUser-and-SocketGroup-for-chown-ing-.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1166,6 +1208,18 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sat Jul 19 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-20
+- Make it easier to apply sysctl settings delaying
+  systemd-sysctl.service after modules have been loaded
+- Terminal font loading fixes
+- Man page updates (#1022977)
+- Hardware database update
+- Journal XZ compression settings updated for speed
+- Add "watch" as new chassis type
+- Add udev tag "ID_SOFTWARE_RADIO" to allow access for users
+- SocketUser and SocketGroup settings backported from v214 (#1119282)
+- Other small tweaks (#996133)
+
 * Fri Jun 20 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-19
 - Fix patch
 - Some more --root support and other assorted fixes

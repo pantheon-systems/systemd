@@ -10,7 +10,7 @@ Subject: [PATCH] socket: check return from exec_spawn
  1 file changed, 2 insertions(+)
 
 diff --git a/src/core/socket.c b/src/core/socket.c
-index b811a61..8e02c03 100644
+index b811a61df5..8e02c036b3 100644
 --- a/src/core/socket.c
 +++ b/src/core/socket.c
 @@ -1208,6 +1208,8 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {

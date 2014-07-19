@@ -12,7 +12,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1017161
  1 file changed, 9 deletions(-)
 
 diff --git a/catalog/systemd.catalog b/catalog/systemd.catalog
-index 892b2ad..3c2fe64 100644
+index 892b2adf78..3c2fe644e7 100644
 --- a/catalog/systemd.catalog
 +++ b/catalog/systemd.catalog
 @@ -204,7 +204,6 @@ Unit @UNIT@ has begun shutting down.

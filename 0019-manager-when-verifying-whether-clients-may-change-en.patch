@@ -10,7 +10,7 @@ This appears to be a copy/paste error.
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
-index 676a07f..8f4d017 100644
+index 676a07ffa5..8f4d01737a 100644
 --- a/src/core/dbus-manager.c
 +++ b/src/core/dbus-manager.c
 @@ -1397,7 +1397,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,

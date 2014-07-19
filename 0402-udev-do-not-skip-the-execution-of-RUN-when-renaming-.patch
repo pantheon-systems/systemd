@@ -13,7 +13,7 @@ Subject: [PATCH] udev: do not skip the execution of RUN when renaming a
  3 files changed, 9 insertions(+), 14 deletions(-)
 
 diff --git a/src/test/test-udev.c b/src/test/test-udev.c
-index 676669b..c59aab1 100644
+index 676669ba88..c59aab11a6 100644
 --- a/src/test/test-udev.c
 +++ b/src/test/test-udev.c
 @@ -157,8 +157,7 @@ int main(int argc, char *argv[])
@@ -27,7 +27,7 @@ index 676669b..c59aab1 100644
          if (event != NULL && event->fd_signal >= 0)
                  close(event->fd_signal);
 diff --git a/src/udev/udevadm-test.c b/src/udev/udevadm-test.c
-index 3aa3274..4610823 100644
+index 3aa3274bfc..461082357f 100644
 --- a/src/udev/udevadm-test.c
 +++ b/src/udev/udevadm-test.c
 @@ -42,7 +42,6 @@ static int adm_test(struct udev *udev, int argc, char *argv[])
@@ -63,7 +63,7 @@ index 3aa3274..4610823 100644
  out:
          if (event != NULL && event->fd_signal >= 0)
 diff --git a/src/udev/udevd.c b/src/udev/udevd.c
-index 7c6c5d6..5235cbd 100644
+index 7c6c5d6a87..5235cbd2ca 100644
 --- a/src/udev/udevd.c
 +++ b/src/udev/udevd.c
 @@ -288,13 +288,12 @@ static void worker_new(struct event *event)

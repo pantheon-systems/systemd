@@ -11,7 +11,7 @@ Subject: [PATCH] systemctl: add more verbose explanation of --kill-who and
  1 file changed, 30 insertions(+), 5 deletions(-)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index 816586c..6492b0e 100644
+index 816586c39e..6492b0ef96 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -389,11 +389,36 @@ systemctl start foo

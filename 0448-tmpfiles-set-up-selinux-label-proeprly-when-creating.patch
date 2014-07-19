@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 2 insertions(+)
 
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index be2115c..6b0dfaf 100644
+index be2115c609..6b0dfaf4db 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -699,9 +699,11 @@ static int create_item(Item *i) {

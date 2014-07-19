@@ -10,7 +10,7 @@ Subject: [PATCH] journald: downgrade warning message when /dev/kmsg does not
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/journal/journald-kmsg.c b/src/journal/journald-kmsg.c
-index 21649d0..9895808 100644
+index 21649d06ce..98958081d2 100644
 --- a/src/journal/journald-kmsg.c
 +++ b/src/journal/journald-kmsg.c
 @@ -382,7 +382,8 @@ int server_open_dev_kmsg(Server *s) {

@@ -11,7 +11,7 @@ shutdown/reboot.
  1 file changed, 3 insertions(+)
 
 diff --git a/src/core/job.c b/src/core/job.c
-index bf1d956..dc3bc12 100644
+index bf1d956908..dc3bc1220e 100644
 --- a/src/core/job.c
 +++ b/src/core/job.c
 @@ -1097,6 +1097,9 @@ void job_shutdown_magic(Job *j) {

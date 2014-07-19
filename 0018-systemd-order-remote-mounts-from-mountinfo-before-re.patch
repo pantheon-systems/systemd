@@ -14,7 +14,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=70002
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/src/core/mount.c b/src/core/mount.c
-index 3d46557..93bfa99 100644
+index 3d46557fb1..93bfa99f3f 100644
 --- a/src/core/mount.c
 +++ b/src/core/mount.c
 @@ -1440,6 +1440,9 @@ static int mount_add_one(

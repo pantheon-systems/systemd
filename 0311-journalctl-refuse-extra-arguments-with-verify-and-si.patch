@@ -12,7 +12,7 @@ For other actions, complain instead of ignoring them silently.
  1 file changed, 5 insertions(+)
 
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index 5b0be27..6f52467 100644
+index 5b0be27156..6f52467042 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -646,6 +646,11 @@ static int parse_argv(int argc, char *argv[]) {

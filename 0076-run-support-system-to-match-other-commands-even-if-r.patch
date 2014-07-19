@@ -13,7 +13,7 @@ Conflicts:
  2 files changed, 22 insertions(+), 7 deletions(-)
 
 diff --git a/man/systemd-run.xml b/man/systemd-run.xml
-index 252335b..48a0715 100644
+index 252335b3c5..48a0715499 100644
 --- a/man/systemd-run.xml
 +++ b/man/systemd-run.xml
 @@ -113,6 +113,15 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
@@ -33,7 +33,7 @@ index 252335b..48a0715 100644
  
          <listitem>
 diff --git a/src/run/run.c b/src/run/run.c
-index 18a4920..a6abead 100644
+index 18a4920f03..a6abead8ba 100644
 --- a/src/run/run.c
 +++ b/src/run/run.c
 @@ -61,6 +61,7 @@ static int parse_argv(int argc, char *argv[]) {

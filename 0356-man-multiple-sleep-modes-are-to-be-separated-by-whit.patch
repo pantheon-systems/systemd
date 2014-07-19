@@ -16,7 +16,7 @@ Conflicts:
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/man/systemd-sleep.conf.xml b/man/systemd-sleep.conf.xml
-index 4622205..04f3b06 100644
+index 462220595f..04f3b06bbe 100644
 --- a/man/systemd-sleep.conf.xml
 +++ b/man/systemd-sleep.conf.xml
 @@ -127,8 +127,8 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.

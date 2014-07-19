@@ -9,7 +9,7 @@ getopt_long() was told to accept -s which was never implemented.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/activate/activate.c b/src/activate/activate.c
-index fc581b9..a9461bc 100644
+index fc581b927e..a9461bc56b 100644
 --- a/src/activate/activate.c
 +++ b/src/activate/activate.c
 @@ -346,7 +346,7 @@ static int parse_argv(int argc, char *argv[]) {

@@ -12,7 +12,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1096067
  1 file changed, 5 insertions(+)
 
 diff --git a/man/sd_journal_print.xml b/man/sd_journal_print.xml
-index 871baff..5ae10bf 100644
+index 871baff8a5..5ae10bf5b5 100644
 --- a/man/sd_journal_print.xml
 +++ b/man/sd_journal_print.xml
 @@ -218,6 +218,11 @@ sd_journal_send("MESSAGE=Hello World, this is PID %lu!", (unsigned long) getpid(

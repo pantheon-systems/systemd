@@ -19,7 +19,7 @@ Conflicts:
  create mode 100644 shell-completion/bash/machinectl
 
 diff --git a/Makefile.am b/Makefile.am
-index 6233a7f..033bbfa 100644
+index 6233a7f7ff..033bbfa7cd 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -3726,6 +3726,9 @@ machinectl_LDADD = \
@@ -33,7 +33,7 @@ index 6233a7f..033bbfa 100644
  	src/machine/test-machine-tables.c
  
 diff --git a/man/machinectl.xml b/man/machinectl.xml
-index bb88395..f00d212 100644
+index bb88395880..f00d2121eb 100644
 --- a/man/machinectl.xml
 +++ b/man/machinectl.xml
 @@ -130,6 +130,14 @@
@@ -53,7 +53,7 @@ index bb88395..f00d212 100644
                                  <listitem><para>Do not query the user
 diff --git a/shell-completion/bash/machinectl b/shell-completion/bash/machinectl
 new file mode 100644
-index 0000000..3789492
+index 0000000000..3789492d72
 --- /dev/null
 +++ b/shell-completion/bash/machinectl
 @@ -0,0 +1,97 @@
@@ -155,7 +155,7 @@ index 0000000..3789492
 +
 +complete -F _machinectl machinectl
 diff --git a/src/machine/machinectl.c b/src/machine/machinectl.c
-index 97c2193..88cf8d5 100644
+index 97c2193551..88cf8d5e01 100644
 --- a/src/machine/machinectl.c
 +++ b/src/machine/machinectl.c
 @@ -43,6 +43,7 @@ static char **arg_property = NULL;

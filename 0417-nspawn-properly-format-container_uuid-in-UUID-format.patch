@@ -11,7 +11,7 @@ http://lists.freedesktop.org/archives/systemd-devel/2014-April/018971.html
  1 file changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index adc682d..028dbe3 100644
+index adc682d6a9..028dbe33e7 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -561,6 +561,15 @@ static int setup_resolv_conf(const char *dest) {

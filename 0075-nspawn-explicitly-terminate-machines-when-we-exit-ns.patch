@@ -13,7 +13,7 @@ Conflicts:
  1 file changed, 65 insertions(+), 5 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index cda6c82..85bbadf 100644
+index cda6c82050..85bbadf811 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -43,9 +43,9 @@

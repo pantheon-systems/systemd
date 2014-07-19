@@ -12,7 +12,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=72311
  1 file changed, 5 deletions(-)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index ccfc734..cf3d1fb 100644
+index ccfc734057..cf3d1fbf55 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -918,11 +918,6 @@ keyboard:dmi:bvn*:bvr*:bd*:svn[sS][aA][mM][sS][uU][nN][gG]*:pn*SX20S*:pvr*

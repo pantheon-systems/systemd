@@ -10,7 +10,7 @@ Subject: [PATCH] cgroup: it's not OK to invoke alloca() in loops
  1 file changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
-index 4359f59..679f289 100644
+index 4359f59908..679f28979a 100644
 --- a/src/core/mount-setup.c
 +++ b/src/core/mount-setup.c
 @@ -210,10 +210,10 @@ int mount_setup_early(void) {

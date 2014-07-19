@@ -13,7 +13,7 @@ the system.journal files, not only on the journal directory.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/tmpfiles.d/systemd.conf b/tmpfiles.d/systemd.conf
-index 7c6d6b9..c470045 100644
+index 7c6d6b9099..c470045321 100644
 --- a/tmpfiles.d/systemd.conf
 +++ b/tmpfiles.d/systemd.conf
 @@ -23,6 +23,6 @@ d /run/systemd/machines 0755 root root -

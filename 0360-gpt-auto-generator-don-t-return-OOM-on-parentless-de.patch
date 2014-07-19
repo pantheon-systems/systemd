@@ -10,7 +10,7 @@ Subject: [PATCH] gpt-auto-generator: don't return OOM on parentless devices
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
-index d7c09f0..d97374c 100644
+index d7c09f01f5..d97374cb8d 100644
 --- a/src/gpt-auto-generator/gpt-auto-generator.c
 +++ b/src/gpt-auto-generator/gpt-auto-generator.c
 @@ -255,7 +255,7 @@ static int enumerate_partitions(struct udev *udev, dev_t dev) {

@@ -18,7 +18,7 @@ Conflicts:
  1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/src/core/main.c b/src/core/main.c
-index 935762f..1ac1ba7 100644
+index 935762f7a4..1ac1ba7a31 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -411,12 +411,9 @@ static int parse_proc_cmdline_word(const char *word) {

@@ -9,7 +9,7 @@ We don't need any GOTO, if we merge all matches into a single line.
  1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/rules/60-drm.rules b/rules/60-drm.rules
-index de038c1..1ed3e44 100644
+index de038c1191..1ed3e445f2 100644
 --- a/rules/60-drm.rules
 +++ b/rules/60-drm.rules
 @@ -1,8 +1,3 @@

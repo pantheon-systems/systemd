@@ -9,7 +9,7 @@ Subject: [PATCH] detect_virtualization() returns NULL; pass empty string to
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
-index 8f4d017..536f2ea 100644
+index 8f4d01737a..536f2ea4db 100644
 --- a/src/core/dbus-manager.c
 +++ b/src/core/dbus-manager.c
 @@ -466,7 +466,7 @@ static int bus_manager_append_progress(DBusMessageIter *i, const char *property,

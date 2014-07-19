@@ -12,7 +12,7 @@ and analyzers shut up about the use of mktemp.
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/src/test/test-fileio.c b/src/test/test-fileio.c
-index 06f3e28..b005f3b 100644
+index 06f3e28288..b005f3b4e6 100644
 --- a/src/test/test-fileio.c
 +++ b/src/test/test-fileio.c
 @@ -41,7 +41,9 @@ static void test_parse_env_file(void) {

@@ -10,7 +10,7 @@ exist.
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/man/udevadm.xml b/man/udevadm.xml
-index d0b257d..b959216 100644
+index d0b257dec9..b959216d90 100644
 --- a/man/udevadm.xml
 +++ b/man/udevadm.xml
 @@ -462,9 +462,13 @@

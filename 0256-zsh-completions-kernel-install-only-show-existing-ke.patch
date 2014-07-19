@@ -12,7 +12,7 @@ When we remove a kernel, we don't remove the modules, so don't look at the modul
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/shell-completion/zsh/_kernel-install b/shell-completion/zsh/_kernel-install
-index 0655188..4fdd3a4 100644
+index 065518834c..4fdd3a4ae7 100644
 --- a/shell-completion/zsh/_kernel-install
 +++ b/shell-completion/zsh/_kernel-install
 @@ -12,7 +12,7 @@ _kernels(){

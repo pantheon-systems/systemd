@@ -11,7 +11,7 @@ http://lists.freedesktop.org/archives/systemd-devel/2014-May/019410.html
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/daemon.xml b/man/daemon.xml
-index 170949e..543468e 100644
+index 170949e712..543468eff8 100644
 --- a/man/daemon.xml
 +++ b/man/daemon.xml
 @@ -352,7 +352,7 @@

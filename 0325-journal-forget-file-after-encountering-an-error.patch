@@ -14,7 +14,7 @@ or sd_journal_previous that happens afterwards.
  1 file changed, 12 insertions(+), 4 deletions(-)
 
 diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
-index b1bd61f..661257b 100644
+index b1bd61fcdb..661257b243 100644
 --- a/src/journal/sd-journal.c
 +++ b/src/journal/sd-journal.c
 @@ -50,6 +50,8 @@

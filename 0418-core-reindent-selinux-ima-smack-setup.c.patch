@@ -19,7 +19,7 @@ Conflicts:
  1 file changed, 76 insertions(+), 76 deletions(-)
 
 diff --git a/src/core/selinux-setup.c b/src/core/selinux-setup.c
-index 9a5d6b2..6d8bc89 100644
+index 9a5d6b2a9d..6d8bc89965 100644
 --- a/src/core/selinux-setup.c
 +++ b/src/core/selinux-setup.c
 @@ -46,82 +46,82 @@ static int null_log(int type, const char *fmt, ...) {

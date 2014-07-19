@@ -26,7 +26,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=78200
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/src/backlight/backlight.c b/src/backlight/backlight.c
-index 34c01d9..77ae48c 100644
+index 34c01d91df..77ae48c26f 100644
 --- a/src/backlight/backlight.c
 +++ b/src/backlight/backlight.c
 @@ -225,7 +225,7 @@ static unsigned get_max_brightness(struct udev_device *device) {

@@ -9,7 +9,7 @@ Subject: [PATCH] delta: replace readdir_r with readdir
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/src/delta/delta.c b/src/delta/delta.c
-index b3272d9..fd024fc 100644
+index b3272d916e..fd024fc26f 100644
 --- a/src/delta/delta.c
 +++ b/src/delta/delta.c
 @@ -280,13 +280,13 @@ static int enumerate_dir(Hashmap *top, Hashmap *bottom, Hashmap *drops, const ch

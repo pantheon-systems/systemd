@@ -14,7 +14,7 @@ http://bugs.debian.org/732156
  1 file changed, 80 insertions(+), 17 deletions(-)
 
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 3f31c11..ca297ba 100644
+index 3f31c11506..ca297ba303 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -305,9 +305,10 @@

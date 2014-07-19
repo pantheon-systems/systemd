@@ -10,7 +10,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1047148
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/journal/journal-vacuum.c b/src/journal/journal-vacuum.c
-index 8b07f65..695e518 100644
+index 8b07f659da..695e518130 100644
 --- a/src/journal/journal-vacuum.c
 +++ b/src/journal/journal-vacuum.c
 @@ -334,7 +334,7 @@ finish:

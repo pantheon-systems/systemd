@@ -20,7 +20,7 @@ process.
  1 file changed, 3 insertions(+)
 
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index a0a8e9c..1fcb3d5 100644
+index a0a8e9c468..1fcb3d5783 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
 @@ -626,6 +626,9 @@ static void dispatch_message_real(

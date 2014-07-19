@@ -14,7 +14,7 @@ SCOPE_STOP_SIGTERM or SCOPE_STOP_SIGKILL.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/dbus-scope.c b/src/core/dbus-scope.c
-index 58dd9ff..71d6921 100644
+index 58dd9ff702..71d6921879 100644
 --- a/src/core/dbus-scope.c
 +++ b/src/core/dbus-scope.c
 @@ -76,7 +76,7 @@ DBusHandlerResult bus_scope_message_handler(Unit *u, DBusConnection *c, DBusMess

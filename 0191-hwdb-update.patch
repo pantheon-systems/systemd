@@ -14,7 +14,7 @@ Conflicts:
  3 files changed, 1922 insertions(+), 53 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index 5067167..92b96ae 100644
+index 5067167cbb..92b96ae45a 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -13411,6 +13411,222 @@ OUI:40D855198*
@@ -3270,7 +3270,7 @@ index 5067167..92b96ae 100644
   ID_OUI_FROM_DATABASE=Shanghai Baud Data Communication Co.,Ltd.
  
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index 289f81c..6142dc8 100644
+index 289f81c738..6142dc86ac 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -917,6 +917,9 @@ pci:v00001000d0000005Bsv00001028sd00001F37*
@@ -4631,7 +4631,7 @@ index 289f81c..6142dc8 100644
   ID_VENDOR_FROM_DATABASE=Digital Devices GmbH
  
 diff --git a/hwdb/20-usb-vendor-model.hwdb b/hwdb/20-usb-vendor-model.hwdb
-index da8385e..6663820 100644
+index da8385ef91..66638203ef 100644
 --- a/hwdb/20-usb-vendor-model.hwdb
 +++ b/hwdb/20-usb-vendor-model.hwdb
 @@ -53,6 +53,12 @@ usb:v017C*

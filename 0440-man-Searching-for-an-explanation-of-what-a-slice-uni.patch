@@ -11,7 +11,7 @@ Subject: [PATCH] man: Searching for an explanation of what a "slice unit" was,
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/man/systemd.slice.xml b/man/systemd.slice.xml
-index 4d27ddf..f82e6c3 100644
+index 4d27ddf890..f82e6c3ba0 100644
 --- a/man/systemd.slice.xml
 +++ b/man/systemd.slice.xml
 @@ -56,13 +56,13 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.

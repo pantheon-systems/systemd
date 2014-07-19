@@ -11,7 +11,7 @@ Subject: [PATCH] man,units: fix installation of systemd-nspawn@.service and
  3 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/TODO b/TODO
-index 425f673..42ba030 100644
+index 425f6736c0..42ba0304a2 100644
 --- a/TODO
 +++ b/TODO
 @@ -491,6 +491,7 @@ Features:
@@ -23,7 +23,7 @@ index 425f673..42ba030 100644
  * cryptsetup:
    - cryptsetup-generator: allow specification of passwords in crypttab itself
 diff --git a/man/systemd-nspawn.xml b/man/systemd-nspawn.xml
-index 7d450f9..ba9e516 100644
+index 7d450f912c..ba9e51686a 100644
 --- a/man/systemd-nspawn.xml
 +++ b/man/systemd-nspawn.xml
 @@ -428,6 +428,18 @@
@@ -46,7 +46,7 @@ index 7d450f9..ba9e516 100644
  
                  <para>The exit code of the program executed in the
 diff --git a/units/systemd-nspawn@.service.in b/units/systemd-nspawn@.service.in
-index eca62e3..8e00736 100644
+index eca62e3b17..8e00736498 100644
 --- a/units/systemd-nspawn@.service.in
 +++ b/units/systemd-nspawn@.service.in
 @@ -14,4 +14,4 @@ ExecStart=@bindir@/systemd-nspawn -bjD /var/lib/container/%i

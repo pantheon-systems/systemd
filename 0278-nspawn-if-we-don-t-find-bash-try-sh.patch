@@ -12,7 +12,7 @@ Conflicts:
  1 file changed, 1 insertion(+)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index cafc306..410b879 100644
+index cafc306273..410b8794dc 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -1499,6 +1499,7 @@ int main(int argc, char *argv[]) {

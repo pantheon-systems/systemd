@@ -11,7 +11,7 @@ things easier when arm virtualization support is added.
  1 file changed, 81 insertions(+), 59 deletions(-)
 
 diff --git a/src/shared/virt.c b/src/shared/virt.c
-index 537ccda..4e18638 100644
+index 537ccda654..4e18638bc9 100644
 --- a/src/shared/virt.c
 +++ b/src/shared/virt.c
 @@ -27,30 +27,10 @@

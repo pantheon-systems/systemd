@@ -9,7 +9,7 @@ Subject: [PATCH] execute: more debugging messages
  2 files changed, 23 insertions(+), 15 deletions(-)
 
 diff --git a/src/core/execute.c b/src/core/execute.c
-index 3979f35..3f7ca52 100644
+index 3979f35988..3f7ca52139 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -317,12 +317,12 @@ static int setup_input(const ExecContext *context, int socket_fd, bool apply_tty
@@ -106,7 +106,7 @@ index 3979f35..3f7ca52 100644
  
          strv_free(e);
 diff --git a/src/login/pam-module.c b/src/login/pam-module.c
-index 49296b5..973daf7 100644
+index 49296b5d63..973daf703e 100644
 --- a/src/login/pam-module.c
 +++ b/src/login/pam-module.c
 @@ -199,7 +199,8 @@ _public_ PAM_EXTERN int pam_sm_open_session(

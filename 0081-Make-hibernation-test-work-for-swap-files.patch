@@ -11,7 +11,7 @@ https://www.kernel.org/doc/Documentation/power/swsusp-and-swap-files.txt
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/shared/sleep-config.c b/src/shared/sleep-config.c
-index d068bfc..2bb0493 100644
+index d068bfce3c..2bb0493812 100644
 --- a/src/shared/sleep-config.c
 +++ b/src/shared/sleep-config.c
 @@ -206,7 +206,7 @@ static int hibernation_partition_size(size_t *size, size_t *used) {

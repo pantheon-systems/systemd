@@ -16,7 +16,7 @@ files_same() returns
  2 files changed, 18 insertions(+), 8 deletions(-)
 
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 6e97a6d..1f83eb7 100644
+index 6e97a6d6fd..1f83eb7518 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -3333,19 +3333,27 @@ bool on_tty(void) {
@@ -56,7 +56,7 @@ index 6e97a6d..1f83eb7 100644
  
  char *ellipsize_mem(const char *s, size_t old_length, size_t new_length, unsigned percent) {
 diff --git a/src/shared/util.h b/src/shared/util.h
-index e83d2ab..20d81e5 100644
+index e83d2abf27..20d81e5c80 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -405,6 +405,8 @@ static inline const char *ansi_highlight_off(void) {

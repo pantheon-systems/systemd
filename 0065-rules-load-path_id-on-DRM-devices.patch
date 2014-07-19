@@ -17,7 +17,7 @@ this alias.
  create mode 100644 rules/60-drm.rules
 
 diff --git a/Makefile.am b/Makefile.am
-index 7ab345a..34de7f2 100644
+index 7ab345a141..34de7f2b58 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -2209,6 +2209,7 @@ dist_udevrules_DATA += \
@@ -30,7 +30,7 @@ index 7ab345a..34de7f2 100644
  	rules/60-persistent-serial.rules \
 diff --git a/rules/60-drm.rules b/rules/60-drm.rules
 new file mode 100644
-index 0000000..de038c1
+index 0000000000..de038c1191
 --- /dev/null
 +++ b/rules/60-drm.rules
 @@ -0,0 +1,8 @@

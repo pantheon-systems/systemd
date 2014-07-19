@@ -19,7 +19,7 @@ Conflicts:
  4 files changed, 17 insertions(+), 15 deletions(-)
 
 diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
-index f01843d..d6ac4f6 100644
+index f01843d65e..d6ac4f6478 100644
 --- a/src/core/load-fragment.c
 +++ b/src/core/load-fragment.c
 @@ -515,9 +515,7 @@ int config_parse_exec(const char *unit,
@@ -55,7 +55,7 @@ index f01843d..d6ac4f6 100644
                  }
  
 diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
-index 6085d33..4ac71ed 100644
+index 6085d33391..4ac71ed3f2 100644
 --- a/src/shared/conf-parser.c
 +++ b/src/shared/conf-parser.c
 @@ -607,8 +607,7 @@ int config_parse_path(const char *unit,
@@ -79,7 +79,7 @@ index 6085d33..4ac71ed 100644
                  }
  
 diff --git a/src/shared/conf-parser.h b/src/shared/conf-parser.h
-index 08428a5..247e562 100644
+index 08428a514a..247e562ef6 100644
 --- a/src/shared/conf-parser.h
 +++ b/src/shared/conf-parser.h
 @@ -122,6 +122,12 @@ int log_syntax_internal(const char *unit, int level,
@@ -96,7 +96,7 @@ index 08428a5..247e562 100644
          int function(const char *unit,                                  \
                       const char *filename,                              \
 diff --git a/src/shared/fileio.c b/src/shared/fileio.c
-index 121cd57..0586e33 100644
+index 121cd571aa..0586e330ea 100644
 --- a/src/shared/fileio.c
 +++ b/src/shared/fileio.c
 @@ -526,15 +526,18 @@ static int load_env_file_push(const char *filename, unsigned line,

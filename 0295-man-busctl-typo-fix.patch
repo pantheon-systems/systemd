@@ -9,7 +9,7 @@ Subject: [PATCH] man: busctl typo fix
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/busctl.xml b/man/busctl.xml
-index 854eb38..6200643 100644
+index 854eb38b53..6200643b29 100644
 --- a/man/busctl.xml
 +++ b/man/busctl.xml
 @@ -184,7 +184,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.

@@ -10,7 +10,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=953077
  1 file changed, 59 insertions(+), 5 deletions(-)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index 166282c..b4bc15d 100644
+index 166282cecc..b4bc15daa4 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -437,7 +437,7 @@ systemctl start foo

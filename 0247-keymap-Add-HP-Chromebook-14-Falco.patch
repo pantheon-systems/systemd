@@ -11,7 +11,7 @@ Thanks to Stefan Nagy <public@stefan-nagy.at>.
  1 file changed, 16 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index e3d1f02..c027cbe 100644
+index e3d1f02c9d..c027cbe203 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -417,6 +417,22 @@ keyboard:dmi:bvn*:bvr*:bd*:svnHewlett-Packard*:pnHDX9494NR:pvr*

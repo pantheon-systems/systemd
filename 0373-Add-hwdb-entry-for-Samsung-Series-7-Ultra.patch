@@ -10,7 +10,7 @@ Subject: [PATCH] Add hwdb entry for Samsung Series 7 Ultra
  1 file changed, 8 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index f9084e4..fdab827 100644
+index f9084e4aa9..fdab8273d9 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -921,6 +921,14 @@ keyboard:dmi:bvn*:bvr*:bd*:svn[sS][aA][mM][sS][uU][nN][gG]*:pn*90X3A*:pvr*

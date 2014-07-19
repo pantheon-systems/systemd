@@ -8,7 +8,7 @@ Subject: [PATCH] logind: add forgotten call to user_send_changed()
  1 file changed, 1 insertion(+)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index f31961a..e519d35 100644
+index f31961a9da..e519d358c4 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -587,6 +587,7 @@ int session_start(Session *s) {

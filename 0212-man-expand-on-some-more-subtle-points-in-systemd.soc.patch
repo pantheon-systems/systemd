@@ -10,7 +10,7 @@ http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=727708#1694
  1 file changed, 49 insertions(+), 18 deletions(-)
 
 diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
-index ac3127d..570a6fb 100644
+index ac3127d7d0..570a6fb1ff 100644
 --- a/man/systemd.socket.xml
 +++ b/man/systemd.socket.xml
 @@ -85,21 +85,26 @@

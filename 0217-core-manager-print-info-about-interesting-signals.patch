@@ -13,7 +13,7 @@ happening in the system.
  1 file changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/src/core/manager.c b/src/core/manager.c
-index a34a3c6..69ad4b5 100644
+index a34a3c6387..69ad4b5010 100644
 --- a/src/core/manager.c
 +++ b/src/core/manager.c
 @@ -1435,16 +1435,22 @@ static int manager_process_signal_fd(Manager *m) {

@@ -10,7 +10,7 @@ Based on 98b47d54ce946ad3524f84eb38d2413498a333dc.
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/src/core/execute.c b/src/core/execute.c
-index 9b85379..ee445d7 100644
+index 9b85379b83..ee445d7cda 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -1611,10 +1611,16 @@ void exec_context_tmp_dirs_done(ExecContext *c) {

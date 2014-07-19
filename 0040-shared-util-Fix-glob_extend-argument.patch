@@ -11,7 +11,7 @@ as it used the global variable, instead of the passed parameters.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 748f1bb..6c88040 100644
+index 748f1bbe02..6c88040d75 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -4391,7 +4391,7 @@ int glob_extend(char ***strv, const char *path) {

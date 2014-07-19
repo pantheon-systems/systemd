@@ -10,7 +10,7 @@ Subject: [PATCH] core: don't try to relabel mounts before we loaded the policy
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/src/core/mount-setup.c b/src/core/mount-setup.c
-index 679f289..cff83d3 100644
+index 679f28979a..cff83d39e4 100644
 --- a/src/core/mount-setup.c
 +++ b/src/core/mount-setup.c
 @@ -166,7 +166,10 @@ static int mount_one(const MountPoint *p, bool relabel) {

@@ -13,7 +13,7 @@ Conflicts:
  1 file changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/src/core/mount.c b/src/core/mount.c
-index c0445a6..0a0ef82 100644
+index c0445a6113..0a0ef82f17 100644
 --- a/src/core/mount.c
 +++ b/src/core/mount.c
 @@ -1412,9 +1412,10 @@ static int mount_add_one(

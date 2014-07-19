@@ -12,7 +12,7 @@ After: /var/tmp/inst1/etc/systemd/system/default.target -> /usr/lib/systemd/syst
  1 file changed, 43 insertions(+), 46 deletions(-)
 
 diff --git a/src/shared/install.c b/src/shared/install.c
-index e6a61fa..9f34ac5 100644
+index e6a61fa4f9..9f34ac5ad5 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -1039,67 +1039,64 @@ static int unit_file_search(

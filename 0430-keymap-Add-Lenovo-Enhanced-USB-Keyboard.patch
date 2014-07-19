@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 11 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index fdab827..c320c21 100644
+index fdab8273d9..c320c218ce 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -576,6 +576,17 @@ keyboard:dmi:bvn*:bvr*:bd*:svnLENOVO*:pn*IdeaPad*U300s*:pvr*

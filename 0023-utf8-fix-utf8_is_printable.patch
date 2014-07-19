@@ -9,7 +9,7 @@ Subject: [PATCH] utf8: fix utf8_is_printable
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/src/shared/utf8.c b/src/shared/utf8.c
-index a8e28ac..31120af 100644
+index a8e28accd3..31120af046 100644
 --- a/src/shared/utf8.c
 +++ b/src/shared/utf8.c
 @@ -141,14 +141,15 @@ bool utf8_is_printable(const char* str, size_t length) {
@@ -31,7 +31,7 @@ index a8e28ac..31120af 100644
  
          return true;
 diff --git a/src/test/test-utf8.c b/src/test/test-utf8.c
-index 7bd0db1..f0182ee 100644
+index 7bd0db173a..f0182ee9af 100644
 --- a/src/test/test-utf8.c
 +++ b/src/test/test-utf8.c
 @@ -26,6 +26,7 @@ static void test_utf8_is_printable(void) {

@@ -15,7 +15,7 @@ the socket will be started, which is not imporant, but not the service.
  1 file changed, 5 insertions(+)
 
 diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
-index 31b5cd0..e0b1b59 100644
+index 31b5cd011f..e0b1b59df2 100644
 --- a/units/systemd-logind.service.in
 +++ b/units/systemd-logind.service.in
 @@ -13,6 +13,11 @@ Documentation=http://www.freedesktop.org/wiki/Software/systemd/multiseat

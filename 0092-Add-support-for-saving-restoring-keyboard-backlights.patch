@@ -21,7 +21,7 @@ Conflicts:
  2 files changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
-index 307f18f..a00ffed 100644
+index 307f18f70d..a00ffed4c0 100644
 --- a/rules/99-systemd.rules.in
 +++ b/rules/99-systemd.rules.in
 @@ -51,9 +51,11 @@ SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_USB_INTERFACES}=="*:0701??:
@@ -38,7 +38,7 @@ index 307f18f..a00ffed 100644
  # Asynchronously mount file systems implemented by these modules as
  # soon as they are loaded.
 diff --git a/src/backlight/backlight.c b/src/backlight/backlight.c
-index 9b2eada..f22deed 100644
+index 9b2eada397..f22deed4e0 100644
 --- a/src/backlight/backlight.c
 +++ b/src/backlight/backlight.c
 @@ -56,9 +56,11 @@ int main(int argc, char *argv[]) {

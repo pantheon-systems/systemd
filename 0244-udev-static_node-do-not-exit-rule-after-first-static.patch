@@ -13,7 +13,7 @@ skipping the entire rule.
  1 file changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/src/udev/udev-rules.c b/src/udev/udev-rules.c
-index 6f8b127..c981773 100644
+index 6f8b127872..c9817733d8 100644
 --- a/src/udev/udev-rules.c
 +++ b/src/udev/udev-rules.c
 @@ -900,6 +900,7 @@ static int rule_add_key(struct rule_tmp *rule_tmp, enum token_type type,

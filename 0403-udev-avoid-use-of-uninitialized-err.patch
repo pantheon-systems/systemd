@@ -18,7 +18,7 @@ Conflicts:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/udev/udevd.c b/src/udev/udevd.c
-index 5235cbd..bbca5d5 100644
+index 5235cbd2ca..bbca5d5bb4 100644
 --- a/src/udev/udevd.c
 +++ b/src/udev/udevd.c
 @@ -272,7 +272,7 @@ static void worker_new(struct event *event)

@@ -11,7 +11,7 @@ Subject: [PATCH] socket: properly handle if our service vanished during
  1 file changed, 6 insertions(+)
 
 diff --git a/src/core/socket.c b/src/core/socket.c
-index 842850f..b811a61 100644
+index 842850f9d2..b811a61df5 100644
 --- a/src/core/socket.c
 +++ b/src/core/socket.c
 @@ -1462,6 +1462,12 @@ static void socket_enter_running(Socket *s, int cfd) {

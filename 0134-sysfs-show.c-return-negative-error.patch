@@ -9,7 +9,7 @@ introduced in 1ca208fb4f93e5869704af1812cbff7130a2fc03
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/sysfs-show.c b/src/login/sysfs-show.c
-index 7c1adfa..f7d11dd 100644
+index 7c1adfaaca..f7d11ddc4c 100644
 --- a/src/login/sysfs-show.c
 +++ b/src/login/sysfs-show.c
 @@ -164,7 +164,7 @@ int show_sysfs(const char *seat, const char *prefix, unsigned n_columns) {

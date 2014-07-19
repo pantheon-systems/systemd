@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 12 insertions(+), 13 deletions(-)
 
 diff --git a/src/shared/path-util.c b/src/shared/path-util.c
-index 45099ee..d8c14e8 100644
+index 45099eeda8..d8c14e8b30 100644
 --- a/src/shared/path-util.c
 +++ b/src/shared/path-util.c
 @@ -327,11 +327,15 @@ bool path_equal(const char *a, const char *b) {

@@ -14,7 +14,7 @@ on arm devices one out of every 7 times or something.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/rules/60-persistent-storage.rules b/rules/60-persistent-storage.rules
-index a4d009a..154ffd9 100644
+index a4d009ae6e..154ffd92ce 100644
 --- a/rules/60-persistent-storage.rules
 +++ b/rules/60-persistent-storage.rules
 @@ -14,7 +14,7 @@ ACTION=="add", SUBSYSTEM=="module", KERNEL=="block", ATTR{parameters/events_dfl_

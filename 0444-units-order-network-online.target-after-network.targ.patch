@@ -19,7 +19,7 @@ Conflicts:
  1 file changed, 1 insertion(+)
 
 diff --git a/units/network-online.target b/units/network-online.target
-index a40c44c..67bc4fa 100644
+index a40c44c9be..67bc4fa471 100644
 --- a/units/network-online.target
 +++ b/units/network-online.target
 @@ -9,3 +9,4 @@

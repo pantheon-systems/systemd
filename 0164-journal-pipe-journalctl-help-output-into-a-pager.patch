@@ -12,7 +12,7 @@ as other systemd tools do and pipe it into a pager.
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index a5c4779..71e28b0 100644
+index a5c4779460..71e28b0a70 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -114,8 +114,18 @@ typedef struct boot_id_t {

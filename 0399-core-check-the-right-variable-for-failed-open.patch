@@ -10,7 +10,7 @@ Subject: [PATCH] core: check the right variable for failed open()
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/cgroup.c b/src/core/cgroup.c
-index 32e2599..c215a86 100644
+index 32e2599a2c..c215a86aad 100644
 --- a/src/core/cgroup.c
 +++ b/src/core/cgroup.c
 @@ -661,7 +661,7 @@ int manager_setup_cgroup(Manager *m) {

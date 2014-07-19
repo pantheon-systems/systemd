@@ -14,7 +14,7 @@ Conflicts:
  2 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/configure.ac b/configure.ac
-index 9904e25..6232cf8 100644
+index 9904e25e99..6232cf8469 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -814,7 +814,7 @@ AC_DEFINE_UNQUOTED(TELINIT, ["$TELINIT"], [Path to telinit])
@@ -27,7 +27,7 @@ index 9904e25..6232cf8 100644
  # ------------------------------------------------------------------------------
  have_myhostname=no
 diff --git a/src/core/main.c b/src/core/main.c
-index 00fd394..58c3a9e 100644
+index 00fd39486b..58c3a9e6ac 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -34,6 +34,10 @@

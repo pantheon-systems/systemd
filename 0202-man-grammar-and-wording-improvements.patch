@@ -26,7 +26,7 @@ Conflicts:
  4 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/man/daemon.xml b/man/daemon.xml
-index 7790420..1fe4546 100644
+index 7790420c6e..1fe4546f00 100644
 --- a/man/daemon.xml
 +++ b/man/daemon.xml
 @@ -408,7 +408,7 @@
@@ -39,7 +39,7 @@ index 7790420..1fe4546 100644
                          it is recommended to place a symlink to the
                          unit file in the <filename>.wants/</filename>
 diff --git a/man/sd_is_fifo.xml b/man/sd_is_fifo.xml
-index 4bb2236..58cd1c9 100644
+index 4bb2236fce..58cd1c91bb 100644
 --- a/man/sd_is_fifo.xml
 +++ b/man/sd_is_fifo.xml
 @@ -165,7 +165,7 @@
@@ -52,7 +52,7 @@ index 4bb2236..58cd1c9 100644
                  name. Special files in this context are character
                  device nodes and files in <filename>/proc</filename>
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index e869f95..e3a370f 100644
+index e869f95033..e3a370f204 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -427,7 +427,7 @@
@@ -65,7 +65,7 @@ index e869f95..e3a370f 100644
                                  <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
                                  </para>
 diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
-index b70c5e9..f6b4b24 100644
+index b70c5e9da7..f6b4b24797 100644
 --- a/man/systemd.unit.xml
 +++ b/man/systemd.unit.xml
 @@ -548,7 +548,7 @@

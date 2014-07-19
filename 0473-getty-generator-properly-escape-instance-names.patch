@@ -19,7 +19,7 @@ Conflicts:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/getty-generator/getty-generator.c b/src/getty-generator/getty-generator.c
-index 625a87e..2f790b8 100644
+index 625a87e1e8..2f790b8350 100644
 --- a/src/getty-generator/getty-generator.c
 +++ b/src/getty-generator/getty-generator.c
 @@ -77,7 +77,7 @@ static int add_serial_getty(const char *tty) {

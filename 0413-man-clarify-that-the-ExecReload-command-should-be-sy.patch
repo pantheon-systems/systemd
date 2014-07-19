@@ -12,7 +12,7 @@ http://lists.freedesktop.org/archives/systemd-devel/2014-May/019054.html
  1 file changed, 14 insertions(+)
 
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 50b19a8..f549e89 100644
+index 50b19a8d5f..f549e89ee0 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -519,6 +519,20 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}</programlisting>

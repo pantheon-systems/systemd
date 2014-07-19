@@ -12,7 +12,7 @@ This brings the man page back into sync with the actual code.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/man/journald.conf.xml b/man/journald.conf.xml
-index 27c326e..77ecd5d 100644
+index 27c326e909..77ecd5d3b9 100644
 --- a/man/journald.conf.xml
 +++ b/man/journald.conf.xml
 @@ -190,8 +190,8 @@

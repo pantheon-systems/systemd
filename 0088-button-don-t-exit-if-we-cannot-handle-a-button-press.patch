@@ -8,7 +8,7 @@ Subject: [PATCH] button: don't exit if we cannot handle a button press
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/logind-button.c b/src/login/logind-button.c
-index ea45c28..4f456d2 100644
+index ea45c28eef..4f456d21af 100644
 --- a/src/login/logind-button.c
 +++ b/src/login/logind-button.c
 @@ -172,7 +172,7 @@ static int button_handle(

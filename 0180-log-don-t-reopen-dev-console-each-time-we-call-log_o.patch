@@ -13,7 +13,7 @@ Instead, force reopen it only if we really really have to.
  3 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/core/main.c b/src/core/main.c
-index 58c3a9e..935762f 100644
+index 58c3a9e6ac..935762f7a4 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -1347,6 +1347,7 @@ int main(int argc, char *argv[]) {
@@ -25,7 +25,7 @@ index 58c3a9e..935762f 100644
  
                  /* For the later on, see above... */
 diff --git a/src/core/shutdown.c b/src/core/shutdown.c
-index ea02b60..5e0f3ce 100644
+index ea02b60456..5e0f3ce9fd 100644
 --- a/src/core/shutdown.c
 +++ b/src/core/shutdown.c
 @@ -155,6 +155,7 @@ int main(int argc, char *argv[]) {
@@ -37,7 +37,7 @@ index ea02b60..5e0f3ce 100644
  
          umask(0022);
 diff --git a/src/shared/log.c b/src/shared/log.c
-index 8f4995a..bd918fb 100644
+index 8f4995a0c8..bd918fb14c 100644
 --- a/src/shared/log.c
 +++ b/src/shared/log.c
 @@ -272,8 +272,6 @@ int log_open(void) {

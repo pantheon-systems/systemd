@@ -8,7 +8,7 @@ Subject: [PATCH] logind: add forgotten return statement
  1 file changed, 2 insertions(+)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 730f11d..ece222a 100644
+index 730f11de7b..ece222af3e 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -782,6 +782,8 @@ void session_release(Session *s) {

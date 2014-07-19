@@ -15,7 +15,7 @@ benefits.
  1 file changed, 8 insertions(+), 11 deletions(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index e0abddf..090cf97 100644
+index e0abddfb9e..090cf9771e 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -315,7 +315,7 @@ static int journal_file_verify_header(JournalFile *f) {

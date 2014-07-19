@@ -19,7 +19,7 @@ Conflicts:
  3 files changed, 46 insertions(+), 46 deletions(-)
 
 diff --git a/man/systemd-delta.xml b/man/systemd-delta.xml
-index f802aa5..23fb8d1 100644
+index f802aa5eb9..23fb8d1df2 100644
 --- a/man/systemd-delta.xml
 +++ b/man/systemd-delta.xml
 @@ -50,8 +50,8 @@
@@ -116,7 +116,7 @@ index f802aa5..23fb8d1 100644
          <refsect1>
                  <title>Exit status</title>
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index c116a9b..0f4be71 100644
+index c116a9b60f..0f4be71960 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -769,8 +769,8 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}</programlisting>
@@ -131,7 +131,7 @@ index c116a9b..0f4be71 100644
  
                          <varlistentry>
 diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
-index da0f2aa..39fba51 100644
+index da0f2aaf7d..39fba510b7 100644
 --- a/man/systemd.socket.xml
 +++ b/man/systemd.socket.xml
 @@ -121,16 +121,16 @@

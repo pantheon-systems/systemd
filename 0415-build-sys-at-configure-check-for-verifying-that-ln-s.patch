@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 2 insertions(+)
 
 diff --git a/configure.ac b/configure.ac
-index 9af56ab..9605b38 100644
+index 9af56ab1f4..9605b3860e 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -78,6 +78,8 @@ AC_PATH_PROG([KMOD], [kmod], [/usr/bin/kmod], [$PATH:/usr/sbin:/sbin])

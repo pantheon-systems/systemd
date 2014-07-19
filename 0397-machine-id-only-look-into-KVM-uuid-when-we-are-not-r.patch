@@ -15,7 +15,7 @@ Conflicts:
  1 file changed, 24 insertions(+), 23 deletions(-)
 
 diff --git a/src/core/machine-id-setup.c b/src/core/machine-id-setup.c
-index 18e015f..dcd1630 100644
+index 18e015fe7f..dcd16308db 100644
 --- a/src/core/machine-id-setup.c
 +++ b/src/core/machine-id-setup.c
 @@ -88,29 +88,6 @@ static int generate(char id[34]) {

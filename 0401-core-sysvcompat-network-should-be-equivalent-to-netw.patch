@@ -27,7 +27,7 @@ Cc: Michal Sekletar <msekleta@redhat.com>
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/src/core/service.c b/src/core/service.c
-index c8dbbef..3bda9a3 100644
+index c8dbbeff1b..3bda9a37d6 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -359,7 +359,7 @@ static int sysv_translate_facility(const char *name, const char *filename, char

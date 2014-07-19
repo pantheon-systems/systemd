@@ -9,7 +9,7 @@ Subject: [PATCH] core/manager: remove infinite loop
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/src/core/manager.c b/src/core/manager.c
-index 944c196..a34a3c6 100644
+index 944c196f3e..a34a3c6387 100644
 --- a/src/core/manager.c
 +++ b/src/core/manager.c
 @@ -2285,10 +2285,8 @@ int manager_deserialize(Manager *m, FILE *f, FDSet *fds) {

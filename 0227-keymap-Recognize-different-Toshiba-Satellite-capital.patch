@@ -10,7 +10,7 @@ https://launchpad.net/bugs/665918
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index d253724..84a061f 100644
+index d253724015..84a061f561 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -1056,9 +1056,9 @@ keyboard:dmi:bvn*:bvr*:bd*:svnFOXCONN:pnQBOOK:*

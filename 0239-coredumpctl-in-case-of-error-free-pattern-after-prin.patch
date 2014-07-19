@@ -9,7 +9,7 @@ Subject: [PATCH] coredumpctl: in case of error free pattern after print
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/journal/coredumpctl.c b/src/journal/coredumpctl.c
-index 560a91b..a5997e2 100644
+index 560a91b620..a5997e2359 100644
 --- a/src/journal/coredumpctl.c
 +++ b/src/journal/coredumpctl.c
 @@ -126,10 +126,11 @@ static int add_match(Set *set, const char *match) {

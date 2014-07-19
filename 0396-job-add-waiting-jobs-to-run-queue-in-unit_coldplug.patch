@@ -29,7 +29,7 @@ This includes the fixup in ae6feb2a01f6954af682bc3580c95d99721dcf46.
  1 file changed, 3 insertions(+)
 
 diff --git a/src/core/job.c b/src/core/job.c
-index 7d2b994..c6bf08f 100644
+index 7d2b994026..c6bf08fc06 100644
 --- a/src/core/job.c
 +++ b/src/core/job.c
 @@ -1070,6 +1070,9 @@ int job_coldplug(Job *j) {

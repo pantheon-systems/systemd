@@ -9,7 +9,7 @@ This brings it in sync with the default config file.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/libudev/libudev.c b/src/libudev/libudev.c
-index 208039a..bc73a5a 100644
+index 208039a1b2..bc73a5a08c 100644
 --- a/src/libudev/libudev.c
 +++ b/src/libudev/libudev.c
 @@ -125,7 +125,7 @@ _public_ struct udev *udev_new(void)

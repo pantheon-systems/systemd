@@ -10,7 +10,7 @@ Subject: [PATCH] journal: don't clobber return parameters of
  1 file changed, 10 insertions(+), 8 deletions(-)
 
 diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
-index f4af1f6..b1bd61f 100644
+index f4af1f6683..b1bd61fcdb 100644
 --- a/src/journal/sd-journal.c
 +++ b/src/journal/sd-journal.c
 @@ -2359,6 +2359,7 @@ _public_ int sd_journal_get_cutoff_realtime_usec(sd_journal *j, uint64_t *from,

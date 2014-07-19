@@ -14,7 +14,7 @@ Conflicts:
  3 files changed, 241 insertions(+), 16 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index 92b96ae..a51a00a 100644
+index 92b96ae45a..a51a00aa1e 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -13627,6 +13627,12 @@ OUI:40D8551E2*
@@ -339,7 +339,7 @@ index 92b96ae..a51a00a 100644
   ID_OUI_FROM_DATABASE=Belkin International Inc.
  
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index 6142dc8..7f833e3 100644
+index 6142dc86ac..7f833e3345 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -4166,6 +4166,9 @@ pci:v00001002d00006600*
@@ -753,7 +753,7 @@ index 6142dc8..7f833e3 100644
   ID_MODEL_FROM_DATABASE=B85 Express LPC Controller
  
 diff --git a/hwdb/20-usb-vendor-model.hwdb b/hwdb/20-usb-vendor-model.hwdb
-index 6663820..60dbcd2 100644
+index 66638203ef..60dbcd24bf 100644
 --- a/hwdb/20-usb-vendor-model.hwdb
 +++ b/hwdb/20-usb-vendor-model.hwdb
 @@ -46055,6 +46055,12 @@ usb:v1B5A*

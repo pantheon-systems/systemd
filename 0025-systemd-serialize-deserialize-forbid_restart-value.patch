@@ -18,7 +18,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=69800
  1 file changed, 11 insertions(+)
 
 diff --git a/src/core/service.c b/src/core/service.c
-index 6792024..98b1599 100644
+index 67920248d3..98b1599a32 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -2651,6 +2651,9 @@ static int service_serialize(Unit *u, FILE *f, FDSet *fds) {

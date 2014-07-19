@@ -11,7 +11,7 @@ Subject: [PATCH] bootctl: add bash completion
  create mode 100644 shell-completion/bash/bootctl
 
 diff --git a/Makefile.am b/Makefile.am
-index 9049fed..703925a 100644
+index 9049fedd16..703925a4c0 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -1748,6 +1748,9 @@ bootctl_LDADD = \
@@ -26,7 +26,7 @@ index 9049fed..703925a 100644
  
 diff --git a/shell-completion/bash/bootctl b/shell-completion/bash/bootctl
 new file mode 100644
-index 0000000..c86ec7e
+index 0000000000..c86ec7edc9
 --- /dev/null
 +++ b/shell-completion/bash/bootctl
 @@ -0,0 +1,60 @@

@@ -8,7 +8,7 @@ Subject: [PATCH] logind: save session after setting the stopping flag
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index e519d35..3ab41e6 100644
+index e519d358c4..3ab41e6339 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -682,10 +682,9 @@ int session_stop(Session *s) {

@@ -8,7 +8,7 @@ Subject: [PATCH] systemctl: fix name mangling for sysv units
  1 file changed, 18 insertions(+), 27 deletions(-)
 
 diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
-index bb7ada9..d75281f 100644
+index bb7ada9f32..d75281f5f6 100644
 --- a/src/systemctl/systemctl.c
 +++ b/src/systemctl/systemctl.c
 @@ -4218,11 +4218,10 @@ static int set_environment(DBusConnection *bus, char **args) {

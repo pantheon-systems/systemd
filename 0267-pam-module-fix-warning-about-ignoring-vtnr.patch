@@ -10,7 +10,7 @@ Feb 19 22:15:01 server crond[26418]: pam_systemd(crond:session): Ignoring vtnr
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/pam-module.c b/src/login/pam-module.c
-index 7ebb5d2..aa09ec1 100644
+index 7ebb5d27a5..aa09ec1dbe 100644
 --- a/src/login/pam-module.c
 +++ b/src/login/pam-module.c
 @@ -335,7 +335,7 @@ _public_ PAM_EXTERN int pam_sm_open_session(

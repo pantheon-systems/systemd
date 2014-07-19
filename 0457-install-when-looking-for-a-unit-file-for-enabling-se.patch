@@ -14,7 +14,7 @@ unit names first, before looking for templates for them.
  1 file changed, 38 insertions(+), 36 deletions(-)
 
 diff --git a/src/shared/install.c b/src/shared/install.c
-index ff0a2a4..00a6a77 100644
+index ff0a2a4d03..00a6a77ec6 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -1048,67 +1048,69 @@ static int unit_file_search(

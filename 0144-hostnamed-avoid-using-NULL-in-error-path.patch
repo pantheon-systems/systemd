@@ -9,7 +9,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1047335
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/hostname/hostnamed.c b/src/hostname/hostnamed.c
-index 6a43aeb..0c24b65 100644
+index 6a43aeb840..0c24b65141 100644
 --- a/src/hostname/hostnamed.c
 +++ b/src/hostname/hostnamed.c
 @@ -637,7 +637,7 @@ static int connect_bus(DBusConnection **_bus) {

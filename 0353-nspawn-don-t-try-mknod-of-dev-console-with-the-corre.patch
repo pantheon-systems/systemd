@@ -21,7 +21,7 @@ would fail, since creating /dev/console is not allowed by it. Creating
  1 file changed, 10 insertions(+), 15 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 410b879..8718e94 100644
+index 410b8794dc..8718e94d14 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -679,23 +679,19 @@ static int setup_ptmx(const char *dest) {

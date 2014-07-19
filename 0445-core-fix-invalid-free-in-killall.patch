@@ -18,7 +18,7 @@ the scope it is in finishes.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/killall.c b/src/core/killall.c
-index e395050..967dac0 100644
+index e395050107..967dac0f91 100644
 --- a/src/core/killall.c
 +++ b/src/core/killall.c
 @@ -167,7 +167,7 @@ static int killall(int sig, Set *pids) {

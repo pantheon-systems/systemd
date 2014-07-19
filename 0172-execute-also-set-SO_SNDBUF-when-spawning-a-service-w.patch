@@ -10,7 +10,7 @@ Subject: [PATCH] execute: also set SO_SNDBUF when spawning a service with
  1 file changed, 4 insertions(+)
 
 diff --git a/src/core/execute.c b/src/core/execute.c
-index 58be72a..9b85379 100644
+index 58be72a224..9b85379b83 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -75,6 +75,8 @@

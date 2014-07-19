@@ -12,7 +12,7 @@ Subject: [PATCH] hwdb: update
  3 files changed, 572 insertions(+), 26 deletions(-)
 
 diff --git a/hwdb/20-OUI.hwdb b/hwdb/20-OUI.hwdb
-index afc0d90..6188bfc 100644
+index afc0d90350..6188bfcff6 100644
 --- a/hwdb/20-OUI.hwdb
 +++ b/hwdb/20-OUI.hwdb
 @@ -52915,6 +52915,9 @@ OUI:0CA42A*
@@ -531,7 +531,7 @@ index afc0d90..6188bfc 100644
 +OUI:FCFFAA*
 + ID_OUI_FROM_DATABASE=IEEE REGISTRATION AUTHORITY  - Please see MAL public listing for more information.
 diff --git a/hwdb/20-pci-vendor-model.hwdb b/hwdb/20-pci-vendor-model.hwdb
-index 2957774..62941b9 100644
+index 2957774ef1..62941b9a45 100644
 --- a/hwdb/20-pci-vendor-model.hwdb
 +++ b/hwdb/20-pci-vendor-model.hwdb
 @@ -4205,6 +4205,9 @@ pci:v00001002d00005F57*
@@ -886,7 +886,7 @@ index 2957774..62941b9 100644
   ID_MODEL_FROM_DATABASE=Z77 Express Chipset LPC Controller (Motherboard)
  
 diff --git a/hwdb/20-usb-vendor-model.hwdb b/hwdb/20-usb-vendor-model.hwdb
-index 52586bc..05f267d 100644
+index 52586bc973..05f267d3a5 100644
 --- a/hwdb/20-usb-vendor-model.hwdb
 +++ b/hwdb/20-usb-vendor-model.hwdb
 @@ -41163,7 +41163,7 @@ usb:v1234pED02*

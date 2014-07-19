@@ -11,7 +11,7 @@ http://lists.freedesktop.org/archives/systemd-devel/2014-April/018928.html
  1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/src/core/service.c b/src/core/service.c
-index f0df5fe..9fd58fa 100644
+index f0df5fead8..9fd58fab09 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -25,6 +25,7 @@

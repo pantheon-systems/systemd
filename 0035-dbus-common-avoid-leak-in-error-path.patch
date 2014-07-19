@@ -11,7 +11,7 @@ src/shared/dbus-common.c:968:33: warning: Potential leak of memory pointed to by
  1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/src/shared/dbus-common.c b/src/shared/dbus-common.c
-index c727cae..3ba2d87 100644
+index c727cae7cd..3ba2d87c4d 100644
 --- a/src/shared/dbus-common.c
 +++ b/src/shared/dbus-common.c
 @@ -934,7 +934,7 @@ int bus_parse_strv_iter(DBusMessageIter *iter, char ***_l) {

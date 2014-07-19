@@ -10,7 +10,7 @@ Subject: [PATCH] man: updates to the passive target section
  1 file changed, 43 insertions(+), 15 deletions(-)
 
 diff --git a/man/systemd.special.xml b/man/systemd.special.xml
-index 8ccccc2..38b94a7 100644
+index 8ccccc2798..38b94a7657 100644
 --- a/man/systemd.special.xml
 +++ b/man/systemd.special.xml
 @@ -866,7 +866,13 @@

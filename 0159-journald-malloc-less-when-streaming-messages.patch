@@ -11,7 +11,7 @@ Subject: [PATCH] journald: malloc less when streaming messages
  3 files changed, 15 insertions(+), 14 deletions(-)
 
 diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
-index 771a2bd..aae381b 100644
+index 771a2bd832..aae381b4ee 100644
 --- a/src/journal/journald-stream.c
 +++ b/src/journal/journald-stream.c
 @@ -75,9 +75,11 @@ struct StdoutStream {
@@ -75,7 +75,7 @@ index 771a2bd..aae381b 100644
          if (epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, s->stdout_fd, &ev) < 0) {
                  log_error("Failed to add stdout server fd to epoll object: %m");
 diff --git a/src/journal/journald-syslog.c b/src/journal/journald-syslog.c
-index c2770a5..5d9b665 100644
+index c2770a53d0..5d9b6651ef 100644
 --- a/src/journal/journald-syslog.c
 +++ b/src/journal/journald-syslog.c
 @@ -236,7 +236,7 @@ size_t syslog_parse_identifier(const char **buf, char **identifier, char **pid)
@@ -97,7 +97,7 @@ index c2770a5..5d9b665 100644
          if (s->forward_to_syslog)
                  forward_syslog_raw(s, priority, orig, ucred, tv);
 diff --git a/src/journal/journald-syslog.h b/src/journal/journald-syslog.h
-index 8ccdb77..057ea79 100644
+index 8ccdb77a09..057ea79def 100644
 --- a/src/journal/journald-syslog.h
 +++ b/src/journal/journald-syslog.h
 @@ -25,7 +25,7 @@

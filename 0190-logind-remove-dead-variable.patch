@@ -11,7 +11,7 @@ Noticed-by: Jan Alexander Steffens <jan.steffens@gmail.com>
  2 files changed, 4 deletions(-)
 
 diff --git a/src/login/logind-user.c b/src/login/logind-user.c
-index e2fce5c..b87311c 100644
+index e2fce5c831..b87311c0d7 100644
 --- a/src/login/logind-user.c
 +++ b/src/login/logind-user.c
 @@ -648,9 +648,6 @@ UserState user_get_state(User *u) {
@@ -25,7 +25,7 @@ index e2fce5c..b87311c 100644
                  return USER_OPENING;
  
 diff --git a/src/login/logind-user.h b/src/login/logind-user.h
-index b9171d3..a36f456 100644
+index b9171d345d..a36f4565e8 100644
 --- a/src/login/logind-user.h
 +++ b/src/login/logind-user.h
 @@ -61,7 +61,6 @@ struct User {

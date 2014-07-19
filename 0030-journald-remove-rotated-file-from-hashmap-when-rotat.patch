@@ -19,7 +19,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=890463
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index 4f47eb1..e03e413 100644
+index 4f47eb1c11..e03e413aef 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
 @@ -321,8 +321,10 @@ void server_rotate(Server *s) {

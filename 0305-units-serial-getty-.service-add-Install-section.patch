@@ -13,7 +13,7 @@ http://lists.freedesktop.org/archives/systemd-devel/2014-February/017329.html
  1 file changed, 3 insertions(+)
 
 diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
-index e32c6b7..aea078f 100644
+index e32c6b7aff..aea078f48f 100644
 --- a/units/serial-getty@.service.m4
 +++ b/units/serial-getty@.service.m4
 @@ -33,3 +33,6 @@ TTYVHangup=yes

@@ -13,7 +13,7 @@ Conflicts:
  2 files changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
-index e213ec4..c8414d4 100644
+index e213ec4f3c..c8414d4287 100644
 --- a/man/systemd.exec.xml
 +++ b/man/systemd.exec.xml
 @@ -295,9 +295,11 @@
@@ -31,7 +31,7 @@ index e213ec4..c8414d4 100644
  
                                  <para>
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index af3e0f2..4fb21ba 100644
+index af3e0f2335..4fb21ba799 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -392,16 +392,32 @@

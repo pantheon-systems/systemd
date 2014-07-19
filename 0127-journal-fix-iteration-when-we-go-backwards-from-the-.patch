@@ -10,7 +10,7 @@ Subject: [PATCH] journal: fix iteration when we go backwards from the
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 02f7554..4e22e08 100644
+index 02f75548b7..4e22e08017 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -1687,7 +1687,7 @@ found:

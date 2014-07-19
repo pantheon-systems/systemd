@@ -10,7 +10,7 @@ Subject: [PATCH] zsh-completion: add systemd-run
  create mode 100644 shell-completion/zsh/_systemd-run
 
 diff --git a/Makefile.am b/Makefile.am
-index 5e3e5d2..7ab345a 100644
+index 5e3e5d2680..7ab345a141 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -352,6 +352,7 @@ dist_zshcompletion_DATA = \
@@ -23,7 +23,7 @@ index 5e3e5d2..7ab345a 100644
  	shell-completion/zsh/_systemd
 diff --git a/shell-completion/zsh/_systemd-run b/shell-completion/zsh/_systemd-run
 new file mode 100644
-index 0000000..0c81c54
+index 0000000000..0c81c543c5
 --- /dev/null
 +++ b/shell-completion/zsh/_systemd-run
 @@ -0,0 +1,31 @@

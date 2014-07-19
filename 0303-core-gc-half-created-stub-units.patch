@@ -9,7 +9,7 @@ Subject: [PATCH] core: gc half-created stub units
  1 file changed, 3 deletions(-)
 
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 8e2a7c4..de34ddc 100644
+index 8e2a7c478c..de34ddc843 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -249,9 +249,6 @@ int unit_set_description(Unit *u, const char *description) {

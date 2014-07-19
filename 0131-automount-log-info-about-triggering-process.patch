@@ -10,7 +10,7 @@ Conflicts:
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/core/automount.c b/src/core/automount.c
-index d1379e0..203104e 100644
+index d1379e0913..203104ed94 100644
 --- a/src/core/automount.c
 +++ b/src/core/automount.c
 @@ -776,8 +776,8 @@ static void automount_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {

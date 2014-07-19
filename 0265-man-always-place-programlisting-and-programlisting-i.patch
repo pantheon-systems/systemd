@@ -25,7 +25,7 @@ Conflicts:
  12 files changed, 33 insertions(+), 71 deletions(-)
 
 diff --git a/man/daemon.xml b/man/daemon.xml
-index 105826a..17d9dd6 100644
+index 105826ac6b..17d9dd6a22 100644
 --- a/man/daemon.xml
 +++ b/man/daemon.xml
 @@ -777,8 +777,7 @@ AS_IF([test "x$with_systemdsystemunitdir" = "xyes" -o "x$with_systemdsystemunitd
@@ -39,7 +39,7 @@ index 105826a..17d9dd6 100644
                          <para>This snippet allows automatic
                          installation of the unit files on systemd
 diff --git a/man/kernel-install.xml b/man/kernel-install.xml
-index 929ceef..3612b7d 100644
+index 929ceef4af..3612b7d934 100644
 --- a/man/kernel-install.xml
 +++ b/man/kernel-install.xml
 @@ -90,9 +90,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
@@ -65,7 +65,7 @@ index 929ceef..3612b7d 100644
  
            <para><command>kernel-install</command> removes the entire directory
 diff --git a/man/nss-myhostname.xml b/man/nss-myhostname.xml
-index efbadac..cca3a99 100644
+index efbadac33f..cca3a99aaa 100644
 --- a/man/nss-myhostname.xml
 +++ b/man/nss-myhostname.xml
 @@ -86,8 +86,7 @@
@@ -103,7 +103,7 @@ index efbadac..cca3a99 100644
                  <para>In this case the local hostname is <varname>omega</varname>.</para>
  
 diff --git a/man/sd_journal_get_fd.xml b/man/sd_journal_get_fd.xml
-index 4b36f97..df7632f 100644
+index 4b36f97af8..df7632f9b2 100644
 --- a/man/sd_journal_get_fd.xml
 +++ b/man/sd_journal_get_fd.xml
 @@ -330,8 +330,7 @@ int wait_for_changes(sd_journal *j) {
@@ -117,7 +117,7 @@ index 4b36f97..df7632f 100644
  
          <refsect1>
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index 25b03d8..cde1694 100644
+index 25b03d838e..cde1694173 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -544,8 +544,7 @@ LISTEN           UNIT                        ACTIVATES
@@ -131,7 +131,7 @@ index 25b03d8..cde1694 100644
              is not suitable for programmatic consumption.
              </para>
 diff --git a/man/systemd-delta.xml b/man/systemd-delta.xml
-index ebaa349..f802aa5 100644
+index ebaa3492f4..f802aa5eb9 100644
 --- a/man/systemd-delta.xml
 +++ b/man/systemd-delta.xml
 @@ -204,20 +204,16 @@
@@ -160,7 +160,7 @@ index ebaa349..f802aa5 100644
  
          <refsect1>
 diff --git a/man/systemd-journal-gatewayd.service.xml b/man/systemd-journal-gatewayd.service.xml
-index 0b6fd70..f639811 100644
+index 0b6fd706a6..f639811e3b 100644
 --- a/man/systemd-journal-gatewayd.service.xml
 +++ b/man/systemd-journal-gatewayd.service.xml
 @@ -154,14 +154,12 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
@@ -201,7 +201,7 @@ index 0b6fd70..f639811 100644
  
    <refsect1>
 diff --git a/man/systemd-run.xml b/man/systemd-run.xml
-index 48a0715..97ddf44 100644
+index 48a0715499..97ddf449b8 100644
 --- a/man/systemd-run.xml
 +++ b/man/systemd-run.xml
 @@ -209,8 +209,7 @@ Sep 08 07:37:21 bupkis systemd[1]: Starting /usr/bin/env...
@@ -215,7 +215,7 @@ index 48a0715..97ddf44 100644
  
    <refsect1>
 diff --git a/man/systemd-sleep.conf.xml b/man/systemd-sleep.conf.xml
-index dc4b0da..4622205 100644
+index dc4b0da68e..462220595f 100644
 --- a/man/systemd-sleep.conf.xml
 +++ b/man/systemd-sleep.conf.xml
 @@ -160,10 +160,8 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
@@ -232,7 +232,7 @@ index dc4b0da..4622205 100644
  
    <refsect1>
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 4fb21ba..e8bb02c 100644
+index 4fb21ba799..e8bb02ca21 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -442,12 +442,9 @@
@@ -271,7 +271,7 @@ index 4fb21ba..e8bb02c 100644
                                  <command>/bin/echo</command> with four
                                  arguments: <literal>one</literal>,
 diff --git a/man/timedatectl.xml b/man/timedatectl.xml
-index f4975ce..5f95486 100644
+index f4975ce547..5f95486f3a 100644
 --- a/man/timedatectl.xml
 +++ b/man/timedatectl.xml
 @@ -245,8 +245,7 @@
@@ -318,7 +318,7 @@ index f4975ce..5f95486 100644
          </refsect1>
  
 diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
-index 8267ffc..9578c93 100644
+index 8267ffca4b..9578c93f52 100644
 --- a/man/tmpfiles.d.xml
 +++ b/man/tmpfiles.d.xml
 @@ -109,7 +109,6 @@

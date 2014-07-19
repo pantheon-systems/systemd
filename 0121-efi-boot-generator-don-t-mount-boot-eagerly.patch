@@ -8,7 +8,7 @@ Subject: [PATCH] efi-boot-generator: don't mount /boot eagerly
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/efi-boot-generator/efi-boot-generator.c b/src/efi-boot-generator/efi-boot-generator.c
-index 05b95ed..5e5c682 100644
+index 05b95ed455..5e5c6823a1 100644
 --- a/src/efi-boot-generator/efi-boot-generator.c
 +++ b/src/efi-boot-generator/efi-boot-generator.c
 @@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {

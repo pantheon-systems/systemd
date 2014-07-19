@@ -24,7 +24,7 @@ see http://llvm.org/bugs/show_bug.cgi?id=18247
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 8ea258b..71ef092 100644
+index 8ea258bdfb..71ef092ecd 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -1010,7 +1010,10 @@ static int journal_file_append_data(

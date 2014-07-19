@@ -15,7 +15,7 @@ not what might happen.
  4 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
-index c678031..64f9cf9 100644
+index c678031c4e..64f9cf9b74 100644
 --- a/man/systemd-tmpfiles.xml
 +++ b/man/systemd-tmpfiles.xml
 @@ -133,7 +133,7 @@
@@ -28,7 +28,7 @@ index c678031..64f9cf9 100644
                                  with an exclamation mark.
                                  </para></listitem>
 diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
-index ed88751..8267ffc 100644
+index ed88751a52..8267ffca4b 100644
 --- a/man/tmpfiles.d.xml
 +++ b/man/tmpfiles.d.xml
 @@ -273,7 +273,7 @@ L    /tmp/foobar -    -    -    -   /dev/null</programlisting>
@@ -50,7 +50,7 @@ index ed88751..8267ffc 100644
  
                  <refsect2>
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 30a8a55..4dd1638 100644
+index 30a8a55d61..4dd1638e44 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -106,7 +106,7 @@ static Set *unix_sockets = NULL;
@@ -110,7 +110,7 @@ index 30a8a55..4dd1638 100644
  
                  case ARG_PREFIX:
 diff --git a/units/systemd-tmpfiles-setup.service.in b/units/systemd-tmpfiles-setup.service.in
-index c2dcae0..01043b7 100644
+index c2dcae0e13..01043b7a96 100644
 --- a/units/systemd-tmpfiles-setup.service.in
 +++ b/units/systemd-tmpfiles-setup.service.in
 @@ -24,4 +24,4 @@ RefuseManualStop=yes

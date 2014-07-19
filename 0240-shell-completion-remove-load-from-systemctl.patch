@@ -13,7 +13,7 @@ Conflicts:
  2 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/shell-completion/bash/systemctl b/shell-completion/bash/systemctl
-index eea4b6d..84149e3 100644
+index eea4b6dbf9..84149e3958 100644
 --- a/shell-completion/bash/systemctl
 +++ b/shell-completion/bash/systemctl
 @@ -141,7 +141,7 @@ _systemctl () {
@@ -26,7 +26,7 @@ index eea4b6d..84149e3 100644
                    [TARGETS]='set-default'
          )
 diff --git a/shell-completion/zsh/_systemctl b/shell-completion/zsh/_systemctl
-index 3959cd5..6d98cb6 100644
+index 3959cd551c..6d98cb68d8 100644
 --- a/shell-completion/zsh/_systemctl
 +++ b/shell-completion/zsh/_systemctl
 @@ -24,7 +24,6 @@

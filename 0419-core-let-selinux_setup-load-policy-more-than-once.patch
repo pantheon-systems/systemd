@@ -40,7 +40,7 @@ enforce=1.
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/src/core/selinux-setup.c b/src/core/selinux-setup.c
-index 6d8bc89..b419a27 100644
+index 6d8bc89965..b419a2710a 100644
 --- a/src/core/selinux-setup.c
 +++ b/src/core/selinux-setup.c
 @@ -51,6 +51,7 @@ int selinux_setup(bool *loaded_policy) {

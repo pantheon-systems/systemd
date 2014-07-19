@@ -17,7 +17,7 @@ Thanks to Anatoly Markov for reporting and testing!
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index 20d398f..b497f92 100644
+index 20d398f7d9..b497f924a8 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -904,6 +904,7 @@ keyboard:dmi:bvn*:bvr*:bd*:svn[sS][aA][mM][sS][uU][nN][gG]*:pn*550P*:pvr*

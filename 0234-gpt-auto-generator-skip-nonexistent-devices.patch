@@ -19,7 +19,7 @@ function return -ENODEV.
  1 file changed, 3 insertions(+)
 
 diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
-index 25440e7..0e8e959 100644
+index 25440e771e..0e8e959f6f 100644
 --- a/src/gpt-auto-generator/gpt-auto-generator.c
 +++ b/src/gpt-auto-generator/gpt-auto-generator.c
 @@ -298,6 +298,9 @@ static int enumerate_partitions(struct udev *udev, dev_t dev) {

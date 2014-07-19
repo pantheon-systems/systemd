@@ -13,7 +13,7 @@ This is correctly documented in the man page.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/kernel-install/kernel-install b/src/kernel-install/kernel-install
-index f5ff362..3ae1d77 100644
+index f5ff3622a4..3ae1d77e33 100644
 --- a/src/kernel-install/kernel-install
 +++ b/src/kernel-install/kernel-install
 @@ -23,7 +23,7 @@ usage()

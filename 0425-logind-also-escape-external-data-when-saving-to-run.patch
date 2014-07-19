@@ -15,7 +15,7 @@ Conflicts:
  1 file changed, 33 insertions(+), 7 deletions(-)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 13de549..9c87e43 100644
+index 13de549ddf..9c87e4326f 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -202,7 +202,6 @@ int session_save(Session *s) {

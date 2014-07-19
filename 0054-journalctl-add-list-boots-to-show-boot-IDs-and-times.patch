@@ -18,7 +18,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=967521:
  4 files changed, 113 insertions(+), 6 deletions(-)
 
 diff --git a/man/journalctl.xml b/man/journalctl.xml
-index b5a0c53..c0cc96d 100644
+index b5a0c539ca..c0cc96d800 100644
 --- a/man/journalctl.xml
 +++ b/man/journalctl.xml
 @@ -478,6 +478,17 @@
@@ -40,7 +40,7 @@ index b5a0c53..c0cc96d 100644
                                  <term><option>--dmesg</option></term>
  
 diff --git a/shell-completion/bash/journalctl b/shell-completion/bash/journalctl
-index 3c40d57..942a253 100644
+index 3c40d57a98..942a25357f 100644
 --- a/shell-completion/bash/journalctl
 +++ b/shell-completion/bash/journalctl
 @@ -42,7 +42,7 @@ _journalctl() {
@@ -53,7 +53,7 @@ index 3c40d57..942a253 100644
                                -o --output -u --unit --user-unit'
                  [ARGUNKNOWN]='-c --cursor --interval -n --lines -p --priority --since --until
 diff --git a/shell-completion/zsh/_journalctl b/shell-completion/zsh/_journalctl
-index 73646b5..29ff3e3 100644
+index 73646b57f5..29ff3e34ee 100644
 --- a/shell-completion/zsh/_journalctl
 +++ b/shell-completion/zsh/_journalctl
 @@ -70,6 +70,7 @@ _arguments -s \
@@ -65,7 +65,7 @@ index 73646b5..29ff3e3 100644
      {-u+,--unit=}'[Show data only from the specified unit]:units:_journal_fields _SYSTEMD_UNIT' \
      '--user-unit=[Show data only from the specified user session unit]:units:_journal_fields USER_UNIT' \
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index 0876ee6..a5c4779 100644
+index 0876ee60f8..a5c4779460 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -104,12 +104,14 @@ static enum {

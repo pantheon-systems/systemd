@@ -19,7 +19,7 @@ After:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/manager.c b/src/core/manager.c
-index 3a38fab..28f4d72 100644
+index 3a38fab6d5..28f4d72e26 100644
 --- a/src/core/manager.c
 +++ b/src/core/manager.c
 @@ -495,7 +495,7 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {

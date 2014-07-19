@@ -15,7 +15,7 @@ up, but patch is really one line.
  1 file changed, 70 insertions(+), 67 deletions(-)
 
 diff --git a/src/core/mount.c b/src/core/mount.c
-index db055f0..70cd372 100644
+index db055f0a00..70cd372e10 100644
 --- a/src/core/mount.c
 +++ b/src/core/mount.c
 @@ -59,6 +59,72 @@ static const UnitActiveState state_translation_table[_MOUNT_STATE_MAX] = {

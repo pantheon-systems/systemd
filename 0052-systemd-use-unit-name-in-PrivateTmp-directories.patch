@@ -17,7 +17,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=957439
  create mode 100644 src/test/test-namespace.c
 
 diff --git a/Makefile.am b/Makefile.am
-index 8d9c587..5e3e5d2 100644
+index 8d9c58758f..5e3e5d2680 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -1130,6 +1130,7 @@ tests += \
@@ -42,7 +42,7 @@ index 8d9c587..5e3e5d2 100644
  	src/test/test-hashmap.c
  
 diff --git a/src/core/execute.c b/src/core/execute.c
-index 3f7ca52..58be72a 100644
+index 3f7ca52139..58be72a224 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -1089,7 +1089,7 @@ int exec_spawn(ExecCommand *command,
@@ -55,7 +55,7 @@ index 3f7ca52..58be72a 100644
                          return r;
          }
 diff --git a/src/core/namespace.c b/src/core/namespace.c
-index 936f368..b453f8d 100644
+index 936f36839b..b453f8dc09 100644
 --- a/src/core/namespace.c
 +++ b/src/core/namespace.c
 @@ -184,26 +184,29 @@ static int make_read_only(BindMount *m) {
@@ -95,7 +95,7 @@ index 936f368..b453f8d 100644
          *tmp_dir = NULL;
  
 diff --git a/src/core/namespace.h b/src/core/namespace.h
-index ddb5794..ee7416b 100644
+index ddb579468d..ee7416b7bd 100644
 --- a/src/core/namespace.h
 +++ b/src/core/namespace.h
 @@ -23,7 +23,10 @@
@@ -112,7 +112,7 @@ index ddb5794..ee7416b 100644
                      char **inaccessible_dirs,
 diff --git a/src/test/test-namespace.c b/src/test/test-namespace.c
 new file mode 100644
-index 0000000..1c04676
+index 0000000000..1c04676cc4
 --- /dev/null
 +++ b/src/test/test-namespace.c
 @@ -0,0 +1,56 @@

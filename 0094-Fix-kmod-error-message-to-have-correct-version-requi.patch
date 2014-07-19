@@ -8,7 +8,7 @@ Subject: [PATCH] Fix kmod error message to have correct version requirement
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure.ac b/configure.ac
-index 5bc31c5..9904e25 100644
+index 5bc31c519a..9904e25e99 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -271,7 +271,7 @@ if test "x$enable_kmod" != "xno"; then

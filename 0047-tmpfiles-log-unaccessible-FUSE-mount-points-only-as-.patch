@@ -9,7 +9,7 @@ Subject: [PATCH] tmpfiles: log unaccessible FUSE mount points only as debug
  1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 8122d6a..239e56b 100644
+index 8122d6af6a..239e56ba9c 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -275,12 +275,15 @@ static int dir_cleanup(

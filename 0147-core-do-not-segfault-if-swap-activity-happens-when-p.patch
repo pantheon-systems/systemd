@@ -15,7 +15,7 @@ to recover.
  1 file changed, 29 insertions(+), 16 deletions(-)
 
 diff --git a/src/core/swap.c b/src/core/swap.c
-index 147f710..f295b65 100644
+index 147f710b66..f295b6543b 100644
 --- a/src/core/swap.c
 +++ b/src/core/swap.c
 @@ -1068,14 +1068,40 @@ static int swap_load_proc_swaps(Manager *m, bool set_flags) {

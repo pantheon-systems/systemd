@@ -9,7 +9,7 @@ Subject: [PATCH] man: typo fix
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/systemd.time.xml b/man/systemd.time.xml
-index f438fa5..a837f23 100644
+index f438fa5bb9..a837f232c3 100644
 --- a/man/systemd.time.xml
 +++ b/man/systemd.time.xml
 @@ -222,7 +222,7 @@

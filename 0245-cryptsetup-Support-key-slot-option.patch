@@ -22,7 +22,7 @@ http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=704470
  2 files changed, 25 insertions(+), 2 deletions(-)
 
 diff --git a/man/crypttab.xml b/man/crypttab.xml
-index 90d8ce9..5f386e5 100644
+index 90d8ce95fe..5f386e55f8 100644
 --- a/man/crypttab.xml
 +++ b/man/crypttab.xml
 @@ -164,6 +164,20 @@
@@ -47,7 +47,7 @@ index 90d8ce9..5f386e5 100644
  
                                  <listitem><para>Force LUKS mode. When this mode
 diff --git a/src/cryptsetup/cryptsetup.c b/src/cryptsetup/cryptsetup.c
-index 39f7db7..6a76d21 100644
+index 39f7db7e3f..6a76d21c2c 100644
 --- a/src/cryptsetup/cryptsetup.c
 +++ b/src/cryptsetup/cryptsetup.c
 @@ -39,6 +39,7 @@

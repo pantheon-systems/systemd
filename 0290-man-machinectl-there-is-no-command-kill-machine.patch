@@ -9,7 +9,7 @@ Subject: [PATCH] man: machinectl: there is no command 'kill-machine'
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/man/machinectl.xml b/man/machinectl.xml
-index 2ed9f2e..bb88395 100644
+index 2ed9f2e8a1..bb88395880 100644
 --- a/man/machinectl.xml
 +++ b/man/machinectl.xml
 @@ -141,7 +141,7 @@

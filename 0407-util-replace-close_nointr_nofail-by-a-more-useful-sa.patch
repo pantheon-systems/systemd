@@ -133,7 +133,7 @@ Conflicts:
  76 files changed, 297 insertions(+), 483 deletions(-)
 
 diff --git a/src/core/audit-fd.c b/src/core/audit-fd.c
-index 5955bd8..4326d17 100644
+index 5955bd846e..4326d17360 100644
 --- a/src/core/audit-fd.c
 +++ b/src/core/audit-fd.c
 @@ -55,7 +55,7 @@ int get_audit_fd(void) {
@@ -146,7 +146,7 @@ index 5955bd8..4326d17 100644
          initialized = true;
          audit_fd = -ECONNRESET;
 diff --git a/src/core/automount.c b/src/core/automount.c
-index 203104e..4c753de 100644
+index 203104ed94..4c753de136 100644
 --- a/src/core/automount.c
 +++ b/src/core/automount.c
 @@ -92,8 +92,7 @@ static void unmount_autofs(Automount *a) {
@@ -268,7 +268,7 @@ index 203104e..4c753de 100644
  
  static void automount_reset_failed(Unit *u) {
 diff --git a/src/core/cgroup.c b/src/core/cgroup.c
-index c215a86..9e46304 100644
+index c215a86aad..9e463043b3 100644
 --- a/src/core/cgroup.c
 +++ b/src/core/cgroup.c
 @@ -657,8 +657,7 @@ int manager_setup_cgroup(Manager *m) {
@@ -294,7 +294,7 @@ index c215a86..9e46304 100644
          free(m->cgroup_root);
          m->cgroup_root = NULL;
 diff --git a/src/core/dbus.c b/src/core/dbus.c
-index aa3d93b..b616a24 100644
+index aa3d93bf06..b616a24a3f 100644
 --- a/src/core/dbus.c
 +++ b/src/core/dbus.c
 @@ -147,7 +147,7 @@ static dbus_bool_t bus_add_watch(DBusWatch *bus_watch, void *data) {
@@ -336,7 +336,7 @@ index aa3d93b..b616a24 100644
  }
  
 diff --git a/src/core/execute.c b/src/core/execute.c
-index ee445d7..add66ce 100644
+index ee445d7cda..add66ceceb 100644
 --- a/src/core/execute.c
 +++ b/src/core/execute.c
 @@ -103,7 +103,7 @@ static int shift_fds(int fds[], unsigned n_fds) {
@@ -486,7 +486,7 @@ index ee445d7..add66ce 100644
  
  int exec_spawn(ExecCommand *command,
 diff --git a/src/core/ima-setup.c b/src/core/ima-setup.c
-index 7f8ec23..ed65096 100644
+index 7f8ec23d58..ed65096f04 100644
 --- a/src/core/ima-setup.c
 +++ b/src/core/ima-setup.c
 @@ -47,7 +47,7 @@ int ima_setup(void) {
@@ -510,7 +510,7 @@ index 7f8ec23..ed65096 100644
                  return result;
  #endif /* HAVE_IMA */
 diff --git a/src/core/job.c b/src/core/job.c
-index c6bf08f..916e191 100644
+index c6bf08fc06..916e191075 100644
 --- a/src/core/job.c
 +++ b/src/core/job.c
 @@ -110,7 +110,7 @@ void job_free(Job *j) {
@@ -542,7 +542,7 @@ index c6bf08f..916e191 100644
                                  j->timer_watch.type = WATCH_JOB_TIMER;
                                  j->timer_watch.fd = fdset_remove(fds, fd);
 diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
-index d6ac4f6..45b36b9 100644
+index d6ac4f6478..45b36b97c4 100644
 --- a/src/core/load-fragment.c
 +++ b/src/core/load-fragment.c
 @@ -2373,7 +2373,7 @@ static int open_follow(char **filename, FILE **_f, Set *names, char **_final) {
@@ -555,7 +555,7 @@ index d6ac4f6..45b36b9 100644
          }
  
 diff --git a/src/core/machine-id-setup.c b/src/core/machine-id-setup.c
-index dcd1630..86fa0b4 100644
+index dcd16308db..86fa0b4c99 100644
 --- a/src/core/machine-id-setup.c
 +++ b/src/core/machine-id-setup.c
 @@ -73,7 +73,7 @@ static int generate(char id[34]) {
@@ -587,7 +587,7 @@ index dcd1630..86fa0b4 100644
          /* Hmm, we couldn't write it? So let's write it to
           * /run/machine-id as a replacement */
 diff --git a/src/core/main.c b/src/core/main.c
-index 1ac1ba7..2a294c6 100644
+index 1ac1ba7a31..2a294c67fb 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -235,7 +235,7 @@ static int console_setup(bool do_reset) {
@@ -600,7 +600,7 @@ index 1ac1ba7..2a294c6 100644
  }
  
 diff --git a/src/core/manager.c b/src/core/manager.c
-index 1baa863..1e7dc38 100644
+index 1baa8631a1..1e7dc3835c 100644
 --- a/src/core/manager.c
 +++ b/src/core/manager.c
 @@ -192,8 +192,7 @@ static int manager_watch_jobs_in_progress(Manager *m) {
@@ -692,7 +692,7 @@ index 1baa863..1e7dc38 100644
          free(message);
  }
 diff --git a/src/core/path.c b/src/core/path.c
-index 99e2fed..5e4f6d5 100644
+index 99e2fedf29..5e4f6d5b69 100644
 --- a/src/core/path.c
 +++ b/src/core/path.c
 @@ -150,9 +150,7 @@ void path_spec_unwatch(PathSpec *s, Unit *u) {
@@ -707,7 +707,7 @@ index 99e2fed..5e4f6d5 100644
  
  int path_spec_fd_event(PathSpec *s, uint32_t events) {
 diff --git a/src/core/service.c b/src/core/service.c
-index 3bda9a3..f0df5fe 100644
+index 3bda9a37d6..f0df5fead8 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -222,8 +222,7 @@ static void service_close_socket_fd(Service *s) {
@@ -731,7 +731,7 @@ index 3bda9a3..f0df5fe 100644
                  }
          } else if (streq(key, "main-exec-status-pid")) {
 diff --git a/src/core/smack-setup.c b/src/core/smack-setup.c
-index 1434dea..8838d31 100644
+index 1434dea7c1..8838d31a88 100644
 --- a/src/core/smack-setup.c
 +++ b/src/core/smack-setup.c
 @@ -86,7 +86,7 @@ static int write_rules(const char* dstpath, const char* srcdir) {
@@ -744,7 +744,7 @@ index 1434dea..8838d31 100644
                          continue;
                  }
 diff --git a/src/core/socket.c b/src/core/socket.c
-index e673f38..842850f 100644
+index e673f3884c..842850f9d2 100644
 --- a/src/core/socket.c
 +++ b/src/core/socket.c
 @@ -113,7 +113,7 @@ void socket_free_ports(Socket *s) {
@@ -894,7 +894,7 @@ index e673f38..842850f 100644
                          }
                  }
 diff --git a/src/core/switch-root.c b/src/core/switch-root.c
-index ce0e41d..518ec1f 100644
+index ce0e41d510..518ec1f0a7 100644
 --- a/src/core/switch-root.c
 +++ b/src/core/switch-root.c
 @@ -41,11 +41,10 @@ int switch_root(const char *new_root) {
@@ -987,7 +987,7 @@ index ce0e41d..518ec1f 100644
 +        return 0;
  }
 diff --git a/src/core/umount.c b/src/core/umount.c
-index fbd7e1c..57a97e1 100644
+index fbd7e1c101..57a97e1dc7 100644
 --- a/src/core/umount.c
 +++ b/src/core/umount.c
 @@ -315,14 +315,14 @@ static int dm_list_get(MountPoint **head) {
@@ -1010,7 +1010,7 @@ index fbd7e1c..57a97e1 100644
                  return 1;
  
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 9a7720d..c05926a 100644
+index 9a7720da7b..c05926ad3b 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -1851,7 +1851,7 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
@@ -1032,7 +1032,7 @@ index 9a7720d..c05926a 100644
          w->fd = -1;
          w->type = WATCH_INVALID;
 diff --git a/src/fsck/fsck.c b/src/fsck/fsck.c
-index 1189fe7..1ae104a 100644
+index 1189fe76bf..1ae104a1a4 100644
 --- a/src/fsck/fsck.c
 +++ b/src/fsck/fsck.c
 @@ -183,7 +183,7 @@ static int process_progress(int fd) {
@@ -1063,7 +1063,7 @@ index 1189fe7..1ae104a 100644
          if (progress_pipe[0] >= 0) {
                  process_progress(progress_pipe[0]);
 diff --git a/src/initctl/initctl.c b/src/initctl/initctl.c
-index ec33040..03a379a 100644
+index ec33040509..03a379a954 100644
 --- a/src/initctl/initctl.c
 +++ b/src/initctl/initctl.c
 @@ -258,7 +258,7 @@ static void fifo_free(Fifo *f) {
@@ -1086,7 +1086,7 @@ index ec33040..03a379a 100644
          if (s->bus) {
                  dbus_connection_flush(s->bus);
 diff --git a/src/journal/cat.c b/src/journal/cat.c
-index ea61578..b4b1332 100644
+index ea61578353..b4b13323c2 100644
 --- a/src/journal/cat.c
 +++ b/src/journal/cat.c
 @@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
@@ -1113,7 +1113,7 @@ index ea61578..b4b1332 100644
          return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
  }
 diff --git a/src/journal/catalog.c b/src/journal/catalog.c
-index e5342be..7f748b3 100644
+index e5342bee51..7f748b3ae1 100644
 --- a/src/journal/catalog.c
 +++ b/src/journal/catalog.c
 @@ -435,18 +435,18 @@ static int open_mmap(const char *database, int *_fd, struct stat *_st, void **_p
@@ -1148,7 +1148,7 @@ index e5342be..7f748b3 100644
                  return -EBADMSG;
          }
 diff --git a/src/journal/coredumpctl.c b/src/journal/coredumpctl.c
-index a5997e2..f384286 100644
+index a5997e2359..f3842864c4 100644
 --- a/src/journal/coredumpctl.c
 +++ b/src/journal/coredumpctl.c
 @@ -491,8 +491,7 @@ static int run_gdb(sd_journal *j) {
@@ -1162,7 +1162,7 @@ index a5997e2..f384286 100644
          pid = fork();
          if (pid < 0) {
 diff --git a/src/journal/journal-authenticate.c b/src/journal/journal-authenticate.c
-index f416b79..5ab1982 100644
+index f416b79a34..5ab1982bf0 100644
 --- a/src/journal/journal-authenticate.c
 +++ b/src/journal/journal-authenticate.c
 @@ -418,10 +418,9 @@ finish:
@@ -1179,7 +1179,7 @@ index f416b79..5ab1982 100644
  }
  
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 57ded0a..2d2d289 100644
+index 57ded0abb1..2d2d289260 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -133,9 +133,7 @@ void journal_file_close(JournalFile *f) {
@@ -1194,7 +1194,7 @@ index 57ded0a..2d2d289 100644
  
          if (f->mmap)
 diff --git a/src/journal/journal-send.c b/src/journal/journal-send.c
-index d99ff0c..d40eaba 100644
+index d99ff0c9cc..d40eababa6 100644
 --- a/src/journal/journal-send.c
 +++ b/src/journal/journal-send.c
 @@ -66,7 +66,7 @@ retry:
@@ -1262,7 +1262,7 @@ index d99ff0c..d40eaba 100644
          }
  
 diff --git a/src/journal/journal-verify.c b/src/journal/journal-verify.c
-index f2422ff..55ec6fd 100644
+index f2422ff841..55ec6fd7e6 100644
 --- a/src/journal/journal-verify.c
 +++ b/src/journal/journal-verify.c
 @@ -1228,9 +1228,9 @@ int journal_file_verify(
@@ -1300,7 +1300,7 @@ index f2422ff..55ec6fd 100644
  
          return r;
 diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
-index b991ae3..9886a2f 100644
+index b991ae304d..9886a2fe4a 100644
 --- a/src/journal/journalctl.c
 +++ b/src/journal/journalctl.c
 @@ -1141,7 +1141,7 @@ static int setup_keys(void) {
@@ -1323,7 +1323,7 @@ index b991ae3..9886a2f 100644
          if (k) {
                  unlink(k);
 diff --git a/src/journal/journald-console.c b/src/journal/journald-console.c
-index 1ee3afe..7a566ae 100644
+index 1ee3afeacc..7a566ae9e4 100644
 --- a/src/journal/journald-console.c
 +++ b/src/journal/journald-console.c
 @@ -107,7 +107,7 @@ void server_forward_console(
@@ -1336,7 +1336,7 @@ index 1ee3afe..7a566ae 100644
  finish:
          free(ident_buf);
 diff --git a/src/journal/journald-kmsg.c b/src/journal/journald-kmsg.c
-index 9895808..4c2f6e7 100644
+index 98958081d2..4c2f6e7767 100644
 --- a/src/journal/journald-kmsg.c
 +++ b/src/journal/journald-kmsg.c
 @@ -407,7 +407,7 @@ int server_open_dev_kmsg(Server *s) {
@@ -1368,7 +1368,7 @@ index 9895808..4c2f6e7 100644
  
          return 0;
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index cd2cfe9..0b31d10 100644
+index cd2cfe9bb4..0b31d1015c 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
 @@ -1638,26 +1638,13 @@ void server_done(Server *s) {
@@ -1406,7 +1406,7 @@ index cd2cfe9..0b31d10 100644
          if (s->rate_limit)
                  journal_rate_limit_free(s->rate_limit);
 diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
-index aae381b..816e351 100644
+index aae381b4ee..816e351e0a 100644
 --- a/src/journal/journald-stream.c
 +++ b/src/journal/journald-stream.c
 @@ -327,7 +327,7 @@ void stdout_stream_free(StdoutStream *s) {
@@ -1435,7 +1435,7 @@ index aae381b..816e351 100644
          }
  
 diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
-index 661257b..3840ee4 100644
+index 661257b243..3840ee486f 100644
 --- a/src/journal/sd-journal.c
 +++ b/src/journal/sd-journal.c
 @@ -1836,8 +1836,7 @@ _public_ void sd_journal_close(sd_journal *j) {
@@ -1449,7 +1449,7 @@ index 661257b..3840ee4 100644
          if (j->mmap) {
                  log_debug("mmap cache statistics: %u hit, %u miss", mmap_cache_get_hit(j->mmap), mmap_cache_get_missed(j->mmap));
 diff --git a/src/journal/test-journal-verify.c b/src/journal/test-journal-verify.c
-index 0540074..3b181c6 100644
+index 0540074207..3b181c6794 100644
 --- a/src/journal/test-journal-verify.c
 +++ b/src/journal/test-journal-verify.c
 @@ -48,7 +48,7 @@ static void bit_toggle(const char *fn, uint64_t p) {
@@ -1462,7 +1462,7 @@ index 0540074..3b181c6 100644
  
  static int raw_verify(const char *fn, const char *verification_key) {
 diff --git a/src/journal/test-mmap-cache.c b/src/journal/test-mmap-cache.c
-index e2ffaf4..868ba00 100644
+index e2ffaf4723..868ba007b6 100644
 --- a/src/journal/test-mmap-cache.c
 +++ b/src/journal/test-mmap-cache.c
 @@ -71,9 +71,9 @@ int main(int argc, char *argv[]) {
@@ -1479,7 +1479,7 @@ index e2ffaf4..868ba00 100644
          return 0;
  }
 diff --git a/src/libsystemd-bus/bus-kernel.c b/src/libsystemd-bus/bus-kernel.c
-index bf8de04..4efc65f 100644
+index bf8de04ab6..4efc65fea4 100644
 --- a/src/libsystemd-bus/bus-kernel.c
 +++ b/src/libsystemd-bus/bus-kernel.c
 @@ -414,7 +414,7 @@ static void close_kdbus_msg(sd_bus *bus, struct kdbus_msg *k) {
@@ -1510,7 +1510,7 @@ index bf8de04..4efc65f 100644
  
  void bus_kernel_push_memfd(sd_bus *bus, int fd, void *address, size_t size) {
 diff --git a/src/libsystemd-bus/bus-message.c b/src/libsystemd-bus/bus-message.c
-index 760a148..7284d27 100644
+index 760a148fad..7284d27879 100644
 --- a/src/libsystemd-bus/bus-message.c
 +++ b/src/libsystemd-bus/bus-message.c
 @@ -68,7 +68,7 @@ static void message_free_part(sd_bus_message *m, struct bus_body_part *part) {
@@ -1533,7 +1533,7 @@ index 760a148..7284d27 100644
          return r;
  }
 diff --git a/src/libsystemd-bus/bus-socket.c b/src/libsystemd-bus/bus-socket.c
-index b60facb..32b9207 100644
+index b60facb20f..32b92079d6 100644
 --- a/src/libsystemd-bus/bus-socket.c
 +++ b/src/libsystemd-bus/bus-socket.c
 @@ -745,7 +745,7 @@ int bus_socket_exec(sd_bus *b) {
@@ -1555,7 +1555,7 @@ index b60facb..32b9207 100644
  
          return bus_socket_start_auth(b);
 diff --git a/src/libsystemd-bus/sd-bus.c b/src/libsystemd-bus/sd-bus.c
-index 8dc3f6e..6f08a00 100644
+index 8dc3f6e345..6f08a00a02 100644
 --- a/src/libsystemd-bus/sd-bus.c
 +++ b/src/libsystemd-bus/sd-bus.c
 @@ -49,10 +49,10 @@ static void bus_close_fds(sd_bus *b) {
@@ -1572,7 +1572,7 @@ index 8dc3f6e..6f08a00 100644
          b->input_fd = b->output_fd = -1;
  }
 diff --git a/src/libsystemd-bus/sd-memfd.c b/src/libsystemd-bus/sd-memfd.c
-index bd14da3..4ecfe61 100644
+index bd14da3a70..4ecfe61ab3 100644
 --- a/src/libsystemd-bus/sd-memfd.c
 +++ b/src/libsystemd-bus/sd-memfd.c
 @@ -88,7 +88,7 @@ void sd_memfd_free(sd_memfd *m) {
@@ -1585,7 +1585,7 @@ index bd14da3..4ecfe61 100644
          free(m);
  }
 diff --git a/src/libsystemd-bus/test-bus-chat.c b/src/libsystemd-bus/test-bus-chat.c
-index f308edd..b2c2636 100644
+index f308eddbb0..b2c263628a 100644
 --- a/src/libsystemd-bus/test-bus-chat.c
 +++ b/src/libsystemd-bus/test-bus-chat.c
 @@ -229,7 +229,7 @@ static int server(sd_bus *bus) {
@@ -1598,7 +1598,7 @@ index f308edd..b2c2636 100644
                          }
  
 diff --git a/src/libsystemd-bus/test-bus-kernel-benchmark.c b/src/libsystemd-bus/test-bus-kernel-benchmark.c
-index 2e84cd9..7ee9fbb 100644
+index 2e84cd9244..7ee9fbb160 100644
 --- a/src/libsystemd-bus/test-bus-kernel-benchmark.c
 +++ b/src/libsystemd-bus/test-bus-kernel-benchmark.c
 @@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
@@ -1611,7 +1611,7 @@ index 2e84cd9..7ee9fbb 100644
  
                  switch (mode) {
 diff --git a/src/libsystemd-bus/test-bus-kernel.c b/src/libsystemd-bus/test-bus-kernel.c
-index 680dcde..2d08bc8 100644
+index 680dcde5b4..2d08bc82ac 100644
 --- a/src/libsystemd-bus/test-bus-kernel.c
 +++ b/src/libsystemd-bus/test-bus-kernel.c
 @@ -122,14 +122,12 @@ int main(int argc, char *argv[]) {
@@ -1632,7 +1632,7 @@ index 680dcde..2d08bc8 100644
          r = sd_bus_send(b, m, NULL);
          assert_se(r >= 0);
 diff --git a/src/login/inhibit.c b/src/login/inhibit.c
-index 29e50c1..37edc5e 100644
+index 29e50c1447..37edc5edb5 100644
 --- a/src/login/inhibit.c
 +++ b/src/login/inhibit.c
 @@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
@@ -1645,7 +1645,7 @@ index 29e50c1..37edc5e 100644
  
                          execvp(argv[optind], argv + optind);
 diff --git a/src/login/logind-button.c b/src/login/logind-button.c
-index 4f456d2..1705a29 100644
+index 4f456d21af..1705a294c1 100644
 --- a/src/login/logind-button.c
 +++ b/src/login/logind-button.c
 @@ -74,7 +74,7 @@ void button_free(Button *b) {
@@ -1658,7 +1658,7 @@ index 4f456d2..1705a29 100644
          }
  
 diff --git a/src/login/logind-core.c b/src/login/logind-core.c
-index 36999ac..ce14a99 100644
+index 36999ace40..ce14a992a1 100644
 --- a/src/login/logind-core.c
 +++ b/src/login/logind-core.c
 @@ -460,7 +460,7 @@ static int vt_is_busy(int vtnr) {
@@ -1671,7 +1671,7 @@ index 36999ac..ce14a99 100644
          return r;
  }
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index a5ab19c..24f6622 100644
+index a5ab19cd9e..24f6622330 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -795,7 +795,7 @@ static int bus_manager_inhibit(
@@ -1694,7 +1694,7 @@ index a5ab19c..24f6622 100644
          return r;
  }
 diff --git a/src/login/logind-inhibit.c b/src/login/logind-inhibit.c
-index e770883..38a6841 100644
+index e77088364a..38a684189a 100644
 --- a/src/login/logind-inhibit.c
 +++ b/src/login/logind-inhibit.c
 @@ -258,8 +258,7 @@ int inhibitor_load(Inhibitor *i) {
@@ -1718,7 +1718,7 @@ index e770883..38a6841 100644
  
          if (i->fifo_path) {
 diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
-index feebcf4..b581925 100644
+index feebcf4558..b581925091 100644
 --- a/src/login/logind-seat.c
 +++ b/src/login/logind-seat.c
 @@ -183,8 +183,7 @@ static int vt_allocate(int vtnr) {
@@ -1732,7 +1732,7 @@ index feebcf4..b581925 100644
          return r;
  }
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index ece222a..13de549 100644
+index ece222af3e..13de549ddf 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -375,8 +375,7 @@ int session_load(Session *s) {
@@ -1756,7 +1756,7 @@ index ece222a..13de549 100644
                  session_save(s);
                  user_save(s->user);
 diff --git a/src/login/logind.c b/src/login/logind.c
-index 5180be7..f147910 100644
+index 5180be7426..f14791058e 100644
 --- a/src/login/logind.c
 +++ b/src/login/logind.c
 @@ -152,8 +152,7 @@ void manager_free(Manager *m) {
@@ -1804,7 +1804,7 @@ index 5180be7..f147910 100644
          return r;
  }
 diff --git a/src/login/pam-module.c b/src/login/pam-module.c
-index 6259450..fe3ddd4 100644
+index 6259450025..fe3ddd40ed 100644
 --- a/src/login/pam-module.c
 +++ b/src/login/pam-module.c
 @@ -478,8 +478,7 @@ finish:
@@ -1818,7 +1818,7 @@ index 6259450..fe3ddd4 100644
          return r;
  }
 diff --git a/src/login/sd-login.c b/src/login/sd-login.c
-index 7e25041..2e7768e 100644
+index 7e25041f6d..2e7768e6c8 100644
 --- a/src/login/sd-login.c
 +++ b/src/login/sd-login.c
 @@ -646,7 +646,7 @@ _public_ int sd_login_monitor_new(const char *category, sd_login_monitor **m) {
@@ -1858,7 +1858,7 @@ index 7e25041..2e7768e 100644
                  }
  
 diff --git a/src/login/test-inhibit.c b/src/login/test-inhibit.c
-index 7b6deff..68d91da 100644
+index 7b6deffc3e..68d91daf47 100644
 --- a/src/login/test-inhibit.c
 +++ b/src/login/test-inhibit.c
 @@ -127,11 +127,11 @@ int main(int argc, char*argv[]) {
@@ -1876,7 +1876,7 @@ index 7b6deff..68d91da 100644
          print_inhibitors(bus);
  
 diff --git a/src/machine/machined.c b/src/machine/machined.c
-index ad804a1..f427383 100644
+index ad804a1e14..f4273838ec 100644
 --- a/src/machine/machined.c
 +++ b/src/machine/machined.c
 @@ -73,11 +73,8 @@ void manager_free(Manager *m) {
@@ -1894,7 +1894,7 @@ index ad804a1..f427383 100644
          free(m);
  }
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 8718e94..adc682d 100644
+index 8718e94d14..adc682d6a9 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -785,7 +785,7 @@ static int setup_kmsg(const char *dest, int kmsg_socket) {
@@ -1979,7 +1979,7 @@ index 8718e94..adc682d 100644
                  fdset_free(fds);
                  fds = NULL;
 diff --git a/src/readahead/readahead-collect.c b/src/readahead/readahead-collect.c
-index 6b74866..112f59c 100644
+index 6b748664c3..112f59cfd4 100644
 --- a/src/readahead/readahead-collect.c
 +++ b/src/readahead/readahead-collect.c
 @@ -177,8 +177,7 @@ finish:
@@ -2030,7 +2030,7 @@ index 6b74866..112f59c 100644
          if (pack) {
                  fclose(pack);
 diff --git a/src/readahead/readahead-common.c b/src/readahead/readahead-common.c
-index 1edf9cc..49679fc 100644
+index 1edf9cc33c..49679fc834 100644
 --- a/src/readahead/readahead-common.c
 +++ b/src/readahead/readahead-common.c
 @@ -218,7 +218,7 @@ int open_inotify(void) {
@@ -2043,7 +2043,7 @@ index 1edf9cc..49679fc 100644
          }
  
 diff --git a/src/readahead/readahead-replay.c b/src/readahead/readahead-replay.c
-index cb04e5f..8dc1942 100644
+index cb04e5f9cd..8dc194257f 100644
 --- a/src/readahead/readahead-replay.c
 +++ b/src/readahead/readahead-replay.c
 @@ -67,10 +67,8 @@ static int unpack_file(FILE *pack) {
@@ -2093,7 +2093,7 @@ index cb04e5f..8dc1942 100644
          free(pack_fn);
  
 diff --git a/src/reply-password/reply-password.c b/src/reply-password/reply-password.c
-index 2f16898..c730216 100644
+index 2f168985b4..c730216b73 100644
 --- a/src/reply-password/reply-password.c
 +++ b/src/reply-password/reply-password.c
 @@ -91,7 +91,8 @@ int main(int argc, char *argv[]) {
@@ -2117,7 +2117,7 @@ index 2f16898..c730216 100644
          return r;
  }
 diff --git a/src/shared/ask-password-api.c b/src/shared/ask-password-api.c
-index 25367d0..200876d 100644
+index 25367d0972..200876de83 100644
 --- a/src/shared/ask-password-api.c
 +++ b/src/shared/ask-password-api.c
 @@ -231,8 +231,7 @@ int ask_password_tty(
@@ -2172,7 +2172,7 @@ index 25367d0..200876d 100644
          if (f)
                  fclose(f);
 diff --git a/src/shared/dbus-loop.c b/src/shared/dbus-loop.c
-index c533242..aadb641 100644
+index c533242220..aadb641811 100644
 --- a/src/shared/dbus-loop.c
 +++ b/src/shared/dbus-loop.c
 @@ -75,7 +75,7 @@ static dbus_bool_t add_watch(DBusWatch *watch, void *data) {
@@ -2223,7 +2223,7 @@ index c533242..aadb641 100644
          }
  
 diff --git a/src/shared/fdset.c b/src/shared/fdset.c
-index fd27398..a2c861d 100644
+index fd27398ebb..a2c861de3f 100644
 --- a/src/shared/fdset.c
 +++ b/src/shared/fdset.c
 @@ -82,7 +82,7 @@ int fdset_put_dup(FDSet *s, int fd) {
@@ -2236,7 +2236,7 @@ index fd27398..a2c861d 100644
          }
  
 diff --git a/src/shared/hwclock.c b/src/shared/hwclock.c
-index 17f12de..10c6537 100644
+index 17f12de51f..10c6537a87 100644
 --- a/src/shared/hwclock.c
 +++ b/src/shared/hwclock.c
 @@ -62,7 +62,7 @@ int hwclock_get_time(struct tm *tm) {
@@ -2258,7 +2258,7 @@ index 17f12de..10c6537 100644
          return err;
  }
 diff --git a/src/shared/install.c b/src/shared/install.c
-index cb07947..241e000 100644
+index cb07947527..241e000820 100644
 --- a/src/shared/install.c
 +++ b/src/shared/install.c
 @@ -207,7 +207,7 @@ static int remove_marked_symlinks_fd(
@@ -2316,7 +2316,7 @@ index cb07947..241e000 100644
          }
  
 diff --git a/src/shared/log.c b/src/shared/log.c
-index 2267764..039cbbe 100644
+index 2267764859..039cbbebca 100644
 --- a/src/shared/log.c
 +++ b/src/shared/log.c
 @@ -62,7 +62,7 @@ void log_close_console(void) {
@@ -2380,7 +2380,7 @@ index 2267764..039cbbe 100644
  
  static int log_open_journal(void) {
 diff --git a/src/shared/socket-label.c b/src/shared/socket-label.c
-index ff212de..e4382d5 100644
+index ff212de825..e4382d531c 100644
 --- a/src/shared/socket-label.c
 +++ b/src/shared/socket-label.c
 @@ -138,6 +138,6 @@ int socket_address_listen(
@@ -2392,7 +2392,7 @@ index ff212de..e4382d5 100644
          return r;
  }
 diff --git a/src/shared/spawn-polkit-agent.c b/src/shared/spawn-polkit-agent.c
-index f9e52cd..fccf1e9 100644
+index f9e52cdcbd..fccf1e9173 100644
 --- a/src/shared/spawn-polkit-agent.c
 +++ b/src/shared/spawn-polkit-agent.c
 @@ -61,7 +61,7 @@ int polkit_agent_open(void) {
@@ -2414,7 +2414,7 @@ index f9e52cd..fccf1e9 100644
          return r;
  }
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 533db92..aa6242d 100644
+index 533db92918..aa6242d40c 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -173,13 +173,22 @@ int close_nointr(int fd) {
@@ -2686,7 +2686,7 @@ index 533db92..aa6242d 100644
                  if (fd < 0) {
                          if (errno == ENOENT)
 diff --git a/src/shared/util.h b/src/shared/util.h
-index a173885..e83d2ab 100644
+index a1738856bc..e83d2abf27 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -125,7 +125,8 @@ char *endswith(const char *s, const char *postfix) _pure_;
@@ -2710,7 +2710,7 @@ index a173885..e83d2ab 100644
  
  static inline void umaskp(mode_t *u) {
 diff --git a/src/shared/watchdog.c b/src/shared/watchdog.c
-index ddbe7af..ba9ad9b 100644
+index ddbe7afd3c..ba9ad9be97 100644
 --- a/src/shared/watchdog.c
 +++ b/src/shared/watchdog.c
 @@ -164,6 +164,5 @@ void watchdog_close(bool disarm) {
@@ -2722,7 +2722,7 @@ index ddbe7af..ba9ad9b 100644
 +        watchdog_fd = safe_close(watchdog_fd);
  }
 diff --git a/src/shutdownd/shutdownd.c b/src/shutdownd/shutdownd.c
-index 461a726..886380d 100644
+index 461a7261f4..886380d36c 100644
 --- a/src/shutdownd/shutdownd.c
 +++ b/src/shutdownd/shutdownd.c
 @@ -438,8 +438,7 @@ int main(int argc, char *argv[]) {
@@ -2736,7 +2736,7 @@ index 461a726..886380d 100644
          if (unlink_nologin)
                  unlink("/run/nologin");
 diff --git a/src/test/test-util.c b/src/test/test-util.c
-index 7566adc..34b7db8 100644
+index 7566adcc2f..34b7db81cb 100644
 --- a/src/test/test-util.c
 +++ b/src/test/test-util.c
 @@ -64,7 +64,7 @@ static void test_close_many(void) {
@@ -2749,7 +2749,7 @@ index 7566adc..34b7db8 100644
          unlink(name0);
          unlink(name1);
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 98d01a1..4244656 100644
+index 98d01a1384..4244656a15 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -489,7 +489,7 @@ static int write_one_file(Item *i, const char *path) {
@@ -2777,7 +2777,7 @@ index 98d01a1..4244656 100644
          if (stat(path, &st) < 0) {
                  log_error("stat(%s) failed: %m", path);
 diff --git a/src/tty-ask-password-agent/tty-ask-password-agent.c b/src/tty-ask-password-agent/tty-ask-password-agent.c
-index 256c21d..cb74c72 100644
+index 256c21d877..cb74c72a98 100644
 --- a/src/tty-ask-password-agent/tty-ask-password-agent.c
 +++ b/src/tty-ask-password-agent/tty-ask-password-agent.c
 @@ -234,11 +234,8 @@ static int ask_password_plymouth(
@@ -2841,7 +2841,7 @@ index 256c21d..cb74c72 100644
          return r;
  }
 diff --git a/src/vconsole/vconsole-setup.c b/src/vconsole/vconsole-setup.c
-index 1bbf737..0f2b706 100644
+index 1bbf737c36..0f2b7066e2 100644
 --- a/src/vconsole/vconsole-setup.c
 +++ b/src/vconsole/vconsole-setup.c
 @@ -301,8 +301,7 @@ finish:

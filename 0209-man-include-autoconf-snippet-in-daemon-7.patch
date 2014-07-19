@@ -10,7 +10,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=40446
  1 file changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/man/daemon.xml b/man/daemon.xml
-index 1fe4546..105826a 100644
+index 1fe4546f00..105826ac6b 100644
 --- a/man/daemon.xml
 +++ b/man/daemon.xml
 @@ -765,12 +765,20 @@

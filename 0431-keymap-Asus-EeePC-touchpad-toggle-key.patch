@@ -17,7 +17,7 @@ Conflicts:
  1 file changed, 3 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index c320c21..b407949 100644
+index c320c218ce..b4079491de 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -140,6 +140,9 @@ keyboard:dmi:bvn*:bvr*:bd*:svnASUS:pn*

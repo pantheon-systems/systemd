@@ -13,7 +13,7 @@ File locking is usually a bad idea, don't suggest using it.
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/man/daemon.xml b/man/daemon.xml
-index 932de3b..170949e 100644
+index 932de3b478..170949e712 100644
 --- a/man/daemon.xml
 +++ b/man/daemon.xml
 @@ -158,9 +158,7 @@

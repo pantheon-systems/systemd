@@ -19,7 +19,7 @@ Conflicts:
  create mode 100644 src/journal/systemd-journal-feeder.py
 
 diff --git a/man/crypttab.xml b/man/crypttab.xml
-index 5f386e5..4b6d12e 100644
+index 5f386e55f8..4b6d12ef4f 100644
 --- a/man/crypttab.xml
 +++ b/man/crypttab.xml
 @@ -171,7 +171,7 @@
@@ -42,7 +42,7 @@ index 5f386e5..4b6d12e 100644
                                  inside of the volume provided in the second
 diff --git a/src/journal/systemd-journal-feeder.py b/src/journal/systemd-journal-feeder.py
 new file mode 100644
-index 0000000..5cfab82
+index 0000000000..5cfab82ea0
 --- /dev/null
 +++ b/src/journal/systemd-journal-feeder.py
 @@ -0,0 +1,83 @@

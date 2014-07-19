@@ -38,7 +38,7 @@ Suggested-by:Luca Miccini <lmiccini@redhat.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/udev/cdrom_id/cdrom_id.c b/src/udev/cdrom_id/cdrom_id.c
-index 1fc0dfa..dac35a6 100644
+index 1fc0dfa34f..dac35a6455 100644
 --- a/src/udev/cdrom_id/cdrom_id.c
 +++ b/src/udev/cdrom_id/cdrom_id.c
 @@ -555,7 +555,7 @@ static int cd_profiles(struct udev *udev, int fd)

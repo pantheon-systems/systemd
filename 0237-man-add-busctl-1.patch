@@ -16,7 +16,7 @@ Conflicts:
  create mode 100644 man/busctl.xml
 
 diff --git a/Makefile-man.am b/Makefile-man.am
-index 3f626e8..9c3cb35 100644
+index 3f626e8b6d..9c3cb35d91 100644
 --- a/Makefile-man.am
 +++ b/Makefile-man.am
 @@ -3,6 +3,7 @@
@@ -29,7 +29,7 @@ index 3f626e8..9c3cb35 100644
  	man/hostname.5 \
 diff --git a/man/busctl.xml b/man/busctl.xml
 new file mode 100644
-index 0000000..0c5f05a
+index 0000000000..0c5f05af87
 --- /dev/null
 +++ b/man/busctl.xml
 @@ -0,0 +1,206 @@

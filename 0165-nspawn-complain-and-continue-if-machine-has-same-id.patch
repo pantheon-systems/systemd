@@ -18,7 +18,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=68369
  1 file changed, 19 insertions(+), 4 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 7346253..618f9c3 100644
+index 734625321f..618f9c3dc7 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -811,14 +811,11 @@ static int setup_hostname(void) {

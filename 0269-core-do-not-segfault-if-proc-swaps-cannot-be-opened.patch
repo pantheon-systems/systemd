@@ -18,7 +18,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1069393
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/core/swap.c b/src/core/swap.c
-index 727bb95..3c009da 100644
+index 727bb95e7c..3c009da703 100644
 --- a/src/core/swap.c
 +++ b/src/core/swap.c
 @@ -1074,7 +1074,7 @@ static int open_proc_swaps(Manager *m) {

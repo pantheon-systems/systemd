@@ -8,7 +8,7 @@ Subject: [PATCH] systemctl: fix typo in help text
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
-index 036828b..36040db 100644
+index 036828b5dd..36040db1fa 100644
 --- a/src/systemctl/systemctl.c
 +++ b/src/systemctl/systemctl.c
 @@ -4743,7 +4743,7 @@ static int systemctl_help(void) {

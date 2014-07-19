@@ -19,7 +19,7 @@ Conflicts:
  6 files changed, 108 insertions(+), 85 deletions(-)
 
 diff --git a/src/core/manager.c b/src/core/manager.c
-index 58c17ab..3a38fab 100644
+index 58c17ab325..3a38fab6d5 100644
 --- a/src/core/manager.c
 +++ b/src/core/manager.c
 @@ -2661,9 +2661,8 @@ void manager_run_generators(Manager *m) {
@@ -35,7 +35,7 @@ index 58c17ab..3a38fab 100644
          trim_generator_dir(m, &m->generator_unit_path);
          trim_generator_dir(m, &m->generator_unit_path_early);
 diff --git a/src/core/shutdown.c b/src/core/shutdown.c
-index 5e0f3ce..68960b1 100644
+index 5e0f3ce9fd..68960b1abe 100644
 --- a/src/core/shutdown.c
 +++ b/src/core/shutdown.c
 @@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
@@ -48,7 +48,7 @@ index 5e0f3ce..68960b1 100644
          if (!in_container && !in_initrd() &&
              access("/run/initramfs/shutdown", X_OK) == 0) {
 diff --git a/src/shared/hashmap.h b/src/shared/hashmap.h
-index 3d4f672..b912af8 100644
+index 3d4f6721bc..b912af8d8f 100644
 --- a/src/shared/hashmap.h
 +++ b/src/shared/hashmap.h
 @@ -24,6 +24,7 @@
@@ -71,7 +71,7 @@ index 3d4f672..b912af8 100644
 +#define _cleanup_hashmap_free_free_ _cleanup_(hashmap_free_freep)
 +#define _cleanup_hashmap_free_free_free_ _cleanup_(hashmap_free_free_freep)
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 1329854..bec339b 100644
+index 132985452f..bec339b80a 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -3740,111 +3740,123 @@ bool dirent_is_file_with_suffix(const struct dirent *de, const char *suffix) {
@@ -274,7 +274,7 @@ index 1329854..bec339b 100644
  
  int kill_and_sigcont(pid_t pid, int sig) {
 diff --git a/src/shared/util.h b/src/shared/util.h
-index 02621a7..47a3dc9 100644
+index 02621a7e19..47a3dc9114 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -432,7 +432,7 @@ bool tty_is_console(const char *tty) _pure_;
@@ -287,7 +287,7 @@ index 02621a7..47a3dc9 100644
  int kill_and_sigcont(pid_t pid, int sig);
  
 diff --git a/src/sleep/sleep.c b/src/sleep/sleep.c
-index c228cb6..8e847db 100644
+index c228cb660f..8e847db61a 100644
 --- a/src/sleep/sleep.c
 +++ b/src/sleep/sleep.c
 @@ -25,14 +25,15 @@

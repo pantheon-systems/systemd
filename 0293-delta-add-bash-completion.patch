@@ -11,7 +11,7 @@ Subject: [PATCH] delta: add bash completion
  create mode 100644 shell-completion/bash/systemd-delta
 
 diff --git a/Makefile.am b/Makefile.am
-index 033bbfa..9049fed 100644
+index 033bbfa7cd..9049fedd16 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -342,6 +342,7 @@ dist_bashcompletion_DATA = \
@@ -24,7 +24,7 @@ index 033bbfa..9049fed 100644
  	shell-completion/bash/kernel-install
 diff --git a/shell-completion/bash/systemd-delta b/shell-completion/bash/systemd-delta
 new file mode 100644
-index 0000000..cb17328
+index 0000000000..cb1732895f
 --- /dev/null
 +++ b/shell-completion/bash/systemd-delta
 @@ -0,0 +1,61 @@

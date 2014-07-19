@@ -12,7 +12,7 @@ ref: https://bugs.freedesktop.org/show_bug.cgi?id=70148
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/mount.c b/src/core/mount.c
-index 93bfa99..db055f0 100644
+index 93bfa99f3f..db055f0a00 100644
 --- a/src/core/mount.c
 +++ b/src/core/mount.c
 @@ -182,7 +182,7 @@ static int mount_add_mount_links(Mount *m) {

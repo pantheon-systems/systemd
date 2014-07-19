@@ -25,7 +25,7 @@ Fixes:
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/login/logind-session-device.c b/src/login/logind-session-device.c
-index 6605935..fd02b43 100644
+index 6605935f3c..fd02b437d6 100644
 --- a/src/login/logind-session-device.c
 +++ b/src/login/logind-session-device.c
 @@ -162,7 +162,7 @@ static int session_device_open(SessionDevice *sd, bool active) {

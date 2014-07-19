@@ -12,7 +12,7 @@ Improve wording under "Description" and "_KERNEL_DEVICE="
  1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/man/systemd.journal-fields.xml b/man/systemd.journal-fields.xml
-index 8a15598..bb89ed5 100644
+index 8a15598e63..bb89ed58d3 100644
 --- a/man/systemd.journal-fields.xml
 +++ b/man/systemd.journal-fields.xml
 @@ -51,14 +51,14 @@

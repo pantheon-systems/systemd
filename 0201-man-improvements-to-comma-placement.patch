@@ -52,7 +52,7 @@ Conflicts:
  33 files changed, 38 insertions(+), 38 deletions(-)
 
 diff --git a/man/halt.xml b/man/halt.xml
-index 2a13d3c..f54a864 100644
+index 2a13d3c635..f54a8648ad 100644
 --- a/man/halt.xml
 +++ b/man/halt.xml
 @@ -148,7 +148,7 @@
@@ -65,7 +65,7 @@ index 2a13d3c..f54a864 100644
          </refsect1>
  
 diff --git a/man/hostnamectl.xml b/man/hostnamectl.xml
-index b39fb55..a0776f5 100644
+index b39fb5502b..a0776f55bc 100644
 --- a/man/hostnamectl.xml
 +++ b/man/hostnamectl.xml
 @@ -255,7 +255,7 @@
@@ -78,7 +78,7 @@ index b39fb55..a0776f5 100644
          </refsect1>
  
 diff --git a/man/sd-daemon.xml b/man/sd-daemon.xml
-index 84c1afa..b48eac9 100644
+index 84c1afa46a..b48eac9f44 100644
 --- a/man/sd-daemon.xml
 +++ b/man/sd-daemon.xml
 @@ -83,7 +83,7 @@
@@ -100,7 +100,7 @@ index 84c1afa..b48eac9 100644
                  sources:
                  <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/libsystemd-daemon/sd-daemon.c"/>
 diff --git a/man/sd-readahead.xml b/man/sd-readahead.xml
-index f8a0a0b..bcc46b2 100644
+index f8a0a0b559..bcc46b24d8 100644
 --- a/man/sd-readahead.xml
 +++ b/man/sd-readahead.xml
 @@ -83,7 +83,7 @@
@@ -113,7 +113,7 @@ index f8a0a0b..bcc46b2 100644
                  sources:
                  <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/readahead/sd-readahead.c"/>
 diff --git a/man/sd_booted.xml b/man/sd_booted.xml
-index 6f8cc95..1e38d2a 100644
+index 6f8cc95ca7..1e38d2abd3 100644
 --- a/man/sd_booted.xml
 +++ b/man/sd_booted.xml
 @@ -106,7 +106,7 @@
@@ -126,7 +126,7 @@ index 6f8cc95..1e38d2a 100644
  
                  <para>If the reference implementation is used as
 diff --git a/man/sd_get_seats.xml b/man/sd_get_seats.xml
-index 1e55af3..f0e7655 100644
+index 1e55af3bdf..f0e7655d4c 100644
 --- a/man/sd_get_seats.xml
 +++ b/man/sd_get_seats.xml
 @@ -107,7 +107,7 @@
@@ -139,7 +139,7 @@ index 1e55af3..f0e7655 100644
                  <function>sd_get_uids()</function> and
                  <function>sd_get_machine_names()</function> return the
 diff --git a/man/sd_is_fifo.xml b/man/sd_is_fifo.xml
-index 5e79453..4bb2236 100644
+index 5e79453cec..4bb2236fce 100644
 --- a/man/sd_is_fifo.xml
 +++ b/man/sd_is_fifo.xml
 @@ -214,7 +214,7 @@
@@ -152,7 +152,7 @@ index 5e79453..4bb2236 100644
  
                  <para>These functions continue to work as described,
 diff --git a/man/sd_listen_fds.xml b/man/sd_listen_fds.xml
-index aaabdbf..6a9e082 100644
+index aaabdbf3e8..6a9e082180 100644
 --- a/man/sd_listen_fds.xml
 +++ b/man/sd_listen_fds.xml
 @@ -155,7 +155,7 @@
@@ -165,7 +165,7 @@ index aaabdbf..6a9e082 100644
  
                  <para>If the reference implementation is used as
 diff --git a/man/sd_login_monitor_new.xml b/man/sd_login_monitor_new.xml
-index f439d3e..14ff241 100644
+index f439d3e7b5..14ff241d82 100644
 --- a/man/sd_login_monitor_new.xml
 +++ b/man/sd_login_monitor_new.xml
 @@ -198,13 +198,13 @@ else {
@@ -186,7 +186,7 @@ index f439d3e..14ff241 100644
                  returns a combination of <constant>POLLIN</constant>,
                  <constant>POLLOUT</constant> and suchlike. On failure,
 diff --git a/man/sd_notify.xml b/man/sd_notify.xml
-index e078140..aae27a8 100644
+index e078140406..aae27a838d 100644
 --- a/man/sd_notify.xml
 +++ b/man/sd_notify.xml
 @@ -241,7 +241,7 @@
@@ -199,7 +199,7 @@ index e078140..aae27a8 100644
  
                  <para>If the reference implementation is used as
 diff --git a/man/sd_readahead.xml b/man/sd_readahead.xml
-index bb01bcf..9827299 100644
+index bb01bcfd89..98272997cb 100644
 --- a/man/sd_readahead.xml
 +++ b/man/sd_readahead.xml
 @@ -139,7 +139,7 @@
@@ -212,7 +212,7 @@ index bb01bcf..9827299 100644
  
                  <para>If -DDISABLE_SYSTEMD is set during compilation,
 diff --git a/man/sd_seat_get_active.xml b/man/sd_seat_get_active.xml
-index 23d582d..c64ba13 100644
+index 23d582da92..c64ba13c3a 100644
 --- a/man/sd_seat_get_active.xml
 +++ b/man/sd_seat_get_active.xml
 @@ -143,9 +143,9 @@
@@ -228,7 +228,7 @@ index 23d582d..c64ba13 100644
                  the number of entries in the session identifier
                  array. If the test succeeds,
 diff --git a/man/sd_uid_get_state.xml b/man/sd_uid_get_state.xml
-index 0faa765..30b254c 100644
+index 0faa7651e5..30b254c805 100644
 --- a/man/sd_uid_get_state.xml
 +++ b/man/sd_uid_get_state.xml
 @@ -152,11 +152,11 @@
@@ -246,7 +246,7 @@ index 0faa765..30b254c 100644
                  <function>sd_uid_get_seats()</function> return the
                  number of entries in the returned arrays. On failure,
 diff --git a/man/shutdown.xml b/man/shutdown.xml
-index 795fb66..27e7e87 100644
+index 795fb66328..27e7e87b6c 100644
 --- a/man/shutdown.xml
 +++ b/man/shutdown.xml
 @@ -164,7 +164,7 @@
@@ -259,7 +259,7 @@ index 795fb66..27e7e87 100644
          </refsect1>
  
 diff --git a/man/systemd-analyze.xml b/man/systemd-analyze.xml
-index aefbfc8..b7753f9 100644
+index aefbfc8af7..b7753f99d1 100644
 --- a/man/systemd-analyze.xml
 +++ b/man/systemd-analyze.xml
 @@ -270,7 +270,7 @@
@@ -272,7 +272,7 @@ index aefbfc8..b7753f9 100644
          </refsect1>
  
 diff --git a/man/systemd-ask-password.xml b/man/systemd-ask-password.xml
-index 8af328d..79902cb 100644
+index 8af328dcfa..79902cbd9a 100644
 --- a/man/systemd-ask-password.xml
 +++ b/man/systemd-ask-password.xml
 @@ -167,7 +167,7 @@
@@ -285,7 +285,7 @@ index 8af328d..79902cb 100644
          </refsect1>
  
 diff --git a/man/systemd-cat.xml b/man/systemd-cat.xml
-index ffb1dfd..ba7a2cf 100644
+index ffb1dfd50b..ba7a2cf0c7 100644
 --- a/man/systemd-cat.xml
 +++ b/man/systemd-cat.xml
 @@ -158,7 +158,7 @@
@@ -298,7 +298,7 @@ index ffb1dfd..ba7a2cf 100644
          </refsect1>
  
 diff --git a/man/systemd-cgls.xml b/man/systemd-cgls.xml
-index 432706b..152b883 100644
+index 432706bcbc..152b883533 100644
 --- a/man/systemd-cgls.xml
 +++ b/man/systemd-cgls.xml
 @@ -145,7 +145,7 @@
@@ -311,7 +311,7 @@ index 432706b..152b883 100644
          </refsect1>
  
 diff --git a/man/systemd-cgtop.xml b/man/systemd-cgtop.xml
-index 7faedfb..0e1f7c5 100644
+index 7faedfbfdb..0e1f7c554a 100644
 --- a/man/systemd-cgtop.xml
 +++ b/man/systemd-cgtop.xml
 @@ -264,7 +264,7 @@
@@ -324,7 +324,7 @@ index 7faedfb..0e1f7c5 100644
          </refsect1>
  
 diff --git a/man/systemd-coredumpctl.xml b/man/systemd-coredumpctl.xml
-index 9ccb67d..67f75d1 100644
+index 9ccb67d12d..67f75d1c53 100644
 --- a/man/systemd-coredumpctl.xml
 +++ b/man/systemd-coredumpctl.xml
 @@ -200,7 +200,7 @@
@@ -337,7 +337,7 @@ index 9ccb67d..67f75d1 100644
                  as failure.
                  </para>
 diff --git a/man/systemd-delta.xml b/man/systemd-delta.xml
-index 4d3ab78..ebaa349 100644
+index 4d3ab78040..ebaa3492f4 100644
 --- a/man/systemd-delta.xml
 +++ b/man/systemd-delta.xml
 @@ -223,7 +223,7 @@
@@ -350,7 +350,7 @@ index 4d3ab78..ebaa349 100644
          </refsect1>
  
 diff --git a/man/systemd-machine-id-setup.xml b/man/systemd-machine-id-setup.xml
-index bc38d55..7b3aa7e 100644
+index bc38d551ca..7b3aa7e9a0 100644
 --- a/man/systemd-machine-id-setup.xml
 +++ b/man/systemd-machine-id-setup.xml
 @@ -116,7 +116,7 @@
@@ -363,7 +363,7 @@ index bc38d55..7b3aa7e 100644
          </refsect1>
  
 diff --git a/man/systemd-notify.xml b/man/systemd-notify.xml
-index a769346..e14977d 100644
+index a76934649a..e14977d054 100644
 --- a/man/systemd-notify.xml
 +++ b/man/systemd-notify.xml
 @@ -172,7 +172,7 @@
@@ -376,7 +376,7 @@ index a769346..e14977d 100644
          </refsect1>
  
 diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
-index 495247e..c678031 100644
+index 495247e198..c678031c4e 100644
 --- a/man/systemd-tmpfiles.xml
 +++ b/man/systemd-tmpfiles.xml
 @@ -178,7 +178,7 @@
@@ -389,7 +389,7 @@ index 495247e..c678031 100644
          </refsect1>
  
 diff --git a/man/systemd-tty-ask-password-agent.xml b/man/systemd-tty-ask-password-agent.xml
-index 31a18ba..cb5fb43 100644
+index 31a18ba4b0..cb5fb43d9c 100644
 --- a/man/systemd-tty-ask-password-agent.xml
 +++ b/man/systemd-tty-ask-password-agent.xml
 @@ -148,7 +148,7 @@
@@ -402,7 +402,7 @@ index 31a18ba..cb5fb43 100644
          </refsect1>
  
 diff --git a/man/systemd.device.xml b/man/systemd.device.xml
-index 002b647..586473c 100644
+index 002b647ff9..586473c61d 100644
 --- a/man/systemd.device.xml
 +++ b/man/systemd.device.xml
 @@ -75,7 +75,7 @@
@@ -415,7 +415,7 @@ index 002b647..586473c 100644
                  <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
                  for details.</para>
 diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
-index df5a79e..6f9f70c 100644
+index df5a79e2b8..6f9f70c3eb 100644
 --- a/man/systemd.mount.xml
 +++ b/man/systemd.mount.xml
 @@ -94,7 +94,7 @@
@@ -428,7 +428,7 @@ index df5a79e..6f9f70c 100644
  
                  <para>Optionally, a mount unit may be accompanied by
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 80a935d..e869f95 100644
+index 80a935d373..e869f95033 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -441,7 +441,7 @@
@@ -441,7 +441,7 @@ index 80a935d..e869f95 100644
                                  be used.</para>
  
 diff --git a/man/systemd.special.xml b/man/systemd.special.xml
-index 863a029..76bb5cd 100644
+index 863a029fe3..76bb5cdcf3 100644
 --- a/man/systemd.special.xml
 +++ b/man/systemd.special.xml
 @@ -996,7 +996,7 @@
@@ -454,7 +454,7 @@ index 863a029..76bb5cd 100644
  
                  <variablelist>
 diff --git a/man/systemd.swap.xml b/man/systemd.swap.xml
-index 13f6c84..5e8b25f 100644
+index 13f6c8441a..5e8b25fdd8 100644
 --- a/man/systemd.swap.xml
 +++ b/man/systemd.swap.xml
 @@ -85,7 +85,7 @@
@@ -467,7 +467,7 @@ index 13f6c84..5e8b25f 100644
  
                  <para>All swap units automatically get the appropriate
 diff --git a/man/systemd.xml b/man/systemd.xml
-index 85c06d3..23a0c26 100644
+index 85c06d3866..23a0c265bb 100644
 --- a/man/systemd.xml
 +++ b/man/systemd.xml
 @@ -494,7 +494,7 @@
@@ -480,7 +480,7 @@ index 85c06d3..23a0c26 100644
                  Design Document</ulink>.</para>
  
 diff --git a/man/telinit.xml b/man/telinit.xml
-index bb80939..b20a60a 100644
+index bb8093914a..b20a60a4ca 100644
 --- a/man/telinit.xml
 +++ b/man/telinit.xml
 @@ -171,7 +171,7 @@
@@ -493,7 +493,7 @@ index bb80939..b20a60a 100644
          </refsect1>
  
 diff --git a/man/timedatectl.xml b/man/timedatectl.xml
-index be0ad3f..f4975ce 100644
+index be0ad3f012..f4975ce547 100644
 --- a/man/timedatectl.xml
 +++ b/man/timedatectl.xml
 @@ -222,7 +222,7 @@

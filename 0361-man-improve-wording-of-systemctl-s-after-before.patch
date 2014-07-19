@@ -19,7 +19,7 @@ Reported-by: Lennart Poettering <lennart@poettering.net>
  1 file changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index 03f2bc5..171a9bf 100644
+index 03f2bc5e51..171a9bfae5 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -173,12 +173,27 @@ systemctl start foo

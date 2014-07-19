@@ -11,7 +11,7 @@ Based-on: a50df72b37ce2a7caf7775c70d18c3f9504b9e80
  1 file changed, 1 insertion(+), 10 deletions(-)
 
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index c1c3d7f..e1f0c9a 100644
+index c1c3d7fd40..e1f0c9a0d7 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -2548,10 +2548,9 @@ int manager_start_scope(

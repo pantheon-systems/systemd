@@ -11,7 +11,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1026860
  1 file changed, 31 insertions(+), 14 deletions(-)
 
 diff --git a/man/systemd.device.xml b/man/systemd.device.xml
-index 96ebe89..002b647 100644
+index 96ebe89095..002b647ff9 100644
 --- a/man/systemd.device.xml
 +++ b/man/systemd.device.xml
 @@ -70,12 +70,15 @@

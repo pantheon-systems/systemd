@@ -12,7 +12,7 @@ Reported-by: Oleksii Shevchuk <alxchk@gmail.com>
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/src/shared/cgroup-show.c b/src/shared/cgroup-show.c
-index cc44ab4..aa0f017 100644
+index cc44ab4ea9..aa0f017d71 100644
 --- a/src/shared/cgroup-show.c
 +++ b/src/shared/cgroup-show.c
 @@ -44,8 +44,6 @@ static void show_pid_array(int pids[], unsigned n_pids, const char *prefix, unsi

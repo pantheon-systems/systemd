@@ -37,7 +37,7 @@ Conflicts:
  12 files changed, 20 insertions(+), 20 deletions(-)
 
 diff --git a/man/busctl.xml b/man/busctl.xml
-index 0c5f05a..854eb38 100644
+index 0c5f05af87..854eb38b53 100644
 --- a/man/busctl.xml
 +++ b/man/busctl.xml
 @@ -151,7 +151,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
@@ -50,7 +50,7 @@ index 0c5f05a..854eb38 100644
            </listitem>
        </varlistentry>
 diff --git a/man/journalctl.xml b/man/journalctl.xml
-index b695b3d..623d966 100644
+index b695b3d6a9..623d96695d 100644
 --- a/man/journalctl.xml
 +++ b/man/journalctl.xml
 @@ -370,7 +370,7 @@
@@ -63,7 +63,7 @@ index b695b3d..623d966 100644
                                                          </para>
                                                  </listitem>
 diff --git a/man/journald.conf.xml b/man/journald.conf.xml
-index e0796e1..27c326e 100644
+index e0796e1cce..27c326e909 100644
 --- a/man/journald.conf.xml
 +++ b/man/journald.conf.xml
 @@ -269,12 +269,12 @@
@@ -83,7 +83,7 @@ index e0796e1..27c326e 100644
                                  either.</para>
  
 diff --git a/man/machine-info.xml b/man/machine-info.xml
-index ddf8f8b..7448e68 100644
+index ddf8f8b3d0..7448e68fd4 100644
 --- a/man/machine-info.xml
 +++ b/man/machine-info.xml
 @@ -55,7 +55,7 @@
@@ -114,7 +114,7 @@ index ddf8f8b..7448e68 100644
                  <filename>/etc/machine-info</filename>:</para>
  
 diff --git a/man/sd_journal_print.xml b/man/sd_journal_print.xml
-index a716cc3..871baff 100644
+index a716cc35e6..871baff8a5 100644
 --- a/man/sd_journal_print.xml
 +++ b/man/sd_journal_print.xml
 @@ -203,7 +203,7 @@ sd_journal_send("MESSAGE=Hello World, this is PID %lu!", (unsigned long) getpid(
@@ -127,7 +127,7 @@ index a716cc3..871baff 100644
                  log entries that are generated via
                  <function>sd_journal_send()</function>. Using
 diff --git a/man/systemd-coredumpctl.xml b/man/systemd-coredumpctl.xml
-index 286ff14..4318a2f 100644
+index 286ff14639..4318a2fd44 100644
 --- a/man/systemd-coredumpctl.xml
 +++ b/man/systemd-coredumpctl.xml
 @@ -135,7 +135,7 @@
@@ -140,7 +140,7 @@ index 286ff14..4318a2f 100644
                                  <option>-o/--output</option>.
                                  </para></listitem>
 diff --git a/man/systemd-journald.service.xml b/man/systemd-journald.service.xml
-index 0a20e21..4d2cb40 100644
+index 0a20e21159..4d2cb40805 100644
 --- a/man/systemd-journald.service.xml
 +++ b/man/systemd-journald.service.xml
 @@ -66,10 +66,10 @@
@@ -157,7 +157,7 @@ index 0a20e21..4d2cb40 100644
  
                  <para>Log data collected by the journal is primarily
 diff --git a/man/systemd-system.conf.xml b/man/systemd-system.conf.xml
-index 9a1a99f..6f36930 100644
+index 9a1a99fecf..6f36930a06 100644
 --- a/man/systemd-system.conf.xml
 +++ b/man/systemd-system.conf.xml
 @@ -135,7 +135,7 @@
@@ -170,7 +170,7 @@ index 9a1a99f..6f36930 100644
  
                          <varlistentry>
 diff --git a/man/systemd-udevd.service.xml b/man/systemd-udevd.service.xml
-index 0e49fa0..bb04694 100644
+index 0e49fa07f6..bb04694342 100644
 --- a/man/systemd-udevd.service.xml
 +++ b/man/systemd-udevd.service.xml
 @@ -83,7 +83,7 @@
@@ -192,7 +192,7 @@ index 0e49fa0..bb04694 100644
            debugging system crashes during coldplug caused by loading
            non-working kernel modules.</para>
 diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
-index ae134f2..630a28c 100644
+index ae134f2d89..630a28cb54 100644
 --- a/man/systemd.exec.xml
 +++ b/man/systemd.exec.xml
 @@ -248,7 +248,7 @@
@@ -205,7 +205,7 @@ index ae134f2..630a28c 100644
                                  case the specificed CPU affinity masks
                                  are merged. If the empty string is
 diff --git a/man/systemd.journal-fields.xml b/man/systemd.journal-fields.xml
-index bb89ed5..b492aae 100644
+index bb89ed58d3..b492aae0ae 100644
 --- a/man/systemd.journal-fields.xml
 +++ b/man/systemd.journal-fields.xml
 @@ -529,7 +529,7 @@
@@ -218,7 +218,7 @@ index bb89ed5..b492aae 100644
                  log entries via calls such as
                  <citerefentry><refentrytitle>sd_journal_send</refentrytitle><manvolnum>3</manvolnum></citerefentry>. They
 diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
-index 3e1dd88..67267b2 100644
+index 3e1dd8859b..67267b2744 100644
 --- a/man/systemd.socket.xml
 +++ b/man/systemd.socket.xml
 @@ -90,9 +90,9 @@

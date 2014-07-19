@@ -12,7 +12,7 @@ marcosf0> missing comma in udevadm "see also" section
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/udevadm.xml b/man/udevadm.xml
-index b172266..112652c 100644
+index b172266ade..112652c8d1 100644
 --- a/man/udevadm.xml
 +++ b/man/udevadm.xml
 @@ -514,7 +514,7 @@

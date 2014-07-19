@@ -9,7 +9,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1027478
  1 file changed, 2 insertions(+)
 
 diff --git a/src/shared/acpi-fpdt.c b/src/shared/acpi-fpdt.c
-index 75648b4..7bae47f 100644
+index 75648b4d86..7bae47f85f 100644
 --- a/src/shared/acpi-fpdt.c
 +++ b/src/shared/acpi-fpdt.c
 @@ -109,6 +109,8 @@ int acpi_get_boot_usec(usec_t *loader_start, usec_t *loader_exit) {

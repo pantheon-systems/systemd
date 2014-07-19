@@ -13,7 +13,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1043304
  2 files changed, 8 insertions(+), 15 deletions(-)
 
 diff --git a/src/shared/time-util.c b/src/shared/time-util.c
-index 81d4ede..d31401b 100644
+index 81d4ede1b8..d31401bb5c 100644
 --- a/src/shared/time-util.c
 +++ b/src/shared/time-util.c
 @@ -382,7 +382,7 @@ void dual_timestamp_deserialize(const char *value, dual_timestamp *t) {
@@ -26,7 +26,7 @@ index 81d4ede..d31401b 100644
          else {
                  t->realtime = a;
 diff --git a/src/udev/udev-builtin-net_id.c b/src/udev/udev-builtin-net_id.c
-index 9ae8f08..9bc1946 100644
+index 9ae8f08ccf..9bc1946ecd 100644
 --- a/src/udev/udev-builtin-net_id.c
 +++ b/src/udev/udev-builtin-net_id.c
 @@ -166,23 +166,17 @@ out:

@@ -12,7 +12,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1088057
  1 file changed, 19 insertions(+), 6 deletions(-)
 
 diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
-index 4704352..eb8b13d 100644
+index 4704352e42..eb8b13deee 100644
 --- a/man/systemd.unit.xml
 +++ b/man/systemd.unit.xml
 @@ -675,13 +675,26 @@

@@ -15,7 +15,7 @@ Similar fix from the one done in systemd-analyze (418e3750)
  1 file changed, 2 insertions(+)
 
 diff --git a/src/bootchart/svg.c b/src/bootchart/svg.c
-index 5eee2d1..fe8b1b8 100644
+index 5eee2d1987..fe8b1b8a8f 100644
 --- a/src/bootchart/svg.c
 +++ b/src/bootchart/svg.c
 @@ -123,6 +123,7 @@ static void svg_header(void) {

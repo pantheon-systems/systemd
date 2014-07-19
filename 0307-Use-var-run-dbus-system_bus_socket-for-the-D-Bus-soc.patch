@@ -17,7 +17,7 @@ Conflicts:
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/libsystemd-bus/sd-bus.c b/src/libsystemd-bus/sd-bus.c
-index db0880f..8dc3f6e 100644
+index db0880f21c..8dc3f6e345 100644
 --- a/src/libsystemd-bus/sd-bus.c
 +++ b/src/libsystemd-bus/sd-bus.c
 @@ -972,8 +972,8 @@ int sd_bus_open_system(sd_bus **ret) {
@@ -32,7 +32,7 @@ index db0880f..8dc3f6e 100644
  
          b->bus_client = true;
 diff --git a/src/stdio-bridge/stdio-bridge.c b/src/stdio-bridge/stdio-bridge.c
-index ab1a43a..f2a26c0 100644
+index ab1a43ab1a..f2a26c019d 100644
 --- a/src/stdio-bridge/stdio-bridge.c
 +++ b/src/stdio-bridge/stdio-bridge.c
 @@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {

@@ -12,7 +12,7 @@ Rename NO_OPTION to STANDALONE for consistency with other files.
  4 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/shell-completion/bash/systemctl b/shell-completion/bash/systemctl
-index e335ee8..eea4b6d 100644
+index e335ee871c..eea4b6dbf9 100644
 --- a/shell-completion/bash/systemctl
 +++ b/shell-completion/bash/systemctl
 @@ -137,7 +137,7 @@ _systemctl () {
@@ -25,7 +25,7 @@ index e335ee8..eea4b6d 100644
                               list-sockets list-units list-unit-files poweroff reboot rescue
                               show-environment suspend get-default'
 diff --git a/shell-completion/bash/systemd-analyze b/shell-completion/bash/systemd-analyze
-index 5bd6768..b65466b 100644
+index 5bd676866b..b65466ba47 100644
 --- a/shell-completion/bash/systemd-analyze
 +++ b/shell-completion/bash/systemd-analyze
 @@ -31,7 +31,7 @@ _systemd_analyze() {
@@ -47,7 +47,7 @@ index 5bd6768..b65466b 100644
                          comps='--help --version --system --user'
                  fi
 diff --git a/shell-completion/zsh/_systemctl b/shell-completion/zsh/_systemctl
-index 298e97e..3959cd5 100644
+index 298e97ed61..3959cd551c 100644
 --- a/shell-completion/zsh/_systemctl
 +++ b/shell-completion/zsh/_systemctl
 @@ -38,7 +38,6 @@
@@ -68,7 +68,7 @@ index 298e97e..3959cd5 100644
  #                  list-unit-files poweroff reboot rescue show-environment'
  #         [NAME]='snapshot load'
 diff --git a/shell-completion/zsh/_systemd-analyze b/shell-completion/zsh/_systemd-analyze
-index 37c60f5..2eda5fe 100644
+index 37c60f5b40..2eda5fe8a9 100644
 --- a/shell-completion/zsh/_systemd-analyze
 +++ b/shell-completion/zsh/_systemd-analyze
 @@ -15,6 +15,7 @@ _systemd_analyze_command(){

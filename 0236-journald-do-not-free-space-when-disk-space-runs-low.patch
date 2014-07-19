@@ -39,7 +39,7 @@ reasonable compromise between implementation complexity and robustness.
  8 files changed, 58 insertions(+), 27 deletions(-)
 
 diff --git a/man/journald.conf.xml b/man/journald.conf.xml
-index b362c5d..e0796e1 100644
+index b362c5de2c..e0796e1cce 100644
 --- a/man/journald.conf.xml
 +++ b/man/journald.conf.xml
 @@ -250,20 +250,35 @@
@@ -91,7 +91,7 @@ index b362c5d..e0796e1 100644
                                  <varname>RuntimeMaxFileSize=</varname>
                                  control how large individual journal
 diff --git a/src/journal/journal-file.h b/src/journal/journal-file.h
-index 0bd23f7..2e06b57 100644
+index 0bd23f7002..2e06b57dc7 100644
 --- a/src/journal/journal-file.h
 +++ b/src/journal/journal-file.h
 @@ -37,6 +37,7 @@
@@ -103,7 +103,7 @@ index 0bd23f7..2e06b57 100644
          uint64_t min_size;
          uint64_t keep_free;
 diff --git a/src/journal/journal-vacuum.c b/src/journal/journal-vacuum.c
-index d4a1c6c..8b07f65 100644
+index d4a1c6c933..8b07f659da 100644
 --- a/src/journal/journal-vacuum.c
 +++ b/src/journal/journal-vacuum.c
 @@ -150,7 +150,6 @@ static int journal_file_empty(int dir_fd, const char *name) {
@@ -134,7 +134,7 @@ index d4a1c6c..8b07f65 100644
  
                  if (unlinkat(dirfd(d), list[i].filename, 0) >= 0) {
 diff --git a/src/journal/journal-vacuum.h b/src/journal/journal-vacuum.h
-index f5e3e52..bc30c3a 100644
+index f5e3e5291f..bc30c3a140 100644
 --- a/src/journal/journal-vacuum.h
 +++ b/src/journal/journal-vacuum.h
 @@ -23,4 +23,4 @@
@@ -144,7 +144,7 @@ index f5e3e52..bc30c3a 100644
 -int journal_directory_vacuum(const char *directory, uint64_t max_use, uint64_t min_free, usec_t max_retention_usec, usec_t *oldest_usec);
 +int journal_directory_vacuum(const char *directory, uint64_t max_use, usec_t max_retention_usec, usec_t *oldest_usec);
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index 1fcb3d5..cd2cfe9 100644
+index 1fcb3d5783..cd2cfe9bb4 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
 @@ -158,9 +158,18 @@ static uint64_t available_space(Server *s, bool verbose) {
@@ -204,7 +204,7 @@ index 1fcb3d5..cd2cfe9 100644
                          log_error("Failed to vacuum %s: %s", p, strerror(-r));
          }
 diff --git a/src/journal/test-journal-interleaving.c b/src/journal/test-journal-interleaving.c
-index 1a058ea..974fa3b 100644
+index 1a058eaedd..974fa3b21d 100644
 --- a/src/journal/test-journal-interleaving.c
 +++ b/src/journal/test-journal-interleaving.c
 @@ -194,7 +194,7 @@ static void test_skip(void (*setup)(void))
@@ -226,7 +226,7 @@ index 1a058ea..974fa3b 100644
                  assert_se(rm_rf_dangerous(t, false, true, false) >= 0);
          }
 diff --git a/src/journal/test-journal.c b/src/journal/test-journal.c
-index 190c426..3b8778d 100644
+index 190c426eba..3b8778d496 100644
 --- a/src/journal/test-journal.c
 +++ b/src/journal/test-journal.c
 @@ -126,7 +126,7 @@ static void test_non_empty(void) {
@@ -248,7 +248,7 @@ index 190c426..3b8778d 100644
                  assert_se(rm_rf_dangerous(t, false, true, false) >= 0);
          }
 diff --git a/src/shared/macro.h b/src/shared/macro.h
-index d4f92b6..bc5b3c1 100644
+index d4f92b60ec..bc5b3c1de8 100644
 --- a/src/shared/macro.h
 +++ b/src/shared/macro.h
 @@ -114,6 +114,13 @@ static inline size_t ALIGN_TO(size_t l, size_t ali) {

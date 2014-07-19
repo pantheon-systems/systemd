@@ -27,7 +27,7 @@ Note: Backported by Dr. Werner Fink <werner@suse.de>
  3 files changed, 38 insertions(+), 31 deletions(-)
 
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index 583d62e..6f3e442 100644
+index 583d62e15d..6f3e442efb 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -523,6 +523,7 @@ static int bus_manager_create_session(Manager *m, DBusMessage *message) {
@@ -39,7 +39,7 @@ index 583d62e..6f3e442 100644
                                  DBUS_TYPE_UINT32, &vtnr,
                                  DBUS_TYPE_BOOLEAN, &exists,
 diff --git a/src/login/logind-session-dbus.c b/src/login/logind-session-dbus.c
-index be4e01c..86b0746 100644
+index be4e01c5e3..86b0746313 100644
 --- a/src/login/logind-session-dbus.c
 +++ b/src/login/logind-session-dbus.c
 @@ -755,6 +755,7 @@ int session_send_create_reply(Session *s, DBusError *error) {
@@ -51,7 +51,7 @@ index be4e01c..86b0746 100644
                                      DBUS_TYPE_UINT32, &vtnr,
                                      DBUS_TYPE_BOOLEAN, &exists,
 diff --git a/src/login/pam-module.c b/src/login/pam-module.c
-index aa09ec1..4d6b052 100644
+index aa09ec1dbe..4d6b052497 100644
 --- a/src/login/pam-module.c
 +++ b/src/login/pam-module.c
 @@ -86,31 +86,24 @@ static int get_user_data(

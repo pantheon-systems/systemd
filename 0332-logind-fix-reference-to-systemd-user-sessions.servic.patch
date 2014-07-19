@@ -8,7 +8,7 @@ Subject: [PATCH] logind: fix reference to systemd-user-sessions.service
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 2bac0a2..f31961a 100644
+index 2bac0a2392..f31961a9da 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -518,7 +518,7 @@ static int session_start_scope(Session *s) {

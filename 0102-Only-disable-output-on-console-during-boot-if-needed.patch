@@ -10,7 +10,7 @@ If there are no more jobs on console, no need/we shouldn't disable output.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/core/manager.c b/src/core/manager.c
-index 58dacdc..ce32baf 100644
+index 58dacdc8b5..ce32baf6ab 100644
 --- a/src/core/manager.c
 +++ b/src/core/manager.c
 @@ -1761,7 +1761,7 @@ static int process_event(Manager *m, struct epoll_event *ev) {
@@ -23,7 +23,7 @@ index 58dacdc..ce32baf 100644
                  manager_unwatch_idle_pipe(m);
                  close_idle_pipe(m);
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 1db7d06..717ce84 100644
+index 1db7d061c4..717ce849ea 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
 @@ -1454,7 +1454,7 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su

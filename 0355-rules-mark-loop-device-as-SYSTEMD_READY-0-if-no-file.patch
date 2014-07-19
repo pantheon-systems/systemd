@@ -15,7 +15,7 @@ ready for use yet (there's no file attached).
  1 file changed, 3 insertions(+)
 
 diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
-index 1eaf0c1..79a03cd 100644
+index 1eaf0c115c..79a03cd227 100644
 --- a/rules/99-systemd.rules.in
 +++ b/rules/99-systemd.rules.in
 @@ -22,6 +22,9 @@ SUBSYSTEM=="block", KERNEL!="ram*", ENV{DM_UUID}=="CRYPT-*", ENV{ID_PART_TABLE_T

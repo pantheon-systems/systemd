@@ -10,7 +10,7 @@ Subject: [PATCH] rules: add loop-control and btrfs-control to "disk" group
  1 file changed, 2 insertions(+)
 
 diff --git a/rules/50-udev-default.rules b/rules/50-udev-default.rules
-index 0bccf67..23ca088 100644
+index 0bccf67b7b..23ca08859e 100644
 --- a/rules/50-udev-default.rules
 +++ b/rules/50-udev-default.rules
 @@ -59,6 +59,8 @@ KERNEL=="pktcdvd", GROUP="cdrom"

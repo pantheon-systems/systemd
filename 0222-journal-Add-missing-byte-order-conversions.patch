@@ -16,7 +16,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=73194
  2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 5ef6a2a..ba65464 100644
+index 5ef6a2a735..ba654649b6 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -1452,7 +1452,7 @@ static int generic_array_get(
@@ -38,7 +38,7 @@ index 5ef6a2a..ba65464 100644
          if (subtract_one && i == 0)
                  p = last_p;
 diff --git a/src/journal/journal-verify.c b/src/journal/journal-verify.c
-index 3405811..82b0f0a 100644
+index 3405811534..82b0f0a98b 100644
 --- a/src/journal/journal-verify.c
 +++ b/src/journal/journal-verify.c
 @@ -249,12 +249,12 @@ static int journal_file_object_verify(JournalFile *f, uint64_t offset, Object *o

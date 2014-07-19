@@ -8,7 +8,7 @@ Subject: [PATCH] journald: fix minor memory leak
  1 file changed, 2 insertions(+)
 
 diff --git a/src/journal/journal-vacuum.c b/src/journal/journal-vacuum.c
-index c73ad8f..8d5effb 100644
+index c73ad8f393..8d5effb45c 100644
 --- a/src/journal/journal-vacuum.c
 +++ b/src/journal/journal-vacuum.c
 @@ -278,6 +278,8 @@ int journal_directory_vacuum(

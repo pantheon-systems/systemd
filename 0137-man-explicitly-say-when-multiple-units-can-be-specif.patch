@@ -11,7 +11,7 @@ itistoday> do you use a comma, or use multiple After= statements?
  1 file changed, 70 insertions(+), 58 deletions(-)
 
 diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
-index 5c8b8e8..029392c 100644
+index 5c8b8e8868..029392cd5c 100644
 --- a/man/systemd.unit.xml
 +++ b/man/systemd.unit.xml
 @@ -410,10 +410,12 @@

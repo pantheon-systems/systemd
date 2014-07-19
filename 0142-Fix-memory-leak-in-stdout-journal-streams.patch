@@ -12,7 +12,7 @@ unit_id.
  1 file changed, 1 insertion(+)
 
 diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
-index 9c4efec..4080622 100644
+index 9c4efec9bc..4080622c48 100644
 --- a/src/journal/journald-stream.c
 +++ b/src/journal/journald-stream.c
 @@ -339,6 +339,7 @@ void stdout_stream_free(StdoutStream *s) {

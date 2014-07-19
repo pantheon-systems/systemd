@@ -12,7 +12,7 @@ Subject: [PATCH] journald: keep statistics on how of we hit/miss the mmap
  3 files changed, 29 insertions(+), 3 deletions(-)
 
 diff --git a/src/journal/mmap-cache.c b/src/journal/mmap-cache.c
-index 03b57be..42a8a7d 100644
+index 03b57beb04..42a8a7df6f 100644
 --- a/src/journal/mmap-cache.c
 +++ b/src/journal/mmap-cache.c
 @@ -72,6 +72,9 @@ struct MMapCache {
@@ -64,7 +64,7 @@ index 03b57be..42a8a7d 100644
 +        return m->n_missed;
 +}
 diff --git a/src/journal/mmap-cache.h b/src/journal/mmap-cache.h
-index 0c42fb8..912336d 100644
+index 0c42fb88e6..912336d7c2 100644
 --- a/src/journal/mmap-cache.h
 +++ b/src/journal/mmap-cache.h
 @@ -34,3 +34,6 @@ MMapCache* mmap_cache_unref(MMapCache *m);
@@ -75,7 +75,7 @@ index 0c42fb8..912336d 100644
 +unsigned mmap_cache_get_hit(MMapCache *m);
 +unsigned mmap_cache_get_missed(MMapCache *m);
 diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
-index 9676f0f..52abbe9 100644
+index 9676f0f041..52abbe9670 100644
 --- a/src/journal/sd-journal.c
 +++ b/src/journal/sd-journal.c
 @@ -1831,8 +1831,10 @@ _public_ void sd_journal_close(sd_journal *j) {

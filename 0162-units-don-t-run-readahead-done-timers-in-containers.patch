@@ -13,7 +13,7 @@ to stop it either.
  2 files changed, 2 insertions(+)
 
 diff --git a/units/systemd-readahead-done.service.in b/units/systemd-readahead-done.service.in
-index c3b2ac5..e0d9579 100644
+index c3b2ac506a..e0d9579449 100644
 --- a/units/systemd-readahead-done.service.in
 +++ b/units/systemd-readahead-done.service.in
 @@ -12,6 +12,7 @@ DefaultDependencies=no
@@ -25,7 +25,7 @@ index c3b2ac5..e0d9579 100644
  [Service]
  Type=oneshot
 diff --git a/units/systemd-readahead-done.timer b/units/systemd-readahead-done.timer
-index 41bfb2b..a9f6278 100644
+index 41bfb2bd32..a9f6278f27 100644
 --- a/units/systemd-readahead-done.timer
 +++ b/units/systemd-readahead-done.timer
 @@ -12,6 +12,7 @@ DefaultDependencies=no

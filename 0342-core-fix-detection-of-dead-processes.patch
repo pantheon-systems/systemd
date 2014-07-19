@@ -19,7 +19,7 @@ This fixes timeouts like:
  3 files changed, 34 insertions(+)
 
 diff --git a/src/core/service.c b/src/core/service.c
-index 41e5cb5..d9bc021 100644
+index 41e5cb55f6..d9bc021812 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -1429,6 +1429,14 @@ static int service_load_pid_file(Service *s, bool may_warn) {
@@ -38,7 +38,7 @@ index 41e5cb5..d9bc021 100644
                  if (pid == s->main_pid)
                          return 0;
 diff --git a/src/shared/util.c b/src/shared/util.c
-index e754747..1329854 100644
+index e75474781b..132985452f 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -558,6 +558,31 @@ char *truncate_nl(char *s) {
@@ -74,7 +74,7 @@ index e754747..1329854 100644
          const char *p;
  
 diff --git a/src/shared/util.h b/src/shared/util.h
-index bdbdca3..ca38336 100644
+index bdbdca3b57..ca38336521 100644
 --- a/src/shared/util.h
 +++ b/src/shared/util.h
 @@ -216,6 +216,7 @@ char *file_in_same_dir(const char *path, const char *filename);

@@ -22,7 +22,7 @@ Conflicts:
  2 files changed, 83 insertions(+), 8 deletions(-)
 
 diff --git a/src/fsck/fsck.c b/src/fsck/fsck.c
-index 9b4e555..1189fe7 100644
+index 9b4e5558f7..1189fe76bf 100644
 --- a/src/fsck/fsck.c
 +++ b/src/fsck/fsck.c
 @@ -244,10 +244,11 @@ int main(int argc, char *argv[]) {
@@ -101,7 +101,7 @@ index 9b4e555..1189fe7 100644
                  if (pipe(progress_pipe) < 0) {
                          log_error("pipe(): %m");
 diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
-index 9efccb9..795a24c 100644
+index 9efccb983d..795a24c992 100644
 --- a/src/fstab-generator/fstab-generator.c
 +++ b/src/fstab-generator/fstab-generator.c
 @@ -147,6 +147,52 @@ static bool mount_in_initrd(struct mntent *me) {

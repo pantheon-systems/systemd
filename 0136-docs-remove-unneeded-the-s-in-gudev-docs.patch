@@ -9,7 +9,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=72164
  1 file changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/src/libudev/libudev-device.c b/src/libudev/libudev-device.c
-index a644904..161181a 100644
+index a644904757..161181a592 100644
 --- a/src/libudev/libudev-device.c
 +++ b/src/libudev/libudev-device.c
 @@ -980,9 +980,8 @@ static struct udev_device *device_new_from_parent(struct udev_device *udev_devic

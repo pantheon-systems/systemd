@@ -10,7 +10,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=71929
  1 file changed, 1 insertion(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index cf3d1fb..d253724 100644
+index cf3d1fbf55..d253724015 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -524,6 +524,7 @@ keyboard:dmi:bvn*:bvr*:bd*:svnLENOVO*:pnS10-*:pvr*

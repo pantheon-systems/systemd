@@ -12,7 +12,7 @@ Subject: [PATCH] systemctl: --kill-mode is long long gone, don't mention it in
  2 files changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index 171a9bf..816586c 100644
+index 171a9bfae5..816586c39e 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -671,9 +671,8 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
@@ -28,7 +28,7 @@ index 171a9bf..816586c 100644
          </varlistentry>
          <varlistentry>
 diff --git a/shell-completion/bash/systemctl b/shell-completion/bash/systemctl
-index a5f10b4..857552d 100644
+index a5f10b4f13..857552d570 100644
 --- a/shell-completion/bash/systemctl
 +++ b/shell-completion/bash/systemctl
 @@ -74,7 +74,7 @@ _systemctl () {

@@ -28,7 +28,7 @@ Conflicts:
  1 file changed, 62 insertions(+), 2 deletions(-)
 
 diff --git a/src/udev/udev-builtin-net_id.c b/src/udev/udev-builtin-net_id.c
-index 9bc1946..b3cb04b 100644
+index 9bc1946ecd..b3cb04b801 100644
 --- a/src/udev/udev-builtin-net_id.c
 +++ b/src/udev/udev-builtin-net_id.c
 @@ -28,6 +28,7 @@

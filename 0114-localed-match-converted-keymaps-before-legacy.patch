@@ -44,7 +44,7 @@ Conflicts:
  3 files changed, 126 insertions(+), 84 deletions(-)
 
 diff --git a/src/locale/localectl.c b/src/locale/localectl.c
-index 8259c0a..d3c6152 100644
+index 8259c0af5f..d3c6152ca2 100644
 --- a/src/locale/localectl.c
 +++ b/src/locale/localectl.c
 @@ -38,6 +38,7 @@
@@ -75,7 +75,7 @@ index 8259c0a..d3c6152 100644
          l = set_get_strv(keymaps);
          if (!l) {
 diff --git a/src/locale/localed.c b/src/locale/localed.c
-index e160c04..b9b98f4 100644
+index e160c046a4..b9b98f46e7 100644
 --- a/src/locale/localed.c
 +++ b/src/locale/localed.c
 @@ -792,105 +792,135 @@ static int convert_vconsole_to_x11(DBusConnection *connection) {
@@ -302,7 +302,7 @@ index e160c04..b9b98f4 100644
                  r = write_data_vconsole();
                  if (r < 0)
 diff --git a/src/shared/def.h b/src/shared/def.h
-index e4ef735..58c834c 100644
+index e4ef73555d..58c834c0c4 100644
 --- a/src/shared/def.h
 +++ b/src/shared/def.h
 @@ -41,3 +41,16 @@

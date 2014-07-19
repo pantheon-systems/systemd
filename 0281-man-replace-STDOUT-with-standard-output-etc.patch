@@ -33,7 +33,7 @@ Conflicts:
  14 files changed, 63 insertions(+), 58 deletions(-)
 
 diff --git a/man/daemon.xml b/man/daemon.xml
-index 17d9dd6..26ba600 100644
+index 17d9dd6a22..26ba600521 100644
 --- a/man/daemon.xml
 +++ b/man/daemon.xml
 @@ -74,8 +74,8 @@
@@ -90,7 +90,7 @@ index 17d9dd6..26ba600 100644
                                  syslog by the init system. If log
                                  priorities are necessary, these can be
 diff --git a/man/sd-daemon.xml b/man/sd-daemon.xml
-index b48eac9..555d1ac 100644
+index b48eac9f44..555d1ac289 100644
 --- a/man/sd-daemon.xml
 +++ b/man/sd-daemon.xml
 @@ -96,7 +96,7 @@
@@ -103,7 +103,7 @@ index b48eac9..555d1ac 100644
                  configured with <varname>StandardError=syslog</varname>
                  or <varname>StandardError=kmsg</varname>, these
 diff --git a/man/sd_journal_stream_fd.xml b/man/sd_journal_stream_fd.xml
-index a8dc8fd..646fe15 100644
+index a8dc8fd08a..646fe1580b 100644
 --- a/man/sd_journal_stream_fd.xml
 +++ b/man/sd_journal_stream_fd.xml
 @@ -69,8 +69,8 @@
@@ -118,7 +118,7 @@ index a8dc8fd..646fe15 100644
                  <para><function>sd_journal_stream_fd()</function>
                  takes a short program identifier string as first
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index cde1694..d4048a8 100644
+index cde1694173..d4048a8801 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -666,21 +666,23 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
@@ -169,7 +169,7 @@ index cde1694..d4048a8 100644
              <para>A snapshot refers to a saved state of the systemd
              manager. It is implemented itself as a unit that is
 diff --git a/man/systemd-ask-password.xml b/man/systemd-ask-password.xml
-index 79902cb..db5cb20 100644
+index 79902cbd9a..db5cb20db5 100644
 --- a/man/systemd-ask-password.xml
 +++ b/man/systemd-ask-password.xml
 @@ -60,7 +60,7 @@
@@ -182,7 +182,7 @@ index 79902cb..db5cb20 100644
                  query the password system-wide and allow active users
                  to respond via several agents. The latter is
 diff --git a/man/systemd-cat.xml b/man/systemd-cat.xml
-index ba7a2cf..16a8eb4 100644
+index ba7a2cf0c7..16a8eb456c 100644
 --- a/man/systemd-cat.xml
 +++ b/man/systemd-cat.xml
 @@ -60,18 +60,18 @@
@@ -229,7 +229,7 @@ index ba7a2cf..16a8eb4 100644
          </refsect1>
  
 diff --git a/man/systemd-coredumpctl.xml b/man/systemd-coredumpctl.xml
-index c096f6d..286ff14 100644
+index c096f6d7b1..286ff14639 100644
 --- a/man/systemd-coredumpctl.xml
 +++ b/man/systemd-coredumpctl.xml
 @@ -135,8 +135,8 @@
@@ -244,7 +244,7 @@ index c096f6d..286ff14 100644
                                  </para></listitem>
                          </varlistentry>
 diff --git a/man/systemd-journald.service.xml b/man/systemd-journald.service.xml
-index 2f877f5..0a20e21 100644
+index 2f877f565c..0a20e21159 100644
 --- a/man/systemd-journald.service.xml
 +++ b/man/systemd-journald.service.xml
 @@ -59,15 +59,15 @@
@@ -272,7 +272,7 @@ index 2f877f5..0a20e21 100644
                  for more information about the collected meta data.
                  </para>
 diff --git a/man/systemd-udevd.service.xml b/man/systemd-udevd.service.xml
-index 50a1076..b3bca2f 100644
+index 50a10764bf..b3bca2fec2 100644
 --- a/man/systemd-udevd.service.xml
 +++ b/man/systemd-udevd.service.xml
 @@ -70,7 +70,7 @@
@@ -301,7 +301,7 @@ index 50a1076..b3bca2f 100644
        </varlistentry>
        <varlistentry>
 diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
-index 5ba1aac..ae134f2 100644
+index 5ba1aac0a1..ae134f2d89 100644
 --- a/man/systemd.exec.xml
 +++ b/man/systemd.exec.xml
 @@ -472,9 +472,9 @@
@@ -329,7 +329,7 @@ index 5ba1aac..ae134f2 100644
                                  <filename>/dev/console</filename>.</para></listitem>
                          </varlistentry>
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index d23904e..c116a9b 100644
+index d23904ee77..c116a9b60f 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -858,7 +858,7 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}</programlisting>
@@ -342,7 +342,7 @@ index d23904e..c116a9b 100644
                                  set and hence are in
                                  non-blocking mode. This option is only
 diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
-index 570a6fb..da0f2aa 100644
+index 570a6fb1ff..da0f2aaf7d 100644
 --- a/man/systemd.socket.xml
 +++ b/man/systemd.socket.xml
 @@ -144,8 +144,8 @@
@@ -357,7 +357,7 @@ index 570a6fb..da0f2aa 100644
          </refsect1>
  
 diff --git a/man/udev.xml b/man/udev.xml
-index 82e7478..25a3ea9 100644
+index 82e747879b..25a3ea99af 100644
 --- a/man/udev.xml
 +++ b/man/udev.xml
 @@ -255,7 +255,7 @@
@@ -370,7 +370,7 @@ index 82e7478..25a3ea9 100644
              <para>This can only be used for very short-running foreground tasks. For details,
              see <varname>RUN</varname>.</para>
 diff --git a/man/udevadm.xml b/man/udevadm.xml
-index 32bf480..b172266 100644
+index 32bf480674..b172266ade 100644
 --- a/man/udevadm.xml
 +++ b/man/udevadm.xml
 @@ -72,7 +72,7 @@

@@ -14,7 +14,7 @@ instead of applying the new config.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/rules/60-keyboard.rules b/rules/60-keyboard.rules
-index 4e0f366..22f71e7 100644
+index 4e0f3663f6..22f71e7792 100644
 --- a/rules/60-keyboard.rules
 +++ b/rules/60-keyboard.rules
 @@ -1,6 +1,6 @@

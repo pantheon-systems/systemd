@@ -10,7 +10,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=72311
  1 file changed, 1 insertion(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index 644cb94..ccfc734 100644
+index 644cb94ed3..ccfc734057 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -875,6 +875,7 @@ keyboard:dmi:bvn*:bvr*:bd*:svn[sS][aA][mM][sS][uU][nN][gG]*:pn*550P*:pvr*

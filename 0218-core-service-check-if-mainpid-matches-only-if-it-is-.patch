@@ -13,7 +13,7 @@ Conflicts:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/core/service.c b/src/core/service.c
-index 62ae8f0..f0acda1 100644
+index 62ae8f0119..f0acda102b 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -3400,7 +3400,7 @@ static void service_notify_message(Unit *u, pid_t pid, char **tags) {

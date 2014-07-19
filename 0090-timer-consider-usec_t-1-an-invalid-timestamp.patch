@@ -9,7 +9,7 @@ Subject: [PATCH] timer: consider (usec_t) -1 an invalid timestamp
  2 files changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/src/shared/time-util.c b/src/shared/time-util.c
-index b8a6bd7..81d4ede 100644
+index b8a6bd7f16..81d4ede1b8 100644
 --- a/src/shared/time-util.c
 +++ b/src/shared/time-util.c
 @@ -157,7 +157,7 @@ char *format_timestamp(char *buf, size_t l, usec_t t) {
@@ -31,7 +31,7 @@ index b8a6bd7..81d4ede 100644
  
          sec = (time_t) (t / USEC_PER_SEC);
 diff --git a/src/shared/time-util.h b/src/shared/time-util.h
-index 7660fe1..bc10d22 100644
+index 7660fe1872..bc10d2237b 100644
 --- a/src/shared/time-util.h
 +++ b/src/shared/time-util.h
 @@ -64,7 +64,10 @@ dual_timestamp* dual_timestamp_get(dual_timestamp *ts);

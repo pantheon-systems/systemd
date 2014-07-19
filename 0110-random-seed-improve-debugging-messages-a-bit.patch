@@ -9,7 +9,7 @@ Subject: [PATCH] random-seed: improve debugging messages a bit
  2 files changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index 910e780..16a5c3c 100644
+index 910e780fa2..16a5c3cb3a 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -159,6 +159,7 @@ AM_CPPFLAGS = \
@@ -29,7 +29,7 @@ index 910e780..16a5c3c 100644
         '|prefix=$(prefix)|' \
         '|exec_prefix=$(exec_prefix)|' \
 diff --git a/src/random-seed/random-seed.c b/src/random-seed/random-seed.c
-index afbd500..af79ecf 100644
+index afbd5002dd..af79ecf2a9 100644
 --- a/src/random-seed/random-seed.c
 +++ b/src/random-seed/random-seed.c
 @@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {

@@ -12,7 +12,7 @@ loop above, so it's better to also check here for symmetry.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
-index 44920d6..f01843d 100644
+index 44920d6449..f01843d65e 100644
 --- a/src/core/load-fragment.c
 +++ b/src/core/load-fragment.c
 @@ -1860,7 +1860,8 @@ int config_parse_documentation(const char *unit,

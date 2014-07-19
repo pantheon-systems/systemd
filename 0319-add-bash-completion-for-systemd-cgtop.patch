@@ -11,7 +11,7 @@ Subject: [PATCH] add bash completion for systemd-cgtop
  create mode 100644 shell-completion/bash/systemd-cgtop
 
 diff --git a/Makefile.am b/Makefile.am
-index d4a65e7..64d44ce 100644
+index d4a65e7f6b..64d44ce5e6 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -343,6 +343,7 @@ dist_bashcompletion_DATA = \
@@ -24,7 +24,7 @@ index d4a65e7..64d44ce 100644
  	shell-completion/bash/systemd-run \
 diff --git a/shell-completion/bash/systemd-cgtop b/shell-completion/bash/systemd-cgtop
 new file mode 100644
-index 0000000..d7ea42d
+index 0000000000..d7ea42d910
 --- /dev/null
 +++ b/shell-completion/bash/systemd-cgtop
 @@ -0,0 +1,40 @@

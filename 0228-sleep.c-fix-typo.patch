@@ -9,7 +9,7 @@ Subject: [PATCH] sleep.c: fix typo
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/sleep/sleep.c b/src/sleep/sleep.c
-index f96987f..c228cb6 100644
+index f96987f4dc..c228cb660f 100644
 --- a/src/sleep/sleep.c
 +++ b/src/sleep/sleep.c
 @@ -90,7 +90,7 @@ static int execute(char **modes, char **states) {

@@ -10,7 +10,7 @@ Subject: [PATCH] hwdb: fix case-sensitive match
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index 17f06e8..3071c61 100644
+index 17f06e823b..3071c61987 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -868,7 +868,7 @@ keyboard:dmi:bvn*:bvr*:bd*:svnOQO*Inc.*:pnOQO*Model*2*:pvr*

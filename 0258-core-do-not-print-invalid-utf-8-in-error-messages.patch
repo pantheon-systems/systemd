@@ -15,7 +15,7 @@ Conflicts:
  4 files changed, 53 insertions(+), 4 deletions(-)
 
 diff --git a/src/shared/fileio.c b/src/shared/fileio.c
-index d28e38a..121cd57 100644
+index d28e38a621..121cd571aa 100644
 --- a/src/shared/fileio.c
 +++ b/src/shared/fileio.c
 @@ -467,15 +467,18 @@ static int parse_env_file_push(const char *filename, unsigned line,
@@ -42,7 +42,7 @@ index d28e38a..121cd57 100644
          }
  
 diff --git a/src/shared/utf8.c b/src/shared/utf8.c
-index 31120af..2b70d45 100644
+index 31120af046..2b70d45e97 100644
 --- a/src/shared/utf8.c
 +++ b/src/shared/utf8.c
 @@ -172,6 +172,32 @@ const char *utf8_is_valid(const char *str) {
@@ -79,7 +79,7 @@ index 31120af..2b70d45 100644
          const char *p;
  
 diff --git a/src/shared/utf8.h b/src/shared/utf8.h
-index 96a03ea..f93dfb8 100644
+index 96a03ea7cb..f93dfb8676 100644
 --- a/src/shared/utf8.h
 +++ b/src/shared/utf8.h
 @@ -25,8 +25,11 @@
@@ -95,7 +95,7 @@ index 96a03ea..f93dfb8 100644
  bool utf8_is_printable(const char* str, size_t length) _pure_;
  
 diff --git a/src/test/test-utf8.c b/src/test/test-utf8.c
-index f0182ee..53c1d47 100644
+index f0182ee9af..53c1d475b7 100644
 --- a/src/test/test-utf8.c
 +++ b/src/test/test-utf8.c
 @@ -66,12 +66,29 @@ static void test_utf8_encoded_valid_unichar(void) {

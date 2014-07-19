@@ -11,7 +11,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=74157
  2 files changed, 27 insertions(+), 6 deletions(-)
 
 diff --git a/shell-completion/bash/localectl b/shell-completion/bash/localectl
-index 84e2a6b..c9e22af 100644
+index 84e2a6b09e..c9e22af2aa 100644
 --- a/shell-completion/bash/localectl
 +++ b/shell-completion/bash/localectl
 @@ -24,8 +24,14 @@ __contains_word () {
@@ -50,7 +50,7 @@ index 84e2a6b..c9e22af 100644
                  comps=$(command localectl list-keymaps)
          elif __contains_word "$verb" ${VERBS[STANDALONE]} ${VERBS[X11]}; then
 diff --git a/shell-completion/zsh/_localectl b/shell-completion/zsh/_localectl
-index 3d76bb0..c04f4f3 100644
+index 3d76bb0c4d..c04f4f3109 100644
 --- a/shell-completion/zsh/_localectl
 +++ b/shell-completion/zsh/_localectl
 @@ -1,17 +1,22 @@

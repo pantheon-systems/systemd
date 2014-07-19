@@ -10,7 +10,7 @@ Subject: [PATCH] udev/rules: setup tty permissions and group for sclp_line,
  1 file changed, 3 insertions(+)
 
 diff --git a/rules/50-udev-default.rules b/rules/50-udev-default.rules
-index 679dfdf..0bccf67 100644
+index 679dfdfcf4..0bccf67b7b 100644
 --- a/rules/50-udev-default.rules
 +++ b/rules/50-udev-default.rules
 @@ -15,6 +15,9 @@ ACTION!="add", GOTO="default_permissions_end"

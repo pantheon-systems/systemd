@@ -23,7 +23,7 @@ Conflicts:
  1 file changed, 27 insertions(+), 7 deletions(-)
 
 diff --git a/src/shared/virt.c b/src/shared/virt.c
-index 4e18638..e59f2b1 100644
+index 4e18638bc9..e59f2b1f3e 100644
 --- a/src/shared/virt.c
 +++ b/src/shared/virt.c
 @@ -149,7 +149,7 @@ static int detect_vm_dmi(const char **_id) {

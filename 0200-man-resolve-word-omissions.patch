@@ -59,7 +59,7 @@ Conflicts:
  42 files changed, 62 insertions(+), 62 deletions(-)
 
 diff --git a/man/binfmt.d.xml b/man/binfmt.d.xml
-index 94f97e0..6f8668b 100644
+index 94f97e0ed4..6f8668b478 100644
 --- a/man/binfmt.d.xml
 +++ b/man/binfmt.d.xml
 @@ -88,8 +88,8 @@
@@ -74,7 +74,7 @@ index 94f97e0..6f8668b 100644
                  the lexicographically latest name will be applied.</para>
  
 diff --git a/man/journald.conf.xml b/man/journald.conf.xml
-index 8e642a3..b362c5d 100644
+index 8e642a3f59..b362c5de2c 100644
 --- a/man/journald.conf.xml
 +++ b/man/journald.conf.xml
 @@ -155,7 +155,7 @@
@@ -87,7 +87,7 @@ index 8e642a3..b362c5d 100644
                                  logged in user. If
                                  <literal>none</literal>, journal files
 diff --git a/man/loginctl.xml b/man/loginctl.xml
-index 1b54ff7..133d6cf 100644
+index 1b54ff7dc3..133d6cfe9d 100644
 --- a/man/loginctl.xml
 +++ b/man/loginctl.xml
 @@ -109,7 +109,7 @@
@@ -100,7 +100,7 @@ index 1b54ff7..133d6cf 100644
                          </varlistentry>
  
 diff --git a/man/sd-daemon.xml b/man/sd-daemon.xml
-index 6e804e1..84c1afa 100644
+index 6e804e1a6c..84c1afa46a 100644
 --- a/man/sd-daemon.xml
 +++ b/man/sd-daemon.xml
 @@ -144,7 +144,7 @@
@@ -113,7 +113,7 @@ index 6e804e1..84c1afa 100644
                  <constant>libsystemd-daemon</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file. Alternatively, applications consuming these APIs
 diff --git a/man/sd-journal.xml b/man/sd-journal.xml
-index 6d39611..832d584 100644
+index 6d39611447..832d584579 100644
 --- a/man/sd-journal.xml
 +++ b/man/sd-journal.xml
 @@ -98,7 +98,7 @@
@@ -126,7 +126,7 @@ index 6d39611..832d584 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd-login.xml b/man/sd-login.xml
-index 251b35b..1d47b29 100644
+index 251b35b06f..1d47b298dd 100644
 --- a/man/sd-login.xml
 +++ b/man/sd-login.xml
 @@ -99,7 +99,7 @@
@@ -148,7 +148,7 @@ index 251b35b..1d47b29 100644
                  <constant>libsystemd-login</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_booted.xml b/man/sd_booted.xml
-index 64c0cd9..6f8cc95 100644
+index 64c0cd9d3d..6f8cc95ca7 100644
 --- a/man/sd_booted.xml
 +++ b/man/sd_booted.xml
 @@ -100,7 +100,7 @@
@@ -161,7 +161,7 @@ index 64c0cd9..6f8cc95 100644
                  <constant>libsystemd-daemon</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file. Alternatively, applications consuming these APIs
 diff --git a/man/sd_get_seats.xml b/man/sd_get_seats.xml
-index 8254b7c..1e55af3 100644
+index 8254b7cae4..1e55af3bdf 100644
 --- a/man/sd_get_seats.xml
 +++ b/man/sd_get_seats.xml
 @@ -90,13 +90,13 @@
@@ -191,7 +191,7 @@ index 8254b7c..1e55af3 100644
                  <constant>libsystemd-login</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_id128_get_machine.xml b/man/sd_id128_get_machine.xml
-index 6bee7ad..084fda2 100644
+index 6bee7ad9c1..084fda251a 100644
 --- a/man/sd_id128_get_machine.xml
 +++ b/man/sd_id128_get_machine.xml
 @@ -116,7 +116,7 @@
@@ -204,7 +204,7 @@ index 6bee7ad..084fda2 100644
                  <literal>libsystemd-id128</literal> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_id128_randomize.xml b/man/sd_id128_randomize.xml
-index 0b95803..100de16 100644
+index 0b9580308a..100de167b8 100644
 --- a/man/sd_id128_randomize.xml
 +++ b/man/sd_id128_randomize.xml
 @@ -95,7 +95,7 @@
@@ -217,7 +217,7 @@ index 0b95803..100de16 100644
                  <literal>libsystemd-id128</literal> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_id128_to_string.xml b/man/sd_id128_to_string.xml
-index 71cf82a..eae2915 100644
+index 71cf82a6cd..eae291578a 100644
 --- a/man/sd_id128_to_string.xml
 +++ b/man/sd_id128_to_string.xml
 @@ -118,7 +118,7 @@
@@ -230,7 +230,7 @@ index 71cf82a..eae2915 100644
                  file.</para>
          </refsect1>
 diff --git a/man/sd_is_fifo.xml b/man/sd_is_fifo.xml
-index 4d9cd79..5e79453 100644
+index 4d9cd79600..5e79453cec 100644
 --- a/man/sd_is_fifo.xml
 +++ b/man/sd_is_fifo.xml
 @@ -208,7 +208,7 @@
@@ -243,7 +243,7 @@ index 4d9cd79..5e79453 100644
                  <constant>libsystemd-daemon</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file. Alternatively, applications consuming these APIs
 diff --git a/man/sd_journal_add_match.xml b/man/sd_journal_add_match.xml
-index b6c7b06..6568234 100644
+index b6c7b06f2e..6568234e07 100644
 --- a/man/sd_journal_add_match.xml
 +++ b/man/sd_journal_add_match.xml
 @@ -174,7 +174,7 @@
@@ -256,7 +256,7 @@ index b6c7b06..6568234 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_catalog.xml b/man/sd_journal_get_catalog.xml
-index 4a7e0a1..ecd329f 100644
+index 4a7e0a1f8c..ecd329f013 100644
 --- a/man/sd_journal_get_catalog.xml
 +++ b/man/sd_journal_get_catalog.xml
 @@ -118,7 +118,7 @@
@@ -269,7 +269,7 @@ index 4a7e0a1..ecd329f 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_cursor.xml b/man/sd_journal_get_cursor.xml
-index 4cee7d5..046c154 100644
+index 4cee7d5b63..046c154097 100644
 --- a/man/sd_journal_get_cursor.xml
 +++ b/man/sd_journal_get_cursor.xml
 @@ -130,7 +130,7 @@
@@ -282,7 +282,7 @@ index 4cee7d5..046c154 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_cutoff_realtime_usec.xml b/man/sd_journal_get_cutoff_realtime_usec.xml
-index 9bf8220..287c1c5 100644
+index 9bf8220d11..287c1c5ba1 100644
 --- a/man/sd_journal_get_cutoff_realtime_usec.xml
 +++ b/man/sd_journal_get_cutoff_realtime_usec.xml
 @@ -122,7 +122,7 @@
@@ -295,7 +295,7 @@ index 9bf8220..287c1c5 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_data.xml b/man/sd_journal_get_data.xml
-index 0e1111e..6ed52b5 100644
+index 0e1111e05d..6ed52b569e 100644
 --- a/man/sd_journal_get_data.xml
 +++ b/man/sd_journal_get_data.xml
 @@ -203,7 +203,7 @@
@@ -308,7 +308,7 @@ index 0e1111e..6ed52b5 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_fd.xml b/man/sd_journal_get_fd.xml
-index 764f716..4b36f97 100644
+index 764f716a17..4b36f97af8 100644
 --- a/man/sd_journal_get_fd.xml
 +++ b/man/sd_journal_get_fd.xml
 @@ -253,7 +253,7 @@ else {
@@ -321,7 +321,7 @@ index 764f716..4b36f97 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_realtime_usec.xml b/man/sd_journal_get_realtime_usec.xml
-index 8870c29..bf1aa50 100644
+index 8870c29e30..bf1aa50092 100644
 --- a/man/sd_journal_get_realtime_usec.xml
 +++ b/man/sd_journal_get_realtime_usec.xml
 @@ -122,7 +122,7 @@
@@ -334,7 +334,7 @@ index 8870c29..bf1aa50 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_get_usage.xml b/man/sd_journal_get_usage.xml
-index 180d8b2..08d8640 100644
+index 180d8b2ffd..08d86401cf 100644
 --- a/man/sd_journal_get_usage.xml
 +++ b/man/sd_journal_get_usage.xml
 @@ -84,7 +84,7 @@
@@ -347,7 +347,7 @@ index 180d8b2..08d8640 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_next.xml b/man/sd_journal_next.xml
-index 6e437d1..1409b0d 100644
+index 6e437d1822..1409b0dba3 100644
 --- a/man/sd_journal_next.xml
 +++ b/man/sd_journal_next.xml
 @@ -102,7 +102,7 @@
@@ -378,7 +378,7 @@ index 6e437d1..1409b0d 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_print.xml b/man/sd_journal_print.xml
-index e61a648..a716cc3 100644
+index e61a648703..a716cc35e6 100644
 --- a/man/sd_journal_print.xml
 +++ b/man/sd_journal_print.xml
 @@ -227,7 +227,7 @@ sd_journal_send("MESSAGE=Hello World, this is PID %lu!", (unsigned long) getpid(
@@ -391,7 +391,7 @@ index e61a648..a716cc3 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_query_unique.xml b/man/sd_journal_query_unique.xml
-index f5d9d2b..f0b9204 100644
+index f5d9d2bfb5..f0b92048af 100644
 --- a/man/sd_journal_query_unique.xml
 +++ b/man/sd_journal_query_unique.xml
 @@ -156,7 +156,7 @@
@@ -404,7 +404,7 @@ index f5d9d2b..f0b9204 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_seek_head.xml b/man/sd_journal_seek_head.xml
-index 03de30a..939f0b1 100644
+index 03de30a383..939f0b1086 100644
 --- a/man/sd_journal_seek_head.xml
 +++ b/man/sd_journal_seek_head.xml
 @@ -94,7 +94,7 @@
@@ -426,7 +426,7 @@ index 03de30a..939f0b1 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_journal_stream_fd.xml b/man/sd_journal_stream_fd.xml
-index 4bd0abc..a8dc8fd 100644
+index 4bd0abc3b4..a8dc8fd08a 100644
 --- a/man/sd_journal_stream_fd.xml
 +++ b/man/sd_journal_stream_fd.xml
 @@ -112,7 +112,7 @@
@@ -439,7 +439,7 @@ index 4bd0abc..a8dc8fd 100644
                  <constant>libsystemd-journal</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_listen_fds.xml b/man/sd_listen_fds.xml
-index 240300d..aaabdbf 100644
+index 240300dcb0..aaabdbf3e8 100644
 --- a/man/sd_listen_fds.xml
 +++ b/man/sd_listen_fds.xml
 @@ -73,7 +73,7 @@
@@ -461,7 +461,7 @@ index 240300d..aaabdbf 100644
                  <constant>libsystemd-daemon</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file. Alternatively, applications consuming these APIs
 diff --git a/man/sd_login_monitor_new.xml b/man/sd_login_monitor_new.xml
-index 909a3d9..f439d3e 100644
+index 909a3d9bfd..f439d3e7b5 100644
 --- a/man/sd_login_monitor_new.xml
 +++ b/man/sd_login_monitor_new.xml
 @@ -224,7 +224,7 @@ else {
@@ -474,7 +474,7 @@ index 909a3d9..f439d3e 100644
                  <constant>libsystemd-login</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_notify.xml b/man/sd_notify.xml
-index 55965ff..e078140 100644
+index 55965ffce4..e078140406 100644
 --- a/man/sd_notify.xml
 +++ b/man/sd_notify.xml
 @@ -79,7 +79,7 @@
@@ -496,7 +496,7 @@ index 55965ff..e078140 100644
                  <constant>libsystemd-daemon</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file. Alternatively, applications consuming these APIs
 diff --git a/man/sd_pid_get_session.xml b/man/sd_pid_get_session.xml
-index e5c7709..ff5905b 100644
+index e5c77090dd..ff5905b7d2 100644
 --- a/man/sd_pid_get_session.xml
 +++ b/man/sd_pid_get_session.xml
 @@ -186,7 +186,7 @@
@@ -509,7 +509,7 @@ index e5c7709..ff5905b 100644
                  <constant>libsystemd-login</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_seat_get_active.xml b/man/sd_seat_get_active.xml
-index cd87696..23d582d 100644
+index cd8769698c..23d582da92 100644
 --- a/man/sd_seat_get_active.xml
 +++ b/man/sd_seat_get_active.xml
 @@ -164,7 +164,7 @@
@@ -522,7 +522,7 @@ index cd87696..23d582d 100644
                  <constant>libsystemd-login</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_session_is_active.xml b/man/sd_session_is_active.xml
-index 293ce71..06891f7 100644
+index 293ce71642..06891f767f 100644
 --- a/man/sd_session_is_active.xml
 +++ b/man/sd_session_is_active.xml
 @@ -252,7 +252,7 @@
@@ -535,7 +535,7 @@ index 293ce71..06891f7 100644
                  <constant>libsystemd-login</constant> <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                  file.</para>
 diff --git a/man/sd_uid_get_state.xml b/man/sd_uid_get_state.xml
-index d4d23f4..0faa765 100644
+index d4d23f4f1d..0faa7651e5 100644
 --- a/man/sd_uid_get_state.xml
 +++ b/man/sd_uid_get_state.xml
 @@ -139,7 +139,7 @@
@@ -557,7 +557,7 @@ index d4d23f4..0faa765 100644
                  file.</para>
          </refsect1>
 diff --git a/man/sysctl.d.xml b/man/sysctl.d.xml
-index 854864c..5544283 100644
+index 854864cffc..5544283d49 100644
 --- a/man/sysctl.d.xml
 +++ b/man/sysctl.d.xml
 @@ -89,8 +89,8 @@
@@ -572,7 +572,7 @@ index 854864c..5544283 100644
                  lexicographically latest name will be applied. It is
                  recommended to prefix all filenames with a two-digit
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index b4bc15d..61deb19 100644
+index b4bc15daa4..61deb194f0 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -250,7 +250,7 @@ systemctl start foo
@@ -594,7 +594,7 @@ index b4bc15d..61deb19 100644
            temporarily, so that they are lost on the next
            reboot.</para>
 diff --git a/man/systemd-getty-generator.xml b/man/systemd-getty-generator.xml
-index da88e72..b1993ae 100644
+index da88e727c7..b1993aeccc 100644
 --- a/man/systemd-getty-generator.xml
 +++ b/man/systemd-getty-generator.xml
 @@ -61,10 +61,10 @@
@@ -613,7 +613,7 @@ index da88e72..b1993ae 100644
                  argument such as <varname>console=</varname> to get
                  both kernel messages and a getty prompt on a serial
 diff --git a/man/systemd-halt.service.xml b/man/systemd-halt.service.xml
-index 90b443f..99457aa 100644
+index 90b443ffa8..99457aa721 100644
 --- a/man/systemd-halt.service.xml
 +++ b/man/systemd-halt.service.xml
 @@ -65,7 +65,7 @@
@@ -626,7 +626,7 @@ index 90b443f..99457aa 100644
                  pulled in by <filename>poweroff.target</filename>,
                  <filename>systemd-reboot.service</filename> by
 diff --git a/man/systemd-machine-id-setup.xml b/man/systemd-machine-id-setup.xml
-index fef76bc..bc38d55 100644
+index fef76bcfc7..bc38d551ca 100644
 --- a/man/systemd-machine-id-setup.xml
 +++ b/man/systemd-machine-id-setup.xml
 @@ -80,7 +80,7 @@
@@ -639,7 +639,7 @@ index fef76bc..bc38d55 100644
                  is used to initialize the machine ID. For details see
                  the documentation of the <ulink
 diff --git a/man/systemd.preset.xml b/man/systemd.preset.xml
-index 16db8cd..55cb4de 100644
+index 16db8cd85b..55cb4de174 100644
 --- a/man/systemd.preset.xml
 +++ b/man/systemd.preset.xml
 @@ -126,8 +126,8 @@
@@ -654,7 +654,7 @@ index 16db8cd..55cb4de 100644
                  name will be applied. It is recommended to prefix all
                  filenames with a two-digit number and a dash, to simplify
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 8f9137c..80a935d 100644
+index 8f9137c6ac..80a935d373 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -712,7 +712,7 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}
@@ -667,7 +667,7 @@ index 8f9137c..80a935d 100644
                                  terminated abnormally by a signal or
                                  hit a timeout.</para>
 diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
-index 1c78562..ac3127d 100644
+index 1c78562e8a..ac3127d7d0 100644
 --- a/man/systemd.socket.xml
 +++ b/man/systemd.socket.xml
 @@ -213,7 +213,7 @@
@@ -689,7 +689,7 @@ index 1c78562..ac3127d 100644
                                  it is recommended to set the
                                  <varname>FreeBind=</varname> option
 diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
-index 77127ff..b70c5e9 100644
+index 77127ffa86..b70c5e9da7 100644
 --- a/man/systemd.unit.xml
 +++ b/man/systemd.unit.xml
 @@ -634,7 +634,7 @@
@@ -711,7 +711,7 @@ index 77127ff..b70c5e9 100644
                                  may be used to check whether a
                                  specific kernel command line option is
 diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
-index 39aa68d..ed88751 100644
+index 39aa68d92a..ed88751a52 100644
 --- a/man/tmpfiles.d.xml
 +++ b/man/tmpfiles.d.xml
 @@ -88,8 +88,8 @@

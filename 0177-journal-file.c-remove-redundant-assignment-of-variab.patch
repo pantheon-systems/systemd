@@ -12,7 +12,7 @@ loop so there is no reason to also do it here.
  1 file changed, 2 deletions(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 71ef092..5ef6a2a 100644
+index 71ef092ecd..5ef6a2a735 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -1628,8 +1628,6 @@ static int generic_array_bisect(

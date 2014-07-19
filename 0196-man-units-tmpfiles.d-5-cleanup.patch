@@ -21,7 +21,7 @@ Conflicts:
  3 files changed, 134 insertions(+), 88 deletions(-)
 
 diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
-index ba727e1..91c0372 100644
+index ba727e1854..91c0372396 100644
 --- a/man/systemd-tmpfiles.xml
 +++ b/man/systemd-tmpfiles.xml
 @@ -54,7 +54,9 @@
@@ -113,7 +113,7 @@ index ba727e1..91c0372 100644
                          <varlistentry>
                                  <term><option>--prefix=PATH</option></term>
 diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
-index e8b630d..a00637b 100644
+index e8b630da24..a00637beff 100644
 --- a/man/tmpfiles.d.xml
 +++ b/man/tmpfiles.d.xml
 @@ -67,23 +67,32 @@
@@ -390,7 +390,7 @@ index e8b630d..a00637b 100644
  
          </refsect1>
 diff --git a/units/systemd-tmpfiles-setup.service.in b/units/systemd-tmpfiles-setup.service.in
-index 6f98063..3405e28 100644
+index 6f98063744..3405e2842c 100644
 --- a/units/systemd-tmpfiles-setup.service.in
 +++ b/units/systemd-tmpfiles-setup.service.in
 @@ -14,6 +14,7 @@ Conflicts=shutdown.target

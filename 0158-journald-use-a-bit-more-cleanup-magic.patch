@@ -9,7 +9,7 @@ Subject: [PATCH] journald: use a bit more cleanup magic!
  1 file changed, 1 insertion(+), 7 deletions(-)
 
 diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
-index 4080622..771a2bd 100644
+index 4080622c48..771a2bd832 100644
 --- a/src/journal/journald-stream.c
 +++ b/src/journal/journald-stream.c
 @@ -75,7 +75,7 @@ struct StdoutStream {

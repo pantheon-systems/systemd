@@ -27,7 +27,7 @@ Reported-by: Tobias Hunger <tobias.hunger@gmail.com>
  1 file changed, 5 deletions(-)
 
 diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
-index 028dbe3..d645001 100644
+index 028dbe33e7..d645001038 100644
 --- a/src/nspawn/nspawn.c
 +++ b/src/nspawn/nspawn.c
 @@ -939,11 +939,6 @@ static int setup_journal(const char *directory) {

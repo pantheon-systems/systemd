@@ -14,7 +14,7 @@ Conflicts:
  2 files changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/src/shared/label.c b/src/shared/label.c
-index fde39f2..3a18e31 100644
+index fde39f2259..3a18e31c97 100644
 --- a/src/shared/label.c
 +++ b/src/shared/label.c
 @@ -230,6 +230,8 @@ int label_socket_set(const char *label) {
@@ -36,7 +36,7 @@ index fde39f2..3a18e31 100644
                  return;
  
 diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
-index 4244656..be2115c 100644
+index 4244656a15..be2115c609 100644
 --- a/src/tmpfiles/tmpfiles.c
 +++ b/src/tmpfiles/tmpfiles.c
 @@ -460,18 +460,19 @@ static int item_set_perms(Item *i, const char *path) {

@@ -15,7 +15,7 @@ Conflicts:
  1 file changed, 22 insertions(+), 2 deletions(-)
 
 diff --git a/src/shared/util.c b/src/shared/util.c
-index 7500779..e754747 100644
+index 75007792cc..e75474781b 100644
 --- a/src/shared/util.c
 +++ b/src/shared/util.c
 @@ -2285,6 +2285,8 @@ int parse_bytes(const char *t, off_t *bytes) {

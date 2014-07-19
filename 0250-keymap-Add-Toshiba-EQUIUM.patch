@@ -11,7 +11,7 @@ Thanks Aleksander Kowalski <aleksander.kowalski.1@gmail.com>!
  1 file changed, 1 insertion(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index ea206bb..f9084e4 100644
+index ea206bba2e..f9084e4aa9 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -1089,6 +1089,7 @@ keyboard:dmi:bvn*:bvr*:bd*:svnPEGATRON*CORP.:pnSpring*Peak:*

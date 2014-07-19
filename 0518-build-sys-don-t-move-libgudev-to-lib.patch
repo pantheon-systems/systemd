@@ -1,0 +1,34 @@
+From 78c27a998f1d05c55710d9e00f28916eb263c201 Mon Sep 17 00:00:00 2001
+From: Michael Biebl <biebl@debian.org>
+Date: Wed, 16 Jul 2014 12:09:47 +0200
+Subject: [PATCH] build-sys: don't move libgudev to /lib
+
+It depends on libgobject and libgmodule which are installed in /usr/lib.
+
+(cherry picked from commit 5c059d2ead0787a90732d27ed1b485d236abf641)
+(cherry picked from commit c46cee9156e8785fc70e8528d6deb402bef06ca0)
+---
+ Makefile.am | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index d57d890185..205ea50e35 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2682,16 +2682,6 @@ typelibs_DATA = \
+ 
+ CLEANFILES += $(gir_DATA) $(typelibs_DATA)
+ endif # HAVE_INTROSPECTION
+-
+-# move lib from $(libdir) to $(rootlibdir) and update devel link, if needed
+-libgudev-install-hook:
+-	libname=libgudev-1.0.so && $(move-to-rootlibdir)
+-
+-libgudev-uninstall-hook:
+-	rm -f $(DESTDIR)$(rootlibdir)/libgudev-1.0.so*
+-
+-INSTALL_EXEC_HOOKS += libgudev-install-hook
+-UNINSTALL_EXEC_HOOKS += libgudev-uninstall-hook
+ endif
+ 
+ EXTRA_DIST += \

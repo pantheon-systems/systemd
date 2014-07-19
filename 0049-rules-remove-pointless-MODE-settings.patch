@@ -15,7 +15,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=70665
  1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/rules/50-udev-default.rules b/rules/50-udev-default.rules
-index f764789..679dfdf 100644
+index f7647893d4..679dfdfcf4 100644
 --- a/rules/50-udev-default.rules
 +++ b/rules/50-udev-default.rules
 @@ -20,9 +20,7 @@ KERNEL=="tty[A-Z]*[0-9]|pppox[0-9]*|ircomm[0-9]*|noz[0-9]*|rfcomm[0-9]*", GROUP=

@@ -17,7 +17,7 @@ it makes the units appear as "disabled"), let's drop the sections.
  2 files changed, 6 deletions(-)
 
 diff --git a/units/graphical.target b/units/graphical.target
-index 65f2521..a2c4532 100644
+index 65f2521d9e..a2c4532e4c 100644
 --- a/units/graphical.target
 +++ b/units/graphical.target
 @@ -13,6 +13,3 @@ After=multi-user.target
@@ -28,7 +28,7 @@ index 65f2521..a2c4532 100644
 -[Install]
 -Alias=default.target
 diff --git a/units/multi-user.target b/units/multi-user.target
-index 998e046..0f0e5e9 100644
+index 998e04603e..0f0e5e99a7 100644
 --- a/units/multi-user.target
 +++ b/units/multi-user.target
 @@ -12,6 +12,3 @@ Requires=basic.target

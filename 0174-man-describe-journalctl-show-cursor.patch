@@ -9,7 +9,7 @@ Subject: [PATCH] man: describe journalctl --show-cursor
  1 file changed, 17 insertions(+), 5 deletions(-)
 
 diff --git a/man/journalctl.xml b/man/journalctl.xml
-index c0cc96d..d936933 100644
+index c0cc96d800..d936933d69 100644
 --- a/man/journalctl.xml
 +++ b/man/journalctl.xml
 @@ -576,11 +576,23 @@

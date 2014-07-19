@@ -12,7 +12,7 @@ non-zero vtnr for CreateSession
  1 file changed, 6 insertions(+)
 
 diff --git a/src/login/pam-module.c b/src/login/pam-module.c
-index 973daf7..7ebb5d2 100644
+index 973daf703e..7ebb5d27a5 100644
 --- a/src/login/pam-module.c
 +++ b/src/login/pam-module.c
 @@ -335,6 +335,12 @@ _public_ PAM_EXTERN int pam_sm_open_session(

@@ -12,7 +12,7 @@ Issue pointed out by Colin Guthrie.
  1 file changed, 5 insertions(+)
 
 diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
-index bc9808a..da49da7 100644
+index bc9808aacd..da49da7c32 100644
 --- a/src/systemctl/systemctl.c
 +++ b/src/systemctl/systemctl.c
 @@ -4436,6 +4436,11 @@ static int enable_unit(DBusConnection *bus, char **args) {

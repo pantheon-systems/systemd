@@ -11,7 +11,7 @@ Subject: [PATCH] bash: add completion for systemd-nspawn
  create mode 100644 shell-completion/bash/systemd-nspawn
 
 diff --git a/Makefile.am b/Makefile.am
-index 703925a..03a1f91 100644
+index 703925a4c0..03a1f91bc0 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -343,6 +343,7 @@ dist_bashcompletion_DATA = \
@@ -24,7 +24,7 @@ index 703925a..03a1f91 100644
  	shell-completion/bash/kernel-install
 diff --git a/shell-completion/bash/systemd-nspawn b/shell-completion/bash/systemd-nspawn
 new file mode 100644
-index 0000000..0e8a30c
+index 0000000000..0e8a30cb26
 --- /dev/null
 +++ b/shell-completion/bash/systemd-nspawn
 @@ -0,0 +1,90 @@

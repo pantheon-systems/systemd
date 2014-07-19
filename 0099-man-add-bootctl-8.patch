@@ -11,7 +11,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1014303
  create mode 100644 man/bootctl.xml
 
 diff --git a/Makefile-man.am b/Makefile-man.am
-index b8c8acc..3f626e8 100644
+index b8c8acc0b4..3f626e8b6d 100644
 --- a/Makefile-man.am
 +++ b/Makefile-man.am
 @@ -650,6 +650,15 @@ MANPAGES_ALIAS += \
@@ -32,7 +32,7 @@ index b8c8acc..3f626e8 100644
  	man/hostnamectl.1 \
 diff --git a/man/bootctl.xml b/man/bootctl.xml
 new file mode 100644
-index 0000000..28f1b92
+index 0000000000..28f1b9203f
 --- /dev/null
 +++ b/man/bootctl.xml
 @@ -0,0 +1,125 @@

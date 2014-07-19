@@ -15,7 +15,7 @@ everywhere.
  2 files changed, 35 insertions(+), 42 deletions(-)
 
 diff --git a/src/python-systemd/_daemon.c b/src/python-systemd/_daemon.c
-index f0ab16f..c6db69f 100644
+index f0ab16f659..c6db69fe26 100644
 --- a/src/python-systemd/_daemon.c
 +++ b/src/python-systemd/_daemon.c
 @@ -88,7 +88,7 @@ static PyObject* notify(PyObject *self, PyObject *args, PyObject *keywds) {
@@ -82,7 +82,7 @@ index f0ab16f..c6db69f 100644
  
          return PyBool_FromLong(r);
 diff --git a/src/python-systemd/_reader.c b/src/python-systemd/_reader.c
-index bc5db19..0c88926 100644
+index bc5db19049..0c889263a4 100644
 --- a/src/python-systemd/_reader.c
 +++ b/src/python-systemd/_reader.c
 @@ -206,8 +206,7 @@ PyDoc_STRVAR(Reader_reliable_fd__doc__,

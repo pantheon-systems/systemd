@@ -9,7 +9,7 @@ Subject: [PATCH] man: Improve the description of parameter X in tmpfiles.d
  1 file changed, 12 insertions(+), 9 deletions(-)
 
 diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
-index 9fc4b7c..e8b630d 100644
+index 9fc4b7cd8f..e8b630da24 100644
 --- a/man/tmpfiles.d.xml
 +++ b/man/tmpfiles.d.xml
 @@ -184,15 +184,18 @@ L    /tmp/foobar -    -    -    -   /dev/null</programlisting>

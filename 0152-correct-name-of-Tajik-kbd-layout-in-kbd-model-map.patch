@@ -9,7 +9,7 @@ Subject: [PATCH] correct name of Tajik kbd layout in kbd-model-map
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/locale/kbd-model-map b/src/locale/kbd-model-map
-index 78c7887..322c0a9 100644
+index 78c78874e6..322c0a9bc2 100644
 --- a/src/locale/kbd-model-map
 +++ b/src/locale/kbd-model-map
 @@ -39,7 +39,7 @@ ro			ro	pc105		-		terminate:ctrl_alt_bksp

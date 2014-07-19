@@ -11,7 +11,7 @@ https://bugzilla.redhat.com/show_bug.cgi?id=1062955
  1 file changed, 10 insertions(+)
 
 diff --git a/man/sysctl.d.xml b/man/sysctl.d.xml
-index 5544283..00a857b 100644
+index 5544283d49..00a857b11a 100644
 --- a/man/sysctl.d.xml
 +++ b/man/sysctl.d.xml
 @@ -103,6 +103,16 @@

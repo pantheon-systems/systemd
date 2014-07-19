@@ -14,7 +14,7 @@ Content-Transfer-Encoding: 8bit
  1 file changed, 3 insertions(+)
 
 diff --git a/README b/README
-index cf0a18d..fa433be 100644
+index cf0a18de2e..fa433be458 100644
 --- a/README
 +++ b/README
 @@ -189,6 +189,9 @@ WARNINGS:

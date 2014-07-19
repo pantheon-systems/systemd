@@ -9,7 +9,7 @@ Subject: [PATCH] journal-file: protect against alloca(0)
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
-index 090cf97..8ea258b 100644
+index 090cf9771e..8ea258bdfb 100644
 --- a/src/journal/journal-file.c
 +++ b/src/journal/journal-file.c
 @@ -2737,7 +2737,8 @@ int journal_file_copy_entry(JournalFile *from, JournalFile *to, Object *o, uint6

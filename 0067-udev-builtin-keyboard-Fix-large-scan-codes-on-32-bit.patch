@@ -17,7 +17,7 @@ https://launchpad.net/bugs/1247676
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/udev/udev-builtin-keyboard.c b/src/udev/udev-builtin-keyboard.c
-index ddd8535..8f457ab 100644
+index ddd853594e..8f457ab4a2 100644
 --- a/src/udev/udev-builtin-keyboard.c
 +++ b/src/udev/udev-builtin-keyboard.c
 @@ -88,7 +88,7 @@ static int builtin_keyboard(struct udev_device *dev, int argc, char *argv[], boo

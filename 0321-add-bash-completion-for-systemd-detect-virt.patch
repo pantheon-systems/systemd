@@ -11,7 +11,7 @@ Subject: [PATCH] add bash completion for systemd-detect-virt
  create mode 100644 shell-completion/bash/systemd-detect-virt
 
 diff --git a/Makefile.am b/Makefile.am
-index 64d44ce..dafc428 100644
+index 64d44ce5e6..dafc428b86 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -345,6 +345,7 @@ dist_bashcompletion_DATA = \
@@ -24,7 +24,7 @@ index 64d44ce..dafc428 100644
  	shell-completion/bash/udevadm \
 diff --git a/shell-completion/bash/systemd-detect-virt b/shell-completion/bash/systemd-detect-virt
 new file mode 100644
-index 0000000..df06c29
+index 0000000000..df06c29841
 --- /dev/null
 +++ b/shell-completion/bash/systemd-detect-virt
 @@ -0,0 +1,40 @@

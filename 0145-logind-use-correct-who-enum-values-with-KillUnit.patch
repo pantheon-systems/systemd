@@ -9,7 +9,7 @@ NB This is already fixed differently in systemd 209 with the port to kdbus
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index bb85c7d..583d62e 100644
+index bb85c7d4af..583d62e15d 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -2799,7 +2799,7 @@ int manager_kill_unit(Manager *manager, const char *unit, KillWho who, int signo

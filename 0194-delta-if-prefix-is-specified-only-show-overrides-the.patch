@@ -13,7 +13,7 @@ in /run, etc.
  2 files changed, 109 insertions(+), 42 deletions(-)
 
 diff --git a/man/systemd-delta.xml b/man/systemd-delta.xml
-index 413ebd8..4d3ab78 100644
+index 413ebd8de8..4d3ab78040 100644
 --- a/man/systemd-delta.xml
 +++ b/man/systemd-delta.xml
 @@ -49,7 +49,9 @@
@@ -127,7 +127,7 @@ index 413ebd8..4d3ab78 100644
          </refsect1>
  
 diff --git a/src/delta/delta.c b/src/delta/delta.c
-index e97f2e9..ae658f9 100644
+index e97f2e9203..ae658f9c01 100644
 --- a/src/delta/delta.c
 +++ b/src/delta/delta.c
 @@ -4,6 +4,7 @@

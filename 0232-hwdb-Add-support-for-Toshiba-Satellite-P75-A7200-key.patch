@@ -9,7 +9,7 @@ Subject: [PATCH] hwdb: Add support for Toshiba Satellite P75-A7200 keyboard
  1 file changed, 8 insertions(+)
 
 diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
-index 84a061f..e3d1f02 100644
+index 84a061f561..e3d1f02c9d 100644
 --- a/hwdb/60-keyboard.hwdb
 +++ b/hwdb/60-keyboard.hwdb
 @@ -1012,6 +1012,14 @@ keyboard:name:Toshiba*input*device:dmi:bvn*:bvr*:bd*:svnTOSHIBA*:pnSATELLITEU940

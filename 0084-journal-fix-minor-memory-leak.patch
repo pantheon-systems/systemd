@@ -8,7 +8,7 @@ Subject: [PATCH] journal: fix minor memory leak
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
-index 7700d6c..9676f0f 100644
+index 7700d6cb12..9676f0f041 100644
 --- a/src/journal/sd-journal.c
 +++ b/src/journal/sd-journal.c
 @@ -1276,7 +1276,7 @@ static void check_network(sd_journal *j, int fd) {

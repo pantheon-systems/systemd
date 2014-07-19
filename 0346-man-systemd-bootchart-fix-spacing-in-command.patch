@@ -12,7 +12,7 @@ Use the same formatting as the systemd-analyze man page, so that man shows a spa
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/man/systemd-bootchart.xml b/man/systemd-bootchart.xml
-index ae432b5..818afa1 100644
+index ae432b563f..818afa1a29 100644
 --- a/man/systemd-bootchart.xml
 +++ b/man/systemd-bootchart.xml
 @@ -76,8 +76,8 @@

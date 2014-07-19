@@ -13,7 +13,7 @@ Subject: [PATCH] do not accept "garbage" from acpi firmware performance data
  1 file changed, 5 insertions(+)
 
 diff --git a/src/shared/acpi-fpdt.c b/src/shared/acpi-fpdt.c
-index af58c7c..75648b4 100644
+index af58c7cca6..75648b4d86 100644
 --- a/src/shared/acpi-fpdt.c
 +++ b/src/shared/acpi-fpdt.c
 @@ -146,6 +146,11 @@ int acpi_get_boot_usec(usec_t *loader_start, usec_t *loader_exit) {

@@ -9,7 +9,7 @@ Subject: [PATCH] libudev: hwdb - use libudev not systemd logging
  1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/src/libudev/libudev-hwdb.c b/src/libudev/libudev-hwdb.c
-index de1cb83..ba43b9f 100644
+index de1cb83188..ba43b9f0c0 100644
 --- a/src/libudev/libudev-hwdb.c
 +++ b/src/libudev/libudev-hwdb.c
 @@ -277,38 +277,38 @@ _public_ struct udev_hwdb *udev_hwdb_new(struct udev *udev) {

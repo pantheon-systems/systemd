@@ -8,7 +8,7 @@ Subject: [PATCH] udev: ata_id: log faling ioctls as "debug"
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/udev/ata_id/ata_id.c b/src/udev/ata_id/ata_id.c
-index 68a06b9..d375d43 100644
+index 68a06b93b8..d375d43491 100644
 --- a/src/udev/ata_id/ata_id.c
 +++ b/src/udev/ata_id/ata_id.c
 @@ -501,7 +501,7 @@ int main(int argc, char *argv[])

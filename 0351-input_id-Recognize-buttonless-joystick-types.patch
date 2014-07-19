@@ -17,7 +17,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=70734
  1 file changed, 15 insertions(+), 4 deletions(-)
 
 diff --git a/src/udev/udev-builtin-input_id.c b/src/udev/udev-builtin-input_id.c
-index 4691fc0..33c8075 100644
+index 4691fc073d..33c8075a89 100644
 --- a/src/udev/udev-builtin-input_id.c
 +++ b/src/udev/udev-builtin-input_id.c
 @@ -116,16 +116,27 @@ static void test_pointers (struct udev_device *dev,

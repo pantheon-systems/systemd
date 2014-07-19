@@ -15,7 +15,7 @@ Based-on: ba4c5d93b73ef7bba0ae0c6bf2b36a42360f7a34
  3 files changed, 16 insertions(+), 5 deletions(-)
 
 diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
-index 63f0d3c..c1c3d7f 100644
+index 63f0d3c7a3..c1c3d7fd40 100644
 --- a/src/login/logind-dbus.c
 +++ b/src/login/logind-dbus.c
 @@ -2544,10 +2544,11 @@ int manager_start_scope(
@@ -60,7 +60,7 @@ index 63f0d3c..c1c3d7f 100644
           * currently. To make this less problematic, let's shorten the
           * stop timeout for sessions, so that we don't wait
 diff --git a/src/login/logind-session.c b/src/login/logind-session.c
-index 78e6d74..2bac0a2 100644
+index 78e6d74cda..2bac0a2392 100644
 --- a/src/login/logind-session.c
 +++ b/src/login/logind-session.c
 @@ -518,7 +518,7 @@ static int session_start_scope(Session *s) {
@@ -73,7 +73,7 @@ index 78e6d74..2bac0a2 100644
                          log_error("Failed to start session scope %s: %s %s",
                                    scope, bus_error(&error, r), error.name);
 diff --git a/src/login/logind.h b/src/login/logind.h
-index 0d2248f..540572f 100644
+index 0d2248fa53..540572f164 100644
 --- a/src/login/logind.h
 +++ b/src/login/logind.h
 @@ -184,7 +184,7 @@ int manager_send_changed(Manager *manager, const char *properties);

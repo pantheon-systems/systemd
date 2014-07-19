@@ -8,7 +8,7 @@ Subject: [PATCH] man: fix description of is-enabled returned value
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index 61deb19..25b03d8 100644
+index 61deb194f0..25b03d838e 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -932,7 +932,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service

@@ -25,7 +25,7 @@ Conflicts:
  7 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/shell-completion/bash/hostnamectl b/shell-completion/bash/hostnamectl
-index 38ab134..9c75da9 100644
+index 38ab1344f3..9c75da9e7f 100644
 --- a/shell-completion/bash/hostnamectl
 +++ b/shell-completion/bash/hostnamectl
 @@ -41,7 +41,7 @@ _hostnamectl() {
@@ -38,7 +38,7 @@ index 38ab134..9c75da9 100644
                          verb=${COMP_WORDS[i]}
                          break
 diff --git a/shell-completion/bash/localectl b/shell-completion/bash/localectl
-index bec9e78..84e2a6b 100644
+index bec9e78c64..84e2a6b09e 100644
 --- a/shell-completion/bash/localectl
 +++ b/shell-completion/bash/localectl
 @@ -52,7 +52,7 @@ _localectl() {
@@ -51,7 +51,7 @@ index bec9e78..84e2a6b 100644
                          verb=${COMP_WORDS[i]}
                          break
 diff --git a/shell-completion/bash/loginctl b/shell-completion/bash/loginctl
-index 3104b30..26a8696 100644
+index 3104b305fa..26a86965a6 100644
 --- a/shell-completion/bash/loginctl
 +++ b/shell-completion/bash/loginctl
 @@ -70,7 +70,7 @@ _loginctl () {
@@ -64,7 +64,7 @@ index 3104b30..26a8696 100644
                   ! __contains_word "${COMP_WORDS[i-1]}" ${OPTS[ARG]}; then
                          verb=${COMP_WORDS[i]}
 diff --git a/shell-completion/bash/systemctl b/shell-completion/bash/systemctl
-index 84149e3..a5f10b4 100644
+index 84149e3958..a5f10b4f13 100644
 --- a/shell-completion/bash/systemctl
 +++ b/shell-completion/bash/systemctl
 @@ -146,7 +146,7 @@ _systemctl () {
@@ -77,7 +77,7 @@ index 84149e3..a5f10b4 100644
                   ! __contains_word "${COMP_WORDS[i-1]}" ${OPTS[ARG]}; then
                          verb=${COMP_WORDS[i]}
 diff --git a/shell-completion/bash/systemd-analyze b/shell-completion/bash/systemd-analyze
-index b65466b..6afcd96 100644
+index b65466ba47..6afcd963c3 100644
 --- a/shell-completion/bash/systemd-analyze
 +++ b/shell-completion/bash/systemd-analyze
 @@ -39,7 +39,7 @@ _systemd_analyze() {
@@ -90,7 +90,7 @@ index b65466b..6afcd96 100644
                   ! __contains_word "${COMP_WORDS[i-1]}" ${OPTS[ARG]}; then
                          verb=${COMP_WORDS[i]}
 diff --git a/shell-completion/bash/timedatectl b/shell-completion/bash/timedatectl
-index c6a6545..1a0acc6 100644
+index c6a6545257..1a0acc6c7c 100644
 --- a/shell-completion/bash/timedatectl
 +++ b/shell-completion/bash/timedatectl
 @@ -52,7 +52,7 @@ _timedatectl() {
@@ -103,7 +103,7 @@ index c6a6545..1a0acc6 100644
                          verb=${COMP_WORDS[i]}
                          break
 diff --git a/shell-completion/bash/udevadm b/shell-completion/bash/udevadm
-index 8ad8550..7e89189 100644
+index 8ad855060c..7e89189dca 100644
 --- a/shell-completion/bash/udevadm
 +++ b/shell-completion/bash/udevadm
 @@ -36,7 +36,7 @@ _udevadm() {

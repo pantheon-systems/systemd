@@ -13,7 +13,7 @@ system like nfs, and the type is specified as "auto".
  1 file changed, 5 insertions(+)
 
 diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
-index 4137796..8c4c61c 100644
+index 41377962fa..8c4c61c062 100644
 --- a/src/fstab-generator/fstab-generator.c
 +++ b/src/fstab-generator/fstab-generator.c
 @@ -153,6 +153,11 @@ static int add_fsck(FILE *f, const char *what, const char *where, const char *ty

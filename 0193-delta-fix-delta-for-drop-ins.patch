@@ -15,7 +15,7 @@ Conflicts:
  1 file changed, 79 insertions(+), 95 deletions(-)
 
 diff --git a/src/delta/delta.c b/src/delta/delta.c
-index fd024fc..e97f2e9 100644
+index fd024fc26f..e97f2e9203 100644
 --- a/src/delta/delta.c
 +++ b/src/delta/delta.c
 @@ -33,6 +33,34 @@

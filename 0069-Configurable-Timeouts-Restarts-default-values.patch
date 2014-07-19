@@ -26,7 +26,7 @@ configuration options to manager configuration file.
  15 files changed, 59 insertions(+), 17 deletions(-)
 
 diff --git a/man/systemd-system.conf.xml b/man/systemd-system.conf.xml
-index e8cf8a9..c1f2648 100644
+index e8cf8a9cb2..c1f26484ee 100644
 --- a/man/systemd-system.conf.xml
 +++ b/man/systemd-system.conf.xml
 @@ -61,7 +61,6 @@
@@ -68,7 +68,7 @@ index e8cf8a9..c1f2648 100644
  
                                  <listitem><para>Configures the initial
 diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
-index 48af1ca..71a5736 100644
+index 48af1caace..71a5736094 100644
 --- a/man/systemd.mount.xml
 +++ b/man/systemd.mount.xml
 @@ -260,8 +260,8 @@
@@ -83,7 +83,7 @@ index 48af1ca..71a5736 100644
                  </variablelist>
  
 diff --git a/man/systemd.service.xml b/man/systemd.service.xml
-index 5e1ddf7..df04048 100644
+index 5e1ddf7188..df04048334 100644
 --- a/man/systemd.service.xml
 +++ b/man/systemd.service.xml
 @@ -524,7 +524,8 @@
@@ -107,7 +107,7 @@ index 5e1ddf7..df04048 100644
                          </varlistentry>
  
 diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
-index 8c88d9f..1c78562 100644
+index 8c88d9f8aa..1c78562e8a 100644
 --- a/man/systemd.socket.xml
 +++ b/man/systemd.socket.xml
 @@ -679,8 +679,8 @@
@@ -122,7 +122,7 @@ index 8c88d9f..1c78562 100644
  
                          <varlistentry>
 diff --git a/man/systemd.swap.xml b/man/systemd.swap.xml
-index 813ae6c..13f6c84 100644
+index 813ae6c942..13f6c8441a 100644
 --- a/man/systemd.swap.xml
 +++ b/man/systemd.swap.xml
 @@ -186,8 +186,8 @@
@@ -137,7 +137,7 @@ index 813ae6c..13f6c84 100644
                  </variablelist>
  
 diff --git a/src/core/device.c b/src/core/device.c
-index 9fca82a..5397bd6 100644
+index 9fca82ab16..5397bd6354 100644
 --- a/src/core/device.c
 +++ b/src/core/device.c
 @@ -70,7 +70,7 @@ static void device_init(Unit *u) {
@@ -150,7 +150,7 @@ index 9fca82a..5397bd6 100644
          UNIT(d)->ignore_on_isolate = true;
          UNIT(d)->ignore_on_snapshot = true;
 diff --git a/src/core/main.c b/src/core/main.c
-index fe291f8..937994c 100644
+index fe291f8410..937994cb94 100644
 --- a/src/core/main.c
 +++ b/src/core/main.c
 @@ -90,6 +90,9 @@ static bool arg_switched_root = false;
@@ -184,7 +184,7 @@ index fe291f8..937994c 100644
          m->shutdown_watchdog = arg_shutdown_watchdog;
          m->userspace_timestamp = userspace_timestamp;
 diff --git a/src/core/manager.h b/src/core/manager.h
-index a3049b5..e74c609 100644
+index a3049b5e5b..e74c609701 100644
 --- a/src/core/manager.h
 +++ b/src/core/manager.h
 @@ -230,6 +230,9 @@ struct Manager {
@@ -198,7 +198,7 @@ index a3049b5..e74c609 100644
  
          /* non-zero if we are reloading or reexecuting, */
 diff --git a/src/core/mount.c b/src/core/mount.c
-index 70cd372..c0445a6 100644
+index 70cd372e10..c0445a6113 100644
 --- a/src/core/mount.c
 +++ b/src/core/mount.c
 @@ -131,7 +131,7 @@ static void mount_init(Unit *u) {
@@ -211,7 +211,7 @@ index 70cd372..c0445a6 100644
  
          exec_context_init(&m->exec_context);
 diff --git a/src/core/scope.c b/src/core/scope.c
-index 50e5dba..41da3b9 100644
+index 50e5dbacb4..41da3b9378 100644
 --- a/src/core/scope.c
 +++ b/src/core/scope.c
 @@ -46,7 +46,7 @@ static void scope_init(Unit *u) {
@@ -224,7 +224,7 @@ index 50e5dba..41da3b9 100644
          watch_init(&s->timer_watch);
  
 diff --git a/src/core/service.c b/src/core/service.c
-index 96ed2d3..e81aa1f 100644
+index 96ed2d303a..e81aa1fa58 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -124,9 +124,9 @@ static void service_init(Unit *u) {
@@ -241,7 +241,7 @@ index 96ed2d3..e81aa1f 100644
  
          watch_init(&s->watchdog_watch);
 diff --git a/src/core/socket.c b/src/core/socket.c
-index 6c0ac1a..d368f7e 100644
+index 6c0ac1a898..d368f7ee94 100644
 --- a/src/core/socket.c
 +++ b/src/core/socket.c
 @@ -73,7 +73,7 @@ static void socket_init(Unit *u) {
@@ -254,7 +254,7 @@ index 6c0ac1a..d368f7e 100644
          s->socket_mode = 0666;
  
 diff --git a/src/core/swap.c b/src/core/swap.c
-index a68ab7c..147f710 100644
+index a68ab7cdf8..147f710b66 100644
 --- a/src/core/swap.c
 +++ b/src/core/swap.c
 @@ -86,7 +86,7 @@ static void swap_init(Unit *u) {
@@ -267,7 +267,7 @@ index a68ab7c..147f710 100644
          exec_context_init(&s->exec_context);
          s->exec_context.std_output = u->manager->default_std_output;
 diff --git a/src/core/system.conf b/src/core/system.conf
-index 7b03c87..3c6cc03 100644
+index 7b03c8782b..3c6cc0349b 100644
 --- a/src/core/system.conf
 +++ b/src/core/system.conf
 @@ -24,6 +24,9 @@
@@ -281,7 +281,7 @@ index 7b03c87..3c6cc03 100644
  #DefaultLimitCPU=
  #DefaultLimitFSIZE=
 diff --git a/src/core/user.conf b/src/core/user.conf
-index 4a0129a..b030701 100644
+index 4a0129a984..b030701840 100644
 --- a/src/core/user.conf
 +++ b/src/core/user.conf
 @@ -14,3 +14,6 @@

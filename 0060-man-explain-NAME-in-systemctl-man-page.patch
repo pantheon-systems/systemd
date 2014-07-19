@@ -8,7 +8,7 @@ Subject: [PATCH] man: explain NAME in systemctl man page
  1 file changed, 13 insertions(+)
 
 diff --git a/man/systemctl.xml b/man/systemctl.xml
-index e789d4b..166282c 100644
+index e789d4b629..166282cecc 100644
 --- a/man/systemctl.xml
 +++ b/man/systemctl.xml
 @@ -63,6 +63,19 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
