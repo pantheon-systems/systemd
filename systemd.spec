@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -116,6 +116,12 @@ Patch074:       0074-man-journal-add-note-about-sd_journal_get_cutoff_mon.patch
 Patch075:       0075-Be-more-verbose-when-bind-or-listen-fails.patch
 Patch076:       0076-core-show-timeouts-when-watchdog-howls.patch
 Patch077:       0077-escape-fix-return-code.patch
+Patch078:       0078-Add-IFLA_VTI-defines-to-missing.h.patch
+Patch079:       0079-install-systemd-timesyncd.service-is-enabled-by-sysi.patch
+Patch080:       0080-bash-completion-p-option-for-journalctl.patch
+Patch081:       0081-sysusers-fix-selinux-context-of-backup-files.patch
+Patch082:       0082-update-done-set-proper-selinux-context-for-.updated.patch
+
 
 # Presently not accepted upstream, but we disable systemd-resolved in
 # the presets anyways, and this unbreaks anaconda/lorax/livecd-creator
@@ -845,6 +851,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Jul 21 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-5
+- Fix SELinux context of /etc/passwd-, /etc/group-, /etc/.updated (#1121806)
+- Add missing BR so gnutls and elfutils are used
+
 * Sat Jul 19 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-4
 - Various man page updates
 - Static device node logic is conditionalized on CAP_SYS_MODULES instead of CAP_MKNOD
