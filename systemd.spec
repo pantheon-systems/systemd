@@ -139,7 +139,9 @@ BuildRequires:  gobject-introspection-devel
 BuildRequires:  libblkid-devel
 BuildRequires:  xz-devel
 BuildRequires:  kmod-devel
+BuildRequires:  elfutils-devel
 BuildRequires:  libgcrypt-devel
+BuildRequires:  gnutls-devel
 BuildRequires:  qrencode-devel
 BuildRequires:  libmicrohttpd-devel
 BuildRequires:  libxslt
