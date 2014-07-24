@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        7%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -225,6 +225,17 @@ Conflicts:      systemd < 185-4
 %description libs
 Libraries for systemd and udev, as well as the systemd PAM module.
 
+%package compat-libs
+Summary:        systemd compatibility libraries
+License:        LGPLv2+ and MIT
+# To reduce confusion, this package can only be installed in parallel
+# with the normal systemd-libs, same version.
+Requires:       systemd-libs = %{version}-%{release}
+
+%description compat-libs
+Compatibility libraries for systemd. If your package requires this
+package, you need to update your link options and build.
+
 %package devel
 Summary:        Development headers for systemd
 License:        LGPLv2+ and MIT
@@ -358,7 +369,7 @@ pushd build3
         --disable-manpages \
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
-        --enable-compat-libs \
+        --disable-compat-libs \
         --disable-kdbus \
         PYTHON=%{__python3}
 %ifnarch aarch64
@@ -587,6 +598,9 @@ fi
 %post libs -p /sbin/ldconfig
 %postun libs -p /sbin/ldconfig
 
+%post compat-libs -p /sbin/ldconfig
+%postun compat-libs -p /sbin/ldconfig
+
 %post -n libgudev1 -p /sbin/ldconfig
 %postun -n libgudev1 -p /sbin/ldconfig
 
@@ -792,6 +806,8 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_libdir}/libnss_myhostname.so.2
 %{_libdir}/libudev.so.*
 %{_libdir}/libsystemd.so.*
+
+%files compat-libs
 %{_libdir}/libsystemd-daemon.so.*
 %{_libdir}/libsystemd-login.so.*
 %{_libdir}/libsystemd-journal.so.*
@@ -851,6 +867,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Jul 24 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-7
+- Split out systemd-compat-libs subpackage
+
 * Tue Jul 22 2014 Kalev Lember <kalevlember@gmail.com> - 215-6
 - Rebuilt for gobject-introspection 1.41.4
 
