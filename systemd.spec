@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        20%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        21%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -910,6 +910,7 @@ systemctl daemon-reexec >/dev/null 2>&1 || :
 systemctl start systemd-udevd.service >/dev/null 2>&1 || :
 udevadm hwdb --update >/dev/null 2>&1 || :
 journalctl --update-catalog >/dev/null 2>&1 || :
+systemd-tmpfiles --create >/dev/null 2>&1 || :
 
 # Make sure new journal files will be owned by the "systemd-journal" group
 chgrp systemd-journal /var/log/journal/ /var/log/journal/`cat /etc/machine-id 2> /dev/null` >/dev/null 2>&1 || :
@@ -1208,6 +1209,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Jul 24 2014 Michal Schmidt <mschmidt@redhat.com> - 208-21
+- Create temporary files after installation (#1084052, fix from #1101983)
+
 * Sat Jul 19 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-20
 - Make it easier to apply sysctl settings delaying
   systemd-sysctl.service after modules have been loaded
