@@ -1,0 +1,415 @@
+From 927c82868379805898eddff4adbf14c39a8a3ea5 Mon Sep 17 00:00:00 2001
+From: David Strauss <david@davidstrauss.net>
+Date: Mon, 11 Nov 2013 19:03:31 +1000
+Subject: [PATCH 13/13] cgroups: Cache controller masks and optimize queues.
+
+---
+ .gitignore                  |  1 +
+ Makefile.am                 | 13 +++++++
+ src/core/cgroup.c           | 94 +++++++++++++++++++++++++++++++--------------
+ src/core/cgroup.h           |  2 +
+ src/core/unit.c             |  8 +++-
+ src/core/unit.h             |  1 +
+ src/test/test-cgroup-mask.c | 83 +++++++++++++++++++++++++++++++++++++++
+ test/daughter.service       |  7 ++++
+ test/parent.slice           |  5 +++
+ test/son.service            |  8 ++++
+ 10 files changed, 192 insertions(+), 30 deletions(-)
+ create mode 100644 src/test/test-cgroup-mask.c
+ create mode 100644 test/daughter.service
+ create mode 100644 test/parent.slice
+ create mode 100644 test/son.service
+
+diff --git a/.gitignore b/.gitignore
+index 458cea5..20edf32 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -104,6 +104,7 @@
+ /test-calendarspec
+ /test-catalog
+ /test-cgroup
++/test-cgroup-mask
+ /test-cgroup-util
+ /test-daemon
+ /test-date
+diff --git a/Makefile.am b/Makefile.am
+index 82e46a9..df3e810 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1139,6 +1139,7 @@ tests += \
+ 	test-calendarspec \
+ 	test-strip-tab-ansi \
+ 	test-cgroup-util \
++	test-cgroup-mask \
+ 	test-prioq \
+ 	test-fileio \
+ 	test-time \
+@@ -1358,6 +1359,18 @@ test_cgroup_LDADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la
+ 
++test_cgroup_mask_SOURCES = \
++	src/test/test-cgroup-mask.c
++
++test_cgroup_mask_CFLAGS = \
++	$(AM_CFLAGS) \
++	$(DBUS_CFLAGS) \
++	-D"STR(s)=\#s" -D"TEST_DIR=STR($(abs_top_srcdir)/test/)"
++
++test_cgroup_mask_LDADD = \
++	libsystemd-core.la \
++	$(RT_LIBS)
++
+ test_cgroup_util_SOURCES = \
+ 	src/test/test-cgroup-util.c
+ 
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 1a8fd37..c2b1b7d 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -346,21 +346,8 @@ static CGroupControllerMask unit_get_cgroup_mask(Unit *u) {
+ }
+ 
+ static CGroupControllerMask unit_get_members_mask(Unit *u) {
+-        CGroupControllerMask mask = 0;
+-        Unit *m;
+-        Iterator i;
+-
+         assert(u);
+-
+-        SET_FOREACH(m, u->dependencies[UNIT_BEFORE], i) {
+-
+-                if (UNIT_DEREF(m->slice) != u)
+-                        continue;
+-
+-                mask |= unit_get_cgroup_mask(m) | unit_get_members_mask(m);
+-        }
+-
+-        return mask;
++        return u->cgroup_members_mask;
+ }
+ 
+ static CGroupControllerMask unit_get_siblings_mask(Unit *u) {
+@@ -375,6 +362,26 @@ static CGroupControllerMask unit_get_siblings_mask(Unit *u) {
+                 (CGROUP_CPU|CGROUP_BLKIO|CGROUP_CPUACCT);
+ }
+ 
++static CGroupControllerMask unit_get_target_mask(Unit *u) {
++        CGroupControllerMask mask;
++
++        mask = unit_get_cgroup_mask(u) | unit_get_members_mask(u) | unit_get_siblings_mask(u);
++        mask &= u->manager->cgroup_supported;
++
++        return mask;
++}
++
++/* Recurse from a unit up through its containing slices, propagating
++ * mask bits upward. A unit is also member of itself. */
++void unit_update_member_masks(Unit *u) {
++        u->cgroup_members_mask |= unit_get_cgroup_mask(u);
++        if (UNIT_ISSET(u->slice)) {
++                Unit *s = UNIT_DEREF(u->slice);
++                s->cgroup_members_mask |= u->cgroup_members_mask;
++                unit_update_member_masks(s);
++        }
++}
++
+ static int unit_create_cgroups(Unit *u, CGroupControllerMask mask) {
+         _cleanup_free_ char *path;
+         int r;
+@@ -422,8 +429,19 @@ static int unit_create_cgroups(Unit *u, CGroupControllerMask mask) {
+         return 0;
+ }
+ 
++static bool unit_has_mask_realized(Unit *u, CGroupControllerMask mask) {
++        return u->cgroup_realized && u->cgroup_mask == mask;
++}
++
++/* Check if necessary controllers and attributes for a unit are in place.
++ *
++ * If so, do nothing.
++ * If not, create paths, move processes over, and set attributes.
++ *
++ * Returns 0 on success and < 0 on failure. */
+ static int unit_realize_cgroup_now(Unit *u) {
+         CGroupControllerMask mask;
++        int r;
+ 
+         assert(u);
+ 
+@@ -432,19 +450,28 @@ static int unit_realize_cgroup_now(Unit *u) {
+                 u->in_cgroup_queue = false;
+         }
+ 
+-        mask = unit_get_cgroup_mask(u) | unit_get_members_mask(u) | unit_get_siblings_mask(u);
+-        mask &= u->manager->cgroup_supported;
++        mask = unit_get_target_mask(u);
+ 
+-        if (u->cgroup_realized &&
+-            u->cgroup_mask == mask)
++        /* TODO: Consider skipping this check. It may be redundant. */
++        if (unit_has_mask_realized(u, mask))
+                 return 0;
+ 
+         /* First, realize parents */
+-        if (UNIT_ISSET(u->slice))
+-                unit_realize_cgroup_now(UNIT_DEREF(u->slice));
++        if (UNIT_ISSET(u->slice)) {
++                r = unit_realize_cgroup_now(UNIT_DEREF(u->slice));
++                if (r < 0)
++                        return r;
++        }
+ 
+         /* And then do the real work */
+-        return unit_create_cgroups(u, mask);
++        r = unit_create_cgroups(u, mask);
++        if (r < 0)
++                return r;
++
++        /* Finally, apply the necessary attributes. */
++        cgroup_context_apply(unit_get_cgroup_context(u), mask, u->cgroup_path);
++
++        return 0;
+ }
+ 
+ static void unit_add_to_cgroup_queue(Unit *u) {
+@@ -459,12 +486,14 @@ static void unit_add_to_cgroup_queue(Unit *u) {
+ unsigned manager_dispatch_cgroup_queue(Manager *m) {
+         Unit *i;
+         unsigned n = 0;
++        int r;
+ 
+         while ((i = m->cgroup_queue)) {
+                 assert(i->in_cgroup_queue);
+ 
+-                if (unit_realize_cgroup_now(i) >= 0)
+-                        cgroup_context_apply(unit_get_cgroup_context(i), i->cgroup_mask, i->cgroup_path);
++                r = unit_realize_cgroup_now(i);
++                if (r < 0)
++                        log_warning("Failed to realize cgroups for queued unit %s: %s", i->id, strerror(-r));
+ 
+                 n++;
+         }
+@@ -487,9 +516,22 @@ static void unit_queue_siblings(Unit *u) {
+                         if (m == u)
+                                 continue;
+ 
++                        /* Skip units that have a dependency on the slice
++                         * but aren't actually in it. */
+                         if (UNIT_DEREF(m->slice) != slice)
+                                 continue;
+ 
++                        /* No point in doing cgroup application for units
++                         * without active processes. */
++                        if (UNIT_IS_INACTIVE_OR_FAILED(unit_active_state(m)))
++                                continue;
++
++                        /* If the unit doesn't need any new controllers
++                         * and has current ones realized, it doesn't need
++                         * any changes. */
++                        if (unit_has_mask_realized(m, unit_get_target_mask(m)))
++                                continue;
++
+                         unit_add_to_cgroup_queue(m);
+                 }
+ 
+@@ -521,13 +563,9 @@ int unit_realize_cgroup(Unit *u) {
+         /* Add all sibling slices to the cgroup queue. */
+         unit_queue_siblings(u);
+ 
+-        /* And realize this one now */
++        /* And realize this one now (and apply the values) */
+         r = unit_realize_cgroup_now(u);
+ 
+-        /* And apply the values */
+-        if (r >= 0)
+-                cgroup_context_apply(c, u->cgroup_mask, u->cgroup_path);
+-
+         return r;
+ }
+ 
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 0a079e9..25f40f7 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -113,3 +113,5 @@ int manager_notify_cgroup_empty(Manager *m, const char *group);
+ 
+ const char* cgroup_device_policy_to_string(CGroupDevicePolicy i) _const_;
+ CGroupDevicePolicy cgroup_device_policy_from_string(const char *s) _pure_;
++
++void unit_update_member_masks(Unit *u);
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 7f463f3..7e2f402 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -740,7 +740,8 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+                 "%s\tSlice: %s\n"
+                 "%s\tCGroup: %s\n"
+                 "%s\tCGroup realized: %s\n"
+-                "%s\tCGroup mask: 0x%x\n",
++                "%s\tCGroup mask: 0x%x\n"
++                "%s\tCGroup members mask: 0x%x\n",
+                 prefix, u->id,
+                 prefix, unit_description(u),
+                 prefix, strna(u->instance),
+@@ -756,7 +757,8 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+                 prefix, strna(unit_slice_name(u)),
+                 prefix, strna(u->cgroup_path),
+                 prefix, yes_no(u->cgroup_realized),
+-                prefix, u->cgroup_mask);
++                prefix, u->cgroup_mask,
++                prefix, u->cgroup_members_mask);
+ 
+         SET_FOREACH(t, u->names, i)
+                 fprintf(f, "%s\tName: %s\n", prefix, t);
+@@ -1024,6 +1026,8 @@ int unit_load(Unit *u) {
+                                 goto fail;
+                 }
+ 
++                unit_update_member_masks(u);
++
+                 r = unit_add_mount_links(u);
+                 if (r < 0)
+                         goto fail;
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 1a55842..4803925 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -174,6 +174,7 @@ struct Unit {
+         /* Counterparts in the cgroup filesystem */
+         char *cgroup_path;
+         CGroupControllerMask cgroup_mask;
++        CGroupControllerMask cgroup_members_mask;
+ 
+         UnitRef slice;
+ 
+diff --git a/src/test/test-cgroup-mask.c b/src/test/test-cgroup-mask.c
+new file mode 100644
+index 0000000..ecf041f
+--- /dev/null
++++ b/src/test/test-cgroup-mask.c
+@@ -0,0 +1,83 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2013 David Strauss
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/types.h>
++#include <pwd.h>
++
++#include "manager.h"
++#include "unit.h"
++#include "util.h"
++#include "macro.h"
++#include "test-helper.h"
++
++static int test_cgroup_mask(void) {
++        Manager *m;
++        Unit *son, *daughter, *parent, *root;
++        FILE *serial = NULL;
++        FDSet *fdset = NULL;
++        int r;
++
++        /* Prepare the manager. */
++        assert_se(set_unit_path(TEST_DIR) >= 0);
++        r = manager_new(SYSTEMD_USER, false, &m);
++        if (r == -EPERM || r == -EACCES) {
++                puts("manager_new: Permission denied. Skipping test.");
++                return EXIT_TEST_SKIP;
++        }
++        assert(r >= 0);
++        assert_se(manager_startup(m, serial, fdset) >= 0);
++
++        /* Load units and verify hierarchy. */
++        assert_se(manager_load_unit(m, "parent.slice", NULL, NULL, &parent) >= 0);
++        assert_se(manager_load_unit(m, "son.service", NULL, NULL, &son) >= 0);
++        assert_se(manager_load_unit(m, "daughter.service", NULL, NULL, &daughter) >= 0);
++        assert(parent->load_state == UNIT_LOADED);
++        assert(son->load_state == UNIT_LOADED);
++        assert(daughter->load_state == UNIT_LOADED);
++        assert(UNIT_DEREF(son->slice) == parent);
++        assert(UNIT_DEREF(daughter->slice) == parent);
++        root = UNIT_DEREF(parent->slice);
++
++        /* Verify per-unit cgroups settings. */
++        assert(cgroup_context_get_mask(unit_get_cgroup_context(son)) == (CGROUP_CPU | CGROUP_CPUACCT));
++        assert(cgroup_context_get_mask(unit_get_cgroup_context(daughter)) == 0);
++        assert(cgroup_context_get_mask(unit_get_cgroup_context(parent)) == CGROUP_BLKIO);
++        assert(cgroup_context_get_mask(unit_get_cgroup_context(root)) == 0);
++
++        /* Verify aggregation of controller masks. */
++        assert(son->cgroup_members_mask == (CGROUP_CPU | CGROUP_CPUACCT));
++        assert(daughter->cgroup_members_mask == 0);
++        assert(parent->cgroup_members_mask == (CGROUP_CPU | CGROUP_CPUACCT | CGROUP_BLKIO));
++        assert(root->cgroup_members_mask == (CGROUP_CPU | CGROUP_CPUACCT | CGROUP_BLKIO));
++
++        manager_free(m);
++
++        return 0;
++}
++
++int main(int argc, char* argv[]) {
++        int rc = 0;
++        TEST_REQ_RUNNING_SYSTEMD(rc = test_cgroup_mask());
++        return rc;
++}
+diff --git a/test/daughter.service b/test/daughter.service
+new file mode 100644
+index 0000000..aebedca
+--- /dev/null
++++ b/test/daughter.service
+@@ -0,0 +1,7 @@
++[Unit]
++Description=Daughter Service
++
++[Service]
++Slice=parent.slice
++Type=oneshot
++ExecStart=/bin/true
+diff --git a/test/parent.slice b/test/parent.slice
+new file mode 100644
+index 0000000..0222f8e
+--- /dev/null
++++ b/test/parent.slice
+@@ -0,0 +1,5 @@
++[Unit]
++Description=Parent Slice
++
++[Slice]
++BlockIOWeight=200
+diff --git a/test/son.service b/test/son.service
+new file mode 100644
+index 0000000..50bb96a
+--- /dev/null
++++ b/test/son.service
+@@ -0,0 +1,8 @@
++[Unit]
++Description=Son Service
++
++[Service]
++Slice=parent.slice
++Type=oneshot
++ExecStart=/bin/true
++CPUShares=100
+-- 
+1.8.3.1
+
