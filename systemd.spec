@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -493,6 +493,9 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
 install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
+# Delete LICENSE files from _docdir (we'll get them in as %%license)
+rm -rf %{buildroot}%{_docdir}/LICENSE*
+
 %find_lang %{name}
 
 %pre
@@ -629,6 +632,8 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 
 %files -f %{name}.lang
 %doc %{_docdir}/systemd
+%{!?_licensedir:%global license %%doc}
+%license LICENSE.GPL2 LICENSE.LGPL2.1 LICENSE.MIT
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
 %dir %{_sysconfdir}/systemd/user
@@ -877,6 +882,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Aug  6 2014 Tom Callaway <spot@fedoraproject.org> - 215-9
+- fix license handling
+
 * Wed Jul 30 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 215-8
 - Create systemd-journal-remote and systemd-journal-upload users (#1118907)
 
