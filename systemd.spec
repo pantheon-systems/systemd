@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -121,7 +121,7 @@ Patch079:       0079-install-systemd-timesyncd.service-is-enabled-by-sysi.patch
 Patch080:       0080-bash-completion-p-option-for-journalctl.patch
 Patch081:       0081-sysusers-fix-selinux-context-of-backup-files.patch
 Patch082:       0082-update-done-set-proper-selinux-context-for-.updated.patch
-
+Patch083:       0083-Added-arch-tuple-for-PPC64LE.patch
 
 # Presently not accepted upstream, but we disable systemd-resolved in
 # the presets anyways, and this unbreaks anaconda/lorax/livecd-creator
@@ -882,6 +882,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sat Aug 09 2014 Harald Hoyer <harald@redhat.com> 215-10
+- fixed PPC64LE
+
 * Wed Aug  6 2014 Tom Callaway <spot@fedoraproject.org> - 215-9
 - fix license handling
 
