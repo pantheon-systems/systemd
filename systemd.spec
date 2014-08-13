@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        215
-Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -372,7 +372,7 @@ pushd build3
         --disable-compat-libs \
         --disable-kdbus \
         PYTHON=%{__python3}
-%ifnarch aarch64
+%ifnarch aarch64 s390 s390x
 make %{?_smp_mflags} GCC_COLORS="" V=1
 %else
 make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
@@ -387,7 +387,7 @@ pushd build2
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --enable-compat-libs \
         --disable-kdbus
-%ifnarch aarch64
+%ifnarch aarch64 s390 s390x
 make %{?_smp_mflags} GCC_COLORS="" V=1
 %else
 make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
@@ -882,6 +882,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Aug 13 2014 Dan Horák <dan[at]danny.cz> 215-11
+- disable LTO also on s390(x)
+
 * Sat Aug 09 2014 Harald Hoyer <harald@redhat.com> 215-10
 - fixed PPC64LE
 
