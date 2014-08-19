@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        215
-Release:        12%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        216
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -31,102 +31,12 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 Source1:        90-default.preset
 Source7:        99-default-disable.preset
 Source5:        85-display-manager.preset
-# Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
-Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v215..v215-stable
 # i=1; for p in 0*patch;do printf "Patch%03d:       %s\n" $i $p; ((i++));done
-Patch001:       0001-man-add-link-to-Open-Group-Base-Specifications.patch
-Patch002:       0002-sd-path-add-missing-header.patch
-Patch003:       0003-architecture-remove-cris-from-uname-list.patch
-Patch004:       0004-networkd-link-improve-link-tracking-logging.patch
-Patch005:       0005-networkd-properly-track-addresses-when-first-added.patch
-Patch006:       0006-man-netdev-mention-tun-and-tap.patch
-Patch007:       0007-units-conditionalize-static-device-node-logic-on-CAP.patch
-Patch008:       0008-units-conditionalize-configfs-and-debugfs-with-CAP_S.patch
-Patch009:       0009-main-change-check-whether-etc-is-unpopulated-to-look.patch
-Patch010:       0010-networkd-don-t-clear-dhcpv6-lease-timers-if-there-s-.patch
-Patch011:       0011-networkd-accept-section-DHCP-in-systemd.network-file.patch
-Patch012:       0012-machine-don-t-return-uninitialized-variable.patch
-Patch013:       0013-sysusers-fix-uninitialized-warning.patch
-Patch014:       0014-vconsole-setup-run-setfont-before-loadkeys.patch
-Patch015:       0015-coredumpctl-show-a-useful-error-on-permission-proble.patch
-Patch016:       0016-networkd-netdev-add-missing-refs.patch
-Patch017:       0017-vconsole-setup-fix-inverted-error-messages.patch
-Patch018:       0018-udev-link_config-ignore-errors-due-to-missing-MAC-ad.patch
-Patch019:       0019-util-consider-0x7F-a-control-chracter-which-it-is-DE.patch
-Patch020:       0020-main-explain-our-etc-empty-check-a-bit-in-a-comment.patch
-Patch021:       0021-man-add-missing-archs-to-ConditionArchitecture-descr.patch
-Patch022:       0022-man-chroot-jails-are-no-longer-detected-by-Condition.patch
-Patch023:       0023-architecture-add-string-table-entries-for-mips-le-ar.patch
-Patch024:       0024-service-flush-status-text-and-errno-values-each-time.patch
-Patch025:       0025-base-filesystem.c-terminate-string-array-elements-wi.patch
-Patch026:       0026-man-drop-references-to-the-priviliged-command-line-o.patch
-Patch027:       0027-fstab-generator-add-comma-when-removed-option-is-in-.patch
-Patch028:       0028-dropin-add-format-attribute-and-fix-a-wrong-caller.patch
-Patch029:       0029-add-new-systemd-escape-tool.patch
-Patch030:       0030-escape-beef-up-new-systemd-escape-tool.patch
-Patch031:       0031-man-document-systemd-escape-1.patch
-Patch032:       0032-shared-fix-format-string-for-usec_t-type.patch
-Patch033:       0033-logind-allow-switching-to-unused-VTs-via-SwitchTo.patch
-Patch034:       0034-systemctl-fix-visual-alignment-for-lines-prefixed-wi.patch
-Patch035:       0035-accelerometer-Don-t-wait-for-new-data-from-the-senso.patch
-Patch036:       0036-escape-move-to-rootbindir.patch
-Patch037:       0037-journal-compress-improve-xz-compression-performance.patch
-Patch038:       0038-hostnamed-add-a-new-chassis-type-for-watches.patch
-Patch039:       0039-hostnamed-update-documentation-with-new-watch-chassi.patch
-Patch040:       0040-units-make-ExecStopPost-action-part-of-ExecStart.patch
-Patch041:       0041-util-don-t-consider-tabs-special-in-string_has_cc-an.patch
-Patch042:       0042-util-fix-has-cc-check-and-add-test.patch
-Patch043:       0043-sysusers-don-t-allow-user-names-longer-than-UT_NAMES.patch
-Patch044:       0044-sysusers-don-t-allow-control-characters-in-gecos-fie.patch
-Patch045:       0045-sysusers-allow-overrides-in-etc-and-run.patch
-Patch046:       0046-man-document-x-systemd.device-timeout-for-crypttab.patch
-Patch047:       0047-shell-completion-man-beef-up-chassis-completions-and.patch
-Patch048:       0048-Revert-build-sys-include-PolicyKit-files-as-part-of-.patch
-Patch049:       0049-build-sys-Do-not-distribute-generated-emergency.serv.patch
-Patch050:       0050-sysusers-preserve-label-of-etc-passwd-group.patch
-Patch051:       0051-Add-function-to-open-temp-files-in-selinux-mode.patch
-Patch052:       0052-man-add-systemd-coredump-8-and-a-bunch-of-links.patch
-Patch053:       0053-man-sysusers.d-correct-default-user-shell.patch
-Patch054:       0054-man-mention-XDG_DATA_HOME-in-systemd.unit.patch
-Patch055:       0055-path-lookup-don-t-make-.local-share-systemd-user-a-s.patch
-Patch056:       0056-fileio-quote-more-shell-characters-in-envfiles.patch
-Patch057:       0057-man-systemd.netdev-make-it-clear-that-we-do-not-touc.patch
-Patch058:       0058-rules-consistently-use-instead-of.patch
-Patch059:       0059-timesyncd-suppress-resync-at-system-time-change-when.patch
-Patch060:       0060-timesyncd-only-listen-to-clock-changes-when-connecte.patch
-Patch061:       0061-shell-completion-restore-completion-for-p.patch
-Patch062:       0062-core-fix-oneshot-service-resource-control.patch
-Patch063:       0063-rules-uaccess-add-ID_SOFTWARE_RADIO.patch
-Patch064:       0064-journal-allow-files-with-no-data-whatsoever.patch
-Patch065:       0065-units-serial-getty-.service-use-the-default-RestartS.patch
-Patch066:       0066-build-sys-don-t-move-libgudev-to-lib.patch
-Patch067:       0067-shared-include-stdbool.h-in-mkdir.h.patch
-Patch068:       0068-missing.h-add-IFLA_MACVLAN_FLAGS.patch
-Patch069:       0069-man-document-yearly-and-annually-in-systemd.time-7.patch
-Patch070:       0070-core-nicer-message-when-inotify-watches-are-exhauste.patch
-Patch071:       0071-detect-virt-Fix-Xen-domU-discovery.patch
-Patch072:       0072-journal-reduce-test-journal-send-timeout-from-10s-to.patch
-Patch073:       0073-systemd-detect-virt-detect-s390-virtualization.patch
-Patch074:       0074-man-journal-add-note-about-sd_journal_get_cutoff_mon.patch
-Patch075:       0075-Be-more-verbose-when-bind-or-listen-fails.patch
-Patch076:       0076-core-show-timeouts-when-watchdog-howls.patch
-Patch077:       0077-escape-fix-return-code.patch
-Patch078:       0078-Add-IFLA_VTI-defines-to-missing.h.patch
-Patch079:       0079-install-systemd-timesyncd.service-is-enabled-by-sysi.patch
-Patch080:       0080-bash-completion-p-option-for-journalctl.patch
-Patch081:       0081-sysusers-fix-selinux-context-of-backup-files.patch
-Patch082:       0082-update-done-set-proper-selinux-context-for-.updated.patch
-Patch083:       0083-Added-arch-tuple-for-PPC64LE.patch
-
-# Presently not accepted upstream, but we disable systemd-resolved in
-# the presets anyways, and this unbreaks anaconda/lorax/livecd-creator
-# etc.
-Patch0: 0001-resolved-Move-symlink-creation-from-tmpfiles-to-daem.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -144,6 +54,8 @@ BuildRequires:  glib2-devel
 BuildRequires:  gobject-introspection-devel
 BuildRequires:  libblkid-devel
 BuildRequires:  xz-devel
+BuildRequires:  libidn-devel
+BuildRequires:  libcurl-devel
 BuildRequires:  kmod-devel
 BuildRequires:  elfutils-devel
 BuildRequires:  libgcrypt-devel
@@ -485,10 +397,6 @@ touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
 touch %{buildroot}%{_localstatedir}/lib/systemd/random-seed
 touch %{buildroot}%{_localstatedir}/lib/systemd/clock
 
-# Install rsyslog fragment
-mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
-install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
-
 # Install yum protection fragment
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
 install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
@@ -652,7 +560,6 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %dir %{_prefix}/lib/systemd/system-sleep
 %dir %{_prefix}/lib/systemd/catalog
 %dir %{_prefix}/lib/systemd/network
-%dir %{_prefix}/lib/systemd/ntp-units.d
 %dir %{_prefix}/lib/tmpfiles.d
 %dir %{_prefix}/lib/sysusers.d
 %dir %{_prefix}/lib/sysctl.d
@@ -680,6 +587,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.locale1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.timedate1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.machine1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.resolve1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/logind.conf
@@ -688,8 +596,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %config(noreplace) %{_sysconfdir}/systemd/resolved.conf
 %config(noreplace) %{_sysconfdir}/systemd/timesyncd.conf
 %config(noreplace) %{_sysconfdir}/systemd/coredump.conf
+%config(noreplace) %{_sysconfdir}/systemd/journal-remote.conf
+%config(noreplace) %{_sysconfdir}/systemd/journal-upload.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
-%config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
 %config(noreplace) %{_sysconfdir}/pam.d/systemd-user
 %ghost %{_sysconfdir}/udev/hwdb.bin
@@ -715,6 +624,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_bindir}/journalctl
 %{_bindir}/machinectl
 %{_bindir}/busctl
+%{_bindir}/networkctl
 %{_bindir}/coredumpctl
 %{_bindir}/systemd-tmpfiles
 %{_bindir}/systemd-nspawn
@@ -728,11 +638,11 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_bindir}/systemd-inhibit
 %{_bindir}/systemd-path
 %{_bindir}/systemd-sysusers
+%{_bindir}/systemd-firstboot
 %{_bindir}/hostnamectl
 %{_bindir}/localectl
 %{_bindir}/timedatectl
 %{_bindir}/bootctl
-%{_bindir}/systemd-coredumpctl
 %{_bindir}/udevadm
 %{_bindir}/kernel-install
 %{_prefix}/lib/systemd/systemd
@@ -753,6 +663,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_prefix}/lib/systemd/system-generators/systemd-sysv-generator
 %{_prefix}/lib/systemd/system-generators/systemd-debug-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
+%{_prefix}/lib/tmpfiles.d/systemd-remote.conf
 %{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
@@ -763,6 +674,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_prefix}/lib/sysctl.d/50-coredump.conf
 %{_prefix}/lib/sysusers.d/basic.conf
 %{_prefix}/lib/sysusers.d/systemd.conf
+%{_prefix}/lib/sysusers.d/systemd-remote.conf
 %{_prefix}/lib/systemd/system-preset/85-display-manager.preset
 %{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/90-systemd.preset
@@ -784,6 +696,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %exclude %{_mandir}/man8/systemd-journal-gatewayd.*
 %exclude %{_mandir}/man8/systemd-journal-remote.*
 %{_mandir}/man8/*
+%{_datadir}/factory/etc/nsswitch.conf
+%{_datadir}/factory/etc/pam.d/other
+%{_datadir}/factory/etc/pam.d/system-auth
 %{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
@@ -792,6 +707,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/dbus-1/system-services/org.freedesktop.locale1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.timedate1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.machine1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.resolve1.service
 %dir %{_datadir}/polkit-1
 %dir %{_datadir}/polkit-1/actions
 %{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
@@ -804,7 +720,6 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/bash-completion/completions/*
 %{_datadir}/zsh/site-functions/*
 %{_prefix}/lib/systemd/catalog/systemd.*.catalog
-%{_prefix}/lib/systemd/ntp-units.d/90-systemd.list
 %{_prefix}/lib/systemd/network/99-default.link
 %{_prefix}/lib/systemd/network/80-container-host0.network
 %{_prefix}/lib/systemd/network/80-container-ve.network
@@ -819,6 +734,8 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %files libs
 %{_libdir}/security/pam_systemd.so
 %{_libdir}/libnss_myhostname.so.2
+%{_libdir}/libnss_mymachines.so.2
+%{_libdir}/libnss_resolve.so.2
 %{_libdir}/libudev.so.*
 %{_libdir}/libsystemd.so.*
 
@@ -882,6 +799,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Aug 20 2014 Lennart Poettering <lpoetter@redhat.com> - 216-1
+- New upstream release
+
 * Mon Aug 18 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 215-12
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
