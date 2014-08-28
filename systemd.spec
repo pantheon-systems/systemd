@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -289,11 +289,7 @@ pushd build3
         --disable-compat-libs \
         --disable-kdbus \
         PYTHON=%{__python3}
-%ifnarch aarch64 s390 s390x
 make %{?_smp_mflags} GCC_COLORS="" V=1
-%else
-make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
-%endif
 popd
 
 pushd build2
@@ -304,11 +300,7 @@ pushd build2
         --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --enable-compat-libs \
         --disable-kdbus
-%ifnarch aarch64 s390 s390x
 make %{?_smp_mflags} GCC_COLORS="" V=1
-%else
-make %{?_smp_mflags} CFLAGS="${CFLAGS} -fno-lto" GCC_COLORS="" V=1
-%endif
 popd
 
 %install
@@ -804,6 +796,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Aug 28 2014 Peter Robinson <pbrobinson@fedoraproject.org> 216-3
+- Drop no LTO build option for aarch64/s390 now it's fixed in binutils (RHBZ 1091611)
+
 * Thu Aug 21 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-2
 - Re-add patch to disable resolve.conf symlink (#1043119)
 
