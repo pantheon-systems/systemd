@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -593,8 +593,6 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %config(noreplace) %{_sysconfdir}/systemd/resolved.conf
 %config(noreplace) %{_sysconfdir}/systemd/timesyncd.conf
 %config(noreplace) %{_sysconfdir}/systemd/coredump.conf
-%config(noreplace) %{_sysconfdir}/systemd/journal-remote.conf
-%config(noreplace) %{_sysconfdir}/systemd/journal-upload.conf
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
 %config(noreplace) %{_sysconfdir}/pam.d/systemd-user
@@ -660,7 +658,6 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_prefix}/lib/systemd/system-generators/systemd-sysv-generator
 %{_prefix}/lib/systemd/system-generators/systemd-debug-generator
 %{_prefix}/lib/tmpfiles.d/systemd.conf
-%{_prefix}/lib/tmpfiles.d/systemd-remote.conf
 %{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
@@ -671,7 +668,6 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_prefix}/lib/sysctl.d/50-coredump.conf
 %{_prefix}/lib/sysusers.d/basic.conf
 %{_prefix}/lib/sysusers.d/systemd.conf
-%{_prefix}/lib/sysusers.d/systemd-remote.conf
 %{_prefix}/lib/systemd/system-preset/85-display-manager.preset
 %{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/90-systemd.preset
@@ -788,14 +784,21 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %files journal-gateway
+%config(noreplace) %{_sysconfdir}/systemd/journal-remote.conf
+%config(noreplace) %{_sysconfdir}/systemd/journal-upload.conf
 %{_prefix}/lib/systemd/system/systemd-journal-gatewayd.*
 %{_prefix}/lib/systemd/systemd-journal-gatewayd
 %{_prefix}/lib/systemd/systemd-journal-remote
+%{_prefix}/lib/tmpfiles.d/systemd-remote.conf
+%{_prefix}/lib/sysusers.d/systemd-remote.conf
 %{_mandir}/man8/systemd-journal-gatewayd.*
 %{_mandir}/man8/systemd-journal-remote.*
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Sep 03 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-4
+- Move config files for sd-j-remote/upload to sd-journal-gateway subpackage (#1136580)
+
 * Thu Aug 28 2014 Peter Robinson <pbrobinson@fedoraproject.org> 216-3
 - Drop no LTO build option for aarch64/s390 now it's fixed in binutils (RHBZ 1091611)
 
