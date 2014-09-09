@@ -279,27 +279,28 @@ rm -rf build2 build3
 mkdir build2
 mkdir build3
 
+CONFIGURE_OPTS=(
+        --libexecdir=%{_prefix}/lib
+        --with-sysvinit-path=/etc/rc.d/init.d
+        --with-rc-local-script-path-start=/etc/rc.d/rc.local
+        --disable-kdbus
+)
+
 pushd build3
 %define _configure ../configure
 %configure \
-        --libexecdir=%{_prefix}/lib \
+        "${CONFIGURE_OPTS[@]}" \
         --disable-manpages \
-        --with-sysvinit-path=/etc/rc.d/init.d \
-        --with-rc-local-script-path-start=/etc/rc.d/rc.local \
         --disable-compat-libs \
-        --disable-kdbus \
         PYTHON=%{__python3}
 make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
 pushd build2
 %configure \
-        --libexecdir=%{_prefix}/lib \
+        "${CONFIGURE_OPTS[@]}" \
         --enable-gtk-doc \
-        --with-sysvinit-path=/etc/rc.d/init.d \
-        --with-rc-local-script-path-start=/etc/rc.d/rc.local \
-        --enable-compat-libs \
-        --disable-kdbus
+        --enable-compat-libs
 make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
