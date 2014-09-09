@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -802,6 +802,10 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Sep 09 2014 Michal Schmidt <mschmidt@redhat.com> - 216-5
+- Use common CONFIGURE_OPTS for build2 and build3.
+- Configure timesyncd with NTP servers from Fedora/RHEL vendor zone.
+
 * Wed Sep 03 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-4
 - Move config files for sd-j-remote/upload to sd-journal-gateway subpackage (#1136580)
 
