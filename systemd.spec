@@ -274,6 +274,10 @@ sed -r -i 's/\blibsystemd-(login|journal|id128|daemon).c \\/\\/' Makefile.am
     %endif
 %endif
 
+%{?fedora: %global ntpvendor fedora}
+%{?rhel:   %global ntpvendor rhel}
+%{!?ntpvendor: echo 'NTP vendor zone is not set!'; exit 1}
+
 # first make python3 while source directory is empty
 rm -rf build2 build3
 mkdir build2
@@ -283,6 +287,7 @@ CONFIGURE_OPTS=(
         --libexecdir=%{_prefix}/lib
         --with-sysvinit-path=/etc/rc.d/init.d
         --with-rc-local-script-path-start=/etc/rc.d/rc.local
+        --with-ntp-servers='0.%{ntpvendor}.pool.ntp.org 1.%{ntpvendor}.pool.ntp.org 2.%{ntpvendor}.pool.ntp.org 3.%{ntpvendor}.pool.ntp.org'
         --disable-kdbus
 )
 
