@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        5%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -42,6 +42,18 @@ Source6:        yum-protect-systemd.conf
 # the presets anyways, and this unbreaks anaconda/lorax/livecd-creator
 # etc.
 Patch0: 0001-resolved-Move-symlink-creation-from-tmpfiles-to-daem.patch
+
+# timesyncd patches from upstream to be nice to NTP pool
+Patch0002:      0002-timesyncd-check-if-stratum-is-valid.patch
+Patch0003:      0003-timesyncd-fix-calculation-of-transmit-time.patch
+Patch0004:      0004-timesyncd-get-kernel-timestamp-in-nanoseconds.patch
+Patch0005:      0005-timesyncd-check-root-distance.patch
+Patch0006:      0006-timesyncd-manager-don-t-clear-current_server_name-if.patch
+Patch0007:      0007-timesyncd-wait-before-reconnecting-to-first-server.patch
+Patch0008:      0008-timesyncd-remove-retry_timer-logic-which-is-covered-.patch
+Patch0009:      0009-timesyncd-allow-two-missed-replies-before-reselectin.patch
+Patch0010:      0010-timesyncd-don-t-reset-polling-interval-when-reselect.patch
+Patch0011:      0011-Revert-timesyncd-remove-retry_timer-logic-which-is-c.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -802,6 +814,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Sep 10 2014 Michal Schmidt <mschmidt@redhat.com> - 216-6
+- Update timesyncd with patches to avoid hitting NTP pool too often.
+
 * Tue Sep 09 2014 Michal Schmidt <mschmidt@redhat.com> - 216-5
 - Use common CONFIGURE_OPTS for build2 and build3.
 - Configure timesyncd with NTP servers from Fedora/RHEL vendor zone.
