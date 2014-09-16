@@ -82,6 +82,9 @@ enable gpm.*
 # https://bugzilla.redhat.com/show_bug.cgi?id=1066421
 enable gpsd.socket
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1141607
+enable x2gocleansessions.service
+
 enable irqbalance.service
 enable lm_sensors.service
 enable mcelog.*
