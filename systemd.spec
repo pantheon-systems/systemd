@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        21%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        22%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -560,6 +560,7 @@ Patch518:       0518-build-sys-don-t-move-libgudev-to-lib.patch
 Patch519:       0519-core-nicer-message-when-inotify-watches-are-exhauste.patch
 Patch520:       0520-journal-reduce-test-journal-send-timeout-from-10s-to.patch
 Patch521:       0521-socket-add-SocketUser-and-SocketGroup-for-chown-ing-.patch
+Patch522:       0522-nspawn-allow-EEXIST-on-mkdir_safe_label.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1209,6 +1210,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Sep 22 2014 Jan Synacek <jsynacek@redhat.com> - 208-22
+- Fix systemd-nspawn with -u (#1145108)
+
 * Thu Jul 24 2014 Michal Schmidt <mschmidt@redhat.com> - 208-21
 - Create temporary files after installation (#1084052, fix from #1101983)
 

@@ -1,0 +1,29 @@
+From f418f31d5042398344740f2d8ac4dc1c2583151c Mon Sep 17 00:00:00 2001
+From: Brandon Philips <brandon.philips@coreos.com>
+Date: Thu, 13 Mar 2014 15:19:40 -0700
+Subject: [PATCH] nspawn: allow -EEXIST on mkdir_safe /home/${uid}
+
+With systemd 211 nspawn attempts to create the home directory for the
+given uid. However, if the home directory already exists then it will
+fail. Don't error out on -EEXIST.
+---
+ Backported-by: Jan Synacek <jsynacek@redhat.com>
+ Resolves: #1145108
+
+ src/nspawn/nspawn.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index b637b51..7c3d7b8 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -1569,7 +1569,7 @@ int main(int argc, char *argv[]) {
+                                         goto child_fail;
+                                 }
+ 
+-                                if (mkdir_safe_label(home, 0775, uid, gid) < 0) {
++                                if (mkdir_safe_label(home, 0775, uid, gid) < 0 && errno != EEXIST) {
+                                         log_error("mkdir_safe_label() failed: %m");
+                                         goto child_fail;
+                                 }
+
