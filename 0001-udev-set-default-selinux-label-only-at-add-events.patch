@@ -1,0 +1,28 @@
+From 11590caa38178ff067cd6cab9f30b91c68c24bd4 Mon Sep 17 00:00:00 2001
+From: Federico Simoncelli <fsimonce@redhat.com>
+Date: Tue, 30 Sep 2014 13:34:19 +0000
+Subject: [PATCH] udev: set default selinux label only at "add" events
+
+Signed-off-by: Federico Simoncelli <fsimonce@redhat.com>
+---
+ src/udev/udev-node.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/udev/udev-node.c b/src/udev/udev-node.c
+index ca3d781..42b2add 100644
+--- a/src/udev/udev-node.c
++++ b/src/udev/udev-node.c
+@@ -285,7 +285,10 @@ static int node_permissions_apply(struct udev_device *dev, bool apply, mode_t mo
+                 } else {
+                         log_debug("preserve permissions %s, %#o, uid=%u, gid=%u", devnode, mode, uid, gid);
+                 }
+-                label_fix(devnode, true, false);
++
++                if (streq(udev_device_get_action(dev), "add")) {
++                        label_fix(devnode, true, false);
++                }
+         }
+ 
+         /* always update timestamp when we re-use the node, like on media change events */
+-- 
+1.9.3
