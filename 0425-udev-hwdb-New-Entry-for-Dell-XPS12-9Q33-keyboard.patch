@@ -1,0 +1,26 @@
+From 24119cf10c7ed58a8fc0851745149dcc6dd5757f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Stefan=20Br=C3=BCns?= <stefan.bruens@rwth-aachen.de>
+Date: Mon, 29 Sep 2014 22:32:10 -0400
+Subject: [PATCH] udev/hwdb: New Entry for Dell XPS12 9Q33 keyboard
+
+https://bugs.freedesktop.org/show_bug.cgi?id=84437
+---
+ hwdb/60-keyboard.hwdb | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
+index 0ffcb83277..8a1baa7c4b 100644
+--- a/hwdb/60-keyboard.hwdb
++++ b/hwdb/60-keyboard.hwdb
+@@ -243,6 +243,11 @@ keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnPrecision*:pvr*
+ keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnXPS*:pvr*
+  KEYBOARD_KEY_8c=!unknown
+ 
++# Dell XPS12 9Q33
++keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnXPS12-9Q33*:pvr*
++ KEYBOARD_KEY_88=wlan
++ KEYBOARD_KEY_65=switchvideomode                        # Screen Rotate
++
+ # Dell Latitude microphone mute
+ keyboard:name:Dell WMI hotkeys:dmi:bvn*:bvr*:bd*:svnDell*:pnLatitude*
+  KEYBOARD_KEY_150=f20                                   # Mic mute toggle, should be micmute

@@ -1,0 +1,22 @@
+From f697185e5b45287b6a62592129e726d8a636d3ff Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 29 Aug 2014 13:08:16 +0200
+Subject: [PATCH] sd-ipv4ll: name the correct source
+
+---
+ src/libsystemd-network/sd-ipv4ll.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-network/sd-ipv4ll.c b/src/libsystemd-network/sd-ipv4ll.c
+index 3d15fc85ea..8b243319b6 100644
+--- a/src/libsystemd-network/sd-ipv4ll.c
++++ b/src/libsystemd-network/sd-ipv4ll.c
+@@ -564,7 +564,7 @@ int sd_ipv4ll_start (sd_ipv4ll *ll) {
+         if (r < 0)
+                 goto out;
+ 
+-        r = sd_event_source_set_name(ll->timer, "ipv4ll-receive-message");
++        r = sd_event_source_set_name(ll->receive_message, "ipv4ll-receive-message");
+         if (r < 0)
+                 goto out;
+ 

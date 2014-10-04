@@ -1,0 +1,22 @@
+From eed9386748cb6bd7b1aecc62ea723db2e0c541ca Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 13 Sep 2014 11:18:26 -0400
+Subject: [PATCH] core: use correct function to free CalendarSpec
+
+---
+ src/core/load-fragment.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 78da23ea57..7cf19b93cc 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -1369,7 +1369,7 @@ int config_parse_timer(const char *unit,
+         v = new0(TimerValue, 1);
+         if (!v) {
+                 if (c)
+-                        free(c);
++                        calendar_spec_free(c);
+                 return log_oom();
+         }
+ 

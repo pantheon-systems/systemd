@@ -1,0 +1,23 @@
+From 75a0da952f603006d6b3535ecaf8ebe2bded30e7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 5 Oct 2014 14:04:02 -0400
+Subject: [PATCH] bus: add assert to check that we're not freeing a static
+ structure
+
+CID #996315.
+---
+ src/libsystemd/sd-bus/sd-bus.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/libsystemd/sd-bus/sd-bus.c b/src/libsystemd/sd-bus/sd-bus.c
+index 28b993b7ba..bc4376fb51 100644
+--- a/src/libsystemd/sd-bus/sd-bus.c
++++ b/src/libsystemd/sd-bus/sd-bus.c
+@@ -142,6 +142,7 @@ static void bus_free(sd_bus *b) {
+         hashmap_free_free(b->reply_callbacks);
+         prioq_free(b->reply_callbacks_prioq);
+ 
++        assert(b->match_callbacks.type == BUS_MATCH_ROOT);
+         bus_match_free(&b->match_callbacks);
+ 
+         hashmap_free_free(b->vtable_methods);

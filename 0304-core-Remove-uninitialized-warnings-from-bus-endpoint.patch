@@ -1,0 +1,26 @@
+From 96f2f3b1b5f44eb59d23d2abeac12b33a18e1e21 Mon Sep 17 00:00:00 2001
+From: Philippe De Swert <philippedeswert@gmail.com>
+Date: Thu, 18 Sep 2014 18:56:56 +0300
+Subject: [PATCH] core: Remove uninitialized warnings from bus-endpoint.c
+
+Gcc is spewing some warnings about uninitialized variables.
+Let's get rid of the noise.
+---
+ src/core/bus-endpoint.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/bus-endpoint.c b/src/core/bus-endpoint.c
+index 1e8f07eb54..aac540ddee 100644
+--- a/src/core/bus-endpoint.c
++++ b/src/core/bus-endpoint.c
+@@ -34,8 +34,8 @@ int bus_endpoint_new(BusEndpoint **ep)
+ 
+ int bus_endpoint_add_policy(BusEndpoint *ep, const char *name, BusPolicyAccess access)
+ {
+-        _cleanup_free_ BusEndpointPolicy *po;
+-        _cleanup_free_ char *key;
++        _cleanup_free_ BusEndpointPolicy *po = NULL;
++        _cleanup_free_ char *key = NULL;
+         int r;
+ 
+         assert(ep);

@@ -1,0 +1,530 @@
+From 9fa95f8539a380e93f760956bc6982e57f5bf3af Mon Sep 17 00:00:00 2001
+From: Daniel Mack <zonque@gmail.com>
+Date: Sat, 23 Aug 2014 15:28:37 +0200
+Subject: [PATCH] exec: factor out most function arguments of exec_spawn() to
+ ExecParameters
+
+This way, the list of arguments to that function gets more comprehensive,
+and we can get around passing lots of NULL and 0 arguments from socket.c,
+swap.c and mount.c.
+
+It also allows for splitting up the code in exec_spawn().
+
+While at it, make ExecContext const in execute.c.
+---
+ src/core/execute.c | 89 ++++++++++++++++++++++++------------------------------
+ src/core/execute.h | 33 +++++++++++---------
+ src/core/mount.c   | 26 ++++++++--------
+ src/core/service.c | 32 ++++++++++++--------
+ src/core/socket.c  | 27 +++++++++--------
+ src/core/swap.c    | 26 ++++++++--------
+ 6 files changed, 117 insertions(+), 116 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 066efd6fdf..e683fa5e16 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1138,7 +1138,7 @@ static void do_idle_pipe_dance(int idle_pipe[4]) {
+ }
+ 
+ static int build_environment(
+-                ExecContext *c,
++                const ExecContext *c,
+                 unsigned n_fds,
+                 usec_t watchdog_usec,
+                 const char *home,
+@@ -1224,67 +1224,56 @@ static int build_environment(
+ }
+ 
+ int exec_spawn(ExecCommand *command,
+-               char **argv,
+-               ExecContext *context,
+-               int fds[], unsigned n_fds,
+-               char **environment,
+-               bool apply_permissions,
+-               bool apply_chroot,
+-               bool apply_tty_stdin,
+-               bool confirm_spawn,
+-               CGroupControllerMask cgroup_supported,
+-               const char *cgroup_path,
+-               const char *runtime_prefix,
+-               const char *unit_id,
+-               usec_t watchdog_usec,
+-               int idle_pipe[4],
++               const ExecContext *context,
++               const ExecParameters *exec_params,
+                ExecRuntime *runtime,
+                pid_t *ret) {
+ 
+         _cleanup_strv_free_ char **files_env = NULL;
++        int *fds = NULL; unsigned n_fds = 0;
+         int socket_fd;
+-        char *line;
++        char *line, **argv;
+         pid_t pid;
+         int r;
+ 
+         assert(command);
+         assert(context);
+         assert(ret);
+-        assert(fds || n_fds <= 0);
++        assert(exec_params);
++        assert(exec_params->fds || exec_params->n_fds <= 0);
+ 
+         if (context->std_input == EXEC_INPUT_SOCKET ||
+             context->std_output == EXEC_OUTPUT_SOCKET ||
+             context->std_error == EXEC_OUTPUT_SOCKET) {
+ 
+-                if (n_fds != 1)
++                if (exec_params->n_fds != 1)
+                         return -EINVAL;
+ 
+-                socket_fd = fds[0];
+-
+-                fds = NULL;
+-                n_fds = 0;
+-        } else
++                socket_fd = exec_params->fds[0];
++        } else {
+                 socket_fd = -1;
++                fds = exec_params->fds;
++                n_fds = exec_params->n_fds;
++        }
+ 
+         r = exec_context_load_environment(context, &files_env);
+         if (r < 0) {
+                 log_struct_unit(LOG_ERR,
+-                           unit_id,
++                           exec_params->unit_id,
+                            "MESSAGE=Failed to load environment files: %s", strerror(-r),
+                            "ERRNO=%d", -r,
+                            NULL);
+                 return r;
+         }
+ 
+-        if (!argv)
+-                argv = command->argv;
++        argv = exec_params->argv ?: command->argv;
+ 
+         line = exec_command_line(argv);
+         if (!line)
+                 return log_oom();
+ 
+         log_struct_unit(LOG_DEBUG,
+-                        unit_id,
++                        exec_params->unit_id,
+                         "EXECUTABLE=%s", command->path,
+                         "MESSAGE=About to execute: %s", line,
+                         NULL);
+@@ -1324,8 +1313,8 @@ int exec_spawn(ExecCommand *command,
+                         goto fail_child;
+                 }
+ 
+-                if (idle_pipe)
+-                        do_idle_pipe_dance(idle_pipe);
++                if (exec_params->idle_pipe)
++                        do_idle_pipe_dance(exec_params->idle_pipe);
+ 
+                 /* Close sockets very early to make sure we don't
+                  * block init reexecution because it cannot bind its
+@@ -1360,7 +1349,7 @@ int exec_spawn(ExecCommand *command,
+ 
+                 exec_context_tty_reset(context);
+ 
+-                if (confirm_spawn) {
++                if (exec_params->confirm_spawn) {
+                         char response;
+ 
+                         err = ask_for_confirmation(&response, argv);
+@@ -1385,26 +1374,26 @@ int exec_spawn(ExecCommand *command,
+                 if (socket_fd >= 0)
+                         fd_nonblock(socket_fd, false);
+ 
+-                err = setup_input(context, socket_fd, apply_tty_stdin);
++                err = setup_input(context, socket_fd, exec_params->apply_tty_stdin);
+                 if (err < 0) {
+                         r = EXIT_STDIN;
+                         goto fail_child;
+                 }
+ 
+-                err = setup_output(context, STDOUT_FILENO, socket_fd, basename(command->path), unit_id, apply_tty_stdin);
++                err = setup_output(context, STDOUT_FILENO, socket_fd, basename(command->path), exec_params->unit_id, exec_params->apply_tty_stdin);
+                 if (err < 0) {
+                         r = EXIT_STDOUT;
+                         goto fail_child;
+                 }
+ 
+-                err = setup_output(context, STDERR_FILENO, socket_fd, basename(command->path), unit_id, apply_tty_stdin);
++                err = setup_output(context, STDERR_FILENO, socket_fd, basename(command->path), exec_params->unit_id, exec_params->apply_tty_stdin);
+                 if (err < 0) {
+                         r = EXIT_STDERR;
+                         goto fail_child;
+                 }
+ 
+-                if (cgroup_path) {
+-                        err = cg_attach_everywhere(cgroup_supported, cgroup_path, 0);
++                if (exec_params->cgroup_path) {
++                        err = cg_attach_everywhere(exec_params->cgroup_supported, exec_params->cgroup_path, 0);
+                         if (err < 0) {
+                                 r = EXIT_CGROUP;
+                                 goto fail_child;
+@@ -1497,15 +1486,15 @@ int exec_spawn(ExecCommand *command,
+                 }
+ 
+ #ifdef HAVE_PAM
+-                if (cgroup_path && context->user && context->pam_name) {
+-                        err = cg_set_task_access(SYSTEMD_CGROUP_CONTROLLER, cgroup_path, 0644, uid, gid);
++                if (exec_params->cgroup_path && context->user && context->pam_name) {
++                        err = cg_set_task_access(SYSTEMD_CGROUP_CONTROLLER, exec_params->cgroup_path, 0644, uid, gid);
+                         if (err < 0) {
+                                 r = EXIT_CGROUP;
+                                 goto fail_child;
+                         }
+ 
+ 
+-                        err = cg_set_group_access(SYSTEMD_CGROUP_CONTROLLER, cgroup_path, 0755, uid, gid);
++                        err = cg_set_group_access(SYSTEMD_CGROUP_CONTROLLER, exec_params->cgroup_path, 0755, uid, gid);
+                         if (err < 0) {
+                                 r = EXIT_CGROUP;
+                                 goto fail_child;
+@@ -1513,13 +1502,13 @@ int exec_spawn(ExecCommand *command,
+                 }
+ #endif
+ 
+-                if (!strv_isempty(context->runtime_directory) && runtime_prefix) {
++                if (!strv_isempty(context->runtime_directory) && exec_params->runtime_prefix) {
+                         char **rt;
+ 
+                         STRV_FOREACH(rt, context->runtime_directory) {
+                                 _cleanup_free_ char *p;
+ 
+-                                p = strjoin(runtime_prefix, "/", *rt, NULL);
++                                p = strjoin(exec_params->runtime_prefix, "/", *rt, NULL);
+                                 if (!p) {
+                                         r = EXIT_RUNTIME_DIRECTORY;
+                                         err = -ENOMEM;
+@@ -1534,7 +1523,7 @@ int exec_spawn(ExecCommand *command,
+                         }
+                 }
+ 
+-                if (apply_permissions) {
++                if (exec_params->apply_permissions) {
+                         err = enforce_groups(context, username, gid);
+                         if (err < 0) {
+                                 r = EXIT_GROUP;
+@@ -1545,7 +1534,7 @@ int exec_spawn(ExecCommand *command,
+                 umask(context->umask);
+ 
+ #ifdef HAVE_PAM
+-                if (apply_permissions && context->pam_name && username) {
++                if (exec_params->apply_permissions && context->pam_name && username) {
+                         err = setup_pam(context->pam_name, username, uid, context->tty_path, &pam_env, fds, n_fds);
+                         if (err < 0) {
+                                 r = EXIT_PAM;
+@@ -1601,7 +1590,7 @@ int exec_spawn(ExecCommand *command,
+                         }
+                 }
+ 
+-                if (apply_chroot) {
++                if (exec_params->apply_chroot) {
+                         if (context->root_directory)
+                                 if (chroot(context->root_directory) < 0) {
+                                         err = -errno;
+@@ -1646,7 +1635,7 @@ int exec_spawn(ExecCommand *command,
+                         goto fail_child;
+                 }
+ 
+-                if (apply_permissions) {
++                if (exec_params->apply_permissions) {
+ 
+                         for (i = 0; i < _RLIMIT_MAX; i++) {
+                                 if (!context->rlimit[i])
+@@ -1742,14 +1731,14 @@ int exec_spawn(ExecCommand *command,
+ #endif
+                 }
+ 
+-                err = build_environment(context, n_fds, watchdog_usec, home, username, shell, &our_env);
++                err = build_environment(context, n_fds, exec_params->watchdog_usec, home, username, shell, &our_env);
+                 if (r < 0) {
+                         r = EXIT_MEMORY;
+                         goto fail_child;
+                 }
+ 
+                 final_env = strv_env_merge(5,
+-                                           environment,
++                                           exec_params->environment,
+                                            our_env,
+                                            context->environment,
+                                            files_env,
+@@ -1775,7 +1764,7 @@ int exec_spawn(ExecCommand *command,
+                         if (line) {
+                                 log_open();
+                                 log_struct_unit(LOG_DEBUG,
+-                                                unit_id,
++                                                exec_params->unit_id,
+                                                 "EXECUTABLE=%s", command->path,
+                                                 "MESSAGE=Executing: %s", line,
+                                                 NULL);
+@@ -1805,7 +1794,7 @@ int exec_spawn(ExecCommand *command,
+         }
+ 
+         log_struct_unit(LOG_DEBUG,
+-                        unit_id,
++                        exec_params->unit_id,
+                         "MESSAGE=Forked %s as "PID_FMT,
+                         command->path, pid,
+                         NULL);
+@@ -1815,8 +1804,8 @@ int exec_spawn(ExecCommand *command,
+          * outside of the cgroup) and in the parent (so that we can be
+          * sure that when we kill the cgroup the process will be
+          * killed too). */
+-        if (cgroup_path)
+-                cg_attach(SYSTEMD_CGROUP_CONTROLLER, cgroup_path, pid);
++        if (exec_params->cgroup_path)
++                cg_attach(SYSTEMD_CGROUP_CONTROLLER, exec_params->cgroup_path, pid);
+ 
+         exec_status_start(&command->exec_status, pid);
+ 
+diff --git a/src/core/execute.h b/src/core/execute.h
+index 9d05d3a9de..f31f0c9f27 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -25,6 +25,7 @@ typedef struct ExecStatus ExecStatus;
+ typedef struct ExecCommand ExecCommand;
+ typedef struct ExecContext ExecContext;
+ typedef struct ExecRuntime ExecRuntime;
++typedef struct ExecParameters ExecParameters;
+ 
+ #include <linux/types.h>
+ #include <sys/time.h>
+@@ -191,21 +192,25 @@ struct ExecContext {
+ 
+ #include "cgroup.h"
+ 
++struct ExecParameters {
++        char **argv;
++        int *fds; unsigned n_fds;
++        char **environment;
++        bool apply_permissions;
++        bool apply_chroot;
++        bool apply_tty_stdin;
++        bool confirm_spawn;
++        CGroupControllerMask cgroup_supported;
++        const char *cgroup_path;
++        const char *runtime_prefix;
++        const char *unit_id;
++        usec_t watchdog_usec;
++        int *idle_pipe;
++};
++
+ int exec_spawn(ExecCommand *command,
+-               char **argv,
+-               ExecContext *context,
+-               int fds[], unsigned n_fds,
+-               char **environment,
+-               bool apply_permissions,
+-               bool apply_chroot,
+-               bool apply_tty_stdin,
+-               bool confirm_spawn,
+-               CGroupControllerMask cgroup_mask,
+-               const char *cgroup_path,
+-               const char *runtime_prefix,
+-               const char *unit_id,
+-               usec_t watchdog_usec,
+-               int pipe_fd[2],
++               const ExecContext *context,
++               const ExecParameters *exec_params,
+                ExecRuntime *runtime,
+                pid_t *ret);
+ 
+diff --git a/src/core/mount.c b/src/core/mount.c
+index ec90b0a670..e284357c6f 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -691,6 +691,11 @@ static void mount_dump(Unit *u, FILE *f, const char *prefix) {
+ static int mount_spawn(Mount *m, ExecCommand *c, pid_t *_pid) {
+         pid_t pid;
+         int r;
++        ExecParameters exec_params = {
++                .apply_permissions = true,
++                .apply_chroot      = true,
++                .apply_tty_stdin   = true,
++        };
+ 
+         assert(m);
+         assert(c);
+@@ -706,21 +711,16 @@ static int mount_spawn(Mount *m, ExecCommand *c, pid_t *_pid) {
+         if (r < 0)
+                 goto fail;
+ 
++        exec_params.environment = UNIT(m)->manager->environment;
++        exec_params.confirm_spawn = UNIT(m)->manager->confirm_spawn;
++        exec_params.cgroup_supported = UNIT(m)->manager->cgroup_supported;
++        exec_params.cgroup_path = UNIT(m)->cgroup_path;
++        exec_params.runtime_prefix = manager_get_runtime_prefix(UNIT(m)->manager);
++        exec_params.unit_id = UNIT(m)->id;
++
+         r = exec_spawn(c,
+-                       NULL,
+                        &m->exec_context,
+-                       NULL, 0,
+-                       UNIT(m)->manager->environment,
+-                       true,
+-                       true,
+-                       true,
+-                       UNIT(m)->manager->confirm_spawn,
+-                       UNIT(m)->manager->cgroup_supported,
+-                       UNIT(m)->cgroup_path,
+-                       manager_get_runtime_prefix(UNIT(m)->manager),
+-                       UNIT(m)->id,
+-                       0,
+-                       NULL,
++                       &exec_params,
+                        m->exec_runtime,
+                        &pid);
+         if (r < 0)
+diff --git a/src/core/service.c b/src/core/service.c
+index 223e4b3a41..f3775f24c4 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -892,6 +892,11 @@ static int service_spawn(
+         _cleanup_strv_free_ char
+                 **argv = NULL, **final_env = NULL, **our_env = NULL;
+         const char *path;
++        ExecParameters exec_params = {
++                .apply_permissions = apply_permissions,
++                .apply_chroot      = apply_chroot,
++                .apply_tty_stdin   = apply_tty_stdin,
++        };
+ 
+         assert(s);
+         assert(c);
+@@ -967,21 +972,22 @@ static int service_spawn(
+         } else
+                 path = UNIT(s)->cgroup_path;
+ 
++        exec_params.argv = argv;
++        exec_params.fds = fds;
++        exec_params.n_fds = n_fds;
++        exec_params.environment = final_env;
++        exec_params.confirm_spawn = UNIT(s)->manager->confirm_spawn;
++        exec_params.cgroup_supported = UNIT(s)->manager->cgroup_supported;
++        exec_params.cgroup_path = path;
++        exec_params.runtime_prefix = manager_get_runtime_prefix(UNIT(s)->manager);
++        exec_params.unit_id = UNIT(s)->id;
++        exec_params.watchdog_usec = s->watchdog_usec;
++        if (s->type == SERVICE_IDLE)
++                exec_params.idle_pipe = UNIT(s)->manager->idle_pipe;
++
+         r = exec_spawn(c,
+-                       argv,
+                        &s->exec_context,
+-                       fds, n_fds,
+-                       final_env,
+-                       apply_permissions,
+-                       apply_chroot,
+-                       apply_tty_stdin,
+-                       UNIT(s)->manager->confirm_spawn,
+-                       UNIT(s)->manager->cgroup_supported,
+-                       path,
+-                       manager_get_runtime_prefix(UNIT(s)->manager),
+-                       UNIT(s)->id,
+-                       s->watchdog_usec,
+-                       s->type == SERVICE_IDLE ? UNIT(s)->manager->idle_pipe : NULL,
++                       &exec_params,
+                        s->exec_runtime,
+                        &pid);
+         if (r < 0)
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 7ca8edbda8..68e21e60ac 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -1358,6 +1358,11 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
+         _cleanup_free_ char **argv = NULL;
+         pid_t pid;
+         int r;
++        ExecParameters exec_params = {
++                .apply_permissions = true,
++                .apply_chroot      = true,
++                .apply_tty_stdin   = true,
++        };
+ 
+         assert(s);
+         assert(c);
+@@ -1377,21 +1382,17 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
+         if (r < 0)
+                 goto fail;
+ 
++        exec_params.argv = argv;
++        exec_params.environment = UNIT(s)->manager->environment;
++        exec_params.confirm_spawn = UNIT(s)->manager->confirm_spawn;
++        exec_params.cgroup_supported = UNIT(s)->manager->cgroup_supported;
++        exec_params.cgroup_path = UNIT(s)->cgroup_path;
++        exec_params.runtime_prefix = manager_get_runtime_prefix(UNIT(s)->manager);
++        exec_params.unit_id = UNIT(s)->id;
++
+         r = exec_spawn(c,
+-                       argv,
+                        &s->exec_context,
+-                       NULL, 0,
+-                       UNIT(s)->manager->environment,
+-                       true,
+-                       true,
+-                       true,
+-                       UNIT(s)->manager->confirm_spawn,
+-                       UNIT(s)->manager->cgroup_supported,
+-                       UNIT(s)->cgroup_path,
+-                       manager_get_runtime_prefix(UNIT(s)->manager),
+-                       UNIT(s)->id,
+-                       0,
+-                       NULL,
++                       &exec_params,
+                        s->exec_runtime,
+                        &pid);
+         if (r < 0)
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 9f353af430..019d32ed0d 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -619,6 +619,11 @@ static void swap_dump(Unit *u, FILE *f, const char *prefix) {
+ static int swap_spawn(Swap *s, ExecCommand *c, pid_t *_pid) {
+         pid_t pid;
+         int r;
++        ExecParameters exec_params = {
++                .apply_permissions = true,
++                .apply_chroot      = true,
++                .apply_tty_stdin   = true,
++        };
+ 
+         assert(s);
+         assert(c);
+@@ -634,21 +639,16 @@ static int swap_spawn(Swap *s, ExecCommand *c, pid_t *_pid) {
+         if (r < 0)
+                 goto fail;
+ 
++        exec_params.environment = UNIT(s)->manager->environment;
++        exec_params.confirm_spawn = UNIT(s)->manager->confirm_spawn;
++        exec_params.cgroup_supported = UNIT(s)->manager->cgroup_supported;
++        exec_params.cgroup_path = UNIT(s)->cgroup_path;
++        exec_params.runtime_prefix = manager_get_runtime_prefix(UNIT(s)->manager);
++        exec_params.unit_id = UNIT(s)->id;
++
+         r = exec_spawn(c,
+-                       NULL,
+                        &s->exec_context,
+-                       NULL, 0,
+-                       UNIT(s)->manager->environment,
+-                       true,
+-                       true,
+-                       true,
+-                       UNIT(s)->manager->confirm_spawn,
+-                       UNIT(s)->manager->cgroup_supported,
+-                       UNIT(s)->cgroup_path,
+-                       manager_get_runtime_prefix(UNIT(s)->manager),
+-                       UNIT(s)->id,
+-                       0,
+-                       NULL,
++                       &exec_params,
+                        s->exec_runtime,
+                        &pid);
+         if (r < 0)

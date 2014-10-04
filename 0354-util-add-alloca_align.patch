@@ -1,0 +1,76 @@
+From 95d78c7e7c81a6b788f28c33ef2cafd87471a0d7 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Mon, 22 Sep 2014 12:05:16 +0200
+Subject: [PATCH] util: add alloca_align()
+
+The alloca_align() helper is the alloca() equivalent of posix_memalign().
+As there is no such function provided by glibc, we simply account for
+additional memory and return a pointer offset into the allocated memory to
+grant the alignment.
+
+Furthermore, alloca0_align() is added, which simply clears the allocated
+memory.
+---
+ src/shared/util.h    | 16 ++++++++++++++++
+ src/test/test-util.c | 14 ++++++++++++++
+ 2 files changed, 30 insertions(+)
+
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 08d556fc92..a1d5657237 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -852,6 +852,22 @@ int unlink_noerrno(const char *path);
+                 (void *) memset(_new_, 0, _len_);       \
+         })
+ 
++#define alloca_align(size, align)                                       \
++        ({                                                              \
++                void *_ptr_;                                            \
++                size_t _mask_ = (align) - 1;                            \
++                _ptr_ = alloca((size) + _mask_);                        \
++                (void*)(((uintptr_t)_ptr_ + _mask_) & ~_mask_);         \
++        })
++
++#define alloca0_align(size, align)                                      \
++        ({                                                              \
++                void *_new_;                                            \
++                size_t _size_ = (size);                                 \
++                _new_ = alloca_align(_size_, (align));                  \
++                (void*)memset(_new_, 0, _size_);                        \
++        })
++
+ #define strappenda(a, ...)                                       \
+         ({                                                       \
+                 int _len = strlen(a);                            \
+diff --git a/src/test/test-util.c b/src/test/test-util.c
+index f8e42f3a55..1311184815 100644
+--- a/src/test/test-util.c
++++ b/src/test/test-util.c
+@@ -131,6 +131,19 @@ static void test_container_of(void) {
+                                v1) == &myval);
+ }
+ 
++static void test_alloca(void) {
++        static const uint8_t zero[997] = { };
++        char *t;
++
++        t = alloca_align(17, 512);
++        assert_se(!((uintptr_t)t & 0xff));
++        memzero(t, 17);
++
++        t = alloca0_align(997, 1024);
++        assert_se(!((uintptr_t)t & 0x1ff));
++        assert_se(!memcmp(t, zero, 997));
++}
++
+ static void test_first_word(void) {
+         assert_se(first_word("Hello", ""));
+         assert_se(first_word("Hello", "Hello"));
+@@ -1272,6 +1285,7 @@ int main(int argc, char *argv[]) {
+         test_align_power2();
+         test_max();
+         test_container_of();
++        test_alloca();
+         test_first_word();
+         test_close_many();
+         test_parse_boolean();

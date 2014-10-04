@@ -1,0 +1,28 @@
+From 533bb267f13e2f7b4d7b78de30e821dc81c82335 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 3 Sep 2014 18:59:17 +0200
+Subject: [PATCH] update TODO
+
+---
+ TODO | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/TODO b/TODO
+index 299b938c44..208a4ce890 100644
+--- a/TODO
++++ b/TODO
+@@ -21,6 +21,14 @@ External:
+ 
+ Features:
+ 
++* introduce machines.target to order after all nspawn instances
++
++* systemd-nspawn@.service should fail if some nspawn arg is invalid, with Type=notify
++
++* "machinectl list" should probably show columns for OS version and IP addresses
++
++* systemctl: if it fails, show log output?
++
+ * maybe add "systemctl edit" that copies unit files from /usr/lib/systemd/system to /etc/systemd/system and invokes vim on them
+ 
+ * dbus: add new message hdr field for allowing interactive auth, write spec for it. update dbus spec to mandate that unknown flags *must* be ignored...

@@ -1,0 +1,23 @@
+From ad6e5b348fa88f44d6cbfe7aabda7612a1d0463f Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 8 Sep 2014 14:00:58 +0200
+Subject: [PATCH] udev: net_setup_link - export the .link filename applied to
+ the link
+
+---
+ src/udev/udev-builtin-net_setup_link.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/udev/udev-builtin-net_setup_link.c b/src/udev/udev-builtin-net_setup_link.c
+index 6207269ab9..14351de6a6 100644
+--- a/src/udev/udev-builtin-net_setup_link.c
++++ b/src/udev/udev-builtin-net_setup_link.c
+@@ -57,6 +57,8 @@ static int builtin_net_setup_link(struct udev_device *dev, int argc, char **argv
+                 return EXIT_FAILURE;
+         }
+ 
++        udev_builtin_add_property(dev, test, "ID_NET_LINK_FILE", link->filename);
++
+         if (name)
+                 udev_builtin_add_property(dev, test, "ID_NET_NAME", name);
+ 

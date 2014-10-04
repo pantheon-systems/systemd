@@ -1,0 +1,23 @@
+From ffb6c43e7985e837ae50f8831b98c9941c406969 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 22 Sep 2014 09:15:49 -0400
+Subject: [PATCH] exit-status.c: bring EXIT_BUS_ENDPOINT label in line with
+ others
+
+---
+ src/shared/exit-status.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/exit-status.c b/src/shared/exit-status.c
+index b036ded1f4..5c73b4d3c0 100644
+--- a/src/shared/exit-status.c
++++ b/src/shared/exit-status.c
+@@ -150,7 +150,7 @@ const char* exit_status_to_string(ExitStatus status, ExitStatusLevel level) {
+                         return "MAKE_STARTER";
+ 
+                 case EXIT_BUS_ENDPOINT:
+-                        return "EXIT_BUS_ENDPOINT";
++                        return "BUS_ENDPOINT";
+                 }
+         }
+ 

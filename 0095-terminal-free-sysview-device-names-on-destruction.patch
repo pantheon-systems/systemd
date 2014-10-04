@@ -1,0 +1,38 @@
+From fa9838ddd62ea31f8aea99757916a16d76b31cbc Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 28 Aug 2014 12:25:58 +0200
+Subject: [PATCH] terminal: free sysview-device names on destruction
+
+Don't leak the device-names during device destruction in sysview. Somehow,
+the device-name is "const char*", so make it "char*" first to avoid
+warnings when calling free() on it.
+---
+ src/libsystemd-terminal/sysview-internal.h | 2 +-
+ src/libsystemd-terminal/sysview.c          | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/sysview-internal.h b/src/libsystemd-terminal/sysview-internal.h
+index 5aee9f67d8..9299fabb82 100644
+--- a/src/libsystemd-terminal/sysview-internal.h
++++ b/src/libsystemd-terminal/sysview-internal.h
+@@ -39,7 +39,7 @@
+ 
+ struct sysview_device {
+         sysview_seat *seat;
+-        const char *name;
++        char *name;
+         unsigned int type;
+ 
+         union {
+diff --git a/src/libsystemd-terminal/sysview.c b/src/libsystemd-terminal/sysview.c
+index f5363dedf4..bd345fa22e 100644
+--- a/src/libsystemd-terminal/sysview.c
++++ b/src/libsystemd-terminal/sysview.c
+@@ -98,6 +98,7 @@ sysview_device *sysview_device_free(sysview_device *device) {
+                 break;
+         }
+ 
++        free(device->name);
+         free(device);
+ 
+         return NULL;

@@ -1,0 +1,22 @@
+From c4147df156835513c43260a14fc9f7af177f737f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 22 Aug 2014 16:58:25 +0200
+Subject: [PATCH] resolved: fix typo in log message
+
+---
+ src/resolve/resolved-manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/resolve/resolved-manager.c b/src/resolve/resolved-manager.c
+index 659b1dacc8..f97989754d 100644
+--- a/src/resolve/resolved-manager.c
++++ b/src/resolve/resolved-manager.c
+@@ -449,7 +449,7 @@ static int manager_llmnr_start(Manager *m) {
+         return 0;
+ 
+ eaddrinuse:
+-        log_warning("There appears to be another LLMNR respondering running. Turning off LLMNR support.");
++        log_warning("There appears to be another LLMNR responder running. Turning off LLMNR support.");
+         m->llmnr_support = SUPPORT_NO;
+         manager_llmnr_stop(m);
+ 

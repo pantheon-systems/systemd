@@ -1,0 +1,22 @@
+From 120d578e5fa11ee3c210121905fb63bc24e3f043 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Mon, 8 Sep 2014 22:05:17 +0200
+Subject: [PATCH] namespace: avoid posible use of uninitialized variable
+
+---
+ src/core/namespace.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index eaaebdd644..f76d3891c3 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -278,7 +278,7 @@ static int mount_kdbus(BindMount *m) {
+         char temporary_mount[] = "/tmp/kdbus-dev-XXXXXX";
+         _cleanup_free_ char *basepath = NULL;
+         _cleanup_umask_ mode_t u;
+-        char *busnode, *root;
++        char *busnode = NULL, *root;
+         struct stat st;
+         int r;
+ 

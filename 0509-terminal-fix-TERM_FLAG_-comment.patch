@@ -1,0 +1,23 @@
+From 621dbb0569ec318e78cfa7c71646b78eee46e8a5 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sun, 5 Oct 2014 14:45:33 +0200
+Subject: [PATCH] terminal: fix TERM_FLAG_* comment
+
+7BIT mode is enabled by default. Fix the comment to state this correctly.
+---
+ src/libsystemd-terminal/term-internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/term-internal.h b/src/libsystemd-terminal/term-internal.h
+index f0f4432c80..a023498b53 100644
+--- a/src/libsystemd-terminal/term-internal.h
++++ b/src/libsystemd-terminal/term-internal.h
+@@ -582,7 +582,7 @@ struct term_parser {
+  */
+ 
+ enum {
+-        TERM_FLAG_7BIT_MODE                     = (1U << 0),    /* 7bit mode (default: off) */
++        TERM_FLAG_7BIT_MODE                     = (1U << 0),    /* 7bit mode (default: on) */
+         TERM_FLAG_HIDE_CURSOR                   = (1U << 1),    /* hide cursor caret (default: off) */
+         TERM_FLAG_INHIBIT_TPARM                 = (1U << 2),    /* do not send TPARM unrequested (default: off) */
+         TERM_FLAG_NEWLINE_MODE                  = (1U << 3),    /* perform carriage-return on line-feeds (default: off) */

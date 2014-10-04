@@ -1,0 +1,24 @@
+From 9ed6e68e52f399c10d7e4d7f29bb0212c422e9e9 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sun, 5 Oct 2014 14:47:57 +0200
+Subject: [PATCH] terminal/subterm: skip setting parent's cursor
+
+We draw our own cursor in subterm now, so there's no reason to update the
+cursor-position of the parent terminal on each frame. The parent's cursor
+is hidden, anyway.
+---
+ src/libsystemd-terminal/subterm.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/subterm.c b/src/libsystemd-terminal/subterm.c
+index 321cd35f52..dda6759709 100644
+--- a/src/libsystemd-terminal/subterm.c
++++ b/src/libsystemd-terminal/subterm.c
+@@ -482,7 +482,6 @@ static void output_draw_screen(Output *o, term_screen *s) {
+ 
+         term_screen_draw(s, output_draw_cell_fn, o, NULL);
+ 
+-        output_move_to(o, s->cursor_x + 1, s->cursor_y + 3);
+         output_printf(o, "\e[m");
+ }
+ 

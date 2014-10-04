@@ -1,0 +1,72 @@
+From 923041cb0ab7c1795e74fa1ce4b38a6114727a3c Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 10 Aug 2014 23:35:27 +0200
+Subject: [PATCH] hashmap: minor hashmap_replace optimization
+
+When hashmap_replace detects no such key exists yet, it calls hashmap_put that
+performs the same check again. Avoid that by splitting the core of hashmap_put
+into a separate function.
+---
+ src/shared/hashmap.c | 34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
+
+diff --git a/src/shared/hashmap.c b/src/shared/hashmap.c
+index 1eadeced5c..4c517059f6 100644
+--- a/src/shared/hashmap.c
++++ b/src/shared/hashmap.c
+@@ -488,19 +488,10 @@ static bool resize_buckets(Hashmap *h) {
+         return true;
+ }
+ 
+-int hashmap_put(Hashmap *h, const void *key, void *value) {
+-        struct hashmap_entry *e;
+-        unsigned hash;
+-
+-        assert(h);
++static int __hashmap_put(Hashmap *h, const void *key, void *value, unsigned hash) {
++        /* For when we know no such entry exists yet */
+ 
+-        hash = bucket_hash(h, key);
+-        e = hash_scan(h, hash, key);
+-        if (e) {
+-                if (e->value == value)
+-                        return 0;
+-                return -EEXIST;
+-        }
++        struct hashmap_entry *e;
+ 
+         if (resize_buckets(h))
+                 hash = bucket_hash(h, key);
+@@ -521,6 +512,23 @@ int hashmap_put(Hashmap *h, const void *key, void *value) {
+         return 1;
+ }
+ 
++int hashmap_put(Hashmap *h, const void *key, void *value) {
++        struct hashmap_entry *e;
++        unsigned hash;
++
++        assert(h);
++
++        hash = bucket_hash(h, key);
++        e = hash_scan(h, hash, key);
++        if (e) {
++                if (e->value == value)
++                        return 0;
++                return -EEXIST;
++        }
++
++        return __hashmap_put(h, key, value, hash);
++}
++
+ int hashmap_replace(Hashmap *h, const void *key, void *value) {
+         struct hashmap_entry *e;
+         unsigned hash;
+@@ -535,7 +543,7 @@ int hashmap_replace(Hashmap *h, const void *key, void *value) {
+                 return 0;
+         }
+ 
+-        return hashmap_put(h, key, value);
++        return __hashmap_put(h, key, value, hash);
+ }
+ 
+ int hashmap_update(Hashmap *h, const void *key, void *value) {

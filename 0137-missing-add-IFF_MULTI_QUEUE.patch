@@ -1,0 +1,27 @@
+From 04d180c8a8641c209eb19d1210b5d4e36f0ae05b Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sun, 31 Aug 2014 18:50:23 +0200
+Subject: [PATCH] missing: add IFF_MULTI_QUEUE
+
+This was added in 3.8, but we should building with 3.7 headers.
+
+Reported by Samuli Suominen <ssuominen@gentoo.org>.
+---
+ src/shared/missing.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/shared/missing.h b/src/shared/missing.h
+index c80ed2ad99..023c680ec6 100644
+--- a/src/shared/missing.h
++++ b/src/shared/missing.h
+@@ -558,6 +558,10 @@ static inline int setns(int fd, int nstype) {
+ #define IPV6_UNICAST_IF 76
+ #endif
+ 
++#ifndef IFF_MULTI_QUEUE
++#define IFF_MULTI_QUEUE 0x100
++#endif
++
+ #ifndef IFF_LOWER_UP
+ #define IFF_LOWER_UP 0x10000
+ #endif

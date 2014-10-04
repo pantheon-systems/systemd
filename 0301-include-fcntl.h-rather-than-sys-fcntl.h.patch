@@ -1,0 +1,22 @@
+From fdb8bd0fe7244b72ddc1c08e401ebddefdaf4f46 Mon Sep 17 00:00:00 2001
+From: Emil Renner Berthing <systemd@esmil.dk>
+Date: Thu, 18 Sep 2014 15:24:38 +0200
+Subject: [PATCH] include fcntl.h rather than sys/fcntl.h
+
+---
+ src/socket-proxy/socket-proxyd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/socket-proxy/socket-proxyd.c b/src/socket-proxy/socket-proxyd.c
+index 81d8457fdd..ff2b24f452 100644
+--- a/src/socket-proxy/socket-proxyd.c
++++ b/src/socket-proxy/socket-proxyd.c
+@@ -26,7 +26,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <netdb.h>
+-#include <sys/fcntl.h>
++#include <fcntl.h>
+ #include <sys/socket.h>
+ #include <sys/un.h>
+ #include <unistd.h>

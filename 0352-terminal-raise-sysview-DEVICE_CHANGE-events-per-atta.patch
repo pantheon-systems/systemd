@@ -1,0 +1,142 @@
+From f6e3ee1493f20823b2c33465458b92f3581af88d Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sat, 20 Sep 2014 17:47:56 +0200
+Subject: [PATCH] terminal: raise sysview DEVICE_CHANGE events per attachment
+
+Instead of raising DEVICE_CHANGE only per device, we now raise it per
+device-session attachment. This is what we want for all sysview users,
+anyway, as sessions are meant to be independent of each other. Lets avoid
+any external session iterators and just do that in sysview itself.
+---
+ src/libsystemd-terminal/modeset.c | 14 +++++++-------
+ src/libsystemd-terminal/sysview.c | 34 ++++++++++++++++++++++++++++++----
+ src/libsystemd-terminal/sysview.h | 14 +++++++-------
+ 3 files changed, 44 insertions(+), 18 deletions(-)
+
+diff --git a/src/libsystemd-terminal/modeset.c b/src/libsystemd-terminal/modeset.c
+index 33c79a2036..7a28e7ab97 100644
+--- a/src/libsystemd-terminal/modeset.c
++++ b/src/libsystemd-terminal/modeset.c
+@@ -348,6 +348,13 @@ static int modeset_sysview_fn(sysview_context *c, void *userdata, sysview_event
+                         grdev_session_remove_drm(m->grdev_session, sysview_device_get_ud(d));
+ 
+                 break;
++        case SYSVIEW_EVENT_SESSION_REFRESH:
++                d = ev->session_refresh.device;
++                type = sysview_device_get_type(d);
++                if (type == SYSVIEW_DEVICE_DRM)
++                        grdev_session_hotplug_drm(m->grdev_session, ev->session_refresh.ud);
++
++                break;
+         case SYSVIEW_EVENT_SESSION_CONTROL:
+                 r = ev->session_control.error;
+                 if (r < 0) {
+@@ -362,13 +369,6 @@ static int modeset_sysview_fn(sysview_context *c, void *userdata, sysview_event
+                 }
+ 
+                 break;
+-        case SYSVIEW_EVENT_DEVICE_CHANGE:
+-                d = ev->device_change.device;
+-                type = sysview_device_get_type(d);
+-                if (type == SYSVIEW_DEVICE_DRM)
+-                        grdev_session_hotplug_drm(m->grdev_session, ev->device_change.ud);
+-
+-                break;
+         }
+ 
+         return 0;
+diff --git a/src/libsystemd-terminal/sysview.c b/src/libsystemd-terminal/sysview.c
+index 161ea117a4..5b623c1e6c 100644
+--- a/src/libsystemd-terminal/sysview.c
++++ b/src/libsystemd-terminal/sysview.c
+@@ -517,10 +517,11 @@ static int context_raise_session_detach(sysview_context *c, sysview_session *ses
+         return context_raise(c, &event, 0);
+ }
+ 
+-static int context_raise_device_change(sysview_context *c, sysview_device *device, struct udev_device *ud) {
++static int context_raise_session_refresh(sysview_context *c, sysview_session *session, sysview_device *device, struct udev_device *ud) {
+         sysview_event event = {
+-                .type = SYSVIEW_EVENT_DEVICE_CHANGE,
+-                .device_change = {
++                .type = SYSVIEW_EVENT_SESSION_REFRESH,
++                .session_refresh = {
++                        .session = session,
+                         .device = device,
+                         .ud = ud,
+                 }
+@@ -581,6 +582,31 @@ static int context_remove_device(sysview_context *c, sysview_device *device) {
+         return error;
+ }
+ 
++static int context_change_device(sysview_context *c, sysview_device *device, struct udev_device *ud) {
++        sysview_session *session;
++        int r, error = 0;
++        Iterator i;
++
++        assert(c);
++        assert(device);
++
++        log_debug("sysview: change device '%s'", device->name);
++
++        HASHMAP_FOREACH(session, device->seat->session_map, i) {
++                if (!session->public)
++                        continue;
++
++                r = context_raise_session_refresh(c, session, device, ud);
++                if (r != 0)
++                        error = r;
++        }
++
++        if (error < 0)
++                log_debug("sysview: error while changing device '%s': %s",
++                          device->name, strerror(-r));
++        return error;
++}
++
+ static int context_add_session(sysview_context *c, sysview_seat *seat, const char *id) {
+         sysview_session *session;
+         sysview_device *device;
+@@ -884,7 +910,7 @@ static int context_ud_hotplug(sysview_context *c, struct udev_device *d) {
+                 if (!device)
+                         return 0;
+ 
+-                return context_raise_device_change(c, device, d);
++                return context_change_device(c, device, d);
+         } else if (!action || streq_ptr(action, "add")) {
+                 struct udev_device *p;
+                 unsigned int type, t;
+diff --git a/src/libsystemd-terminal/sysview.h b/src/libsystemd-terminal/sysview.h
+index b9452fab89..4d800f8d69 100644
+--- a/src/libsystemd-terminal/sysview.h
++++ b/src/libsystemd-terminal/sysview.h
+@@ -63,9 +63,8 @@ enum {
+         SYSVIEW_EVENT_SESSION_REMOVE,
+         SYSVIEW_EVENT_SESSION_ATTACH,
+         SYSVIEW_EVENT_SESSION_DETACH,
++        SYSVIEW_EVENT_SESSION_REFRESH,
+         SYSVIEW_EVENT_SESSION_CONTROL,
+-
+-        SYSVIEW_EVENT_DEVICE_CHANGE,
+ };
+ 
+ struct sysview_event {
+@@ -94,13 +93,14 @@ struct sysview_event {
+ 
+                 struct {
+                         sysview_session *session;
+-                        int error;
+-                } session_control;
+-
+-                struct {
+                         sysview_device *device;
+                         struct udev_device *ud;
+-                } device_change;
++                } session_refresh;
++
++                struct {
++                        sysview_session *session;
++                        int error;
++                } session_control;
+         };
+ };
+ 

@@ -1,0 +1,47 @@
+From fa9653457302c106f8d47060ef3dda2b4c8038a8 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed, 1 Oct 2014 11:24:08 +0200
+Subject: [PATCH] terminal: add unifont_get_width/height()
+
+Allow unifont users to retrieve the width and height of unifont glyphs. In
+version 1 this is hard-coded as 8/16, but may be changed in the future.
+---
+ src/libsystemd-terminal/unifont.c | 12 ++++++++++++
+ src/libsystemd-terminal/unifont.h |  2 ++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/src/libsystemd-terminal/unifont.c b/src/libsystemd-terminal/unifont.c
+index aa91794410..7520015988 100644
+--- a/src/libsystemd-terminal/unifont.c
++++ b/src/libsystemd-terminal/unifont.c
+@@ -181,6 +181,18 @@ unifont *unifont_unref(unifont *u) {
+         return NULL;
+ }
+ 
++unsigned int unifont_get_width(unifont *u) {
++        assert(u);
++
++        return 8U;
++}
++
++unsigned int unifont_get_height(unifont *u) {
++        assert(u);
++
++        return 16U;
++}
++
+ unsigned int unifont_get_stride(unifont *u) {
+         assert(u);
+ 
+diff --git a/src/libsystemd-terminal/unifont.h b/src/libsystemd-terminal/unifont.h
+index c39512d2c6..0ded61472f 100644
+--- a/src/libsystemd-terminal/unifont.h
++++ b/src/libsystemd-terminal/unifont.h
+@@ -50,5 +50,7 @@ unifont *unifont_unref(unifont *u);
+ 
+ DEFINE_TRIVIAL_CLEANUP_FUNC(unifont*, unifont_unref);
+ 
++unsigned int unifont_get_width(unifont *u);
++unsigned int unifont_get_height(unifont *u);
+ unsigned int unifont_get_stride(unifont *u);
+ int unifont_lookup(unifont *u, unifont_glyph *out, uint32_t ucs4);

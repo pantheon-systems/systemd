@@ -1,0 +1,130 @@
+From 647f68249f90855814de6eb6b0959c6096b41cae Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 1 Oct 2014 09:32:16 -0400
+Subject: [PATCH] tests: add tests for {hashmap,set}_steal_first
+
+Just to make sure that coverity is wrong.
+---
+ Makefile.am             |  7 +++++++
+ src/test/test-hashmap.c | 21 +++++++++++++++++++++
+ src/test/test-set.c     | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 75 insertions(+)
+ create mode 100644 src/test/test-set.c
+
+diff --git a/Makefile.am b/Makefile.am
+index 7bb7f75915..9e087bd9fb 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1341,6 +1341,7 @@ tests += \
+ 	test-fileio \
+ 	test-time \
+ 	test-hashmap \
++	test-set \
+ 	test-list \
+ 	test-tables \
+ 	test-device-nodes \
+@@ -1572,6 +1573,12 @@ test_hashmap_SOURCES = \
+ test_hashmap_LDADD = \
+ 	libsystemd-core.la
+ 
++test_set_SOURCES = \
++	src/test/test-set.c
++
++test_set_LDADD = \
++	libsystemd-core.la
++
+ test_xml_SOURCES = \
+ 	src/test/test-xml.c
+ 
+diff --git a/src/test/test-hashmap.c b/src/test/test-hashmap.c
+index d9863f8dab..f4afbb8e9d 100644
+--- a/src/test/test-hashmap.c
++++ b/src/test/test-hashmap.c
+@@ -507,6 +507,26 @@ static void test_hashmap_steal_first_key(void) {
+         assert_se(hashmap_isempty(m));
+ }
+ 
++static void test_hashmap_steal_first(void) {
++        _cleanup_hashmap_free_ Hashmap *m = NULL;
++        int seen[3] = {};
++        char *val;
++
++        m = hashmap_new(&string_hash_ops);
++        assert_se(m);
++
++        assert_se(hashmap_put(m, "key 1", (void*) "1") == 1);
++        assert_se(hashmap_put(m, "key 2", (void*) "22") == 1);
++        assert_se(hashmap_put(m, "key 3", (void*) "333") == 1);
++
++        while ((val = hashmap_steal_first(m)))
++                seen[strlen(val) - 1]++;
++
++        assert(seen[0] == 1 && seen[1] == 1 && seen[2] == 1);
++
++        assert_se(hashmap_isempty(m));
++}
++
+ static void test_hashmap_clear_free_free(void) {
+         _cleanup_hashmap_free_ Hashmap *m = NULL;
+ 
+@@ -560,6 +580,7 @@ int main(int argc, const char *argv[]) {
+         test_hashmap_many();
+         test_hashmap_first_key();
+         test_hashmap_steal_first_key();
++        test_hashmap_steal_first();
+         test_hashmap_clear_free_free();
+         test_uint64_compare_func();
+         test_trivial_compare_func();
+diff --git a/src/test/test-set.c b/src/test/test-set.c
+new file mode 100644
+index 0000000000..060dba42df
+--- /dev/null
++++ b/src/test/test-set.c
+@@ -0,0 +1,47 @@
++/***
++  This file is part of systemd
++
++  Copyright 2014 Zbigniew Jędrzejewski-Szmek
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "util.h"
++#include "set.h"
++
++static void test_set_steal_first(void) {
++        _cleanup_set_free_ Set *m = NULL;
++        int seen[3] = {};
++        char *val;
++
++        m = set_new(&string_hash_ops);
++        assert_se(m);
++
++        assert_se(set_put(m, (void*) "1") == 1);
++        assert_se(set_put(m, (void*) "22") == 1);
++        assert_se(set_put(m, (void*) "333") == 1);
++
++        while ((val = set_steal_first(m)))
++                seen[strlen(val) - 1]++;
++
++        assert(seen[0] == 1 && seen[1] == 1 && seen[2] == 1);
++
++        assert_se(set_isempty(m));
++}
++
++int main(int argc, const char *argv[]) {
++        test_set_steal_first();
++
++        return 0;
++}

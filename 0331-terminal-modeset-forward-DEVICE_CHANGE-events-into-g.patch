@@ -1,0 +1,29 @@
+From 46c9a12780ea24ef311682897077423f1825c519 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sat, 20 Sep 2014 09:46:13 +0200
+Subject: [PATCH] terminal: modeset: forward DEVICE_CHANGE events into grdev
+
+Properly forward DEVICE_CHANGE events into grdev so we can react to
+changing display setups.
+---
+ src/libsystemd-terminal/modeset.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/libsystemd-terminal/modeset.c b/src/libsystemd-terminal/modeset.c
+index c1119c9e0f..57bf299df5 100644
+--- a/src/libsystemd-terminal/modeset.c
++++ b/src/libsystemd-terminal/modeset.c
+@@ -364,6 +364,13 @@ static int modeset_sysview_fn(sysview_context *c, void *userdata, sysview_event
+                 }
+ 
+                 break;
++        case SYSVIEW_EVENT_DEVICE_CHANGE:
++                d = ev->device_change.device;
++                type = sysview_device_get_type(d);
++                if (type == SYSVIEW_DEVICE_DRM)
++                        grdev_session_hotplug_drm(m->grdev_session, ev->device_change.ud);
++
++                break;
+         }
+ 
+         return 0;

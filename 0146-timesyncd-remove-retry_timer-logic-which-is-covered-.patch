@@ -1,0 +1,55 @@
+From 665c6a9eab46b0b253af6566ca9fc70c866b3fcd Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 2 Sep 2014 14:27:00 +0200
+Subject: [PATCH] timesyncd: remove retry_timer logic which is covered by the
+ server timeout
+
+---
+ src/timesync/timesyncd-manager.c | 14 --------------
+ src/timesync/timesyncd-manager.h |  1 -
+ 2 files changed, 15 deletions(-)
+
+diff --git a/src/timesync/timesyncd-manager.c b/src/timesync/timesyncd-manager.c
+index b7b39ef822..19a28f37e2 100644
+--- a/src/timesync/timesyncd-manager.c
++++ b/src/timesync/timesyncd-manager.c
+@@ -206,19 +206,6 @@ static int manager_send_request(Manager *m) {
+                 return manager_connect(m);
+         }
+ 
+-        /* re-arm timer with increasing timeout, in case the packets never arrive back */
+-        if (m->retry_interval > 0) {
+-                if (m->retry_interval < NTP_POLL_INTERVAL_MAX_SEC * USEC_PER_SEC)
+-                        m->retry_interval *= 2;
+-        } else
+-                m->retry_interval = NTP_POLL_INTERVAL_MIN_SEC * USEC_PER_SEC;
+-
+-        r = manager_arm_timer(m, m->retry_interval);
+-        if (r < 0) {
+-                log_error("Failed to rearm timer: %s", strerror(-r));
+-                return r;
+-        }
+-
+         r = sd_event_add_time(
+                         m->event,
+                         &m->event_timeout,
+@@ -601,7 +588,6 @@ static int manager_receive_response(sd_event_source *source, int fd, uint32_t re
+ 
+         /* valid packet */
+         m->pending = false;
+-        m->retry_interval = 0;
+ 
+         /* announce leap seconds */
+         if (NTP_FIELD_LEAP(ntpmsg.field) & NTP_LEAP_PLUSSEC)
+diff --git a/src/timesync/timesyncd-manager.h b/src/timesync/timesyncd-manager.h
+index bb3e50915e..0ac0e179c1 100644
+--- a/src/timesync/timesyncd-manager.h
++++ b/src/timesync/timesyncd-manager.h
+@@ -59,7 +59,6 @@ struct Manager {
+         /* last sent packet */
+         struct timespec trans_time_mon;
+         struct timespec trans_time;
+-        usec_t retry_interval;
+         bool pending;
+ 
+         /* poll timer */

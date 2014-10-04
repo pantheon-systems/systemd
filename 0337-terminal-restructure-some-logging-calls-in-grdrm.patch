@@ -1,0 +1,58 @@
+From f919ad9d3dc3e25f6eed268fe7eb5e922bcdb3b6 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sat, 20 Sep 2014 11:41:34 +0200
+Subject: [PATCH] terminal: restructure some logging calls in grdrm
+
+Multiple issues here:
+ 1) Don't print excessive card dumps on each resync. Disable it and make
+    developers add it themselves.
+ 2) Ignore EINVAL on page-flips. Some cards don't support page-flips, so
+    we'd print it on each frame. Maybe, at some point, the kernel will add
+    support to retrieve capabilities for that. Until then, simply ignore
+    it.
+ 3) Replace the now dropped card-dump with a short message about resyncing
+    the card.
+---
+ src/libsystemd-terminal/grdev-drm.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/src/libsystemd-terminal/grdev-drm.c b/src/libsystemd-terminal/grdev-drm.c
+index 3936a029fa..5cebb0609e 100644
+--- a/src/libsystemd-terminal/grdev-drm.c
++++ b/src/libsystemd-terminal/grdev-drm.c
+@@ -1177,8 +1177,12 @@ static int grdrm_crtc_commit_flip(grdrm_crtc *crtc, grdev_fb **slot) {
+         r = ioctl(card->fd, DRM_IOCTL_MODE_PAGE_FLIP, &page_flip);
+         if (r < 0) {
+                 r = -errno;
+-                log_debug("grdrm: %s: cannot schedule page-flip on crtc %" PRIu32 ": %m",
+-                          card->base.name, crtc->object.id);
++                /* Avoid excessive logging on EINVAL; it is currently not
++                 * possible to see whether cards support page-flipping, so
++                 * avoid logging on each frame. */
++                if (r != -EINVAL)
++                        log_debug("grdrm: %s: cannot schedule page-flip on crtc %" PRIu32 ": %m",
++                                  card->base.name, crtc->object.id);
+ 
+                 if (grdrm_card_async(card, r))
+                         return r;
+@@ -2145,6 +2149,8 @@ static void grdrm_card_hotplug(grdrm_card *card) {
+         if (!card->running)
+                 return;
+ 
++        log_debug("grdrm: %s/%s: reconfigure card", card->base.session->name, card->base.name);
++
+         card->ready = false;
+         r = grdrm_card_resync(card);
+         if (r < 0) {
+@@ -2155,7 +2161,10 @@ static void grdrm_card_hotplug(grdrm_card *card) {
+ 
+         grdev_session_pin(card->base.session);
+ 
+-        grdrm_card_print(card);
++        /* debug statement to print card information */
++        if (0)
++                grdrm_card_print(card);
++
+         grdrm_card_configure(card);
+         card->ready = true;
+ 

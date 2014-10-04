@@ -1,0 +1,30 @@
+From 3f2e132a197ba3f5172cbbcd285e9aab021de8fc Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 11 Sep 2014 17:37:30 +0200
+Subject: [PATCH] test: fix mem-leak in fdopen() test
+
+We must free FILE* after function return to not leak resources. Note that
+this also closes our fd as fdopen() takes ownership of it.
+Reported by Philippe De Swert (via coverity).
+---
+ src/test/test-util.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/test/test-util.c b/src/test/test-util.c
+index 72a8a6b130..80425ca61a 100644
+--- a/src/test/test-util.c
++++ b/src/test/test-util.c
+@@ -918,11 +918,11 @@ static void test_readlink_and_make_absolute(void) {
+ }
+ 
+ static void test_read_one_char(void) {
++        _cleanup_fclose_ FILE *file = NULL;
+         char r;
+         bool need_nl;
+         char name[] = "/tmp/test-read_one_char.XXXXXX";
+-        _cleanup_close_ int fd = -1;
+-        FILE *file;
++        int fd;
+ 
+         fd = mkostemp_safe(name, O_RDWR|O_CLOEXEC);
+         assert_se(fd >= 0);

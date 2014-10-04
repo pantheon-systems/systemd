@@ -1,0 +1,134 @@
+From 9fd290443f5f99fca0dcd4216b1de70f7d3b8db1 Mon Sep 17 00:00:00 2001
+From: Jan Synacek <jsynacek@redhat.com>
+Date: Thu, 2 Oct 2014 14:39:29 +0200
+Subject: [PATCH] journalctl: add --utc option
+
+Introduce option to display time in UTC.
+---
+ man/journalctl.xml       |  7 +++++++
+ src/journal/journalctl.c | 11 ++++++++++-
+ src/shared/logs-show.c   |  8 +++++---
+ src/shared/output-mode.h |  1 +
+ 4 files changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/man/journalctl.xml b/man/journalctl.xml
+index acd75a6370..7fb6afc8f6 100644
+--- a/man/journalctl.xml
++++ b/man/journalctl.xml
+@@ -380,6 +380,13 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><option>--utc</option></term>
++
++                                <listitem><para>Express time in Coordinated Universal
++                                Time (UTC).</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><option>-x</option></term>
+                                 <term><option>--catalog</option></term>
+ 
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 89a922c067..395f85c9ae 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -63,6 +63,7 @@
+ #define DEFAULT_FSS_INTERVAL_USEC (15*USEC_PER_MINUTE)
+ 
+ static OutputMode arg_output = OUTPUT_SHORT;
++static bool arg_utc = false;
+ static bool arg_pager_end = false;
+ static bool arg_follow = false;
+ static bool arg_full = true;
+@@ -191,6 +192,7 @@ static void help(void) {
+                "  -o --output=STRING       Change journal output mode (short, short-iso,\n"
+                "                                   short-precise, short-monotonic, verbose,\n"
+                "                                   export, json, json-pretty, json-sse, cat)\n"
++               "     --utc                 Express time in Coordinated Universal Time (UTC)\n"
+                "  -x --catalog             Add message explanations where available\n"
+                "     --no-full             Ellipsize fields\n"
+                "  -a --all                 Show all fields, including long and unprintable\n"
+@@ -250,6 +252,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 ARG_DUMP_CATALOG,
+                 ARG_UPDATE_CATALOG,
+                 ARG_FORCE,
++                ARG_UTC,
+         };
+ 
+         static const struct option options[] = {
+@@ -299,6 +302,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "update-catalog", no_argument,       NULL, ARG_UPDATE_CATALOG },
+                 { "reverse",        no_argument,       NULL, 'r'                },
+                 { "machine",        required_argument, NULL, 'M'                },
++                { "utc",            no_argument,       NULL, ARG_UTC            },
+                 {}
+         };
+ 
+@@ -639,6 +643,10 @@ static int parse_argv(int argc, char *argv[]) {
+                         arg_reverse = true;
+                         break;
+ 
++                case ARG_UTC:
++                        arg_utc = true;
++                        break;
++
+                 case '?':
+                         return -EINVAL;
+ 
+@@ -1958,7 +1966,8 @@ int main(int argc, char *argv[]) {
+                                 arg_all * OUTPUT_SHOW_ALL |
+                                 arg_full * OUTPUT_FULL_WIDTH |
+                                 on_tty() * OUTPUT_COLOR |
+-                                arg_catalog * OUTPUT_CATALOG;
++                                arg_catalog * OUTPUT_CATALOG |
++                                arg_utc * OUTPUT_UTC;
+ 
+                         r = output_journal(stdout, j, arg_output, 0, flags, &ellipsized);
+                         need_seek = true;
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index 5a7bbaf03a..d5d9d090b5 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -311,8 +311,10 @@ static int output_short(
+                 uint64_t x;
+                 time_t t;
+                 struct tm tm;
++                struct tm *(*gettime_r)(const time_t *, struct tm *);
+ 
+                 r = -ENOENT;
++                gettime_r = (flags & OUTPUT_UTC) ? gmtime_r : localtime_r;
+ 
+                 if (realtime)
+                         r = safe_atou64(realtime, &x);
+@@ -329,17 +331,17 @@ static int output_short(
+ 
+                 switch(mode) {
+                 case OUTPUT_SHORT_ISO:
+-                        r = strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", localtime_r(&t, &tm));
++                        r = strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", gettime_r(&t, &tm));
+                         break;
+                 case OUTPUT_SHORT_PRECISE:
+-                        r = strftime(buf, sizeof(buf), "%b %d %H:%M:%S", localtime_r(&t, &tm));
++                        r = strftime(buf, sizeof(buf), "%b %d %H:%M:%S", gettime_r(&t, &tm));
+                         if (r > 0) {
+                                 snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+                                          ".%06llu", (unsigned long long) (x % USEC_PER_SEC));
+                         }
+                         break;
+                 default:
+-                        r = strftime(buf, sizeof(buf), "%b %d %H:%M:%S", localtime_r(&t, &tm));
++                        r = strftime(buf, sizeof(buf), "%b %d %H:%M:%S", gettime_r(&t, &tm));
+                 }
+ 
+                 if (r <= 0) {
+diff --git a/src/shared/output-mode.h b/src/shared/output-mode.h
+index ac1bb0123b..81d7f05d91 100644
+--- a/src/shared/output-mode.h
++++ b/src/shared/output-mode.h
+@@ -44,4 +44,5 @@ typedef enum OutputFlags {
+         OUTPUT_COLOR          = 1 << 4,
+         OUTPUT_CATALOG        = 1 << 5,
+         OUTPUT_BEGIN_NEWLINE  = 1 << 6,
++        OUTPUT_UTC            = 1 << 7,
+ } OutputFlags;

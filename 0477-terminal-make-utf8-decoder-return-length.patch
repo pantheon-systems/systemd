@@ -1,0 +1,217 @@
+From f1f5b2a3bdc3178d57c4088a7cd7758afaeba9cb Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 2 Oct 2014 16:36:09 +0200
+Subject: [PATCH] terminal: make utf8 decoder return length
+
+Lets return the parsed length in term_utf8_decode() instead of a buffer
+pointer. Store the pointer in the passed argument.
+
+This makes it adhere to the systemd coding-style, were we always avoid
+returning pointers, but store them in output arguments. In this case, the
+storage is not allocated, so it doesn't fit 100% to this idiom, but still
+looks much nicer.
+---
+ src/libsystemd-terminal/subterm.c          |  4 +--
+ src/libsystemd-terminal/term-parser.c      | 24 ++++++++-------
+ src/libsystemd-terminal/term-screen.c      |  4 +--
+ src/libsystemd-terminal/term.h             |  2 +-
+ src/libsystemd-terminal/test-term-parser.c | 49 +++++++++++++++---------------
+ 5 files changed, 43 insertions(+), 40 deletions(-)
+
+diff --git a/src/libsystemd-terminal/subterm.c b/src/libsystemd-terminal/subterm.c
+index 3990fb392b..adc4caa42e 100644
+--- a/src/libsystemd-terminal/subterm.c
++++ b/src/libsystemd-terminal/subterm.c
+@@ -716,10 +716,10 @@ static int terminal_io_fn(sd_event_source *source, int fd, uint32_t revents, voi
+ 
+         for (i = 0; i < len; ++i) {
+                 const term_seq *seq;
+-                const uint32_t *str;
++                uint32_t *str;
+                 size_t n_str, j;
+ 
+-                str = term_utf8_decode(&t->utf8, &n_str, buf[i]);
++                n_str = term_utf8_decode(&t->utf8, &str, buf[i]);
+                 for (j = 0; j < n_str; ++j) {
+                         type = term_parser_feed(t->parser, &seq, str[j]);
+                         if (type < 0) {
+diff --git a/src/libsystemd-terminal/term-parser.c b/src/libsystemd-terminal/term-parser.c
+index c8c1d13d2e..f9326d563a 100644
+--- a/src/libsystemd-terminal/term-parser.c
++++ b/src/libsystemd-terminal/term-parser.c
+@@ -81,15 +81,16 @@ size_t term_utf8_encode(char *out_utf8, uint32_t g) {
+ /**
+  * term_utf8_decode() - Try decoding the next UCS-4 character
+  * @p: decoder object to operate on or NULL
+- * @out_len: output buffer for length of decoded UCS-4 string or NULL
++ * @out_len: output storage for pointer to decoded UCS-4 string or NULL
+  * @c: next char to push into decoder
+  *
+  * This decodes a UTF-8 stream. It must be called for each input-byte of the
+- * UTF-8 stream and returns a UCS-4 stream. The length of the returned UCS-4
+- * string (number of parsed characters) is stored in @out_len if non-NULL. A
+- * pointer to the string is returned (or NULL if none was parsed). The string
+- * is not zero-terminated! Furthermore, the string is only valid until the next
+- * invokation of this function. It is also bound to the parser-state @p.
++ * UTF-8 stream and returns a UCS-4 stream. A pointer to the parsed UCS-4
++ * string is stored in @out_buf if non-NULL. The length of this string (number
++ * of parsed UCS4 characters) is returned as result. The string is not
++ * zero-terminated! Furthermore, the string is only valid until the next
++ * invocation of this function. It is also bound to the parser state @p and
++ * must not be freed nor written to by the caller.
+  *
+  * This function is highly optimized to work with terminal-emulators. Instead
+  * of being strict about UTF-8 validity, this tries to perform a fallback to
+@@ -100,9 +101,10 @@ size_t term_utf8_encode(char *out_utf8, uint32_t g) {
+  * no helpers to do that for you. To initialize it, simply reset it to all
+  * zero. You can reset or free the object at any point in time.
+  *
+- * Returns: Pointer to the UCS-4 string or NULL.
++ * Returns: Number of parsed UCS4 characters
+  */
+-const uint32_t *term_utf8_decode(term_utf8 *p, size_t *out_len, char c) {
++size_t term_utf8_decode(term_utf8 *p, uint32_t **out_buf, char c) {
++        static uint32_t ucs4_null = 0;
+         uint32_t t, *res = NULL;
+         uint8_t byte;
+         size_t len = 0;
+@@ -246,9 +248,9 @@ const uint32_t *term_utf8_decode(term_utf8 *p, size_t *out_len, char c) {
+         p->n_bytes = 0;
+ 
+ out:
+-        if (out_len)
+-                *out_len = len;
+-        return len > 0 ? res : NULL;
++        if (out_buf)
++                *out_buf = res ? : &ucs4_null;
++        return len;
+ }
+ 
+ /*
+diff --git a/src/libsystemd-terminal/term-screen.c b/src/libsystemd-terminal/term-screen.c
+index 14c32aceb9..2f3f6f91cb 100644
+--- a/src/libsystemd-terminal/term-screen.c
++++ b/src/libsystemd-terminal/term-screen.c
+@@ -3756,7 +3756,7 @@ unsigned int term_screen_get_height(term_screen *screen) {
+ }
+ 
+ int term_screen_feed_text(term_screen *screen, const uint8_t *in, size_t size) {
+-        const uint32_t *ucs4_str;
++        uint32_t *ucs4_str;
+         size_t i, j, ucs4_len;
+         const term_seq *seq;
+         int r;
+@@ -3768,7 +3768,7 @@ int term_screen_feed_text(term_screen *screen, const uint8_t *in, size_t size) {
+          * 8bit mode if the stream is not valid UTF-8. This should be more than
+          * enough to support old 7bit/8bit modes. */
+         for (i = 0; i < size; ++i) {
+-                ucs4_str = term_utf8_decode(&screen->utf8, &ucs4_len, in[i]);
++                ucs4_len = term_utf8_decode(&screen->utf8, &ucs4_str, in[i]);
+                 for (j = 0; j < ucs4_len; ++j) {
+                         r = term_parser_feed(screen->parser, &seq, ucs4_str[j]);
+                         if (r < 0) {
+diff --git a/src/libsystemd-terminal/term.h b/src/libsystemd-terminal/term.h
+index 021cf1c42b..d5b934fc59 100644
+--- a/src/libsystemd-terminal/term.h
++++ b/src/libsystemd-terminal/term.h
+@@ -111,7 +111,7 @@ struct term_utf8 {
+ };
+ 
+ size_t term_utf8_encode(char *out_utf8, uint32_t g);
+-const uint32_t *term_utf8_decode(term_utf8 *p, size_t *out_len, char c);
++size_t term_utf8_decode(term_utf8 *p, uint32_t **out_buf, char c);
+ 
+ /*
+  * Parsers
+diff --git a/src/libsystemd-terminal/test-term-parser.c b/src/libsystemd-terminal/test-term-parser.c
+index ed16f5f276..e8d5dcfbf2 100644
+--- a/src/libsystemd-terminal/test-term-parser.c
++++ b/src/libsystemd-terminal/test-term-parser.c
+@@ -33,39 +33,40 @@
+ 
+ static void test_term_utf8_invalid(void) {
+         term_utf8 p = { };
+-        const uint32_t *res;
++        uint32_t *res;
+         size_t len;
+ 
+-        res = term_utf8_decode(NULL, NULL, 0);
+-        assert_se(res == NULL);
++        len = term_utf8_decode(NULL, NULL, 0);
++        assert_se(!len);
+ 
+-        res = term_utf8_decode(&p, NULL, 0);
+-        assert_se(res != NULL);
+-
+-        len = 5;
+-        res = term_utf8_decode(NULL, &len, 0);
+-        assert_se(res == NULL);
+-        assert_se(len == 0);
++        len = term_utf8_decode(&p, NULL, 0);
++        assert_se(len == 1);
+ 
+-        len = 5;
+-        res = term_utf8_decode(&p, &len, 0);
++        res = NULL;
++        len = term_utf8_decode(NULL, &res, 0);
++        assert_se(!len);
+         assert_se(res != NULL);
++        assert_se(!*res);
++
++        len = term_utf8_decode(&p, &res, 0);
+         assert_se(len == 1);
++        assert_se(res != NULL);
++        assert_se(!*res);
+ 
+-        len = 5;
+-        res = term_utf8_decode(&p, &len, 0xCf);
+-        assert_se(res == NULL);
++        len = term_utf8_decode(&p, &res, 0xCf);
+         assert_se(len == 0);
+-
+-        len = 5;
+-        res = term_utf8_decode(&p, &len, 0x0);
+         assert_se(res != NULL);
++        assert_se(!*res);
++
++        len = term_utf8_decode(&p, &res, 0);
+         assert_se(len == 2);
++        assert_se(res != NULL);
++        assert_se(res[0] == 0xCf && res[1] == 0);
+ }
+ 
+ static void test_term_utf8_range(void) {
+         term_utf8 p = { };
+-        const uint32_t *res;
++        uint32_t *res;
+         char u8[4];
+         uint32_t i, j;
+         size_t ulen, len;
+@@ -78,8 +79,8 @@ static void test_term_utf8_range(void) {
+                         continue;
+ 
+                 for (j = 0; j < ulen; ++j) {
+-                        res = term_utf8_decode(&p, &len, u8[j]);
+-                        if (!res) {
++                        len = term_utf8_decode(&p, &res, u8[j]);
++                        if (len < 1) {
+                                 assert_se(j + 1 != ulen);
+                                 continue;
+                         }
+@@ -117,13 +118,13 @@ static void test_term_utf8_mix(void) {
+                 0x00F0, 0x0080, 0x0080, 0x0001,
+         };
+         term_utf8 p = { };
+-        const uint32_t *res;
++        uint32_t *res;
+         unsigned int i, j;
+         size_t len;
+ 
+         for (i = 0, j = 0; i < sizeof(source); ++i) {
+-                res = term_utf8_decode(&p, &len, source[i]);
+-                if (!res)
++                len = term_utf8_decode(&p, &res, source[i]);
++                if (len < 1)
+                         continue;
+ 
+                 assert_se(j + len <= ELEMENTSOF(result));

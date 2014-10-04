@@ -1,0 +1,70 @@
+From b49ffb29ed902f173852707652b3e3c9c303cebb Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Mon, 15 Sep 2014 22:36:43 +0200
+Subject: [PATCH] sd-bus: sd_bus_message_get_errno should only return positive
+ errno
+
+sd_bus_message_get_errno can currently return either a number of
+different poitive errno values (from bus-error-mapping), or a negative
+EINVAL if passed null as parameter.
+
+The check for null parameter was introduced in 40ca29a1370379d43e44c0ed425eecc7218dcbca
+at the same as the function was renamed from bus_message_to_errno and
+made public API. Before becoming public the function used to return
+only negative values.
+
+It is weird to have a function return both positive and negative errno
+and it generally looks like a mistake. The function is guarded by the
+--enable-kdbus flags so I wonder if we still have time to fix it up?
+It does not have any documentation yet. However, except for a few details
+it is just a convenient way to call sd_bus_error_get_errno which is documented
+to return only positive errno.
+
+This patch makes it return only positive errno and fixes up the two
+calls to the function that tried to cope with both positive and negative
+values.
+---
+ src/libsystemd/sd-bus/bus-message.c | 2 +-
+ src/libsystemd/sd-bus/sd-bus.c      | 2 --
+ src/network/networkd-link.c         | 2 --
+ 3 files changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-message.c b/src/libsystemd/sd-bus/bus-message.c
+index bfb14fcce6..1fa3ad2611 100644
+--- a/src/libsystemd/sd-bus/bus-message.c
++++ b/src/libsystemd/sd-bus/bus-message.c
+@@ -5337,7 +5337,7 @@ int bus_header_message_size(struct bus_header *h, size_t *sum) {
+ }
+ 
+ _public_ int sd_bus_message_get_errno(sd_bus_message *m) {
+-        assert_return(m, -EINVAL);
++        assert_return(m, EINVAL);
+ 
+         if (m->header->type != SD_BUS_MESSAGE_METHOD_ERROR)
+                 return 0;
+diff --git a/src/libsystemd/sd-bus/sd-bus.c b/src/libsystemd/sd-bus/sd-bus.c
+index 33b65aba72..28b993b7ba 100644
+--- a/src/libsystemd/sd-bus/sd-bus.c
++++ b/src/libsystemd/sd-bus/sd-bus.c
+@@ -349,8 +349,6 @@ static int hello_callback(sd_bus *bus, sd_bus_message *reply, void *userdata, sd
+         assert(reply);
+ 
+         r = sd_bus_message_get_errno(reply);
+-        if (r < 0)
+-                return r;
+         if (r > 0)
+                 return -r;
+ 
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 9bf1a811c9..427f6953c5 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -725,8 +725,6 @@ static int set_hostname_handler(sd_bus *bus, sd_bus_message *m, void *userdata,
+                 return 1;
+ 
+         r = sd_bus_message_get_errno(m);
+-        if (r < 0)
+-                r = -r;
+         if (r > 0)
+                 log_warning_link(link, "Could not set hostname: %s",
+                                  strerror(r));

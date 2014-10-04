@@ -1,0 +1,22 @@
+From e4c38cc36e287d46a56a98066cc368ee6fdd1968 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Sun, 31 Aug 2014 22:54:40 +0200
+Subject: [PATCH] journal-remote: fix check if realloc failed
+
+---
+ src/journal-remote/journal-remote-parse.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal-remote/journal-remote-parse.c b/src/journal-remote/journal-remote-parse.c
+index dfb87d49af..e7eb1516fb 100644
+--- a/src/journal-remote/journal-remote-parse.c
++++ b/src/journal-remote/journal-remote-parse.c
+@@ -478,7 +478,7 @@ int process_source(RemoteSource *source, bool compress, bool seal) {
+                 char *tmp;
+ 
+                 tmp = realloc(source->buf, target);
+-                if (tmp)
++                if (!tmp)
+                         log_warning("Failed to reallocate buffer to (smaller) size %zu",
+                                     target);
+                 else {

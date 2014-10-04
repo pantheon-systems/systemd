@@ -1,0 +1,25 @@
+From c168eb6785bacc2042687bf879259dfc27d5a523 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 28 Aug 2014 15:22:26 +0200
+Subject: [PATCH] locale: fix sending PropertiesChanged for x11 keymap changed
+
+The sd_bus_emit_properties_changed() call for x11 keymap changes lacks
+commas.. whoops. Fix it! Now localed emits PropertiesChanged signals
+again.
+---
+ src/locale/localed.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/locale/localed.c b/src/locale/localed.c
+index 508a00079e..4d22568787 100644
+--- a/src/locale/localed.c
++++ b/src/locale/localed.c
+@@ -1046,7 +1046,7 @@ static int method_set_x11_keyboard(sd_bus *bus, sd_bus_message *m, void *userdat
+                 sd_bus_emit_properties_changed(bus,
+                                 "/org/freedesktop/locale1",
+                                 "org.freedesktop.locale1",
+-                                "X11Layout" "X11Model" "X11Variant" "X11Options", NULL);
++                                "X11Layout", "X11Model", "X11Variant", "X11Options", NULL);
+ 
+                 if (convert) {
+                         r = x11_convert_to_vconsole(c, bus);

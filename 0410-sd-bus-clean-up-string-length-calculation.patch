@@ -1,0 +1,54 @@
+From f0c5e28e58215682c832e1667b346b59c804f6a5 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <daniel@zonque.org>
+Date: Sun, 28 Sep 2014 21:19:22 +0200
+Subject: [PATCH] sd-bus: clean up string length calculation
+
+Move the +1 calculus onto the definition of the variable, just to make
+the code a little easier to read. No functional change.
+---
+ src/libsystemd/sd-bus/bus-control.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-control.c b/src/libsystemd/sd-bus/bus-control.c
+index b22f4c4ff6..4ad44469b5 100644
+--- a/src/libsystemd/sd-bus/bus-control.c
++++ b/src/libsystemd/sd-bus/bus-control.c
+@@ -58,15 +58,15 @@ static int bus_request_name_kernel(sd_bus *bus, const char *name, uint64_t flags
+         assert(bus);
+         assert(name);
+ 
+-        l = strlen(name);
+-        size = offsetof(struct kdbus_cmd_name, items) + KDBUS_ITEM_SIZE(l + 1);
++        l = strlen(name) + 1;
++        size = offsetof(struct kdbus_cmd_name, items) + KDBUS_ITEM_SIZE(l);
+         n = alloca0_align(size, 8);
+         n->size = size;
+         kdbus_translate_request_name_flags(flags, (uint64_t *) &n->flags);
+ 
+-        n->items[0].size = KDBUS_ITEM_HEADER_SIZE + l + 1;
++        n->items[0].size = KDBUS_ITEM_HEADER_SIZE + l;
+         n->items[0].type = KDBUS_ITEM_NAME;
+-        memcpy(n->items[0].str, name, l+1);
++        memcpy(n->items[0].str, name, l);
+ 
+ #ifdef HAVE_VALGRIND_MEMCHECK_H
+         VALGRIND_MAKE_MEM_DEFINED(n, n->size);
+@@ -153,14 +153,14 @@ static int bus_release_name_kernel(sd_bus *bus, const char *name) {
+         assert(bus);
+         assert(name);
+ 
+-        l = strlen(name);
+-        size = offsetof(struct kdbus_cmd_name, items) + KDBUS_ITEM_SIZE(l + 1);
++        l = strlen(name) + 1;
++        size = offsetof(struct kdbus_cmd_name, items) + KDBUS_ITEM_SIZE(l);
+         n = alloca0_align(size, 8);
+         n->size = size;
+ 
+-        n->items[0].size = KDBUS_ITEM_HEADER_SIZE + l + 1;
++        n->items[0].size = KDBUS_ITEM_HEADER_SIZE + l;
+         n->items[0].type = KDBUS_ITEM_NAME;
+-        memcpy(n->items[0].str, name, l+1);
++        memcpy(n->items[0].str, name, l);
+ 
+ #ifdef HAVE_VALGRIND_MEMCHECK_H
+         VALGRIND_MAKE_MEM_DEFINED(n, n->size);

@@ -1,0 +1,35 @@
+From b4232628f3d4b00c967310d56c0e95715c9d05cd Mon Sep 17 00:00:00 2001
+From: Evangelos Foutras <evangelos@foutrelis.com>
+Date: Sat, 30 Aug 2014 10:13:43 +0300
+Subject: [PATCH] journal/compress: use LZ4_compress_continue()
+
+We can't use LZ4_compress_limitedOutput_continue() because in the
+worst-case scenario the compressed output can be slightly bigger than
+the input block. This generally affects very few blocks and is no reason
+to abort the compression process.
+
+I ran into this when I noticed that Chromium core dumps weren't being
+compressed. After switching to LZ4_compress_continue() a ~330MB Chromium
+core dump gets compressed to ~17M.
+---
+ src/journal/compress.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/journal/compress.c b/src/journal/compress.c
+index 52a4c100b3..c4c715be2f 100644
+--- a/src/journal/compress.c
++++ b/src/journal/compress.c
+@@ -460,10 +460,10 @@ int compress_stream_lz4(int fdf, int fdt, off_t max_bytes) {
+ 
+                 total_in += n;
+ 
+-                r = LZ4_compress_limitedOutput_continue(&lz4_data, buf, out, n, n);
++                r = LZ4_compress_continue(&lz4_data, buf, out, n);
+                 if (r == 0) {
+-                        log_debug("Compressed size exceeds original, aborting compression.");
+-                        return -ENOBUFS;
++                        log_error("LZ4 compression failed.");
++                        return -EBADMSG;
+                 }
+ 
+                 header = htole32(r);

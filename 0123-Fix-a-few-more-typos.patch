@@ -1,0 +1,324 @@
+From 06b643e7f5a3b79005dd57497897ab7255fe3659 Mon Sep 17 00:00:00 2001
+From: Ruben Kerkhof <ruben@rubenkerkhof.com>
+Date: Sat, 30 Aug 2014 17:13:16 +0200
+Subject: [PATCH] Fix a few more typos
+
+---
+ CODING_STYLE                               | 2 +-
+ NEWS                                       | 2 +-
+ man/file-hierarchy.xml                     | 2 +-
+ man/kernel-command-line.xml                | 2 +-
+ man/sd_bus_creds_get_pid.xml               | 2 +-
+ man/sd_bus_creds_new_from_pid.xml          | 4 ++--
+ man/sd_bus_error.xml                       | 2 +-
+ man/sd_bus_message_append_basic.xml        | 4 ++--
+ man/systemd-hibernate-resume-generator.xml | 2 +-
+ man/systemd-nspawn.xml                     | 2 +-
+ man/systemd.exec.xml                       | 2 +-
+ man/systemd.socket.xml                     | 2 +-
+ src/core/unit.c                            | 2 +-
+ src/journal/test-compress-benchmark.c      | 2 +-
+ src/libsystemd-network/sd-icmp6-nd.c       | 2 +-
+ src/libsystemd-terminal/term-page.c        | 4 ++--
+ src/libsystemd-terminal/term-screen.c      | 4 ++--
+ src/libsystemd-terminal/test-term-page.c   | 2 +-
+ src/libsystemd/sd-bus/kdbus.h              | 2 +-
+ src/shared/architecture.h                  | 2 +-
+ 20 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/CODING_STYLE b/CODING_STYLE
+index a3fc26c1e1..05b5ecf89f 100644
+--- a/CODING_STYLE
++++ b/CODING_STYLE
+@@ -155,7 +155,7 @@
+   function or a "non-logging" function. "Logging" functions do logging
+   on their own, "non-logging" function never log on their own and
+   expect their callers to log. All functions in "library" code,
+-  i.e. in src/shared/ and suchlike must be "non-logging". Everytime a
++  i.e. in src/shared/ and suchlike must be "non-logging". Every time a
+   "logging" function calls a "non-logging" function, it should log
+   about the resulting errors. If a "logging" function calls another
+   "logging" function, then it should not generate log messages, so
+diff --git a/NEWS b/NEWS
+index 2fca2cdc93..f52ee027a1 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1613,7 +1613,7 @@ CHANGES WITH 208:
+           kernel, and on seats that are not seat0.
+ 
+         * A new kernel command line option luks.options= is understood
+-          now which allows specifiying LUKS options for usage for LUKS
++          now which allows specifying LUKS options for usage for LUKS
+           encrypted partitions specified with luks.uuid=.
+ 
+         * tmpfiles.d(5) snippets may now use specifier expansion in
+diff --git a/man/file-hierarchy.xml b/man/file-hierarchy.xml
+index 523846b646..9d96cff007 100644
+--- a/man/file-hierarchy.xml
++++ b/man/file-hierarchy.xml
+@@ -914,7 +914,7 @@
+                       </row>
+                       <row>
+                         <entry><filename>~/.local/lib/<replaceable>package</replaceable></filename></entry>
+-                        <entry>Private, static vendor resources of the package, compatible wih any architecture, or any other kind of read-only vendor data.</entry>
++                        <entry>Private, static vendor resources of the package, compatible with any architecture, or any other kind of read-only vendor data.</entry>
+                       </row>
+                       <row>
+                         <entry><filename>~/.local/lib/<replaceable>arch-id</replaceable>/<replaceable>package</replaceable></filename></entry>
+diff --git a/man/kernel-command-line.xml b/man/kernel-command-line.xml
+index d872e6d5b9..3263b77cea 100644
+--- a/man/kernel-command-line.xml
++++ b/man/kernel-command-line.xml
+@@ -358,7 +358,7 @@
+                                         <para>Enables resume from hibernation
+                                         using the specified device.
+                                         All <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>-like
+-                                        pathes are supported. For details, see
++                                        paths are supported. For details, see
+                                         <citerefentry><refentrytitle>systemd-hibernate-resume-generator</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
+                                 </listitem>
+                         </varlistentry>
+diff --git a/man/sd_bus_creds_get_pid.xml b/man/sd_bus_creds_get_pid.xml
+index 5a848576f3..40ed81ecb0 100644
+--- a/man/sd_bus_creds_get_pid.xml
++++ b/man/sd_bus_creds_get_pid.xml
+@@ -405,7 +405,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+       <varlistentry>
+         <term><varname>-ENXIO</varname></term>
+ 
+-        <listitem><para>An error occured in parsing cgroup paths.
++        <listitem><para>An error occurred in parsing cgroup paths.
+         <filename>libsystemd</filename> might be out of sync with
+         the running systemd version.</para></listitem>
+       </varlistentry>
+diff --git a/man/sd_bus_creds_new_from_pid.xml b/man/sd_bus_creds_new_from_pid.xml
+index 406769b21d..bc94c44095 100644
+--- a/man/sd_bus_creds_new_from_pid.xml
++++ b/man/sd_bus_creds_new_from_pid.xml
+@@ -149,7 +149,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+     and other functions which correspond directly to the constants
+     listed above.</para>
+ 
+-    <para>A mask of fields which were actually sucessfully set
++    <para>A mask of fields which were actually successfully set
+     (acquired from <filename>/proc</filename>, etc.) can be retrieved
+     with <function>sd_bus_creds_get_mask()</function>. If the
+     credentials object was created with
+@@ -162,7 +162,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+     object will not be destroyed until
+     <function>sd_bus_creds_unref</function> has been called as many
+     times plus once more. Once the reference count has dropped to zero,
+-    <parameter>c</parameter> cannot be used anymore, so futher
++    <parameter>c</parameter> cannot be used anymore, so further
+     calls to <function>sd_bus_creds_ref(c)</function> or
+     <function>sd_bus_creds_unref(c)</function> are illegal.</para>
+ 
+diff --git a/man/sd_bus_error.xml b/man/sd_bus_error.xml
+index 3317eadc37..7f4160753e 100644
+--- a/man/sd_bus_error.xml
++++ b/man/sd_bus_error.xml
+@@ -252,7 +252,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+     D-Bus error names are available as constants
+     <constant>SD_BUS_ERROR_FAILED</constant>, etc., listed above. If
+     <parameter>name</parameter> is <constant>NULL</constant>, it is
+-    assumed that no error occured, and 0 is returned. This means that
++    assumed that no error occurred, and 0 is returned. This means that
+     this function may be conveniently used in a
+     <function>return</function> statement.</para>
+ 
+diff --git a/man/sd_bus_message_append_basic.xml b/man/sd_bus_message_append_basic.xml
+index da92020053..7c5f1e9ddc 100644
+--- a/man/sd_bus_message_append_basic.xml
++++ b/man/sd_bus_message_append_basic.xml
+@@ -95,7 +95,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+           <row>
+             <entry><literal>y</literal></entry>
+             <entry><constant>SD_BUS_TYPE_BYTE</constant></entry>
+-            <entry>unsigned interger</entry>
++            <entry>unsigned integer</entry>
+             <entry>1 byte</entry>
+           </row>
+ 
+@@ -200,7 +200,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+     valid Unicode string encoded as UTF-8. In case of the two latter
+     types, the additional requirements for a D-Bus object path or
+     type signature should be satisfied. Those requirements should be
+-    verified by the recepient of the message.
++    verified by the recipient of the message.
+     </para>
+   </refsect1>
+ 
+diff --git a/man/systemd-hibernate-resume-generator.xml b/man/systemd-hibernate-resume-generator.xml
+index 1a4b99ced4..e010c23df4 100644
+--- a/man/systemd-hibernate-resume-generator.xml
++++ b/man/systemd-hibernate-resume-generator.xml
+@@ -71,7 +71,7 @@
+                                 <term><varname>resume=</varname></term>
+ 
+                                 <listitem><para>Takes a path to the resume
+-                                device. Both persistent block device pathes like
++                                device. Both persistent block device paths like
+                                 <filename>/dev/disk/by-foo/bar</filename> and
+                                 <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>-style
+                                 specifiers like <literal>FOO=bar</literal>
+diff --git a/man/systemd-nspawn.xml b/man/systemd-nspawn.xml
+index aea50559f0..820a79bc28 100644
+--- a/man/systemd-nspawn.xml
++++ b/man/systemd-nspawn.xml
+@@ -668,7 +668,7 @@
+                                 as <literal>tmpfs</literal> instance
+                                 into it (the system thus starts up
+                                 with read-only OS resources and
+-                                configuration, but prestine state, any
++                                configuration, but pristine state, any
+                                 changes to the latter are lost on
+                                 shutdown). When the mode parameter is
+                                 specified as <literal>no</literal>
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index af103ff14c..707d582b4f 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -1059,7 +1059,7 @@
+                                 namespace. Note that
+                                 <option>slave</option> means that file
+                                 systems mounted on the host might stay
+-                                mounted continously in the unit's
++                                mounted continuously in the unit's
+                                 namespace, and thus keep the device
+                                 busy. Note that the file system
+                                 namespace related options
+diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
+index 238029a251..8394fa81aa 100644
+--- a/man/systemd.socket.xml
++++ b/man/systemd.socket.xml
+@@ -513,7 +513,7 @@
+ 
+                         <varlistentry>
+                                 <term><varname>KeepAliveProbes=</varname></term>
+-                                <listitem><para>Takes interger as argument. It's the number of unacknowledged probes to
++                                <listitem><para>Takes integer as argument. It's the number of unacknowledged probes to
+                                 send before considering the connection dead and notifying the application layer.
+                                 This controls the TCP_KEEPCNT socket option (see
+                                 <citerefentry><refentrytitle>socket</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 56102b360d..b5c3182940 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -3425,7 +3425,7 @@ int unit_setup_exec_runtime(Unit *u) {
+         offset = UNIT_VTABLE(u)->exec_runtime_offset;
+         assert(offset > 0);
+ 
+-        /* Check if ther already is an ExecRuntime for this unit? */
++        /* Check if there already is an ExecRuntime for this unit? */
+         rt = (ExecRuntime**) ((uint8_t*) u + offset);
+         if (*rt)
+                 return 0;
+diff --git a/src/journal/test-compress-benchmark.c b/src/journal/test-compress-benchmark.c
+index 8975e29b17..b3bc3ec2fe 100644
+--- a/src/journal/test-compress-benchmark.c
++++ b/src/journal/test-compress-benchmark.c
+@@ -61,7 +61,7 @@ static void test_compress_decompress(const char* label,
+                 int r;
+ 
+                 r = compress(text, i, buf, &j);
+-                /* assume compresion must be succesful except for small inputs */
++                /* assume compression must be successful except for small inputs */
+                 assert(r == 0 || (i < 2048 && r == -ENOBUFS));
+                 /* check for overwrites */
+                 assert(buf[i] == 0);
+diff --git a/src/libsystemd-network/sd-icmp6-nd.c b/src/libsystemd-network/sd-icmp6-nd.c
+index 243f06a85f..bbb4531ddb 100644
+--- a/src/libsystemd-network/sd-icmp6-nd.c
++++ b/src/libsystemd-network/sd-icmp6-nd.c
+@@ -212,7 +212,7 @@ static int icmp6_router_advertisment_recv(sd_event_source *s, int fd,
+         if (ra.nd_ra_flags_reserved & ND_RA_FLAG_MANAGED)
+                 event = ICMP6_EVENT_ROUTER_ADVERTISMENT_MANAGED;
+ 
+-        log_icmp6_nd(nd, "Received Router Advertisment flags %s/%s",
++        log_icmp6_nd(nd, "Received Router Advertisement flags %s/%s",
+                      (ra.nd_ra_flags_reserved & ND_RA_FLAG_MANAGED)? "MANAGED":
+                      "none",
+                      (ra.nd_ra_flags_reserved & ND_RA_FLAG_OTHER)? "OTHER":
+diff --git a/src/libsystemd-terminal/term-page.c b/src/libsystemd-terminal/term-page.c
+index 7ae90e2cda..ae73cdf627 100644
+--- a/src/libsystemd-terminal/term-page.c
++++ b/src/libsystemd-terminal/term-page.c
+@@ -42,7 +42,7 @@
+  * support Unicode combining-characters, therefore this gets more complicated.
+  * Characters themselves are represented by a "term_char_t" object. It
+  * should be treated as a normal integer and passed by value. The
+- * sorrounding struct is just to hide the internals. A term-char can contain a
++ * surrounding struct is just to hide the internals. A term-char can contain a
+  * base character together with up to 2 combining-chars in a single integer.
+  * Only if you need more combining-chars (very unlikely!) a term-char is a
+  * pointer to an allocated storage. This requires you to always free term-char
+@@ -1012,7 +1012,7 @@ void term_line_append_combchar(term_line *line, unsigned int pos_x, uint32_t ucs
+  * @age: current age for all modifications
+  * @keep_protected: true if protected cells should be kept
+  *
+- * This is the standard erase operation. It clears all cells in the targetted
++ * This is the standard erase operation. It clears all cells in the targeted
+  * area and re-initializes them. Cells to the right are not shifted left, you
+  * must use DELETE to achieve that. Cells outside the visible area are skipped.
+  *
+diff --git a/src/libsystemd-terminal/term-screen.c b/src/libsystemd-terminal/term-screen.c
+index a19c684d2a..67f9056d57 100644
+--- a/src/libsystemd-terminal/term-screen.c
++++ b/src/libsystemd-terminal/term-screen.c
+@@ -455,7 +455,7 @@ static uint32_t screen_map(term_screen *screen, uint32_t val) {
+ 
+ /*
+  * Command Handlers
+- * This is the inofficial documentation of all the TERM_CMD_* definitions. Each
++ * This is the unofficial documentation of all the TERM_CMD_* definitions. Each
+  * handled command has a separate function with an extensive comment on the
+  * semantics of the command.
+  * Note that many semantics are unknown and need to be verified. This is mostly
+@@ -1040,7 +1040,7 @@ static int screen_DECELR(term_screen *screen, const term_seq *seq) {
+         /*
+          * DECELR - enable-locator-reporting
+          * This changes the locator-reporting mode. @args[0] specifies the mode
+-         * to set, 0 disables locator-reporting, 1 enables it continously, 2
++         * to set, 0 disables locator-reporting, 1 enables it continuously, 2
+          * enables it for a single report. @args[1] specifies the
+          * precision-mode. 0 and 2 set the reporting to cell-precision, 1 sets
+          * pixel-precision.
+diff --git a/src/libsystemd-terminal/test-term-page.c b/src/libsystemd-terminal/test-term-page.c
+index bba83ee405..9e338776e8 100644
+--- a/src/libsystemd-terminal/test-term-page.c
++++ b/src/libsystemd-terminal/test-term-page.c
+@@ -263,7 +263,7 @@ static void test_term_char_allocating(void) {
+  * in the range 'A'-'Z', 'a'-'z'. All those are combined and used as term_char_t
+  * on this cell. Any numbers in the description are combined and are used as
+  * cell-age.
+- * The occurance of a '*'-symbol marks the cell as bold, '/' marks it as italic.
++ * The occurrence of a '*'-symbol marks the cell as bold, '/' marks it as italic.
+  * You can use those characters multiple times, but only the first one has an
+  * effect.
+  * For further symbols, see parse_attr().
+diff --git a/src/libsystemd/sd-bus/kdbus.h b/src/libsystemd/sd-bus/kdbus.h
+index 3751f9ca24..65f76e9cf4 100644
+--- a/src/libsystemd/sd-bus/kdbus.h
++++ b/src/libsystemd/sd-bus/kdbus.h
+@@ -486,7 +486,7 @@ enum kdbus_policy_type {
+  *				policy entries for a name. The provided name
+  *				is not activated and not registered with the
+  *				name database, it only allows unprivileged
+- *				connections to aquire a name, talk or discover
++ *				connections to acquire a name, talk or discover
+  *				a service
+  * @KDBUS_HELLO_MONITOR:	Special-purpose connection to monitor
+  *				bus traffic
+diff --git a/src/shared/architecture.h b/src/shared/architecture.h
+index 71c79b1542..353d49bedf 100644
+--- a/src/shared/architecture.h
++++ b/src/shared/architecture.h
+@@ -28,7 +28,7 @@
+ /* A cleaned up architecture definition. We don't want to get lost in
+  * processor features, models, generations or even ABIs. Hence we
+  * focus on general family, and distuignish word width and
+- * endianess. */
++ * endianness. */
+ 
+ typedef enum Architecture {
+         ARCHITECTURE_X86 = 0,

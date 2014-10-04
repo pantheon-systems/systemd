@@ -1,0 +1,31 @@
+From 8c84621c25c563c7428f3d355136fc542389aab8 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Wed, 17 Sep 2014 23:03:27 +0200
+Subject: [PATCH] sysv-generator: don't check first if hashmap contains the
+ service name
+
+Just test if hashmap_get returns null. hashmap_contains does exactly
+same thing internally so this is slightly more efficient for the true
+case.
+
+Silences a coverity warning too. CID#1237648
+---
+ src/sysv-generator/sysv-generator.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/src/sysv-generator/sysv-generator.c b/src/sysv-generator/sysv-generator.c
+index e5902ab8f8..43bcaa862f 100644
+--- a/src/sysv-generator/sysv-generator.c
++++ b/src/sysv-generator/sysv-generator.c
+@@ -810,9 +810,8 @@ static int set_dependencies_from_rcnd(LookupPaths lp, Hashmap *all_services) {
+                                         goto finish;
+                                 }
+ 
+-                                if (hashmap_contains(all_services, name))
+-                                        service = hashmap_get(all_services, name);
+-                                else {
++                                service = hashmap_get(all_services, name);
++                                if (!service){
+                                         log_warning("Could not find init script for %s", name);
+                                         continue;
+                                 }

@@ -1,0 +1,26 @@
+From c5e6bfc6bc46dd8bc187e035929d6a49cd23ec09 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Tue, 23 Sep 2014 13:40:18 +0200
+Subject: [PATCH] terminal: verify grdev tiles are correctly linked
+
+We used to set "pipe->tile = tile" inside of the leaf allocation. We no
+longer do that. Verify that "out" is non-NULL, otherwise we'd leak memory.
+
+This is currently always given, but make sure to add an assert(), so
+coverity does not complain.
+---
+ src/libsystemd-terminal/grdev.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/libsystemd-terminal/grdev.c b/src/libsystemd-terminal/grdev.c
+index 80a71beeb9..fa1fc378c8 100644
+--- a/src/libsystemd-terminal/grdev.c
++++ b/src/libsystemd-terminal/grdev.c
+@@ -158,6 +158,7 @@ int grdev_tile_new_leaf(grdev_tile **out, grdev_pipe *pipe) {
+         _cleanup_(grdev_tile_freep) grdev_tile *tile = NULL;
+         int r;
+ 
++        assert_return(out, -EINVAL);
+         assert_return(pipe, -EINVAL);
+         assert_return(!pipe->tile, -EINVAL);
+ 

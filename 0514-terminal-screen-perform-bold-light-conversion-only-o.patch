@@ -1,0 +1,27 @@
+From 34dbefceb1377ccd7871e183d7791f76fe879e73 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sun, 5 Oct 2014 15:49:26 +0200
+Subject: [PATCH] terminal/screen: perform bold->light conversion only on
+ foreground
+
+Bold glyphs always use light colors. However, this color conversion is
+limited to the foreground color, so skip it for backgrounds.
+---
+ src/libsystemd-terminal/term-parser.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/libsystemd-terminal/term-parser.c b/src/libsystemd-terminal/term-parser.c
+index 8ec6345d60..d8206a46ba 100644
+--- a/src/libsystemd-terminal/term-parser.c
++++ b/src/libsystemd-terminal/term-parser.c
+@@ -100,8 +100,8 @@ static uint32_t term_color_to_argb32(const term_color *color, const term_attr *a
+         case TERM_CCODE_BLACK ... TERM_CCODE_LIGHT_WHITE:
+                 t = color->ccode - TERM_CCODE_BLACK;
+ 
+-                /* bold causes light colors */
+-                if (t < 8 && attr->bold)
++                /* bold causes light colors (only for foreground colors) */
++                if (t < 8 && attr->bold && color == &attr->fg)
+                         t += 8;
+ 
+                 r = palette[t * 3 + 0];

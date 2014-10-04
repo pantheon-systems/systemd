@@ -1,0 +1,26 @@
+From 371ad55d460559b4262e25d0f9b64dc37c3f7565 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 28 Aug 2014 11:01:31 +0200
+Subject: [PATCH] terminal: sysview: don't return uninitialized error codes
+
+In case 'scan_evdev' and 'scan_drm' are both false, we never set 'r' to
+anyhting, thus return an uninitialized error code. Fix this by always
+returning 0 as we catch negative codes earlier, anyway. Thanks to Thomas
+H.P. Anderson for the report.
+---
+ src/libsystemd-terminal/sysview.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/sysview.c b/src/libsystemd-terminal/sysview.c
+index d885cb4d4a..f5363dedf4 100644
+--- a/src/libsystemd-terminal/sysview.c
++++ b/src/libsystemd-terminal/sysview.c
+@@ -821,7 +821,7 @@ static int context_ud_prepare_monitor(sysview_context *c, struct udev_monitor *m
+                         return r;
+         }
+ 
+-        return r;
++        return 0;
+ }
+ 
+ static int context_ud_prepare_scan(sysview_context *c, struct udev_enumerate *e) {

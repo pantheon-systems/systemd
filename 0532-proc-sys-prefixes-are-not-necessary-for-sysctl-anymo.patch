@@ -1,0 +1,36 @@
+From 1b600437bac3c0676cc72f589909c4cbfe38ba10 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 7 Oct 2014 02:02:59 -0400
+Subject: [PATCH] /proc/sys prefixes are not necessary for sysctl anymore
+
+---
+ man/sysctl.d.xml          | 2 +-
+ rules/99-systemd.rules.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/sysctl.d.xml b/man/sysctl.d.xml
+index 5529fc98bf..3002ebd0fd 100644
+--- a/man/sysctl.d.xml
++++ b/man/sysctl.d.xml
+@@ -158,7 +158,7 @@
+                         <para><filename>/etc/udev/rules.d/99-bridge.rules</filename>:
+                         </para>
+ 
+-                        <programlisting>ACTION=="add", SUBSYSTEM=="module", KERNEL=="bridge", RUN+="/usr/lib/systemd/systemd-sysctl --prefix=/proc/sys/net/bridge"
++                        <programlisting>ACTION=="add", SUBSYSTEM=="module", KERNEL=="bridge", RUN+="/usr/lib/systemd/systemd-sysctl --prefix=/net/bridge"
+ </programlisting>
+ 
+                         <para><filename>/etc/sysctl.d/bridge.conf</filename>:
+diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
+index aa435c4143..e30d9a8f1b 100644
+--- a/rules/99-systemd.rules.in
++++ b/rules/99-systemd.rules.in
+@@ -52,7 +52,7 @@ SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_USB_INTERFACES}=="*:0701??:
+ 
+ # Apply sysctl variables to network devices (and only to those) as they appear.
+ 
+-ACTION=="add", SUBSYSTEM=="net", KERNEL!="lo", RUN+="@rootlibexecdir@/systemd-sysctl --prefix=/proc/sys/net/ipv4/conf/$name --prefix=/proc/sys/net/ipv4/neigh/$name --prefix=/proc/sys/net/ipv6/conf/$name --prefix=/proc/sys/net/ipv6/neigh/$name"
++ACTION=="add", SUBSYSTEM=="net", KERNEL!="lo", RUN+="@rootlibexecdir@/systemd-sysctl --prefix=/net/ipv4/conf/$name --prefix=/net/ipv4/neigh/$name --prefix=/net/ipv6/conf/$name --prefix=/net/ipv6/neigh/$name"
+ 
+ # Pull in backlight save/restore for all backlight devices and
+ # keyboard backlights

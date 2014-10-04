@@ -1,0 +1,37 @@
+From 65fea570f03df51dadc06a3e0d261a71fe62aa01 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 18 Sep 2014 20:25:33 +0200
+Subject: [PATCH] udev: fix typos
+
+Spotted by Andreas Henriksson.
+---
+ src/udev/udev-ctrl.c | 2 +-
+ src/udev/udevd.c     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/udev/udev-ctrl.c b/src/udev/udev-ctrl.c
+index d02147f0f2..98fd3a9acf 100644
+--- a/src/udev/udev-ctrl.c
++++ b/src/udev/udev-ctrl.c
+@@ -205,7 +205,7 @@ struct udev_ctrl_connection *udev_ctrl_get_connection(struct udev_ctrl *uctrl) {
+         /* enable receiving of the sender credentials in the messages */
+         r = setsockopt(conn->sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
+         if (r < 0)
+-                log_warning("colud not set SO_PASSCRED: %m");
++                log_warning("could not set SO_PASSCRED: %m");
+ 
+         udev_ctrl_ref(uctrl);
+         return conn;
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index 9210da6c47..37db81c8bb 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -1060,7 +1060,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 case 't':
+                         r = safe_atou64(optarg, &arg_event_timeout_usec);
+                         if (r < 0)
+-                                log_warning("Invalig --event-timeout ignored: %s", optarg);
++                                log_warning("Invalid --event-timeout ignored: %s", optarg);
+                         else {
+                                 arg_event_timeout_usec *= USEC_PER_SEC;
+                                 arg_event_timeout_warn_usec = (arg_event_timeout_usec / 3) ? : 1;

@@ -1,0 +1,63 @@
+From aa08982d62cf45b59ea6a06c915391f5db1fb86e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 2 Oct 2014 08:11:21 -0400
+Subject: [PATCH] Fix order and document user unit dirs
+
+Fixup for 718880ba0d 'add a transient user unit directory'.
+---
+ man/systemd.unit.xml     |  5 +++++
+ src/shared/path-lookup.c | 12 ++++++------
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 67d46eda98..ec7ca5634e 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -73,6 +73,7 @@
+                 <para><literallayout><filename>$XDG_CONFIG_HOME/systemd/user/*</filename>
+ <filename>$HOME/.config/systemd/user/*</filename>
+ <filename>/etc/systemd/user/*</filename>
++<filename>$XDG_RUNTIME_DIR/systemd/user/*</filename>
+ <filename>/run/systemd/user/*</filename>
+ <filename>$XDG_DATA_HOME/systemd/user/*</filename>
+ <filename>$HOME/.local/share/systemd/user/*</filename>
+@@ -344,6 +345,10 @@
+                         <entry>Local configuration</entry>
+                       </row>
+                       <row>
++                        <entry><filename>$XDG_RUNTIME_DIR/systemd/user</filename></entry>
++                        <entry>Runtime units (only used when $XDG_RUNTIME_DIR is set)</entry>
++                      </row>
++                      <row>
+                         <entry><filename>/run/systemd/user</filename></entry>
+                         <entry>Runtime units</entry>
+                       </row>
+diff --git a/src/shared/path-lookup.c b/src/shared/path-lookup.c
+index d7ed6e9e3c..8f75a8e832 100644
+--- a/src/shared/path-lookup.c
++++ b/src/shared/path-lookup.c
+@@ -162,18 +162,18 @@ static char** user_dirs(
+                 if (strv_extend(&r, config_home) < 0)
+                         goto fail;
+ 
+-        if (runtime_dir)
+-                if (strv_extend(&r, runtime_dir) < 0)
++        if (!strv_isempty(config_dirs))
++                if (strv_extend_strv_concat(&r, config_dirs, "/systemd/user") < 0)
+                         goto fail;
+ 
+-        if (strv_extend(&r, runtime_unit_path) < 0)
++        if (strv_extend_strv(&r, (char**) config_unit_paths) < 0)
+                 goto fail;
+ 
+-        if (!strv_isempty(config_dirs))
+-                if (strv_extend_strv_concat(&r, config_dirs, "/systemd/user") < 0)
++        if (runtime_dir)
++                if (strv_extend(&r, runtime_dir) < 0)
+                         goto fail;
+ 
+-        if (strv_extend_strv(&r, (char**) config_unit_paths) < 0)
++        if (strv_extend(&r, runtime_unit_path) < 0)
+                 goto fail;
+ 
+         if (generator)

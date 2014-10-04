@@ -1,0 +1,40 @@
+From 1bfa594cf26a9880c489cdcb5911bfb3440aa566 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 2 Oct 2014 18:51:29 +0200
+Subject: [PATCH] terminal/drm: clear 'applied' flag when changing state
+
+If a pipe is enabled/disabled, we have to clear crtc->applied of the
+linked CRTC. Otherwise, we will not run a deep modeset, but leave the crtc
+in the pre-configured state.
+---
+ src/libsystemd-terminal/grdev-drm.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/src/libsystemd-terminal/grdev-drm.c b/src/libsystemd-terminal/grdev-drm.c
+index f01df1dae2..232321c0e2 100644
+--- a/src/libsystemd-terminal/grdev-drm.c
++++ b/src/libsystemd-terminal/grdev-drm.c
+@@ -1549,9 +1549,23 @@ static grdev_fb *grdrm_pipe_target(grdev_pipe *basepipe) {
+         return basepipe->back;
+ }
+ 
++static void grdrm_pipe_enable(grdev_pipe *basepipe) {
++        grdrm_pipe *pipe = grdrm_pipe_from_base(basepipe);
++
++        pipe->crtc->applied = false;
++}
++
++static void grdrm_pipe_disable(grdev_pipe *basepipe) {
++        grdrm_pipe *pipe = grdrm_pipe_from_base(basepipe);
++
++        pipe->crtc->applied = false;
++}
++
+ static const grdev_pipe_vtable grdrm_pipe_vtable = {
+         .free                   = grdrm_pipe_free,
+         .target                 = grdrm_pipe_target,
++        .enable                 = grdrm_pipe_enable,
++        .disable                = grdrm_pipe_disable,
+ };
+ 
+ /*

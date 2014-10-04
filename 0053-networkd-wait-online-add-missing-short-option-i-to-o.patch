@@ -1,0 +1,23 @@
+From 32dfe42c66085c55916e5306a9a07d42d3958b6b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C5=81ukasz=20Stelmach?= <stlman@poczta.fm>
+Date: Tue, 26 Aug 2014 12:28:28 +0200
+Subject: [PATCH] networkd-wait-online: add missing short option 'i' to
+ optstring
+
+---
+ src/network/networkd-wait-online.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/network/networkd-wait-online.c b/src/network/networkd-wait-online.c
+index 6c2fdd1b2c..714343656b 100644
+--- a/src/network/networkd-wait-online.c
++++ b/src/network/networkd-wait-online.c
+@@ -59,7 +59,7 @@ static int parse_argv(int argc, char *argv[]) {
+         assert(argc >= 0);
+         assert(argv);
+ 
+-        while ((c = getopt_long(argc, argv, "+hq", options, NULL)) >= 0)
++        while ((c = getopt_long(argc, argv, "+hiq", options, NULL)) >= 0)
+ 
+                 switch (c) {
+ 

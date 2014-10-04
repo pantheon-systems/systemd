@@ -1,0 +1,24 @@
+From caffbef636ec48958dcb22e4b4140a9889a6a769 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Tue, 16 Sep 2014 17:33:20 +0200
+Subject: [PATCH] hostname: add missing EMITS_CHANGE annotation
+
+We call into sd-bus to send PropertiesChanged notifications for
+"Hostname", but forgot to add the annotation to the bus-vtable. Fix that!
+---
+ src/hostname/hostnamed.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/hostname/hostnamed.c b/src/hostname/hostnamed.c
+index d31fef7abe..b6b5d524c5 100644
+--- a/src/hostname/hostnamed.c
++++ b/src/hostname/hostnamed.c
+@@ -613,7 +613,7 @@ static int method_set_location(sd_bus *bus, sd_bus_message *m, void *userdata, s
+ 
+ static const sd_bus_vtable hostname_vtable[] = {
+         SD_BUS_VTABLE_START(0),
+-        SD_BUS_PROPERTY("Hostname", "s", NULL, offsetof(Context, data) + sizeof(char*) * PROP_HOSTNAME, 0),
++        SD_BUS_PROPERTY("Hostname", "s", NULL, offsetof(Context, data) + sizeof(char*) * PROP_HOSTNAME, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("StaticHostname", "s", NULL, offsetof(Context, data) + sizeof(char*) * PROP_STATIC_HOSTNAME, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("PrettyHostname", "s", NULL, offsetof(Context, data) + sizeof(char*) * PROP_PRETTY_HOSTNAME, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("IconName", "s", property_get_icon_name, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),

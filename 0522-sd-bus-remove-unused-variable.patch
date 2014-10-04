@@ -1,0 +1,22 @@
+From 13303f018d066a1c8378511f77fde127b0e14f64 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Mon, 6 Oct 2014 23:58:46 +0200
+Subject: [PATCH] sd-bus: remove unused variable
+
+It is no longer used after d663f1b1a92a778bcdc68f29b8c08cb49431b4f7
+---
+ src/libsystemd/sd-bus/bus-kernel.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-kernel.c b/src/libsystemd/sd-bus/bus-kernel.c
+index 5ae1418afc..92407133be 100644
+--- a/src/libsystemd/sd-bus/bus-kernel.c
++++ b/src/libsystemd/sd-bus/bus-kernel.c
+@@ -800,7 +800,6 @@ int bus_kernel_connect(sd_bus *b) {
+ 
+ static void close_kdbus_msg(sd_bus *bus, struct kdbus_msg *k) {
+         struct kdbus_cmd_free cmd;
+-        uint64_t off _alignas_(8);
+         struct kdbus_item *d;
+ 
+         assert(bus);

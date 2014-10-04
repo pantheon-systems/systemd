@@ -1,0 +1,353 @@
+From 42483a747489ff46aed3588b78bf4b9480dbeaf7 Mon Sep 17 00:00:00 2001
+From: Ivan Shapovalov <intelfx100@gmail.com>
+Date: Wed, 27 Aug 2014 00:17:44 +0400
+Subject: [PATCH] hibernate-resume: add a tool to write a device node's
+ major:minor to /sys/power/resume.
+
+This can be used to initiate a resume from hibernation by path to a swap
+device containing the hibernation image.
+
+The respective templated unit is also added. It is instantiated using
+path to the desired resume device.
+---
+ .gitignore                                 |  1 +
+ Makefile-man.am                            |  7 +++
+ Makefile.am                                | 17 +++++--
+ man/systemd-hibernate-resume@.service.xml  | 81 ++++++++++++++++++++++++++++++
+ src/hibernate-resume/Makefile              |  1 +
+ src/hibernate-resume/hibernate-resume.c    | 81 ++++++++++++++++++++++++++++++
+ units/.gitignore                           |  1 +
+ units/systemd-hibernate-resume@.service.in | 20 ++++++++
+ 8 files changed, 206 insertions(+), 3 deletions(-)
+ create mode 100644 man/systemd-hibernate-resume@.service.xml
+ create mode 120000 src/hibernate-resume/Makefile
+ create mode 100644 src/hibernate-resume/hibernate-resume.c
+ create mode 100644 units/systemd-hibernate-resume@.service.in
+
+diff --git a/.gitignore b/.gitignore
+index 8189da71f0..0b5608ccf9 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -75,6 +75,7 @@
+ /systemd-getty-generator
+ /systemd-gnome-ask-password-agent
+ /systemd-gpt-auto-generator
++/systemd-hibernate-resume
+ /systemd-hostnamed
+ /systemd-inhibit
+ /systemd-initctl
+diff --git a/Makefile-man.am b/Makefile-man.am
+index 562ecba435..09a10383a9 100644
+--- a/Makefile-man.am
++++ b/Makefile-man.am
+@@ -70,6 +70,7 @@ MANPAGES += \
+ 	man/systemd-getty-generator.8 \
+ 	man/systemd-gpt-auto-generator.8 \
+ 	man/systemd-halt.service.8 \
++	man/systemd-hibernate-resume@.service.8 \
+ 	man/systemd-inhibit.1 \
+ 	man/systemd-initctl.service.8 \
+ 	man/systemd-journald.service.8 \
+@@ -199,6 +200,7 @@ MANPAGES_ALIAS += \
+ 	man/systemd-firstboot.service.1 \
+ 	man/systemd-fsck-root.service.8 \
+ 	man/systemd-fsck.8 \
++	man/systemd-hibernate-resume.8 \
+ 	man/systemd-hibernate.service.8 \
+ 	man/systemd-hybrid-sleep.service.8 \
+ 	man/systemd-initctl.8 \
+@@ -305,6 +307,7 @@ man/systemd-ask-password-wall.service.8: man/systemd-ask-password-console.servic
+ man/systemd-firstboot.service.1: man/systemd-firstboot.1
+ man/systemd-fsck-root.service.8: man/systemd-fsck@.service.8
+ man/systemd-fsck.8: man/systemd-fsck@.service.8
++man/systemd-hibernate-resume.8: man/systemd-hibernate-resume@.service.8
+ man/systemd-hibernate.service.8: man/systemd-suspend.service.8
+ man/systemd-hybrid-sleep.service.8: man/systemd-suspend.service.8
+ man/systemd-initctl.8: man/systemd-initctl.service.8
+@@ -567,6 +570,9 @@ man/systemd-fsck-root.service.html: man/systemd-fsck@.service.html
+ man/systemd-fsck.html: man/systemd-fsck@.service.html
+ 	$(html-alias)
+ 
++man/systemd-hibernate-resume.html: man/systemd-hibernate-resume@.service.html
++	$(html-alias)
++
+ man/systemd-hibernate.service.html: man/systemd-suspend.service.html
+ 	$(html-alias)
+ 
+@@ -1619,6 +1625,7 @@ EXTRA_DIST += \
+ 	man/systemd-getty-generator.xml \
+ 	man/systemd-gpt-auto-generator.xml \
+ 	man/systemd-halt.service.xml \
++	man/systemd-hibernate-resume@.service.xml \
+ 	man/systemd-hostnamed.service.xml \
+ 	man/systemd-inhibit.xml \
+ 	man/systemd-initctl.service.xml \
+diff --git a/Makefile.am b/Makefile.am
+index cbf98bdac3..a487caa7bc 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -378,7 +378,8 @@ rootlibexec_PROGRAMS = \
+ 	systemd-sleep \
+ 	systemd-bus-proxyd \
+ 	systemd-socket-proxyd \
+-	systemd-update-done
++	systemd-update-done \
++	systemd-hibernate-resume
+ 
+ systemgenerator_PROGRAMS = \
+ 	systemd-getty-generator \
+@@ -528,7 +529,8 @@ nodist_systemunit_DATA = \
+ 	units/initrd-udevadm-cleanup-db.service \
+ 	units/initrd-switch-root.service \
+ 	units/systemd-nspawn@.service \
+-	units/systemd-update-done.service
++	units/systemd-update-done.service \
++	units/systemd-hibernate-resume@.service
+ 
+ dist_userunit_DATA = \
+ 	units/user/basic.target \
+@@ -575,7 +577,8 @@ EXTRA_DIST += \
+ 	units/initrd-udevadm-cleanup-db.service.in \
+ 	units/initrd-switch-root.service.in \
+ 	units/systemd-nspawn@.service.in \
+-	units/systemd-update-done.service.in
++	units/systemd-update-done.service.in \
++	units/systemd-hibernate-resume@.service.in
+ 
+ CLEANFILES += \
+ 	units/console-shell.service.m4 \
+@@ -2103,6 +2106,14 @@ systemd_delta_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
++systemd_hibernate_resume_SOURCES = \
++	src/hibernate-resume/hibernate-resume.c
++
++systemd_hibernate_resume_LDADD = \
++	libsystemd-internal.la \
++	libsystemd-shared.la
++
++# ------------------------------------------------------------------------------
+ systemd_getty_generator_SOURCES = \
+ 	src/getty-generator/getty-generator.c
+ 
+diff --git a/man/systemd-hibernate-resume@.service.xml b/man/systemd-hibernate-resume@.service.xml
+new file mode 100644
+index 0000000000..9b188b0d96
+--- /dev/null
++++ b/man/systemd-hibernate-resume@.service.xml
+@@ -0,0 +1,81 @@
++<?xml version="1.0"?>
++<!--*-nxml-*-->
++<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
++<!--
++  This file is part of systemd.
++
++  Copyright 2014 Ivan Shapovalov
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++<refentry id="systemd-hibernate-resume@.service">
++
++        <refentryinfo>
++                <title>systemd-hibernate-resume@.service</title>
++                <productname>systemd</productname>
++
++                <authorgroup>
++                        <author>
++                                <contrib>Developer</contrib>
++                                <firstname>Ivan</firstname>
++                                <surname>Shapovalov</surname>
++                                <email>intelfx100@gmail.com</email>
++                        </author>
++                </authorgroup>
++        </refentryinfo>
++
++        <refmeta>
++                <refentrytitle>systemd-hibernate-resume@.service</refentrytitle>
++                <manvolnum>8</manvolnum>
++        </refmeta>
++
++        <refnamediv>
++                <refname>systemd-hibernate-resume@.service</refname>
++                <refname>systemd-hibernate-resume</refname>
++                <refpurpose>Resume from hibernation</refpurpose>
++        </refnamediv>
++
++        <refsynopsisdiv>
++                <para><filename>systemd-hibernate-resume@.service</filename></para>
++                <para><filename>/usr/lib/systemd/systemd-hibernate-resume</filename></para>
++        </refsynopsisdiv>
++
++        <refsect1>
++                <title>Description</title>
++
++                <para><filename>systemd-hibernate-resume@.service</filename> is a
++                service that initiates hibernation resume from a device
++                containing the resume image. It is instantiated for each
++                device that is configured for resuming from.</para>
++
++                <para><filename>systemd-hibernate-resume</filename> only supports
++                the in-kernel hibernation implementation, known as swsusp.
++                Internally, it works by writing the major:minor of specified
++                device node to <filename>/sys/power/resume</filename>.</para>
++
++                <para>Failing to initiate a resume is not an error condition.
++                It may mean that there was no resume image (e. g. if the
++                system has been simply powered off and not hibernated). In
++                such case, the boot is ordinarily continued.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>See Also</title>
++                <para>
++                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-hibernate-resume-generator</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                </para>
++        </refsect1>
++
++</refentry>
+diff --git a/src/hibernate-resume/Makefile b/src/hibernate-resume/Makefile
+new file mode 120000
+index 0000000000..d0b0e8e008
+--- /dev/null
++++ b/src/hibernate-resume/Makefile
+@@ -0,0 +1 @@
++../Makefile
+\ No newline at end of file
+diff --git a/src/hibernate-resume/hibernate-resume.c b/src/hibernate-resume/hibernate-resume.c
+new file mode 100644
+index 0000000000..8f68f81f9e
+--- /dev/null
++++ b/src/hibernate-resume/hibernate-resume.c
+@@ -0,0 +1,81 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2014 Ivan Shapovalov
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <stdio.h>
++#include <errno.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++
++#include "log.h"
++#include "util.h"
++#include "fileio.h"
++
++int main(int argc, char *argv[]) {
++        struct stat st;
++        const char *device;
++        _cleanup_free_ char *major_minor = NULL;
++        int r;
++
++        if (argc != 2) {
++                log_error("This program expects one argument.");
++                return EXIT_FAILURE;
++        }
++
++        log_set_target(LOG_TARGET_AUTO);
++        log_parse_environment();
++        log_open();
++
++        umask(0022);
++
++        device = argv[1];
++
++        if (stat(device, &st) < 0) {
++                log_error("Failed to stat '%s': %m", device);
++                return EXIT_FAILURE;
++        }
++
++        if (!S_ISBLK(st.st_mode)) {
++                log_error("Resume device '%s' is not a block device.", device);
++                return EXIT_FAILURE;
++        }
++
++        if (asprintf(&major_minor, "%d:%d", major(st.st_rdev), minor(st.st_rdev)) < 0) {
++                log_oom();
++                return EXIT_FAILURE;
++        }
++
++        r = write_string_file("/sys/power/resume", major_minor);
++        if (r < 0) {
++                log_error("Failed to write '%s' to /sys/power/resume: %s", major_minor, strerror(-r));
++                return EXIT_FAILURE;
++        }
++
++        /*
++         * The write above shall not return.
++         *
++         * However, failed resume is a normal condition (may mean that there is
++         * no hibernation image).
++         */
++
++        log_info("Could not resume from '%s' (%s).", device, major_minor);
++        return EXIT_SUCCESS;
++}
+diff --git a/units/.gitignore b/units/.gitignore
+index d9b60ac0fc..c60f357416 100644
+--- a/units/.gitignore
++++ b/units/.gitignore
+@@ -54,6 +54,7 @@
+ /systemd-reboot.service
+ /systemd-remount-fs.service
+ /systemd-resolved.service
++/systemd-hibernate-resume@.service
+ /systemd-rfkill@.service
+ /systemd-shutdownd.service
+ /systemd-suspend.service
+diff --git a/units/systemd-hibernate-resume@.service.in b/units/systemd-hibernate-resume@.service.in
+new file mode 100644
+index 0000000000..6db584dc4d
+--- /dev/null
++++ b/units/systemd-hibernate-resume@.service.in
+@@ -0,0 +1,20 @@
++#  This file is part of systemd.
++#
++#  systemd is free software; you can redistribute it and/or modify it
++#  under the terms of the GNU Lesser General Public License as published by
++#  the Free Software Foundation; either version 2.1 of the License, or
++#  (at your option) any later version.
++
++[Unit]
++Description=Resume from hibernation using device %f
++Documentation=man:systemd-hibernate-resume@.service(8)
++DefaultDependencies=no
++BindsTo=%i.device
++Wants=local-fs-pre.target
++After=%i.device
++Before=local-fs-pre.target systemd-remount-fs.service systemd-fsck-root.service
++ConditionPathExists=/etc/initrd-release
++
++[Service]
++Type=oneshot
++ExecStart=@rootlibexecdir@/systemd-hibernate-resume %f

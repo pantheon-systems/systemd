@@ -1,0 +1,65 @@
+From 8e07fc41f86d41e68c5663b2a3c620a0adedcc11 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 31 Aug 2014 00:42:27 -0400
+Subject: [PATCH] Quote unit names in suggested systemctl commandlines
+
+The fact that unit names have to be quoted can be a bit surprising.
+Show quotes in the hint commandline, but only after checking that this
+is necessary, since quotes are visually heavy and usually not needed.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=82832
+---
+ src/core/job.c            | 11 +++++++++--
+ src/systemctl/systemctl.c | 14 ++++++++++++--
+ 2 files changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 5e4987f4e2..ef5dbce1a3 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -632,11 +632,18 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                                 unit_status_printf(u, ANSI_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, format);
+                         break;
+ 
+-                case JOB_FAILED:
++                case JOB_FAILED: {
++                        bool quotes;
++
++                        quotes = chars_intersect(u->id, SHELL_NEED_QUOTES);
++
+                         manager_flip_auto_status(u->manager, true);
+                         unit_status_printf(u, ANSI_HIGHLIGHT_RED_ON "FAILED" ANSI_HIGHLIGHT_OFF, format);
+-                        manager_status_printf(u->manager, false, NULL, "See 'systemctl status %s' for details.", u->id);
++                        manager_status_printf(u->manager, false, NULL,
++                                              "See \"systemctl status %s%s%s\" for details.",
++                                              quotes ? "'" : "", u->id, quotes ? "'" : "");
+                         break;
++                }
+ 
+                 case JOB_DEPENDENCY:
+                         manager_flip_auto_status(u->manager, true);
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 65348193b7..de43c879a7 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2351,8 +2351,18 @@ static int check_wait_response(WaitData *d) {
+                         log_error("Job for %s canceled.", strna(d->name));
+                 else if (streq(d->result, "dependency"))
+                         log_error("A dependency job for %s failed. See 'journalctl -xn' for details.", strna(d->name));
+-                else if (!streq(d->result, "done") && !streq(d->result, "skipped"))
+-                        log_error("Job for %s failed. See 'systemctl status %s' and 'journalctl -xn' for details.", strna(d->name), strna(d->name));
++                else if (!streq(d->result, "done") && !streq(d->result, "skipped")) {
++                        if (d->name) {
++                                bool quotes;
++
++                                quotes = chars_intersect(d->name, SHELL_NEED_QUOTES);
++
++                                log_error("Job for %s failed. See \"systemctl status %s%s%s\" and \"journalctl -xn\" for details.",
++                                          d->name,
++                                          quotes ? "'" : "", d->name, quotes ? "'" : "");
++                        } else
++                                log_error("Job failed. See \"journalctl -xn\" for details.");
++                }
+         }
+ 
+         if (streq(d->result, "timeout"))

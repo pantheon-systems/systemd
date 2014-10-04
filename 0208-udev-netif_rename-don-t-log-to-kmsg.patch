@@ -1,0 +1,23 @@
+From 1187f20655de0c37337ea73e1e55823b83cd7c00 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Tue, 9 Sep 2014 22:45:03 +0200
+Subject: [PATCH] udev: netif_rename - don't log to kmsg
+
+As of 3.17, the kernel will do this on its own, so just do regular log_debug() logging from udev.
+---
+ src/udev/udev-event.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udev/udev-event.c b/src/udev/udev-event.c
+index 1bbf41e757..a883edca07 100644
+--- a/src/udev/udev-event.c
++++ b/src/udev/udev-event.c
+@@ -762,7 +762,7 @@ static int rename_netif(struct udev_event *event) {
+                 return r;
+         }
+ 
+-        print_kmsg("renamed network interface '%s' to '%s'\n", oldname, name);
++        log_debug("renamed network interface '%s' to '%s'\n", oldname, name);
+ 
+         return 0;
+ }

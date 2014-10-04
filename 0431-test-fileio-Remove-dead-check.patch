@@ -1,0 +1,23 @@
+From 2b01a801f6c597a60a1e622978bf7ac0105b9666 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Tue, 30 Sep 2014 23:37:10 +0200
+Subject: [PATCH] test-fileio: Remove dead check
+
+t cannot be null here
+---
+ src/test/test-fileio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/test/test-fileio.c b/src/test/test-fileio.c
+index 1b99828191..ad65abf426 100644
+--- a/src/test/test-fileio.c
++++ b/src/test/test-fileio.c
+@@ -258,7 +258,7 @@ static void test_status_field(void) {
+                 assert_se(safe_atollu(s, &buffers) == 0);
+         }
+ 
+-        if (p && t)
++        if (p)
+                 assert(buffers < total);
+ 
+         /* Seccomp should be a good test for field full of zeros. */

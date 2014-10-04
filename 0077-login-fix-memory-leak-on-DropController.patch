@@ -1,0 +1,33 @@
+From 60240797a4ce464ec7a0537ccbec4c83f599251c Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 22 Aug 2014 14:57:11 +0200
+Subject: [PATCH] login: fix memory-leak on DropController()
+
+Our bus-name watch helpers only remove a bus-name if it's not a
+controller, anymore. If we call manager_drop_busname() before
+unregistering the controller, the busname will not be dropped. Therefore,
+first drop the controller, then drop the bus-name.
+---
+ src/login/logind-session.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 136bbce78e..0c6e425603 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -1061,11 +1061,13 @@ bool session_is_controller(Session *s, const char *sender) {
+ 
+ static void session_swap_controller(Session *s, char *name) {
+         SessionDevice *sd;
++        char *c;
+ 
+         if (s->controller) {
+-                manager_drop_busname(s->manager, s->controller);
+-                free(s->controller);
++                c = s->controller;
+                 s->controller = NULL;
++                manager_drop_busname(s->manager, c);
++                free(c);
+ 
+                 /* Drop all devices as they're now unused. Do that after the
+                  * controller is released to avoid sending out useles

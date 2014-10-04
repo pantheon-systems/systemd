@@ -1,0 +1,25 @@
+From 498cfc230af8f83675be2e92057956f1792969e4 Mon Sep 17 00:00:00 2001
+From: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+Date: Sat, 23 Aug 2014 21:11:44 +0200
+Subject: [PATCH] systemctl: Correct error message printed when
+ bus_process_wait fails
+
+Actually use the variable containing the return code of bus_process_wait when
+printing the error message as a result of it failing.
+---
+ src/systemctl/systemctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index d9b8bee28d..65348193b7 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -2382,7 +2382,7 @@ static int wait_for_jobs(sd_bus *bus, Set *s) {
+         while (!set_isempty(s)) {
+                 q = bus_process_wait(bus);
+                 if (q < 0) {
+-                        log_error("Failed to wait for response: %s", strerror(-r));
++                        log_error("Failed to wait for response: %s", strerror(-q));
+                         return q;
+                 }
+ 

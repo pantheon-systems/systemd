@@ -1,0 +1,28 @@
+From 1c92ff85b786c423f4436ec26007e79369c9ac05 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Fri, 26 Sep 2014 22:01:32 +0200
+Subject: [PATCH] bootchart: use 'n/a' if PRETTY_NAME is not found
+
+Spotted with coverity. If parsing both /etc/os-release and
+/usr/lib/os-release fails then null would be passed on. The calls
+to parse the two files are allowed to fail. A empty /etc may not
+have had the /etc/os-release symlink restored yet and we just
+try again in the loop. If for whatever reason that does not happen
+then we now pass on 'n/a' instead of null.
+---
+ src/bootchart/bootchart.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/bootchart/bootchart.c b/src/bootchart/bootchart.c
+index 366a5ab5d0..813e38deeb 100644
+--- a/src/bootchart/bootchart.c
++++ b/src/bootchart/bootchart.c
+@@ -471,7 +471,7 @@ int main(int argc, char *argv[]) {
+                 exit (EXIT_FAILURE);
+         }
+ 
+-        svg_do(build);
++        svg_do(strna(build));
+ 
+         fprintf(stderr, "systemd-bootchart wrote %s\n", output_file);
+ 

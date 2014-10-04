@@ -1,0 +1,26 @@
+From 4fc13f521ab44eb55c599b07c18860c1aeca35a7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 26 Aug 2014 04:03:24 +0200
+Subject: [PATCH] Revert "systemctl: fix broken list-unit-files with --root"
+
+This reverts commit 41a451cc2901a5deb985aea4cc8de204a22e5612.
+
+This breaks checks for masking of units file, since we invoke
+null_or_empty_path() on the resulting path.
+---
+ src/shared/install.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/install.c b/src/shared/install.c
+index a07d1dd315..4b09a69456 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -2099,7 +2099,7 @@ int unit_file_get_list(
+                         if (!f)
+                                 return -ENOMEM;
+ 
+-                        f->path = path_make_absolute(de->d_name, *i);
++                        f->path = path_make_absolute(de->d_name, units_dir);
+                         if (!f->path)
+                                 return -ENOMEM;
+ 

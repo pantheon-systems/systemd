@@ -1,0 +1,28 @@
+From d498a616075ebfd8025d66c4c4f725d24eb3aca3 Mon Sep 17 00:00:00 2001
+From: Andreas Henriksson <andreas@fatal.se>
+Date: Tue, 16 Sep 2014 19:40:25 +0200
+Subject: [PATCH] bootchart: oom-check correct variable
+
+Coverity warned that we have already dereferenced ps->sample before
+null-checking it. I suspect that's not really the issue and that
+the check is checking the wrong variable.
+Likely the oom-check should be on the just allocated ps->sample->next.
+
+Found by coverity. Fixes: CID#1237765
+---
+ src/bootchart/store.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/bootchart/store.c b/src/bootchart/store.c
+index ed46a503c6..ed683e88d9 100644
+--- a/src/bootchart/store.c
++++ b/src/bootchart/store.c
+@@ -399,7 +399,7 @@ schedstat_next:
+                         continue;
+ 
+                 ps->sample->next = new0(struct ps_sched_struct, 1);
+-                if (!ps->sample) {
++                if (!ps->sample->next) {
+                         log_oom();
+                         exit(EXIT_FAILURE);
+                 }

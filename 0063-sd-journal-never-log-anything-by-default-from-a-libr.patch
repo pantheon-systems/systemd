@@ -1,0 +1,22 @@
+From 36202fd2bc252616966166c98ccb0e0e5ece1fc9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 26 Aug 2014 21:47:46 +0200
+Subject: [PATCH] sd-journal: never log anything by default from a library
+
+---
+ src/journal/sd-journal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index b9ec90230d..80ff8fef57 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -2557,7 +2557,7 @@ _public_ int sd_journal_enumerate_unique(sd_journal *j, const void **data, size_
+ 
+                 /* Let's do the type check by hand, since we used 0 context above. */
+                 if (o->object.type != OBJECT_DATA) {
+-                        log_error("%s:offset " OFSfmt ": object has type %d, expected %d",
++                        log_debug("%s:offset " OFSfmt ": object has type %d, expected %d",
+                                   j->unique_file->path, j->unique_offset,
+                                   o->object.type, OBJECT_DATA);
+                         return -EBADMSG;

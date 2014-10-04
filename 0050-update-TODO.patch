@@ -1,0 +1,24 @@
+From 8dac15b6e9792c2b0f503ddf78ac499817904a6f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 26 Aug 2014 20:23:49 +0200
+Subject: [PATCH] update TODO
+
+---
+ TODO | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/TODO b/TODO
+index 471d3b29bc..09f82d3c37 100644
+--- a/TODO
++++ b/TODO
+@@ -24,6 +24,10 @@ External:
+ 
+ Features:
+ 
++* dbus: add new message hdr field for allowing interactive auth, write spec for it. update dbus spec to mandate that unknown flags *must* be ignored...
++
++* maybe introduce AssertXYZ= similar to ConditionXYZ= that causes a unit to fail (instead of skipping it) if some condition is not true...
++
+ * remove multi-seat-x now
+ 
+ * refcounting in sd-resolve is borked

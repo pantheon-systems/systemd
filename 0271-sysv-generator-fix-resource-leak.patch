@@ -1,0 +1,27 @@
+From 91e7bad45dced1cb2dfaac79337bb08d6e2b74a9 Mon Sep 17 00:00:00 2001
+From: Andreas Henriksson <andreas@fatal.se>
+Date: Tue, 16 Sep 2014 21:22:59 +0200
+Subject: [PATCH] sysv-generator: fix resource leak
+
+The "unit" string allocation is not freed on either error or success path.
+
+Found by coverity. Fixes: CID#1237755
+---
+ src/sysv-generator/sysv-generator.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/sysv-generator/sysv-generator.c b/src/sysv-generator/sysv-generator.c
+index 6c3281ff15..e5902ab8f8 100644
+--- a/src/sysv-generator/sysv-generator.c
++++ b/src/sysv-generator/sysv-generator.c
+@@ -114,9 +114,9 @@ static int add_symlink(const char *service, const char *where) {
+ }
+ 
+ static int generate_unit_file(SysvStub *s) {
+-        char *unit;
+         char **p;
+         _cleanup_fclose_ FILE *f = NULL;
++        _cleanup_free_ char *unit = NULL;
+         _cleanup_free_ char *before = NULL;
+         _cleanup_free_ char *after = NULL;
+         _cleanup_free_ char *wants = NULL;

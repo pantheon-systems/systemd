@@ -1,0 +1,26 @@
+From 5bb14c8651b017983bb9cbd1444969c7a1bda14e Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sun, 31 Aug 2014 19:22:33 +0200
+Subject: [PATCH] test-network: fix off-by-one error in test
+
+---
+ src/network/test-network.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/network/test-network.c b/src/network/test-network.c
+index 3dc051dd92..ea9f938649 100644
+--- a/src/network/test-network.c
++++ b/src/network/test-network.c
+@@ -96,9 +96,9 @@ static void test_deserialize_dhcp_routes(void) {
+                 assert_se(routes[0].gw_addr.s_addr == inet_addr("192.168.0.1"));
+                 assert_se(routes[0].dst_prefixlen == 16);
+ 
+-                assert_se(routes[2].dst_addr.s_addr == inet_addr("0.0.0.0"));
+-                assert_se(routes[2].gw_addr.s_addr == inet_addr("10.0.1.1"));
+-                assert_se(routes[2].dst_prefixlen == 0);
++                assert_se(routes[1].dst_addr.s_addr == inet_addr("0.0.0.0"));
++                assert_se(routes[1].gw_addr.s_addr == inet_addr("10.0.1.1"));
++                assert_se(routes[1].dst_prefixlen == 0);
+         }
+ 
+         {

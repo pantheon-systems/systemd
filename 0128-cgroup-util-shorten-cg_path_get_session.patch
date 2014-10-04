@@ -1,0 +1,60 @@
+From a13ee4c792cb5738c3dd13b2a4bb1a828e7994fd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 29 Aug 2014 07:48:33 -0500
+Subject: [PATCH] cgroup-util: shorten cg_path_get_session
+
+---
+ src/shared/cgroup-util.c    | 12 ++++--------
+ src/test/test-cgroup-util.c |  3 ++-
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index e8cb9c73ac..00eac64236 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -1306,9 +1306,8 @@ int cg_pid_get_machine_name(pid_t pid, char **machine) {
+ }
+ 
+ int cg_path_get_session(const char *path, char **session) {
+-        const char *e, *n, *x;
++        const char *e, *n, *x, *y;
+         char *s;
+-        size_t l;
+ 
+         assert(path);
+ 
+@@ -1325,17 +1324,14 @@ int cg_path_get_session(const char *path, char **session) {
+         x = startswith(s, "session-");
+         if (!x)
+                 return -ENOENT;
+-        if (!endswith(x, ".scope"))
+-                return -ENOENT;
+-
+-        l = strlen(x);
+-        if (l <= 6)
++        y = endswith(x, ".scope");
++        if (!y || x == y)
+                 return -ENOENT;
+ 
+         if (session) {
+                 char *r;
+ 
+-                r = strndup(x, l - 6);
++                r = strndup(x, y - x);
+                 if (!r)
+                         return -ENOMEM;
+ 
+diff --git a/src/test/test-cgroup-util.c b/src/test/test-cgroup-util.c
+index fda8bcc5c5..68c526ae82 100644
+--- a/src/test/test-cgroup-util.c
++++ b/src/test/test-cgroup-util.c
+@@ -106,7 +106,8 @@ static void check_p_g_s(const char *path, int code, const char *result) {
+ static void test_path_get_session(void) {
+         check_p_g_s("/user.slice/user-1000.slice/session-2.scope/foobar.service", 0, "2");
+         check_p_g_s("/session-3.scope", 0, "3");
+-        check_p_g_s("", -ENOENT, 0);
++        check_p_g_s("/session-.scope", -ENOENT, NULL);
++        check_p_g_s("", -ENOENT, NULL);
+ }
+ 
+ static void check_p_g_o_u(const char *path, int code, uid_t result) {

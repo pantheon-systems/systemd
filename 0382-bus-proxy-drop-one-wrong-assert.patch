@@ -1,0 +1,21 @@
+From 4a3bb599609d687e0a501a748bfac491f5fb9f6c Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 25 Sep 2014 16:21:36 +0200
+Subject: [PATCH] bus-proxy: drop one wrong assert()
+
+---
+ src/bus-proxyd/bus-policy.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/bus-proxyd/bus-policy.c b/src/bus-proxyd/bus-policy.c
+index 0de7680d4b..2ff5d646f1 100644
+--- a/src/bus-proxyd/bus-policy.c
++++ b/src/bus-proxyd/bus-policy.c
+@@ -688,7 +688,6 @@ static int check_policy_items(PolicyItem *items, const struct policy_check_filte
+         PolicyItem *i;
+         int r, ret = DUNNO;
+ 
+-        assert(items);
+         assert(filter);
+ 
+         /* Check all policies in a set - a broader one might be followed by a more specific one,

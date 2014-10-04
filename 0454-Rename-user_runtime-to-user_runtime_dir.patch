@@ -1,0 +1,113 @@
+From 4d5dec2389d8e6ce78b45d3058220888f4a93db7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 2 Oct 2014 08:01:00 -0400
+Subject: [PATCH] Rename user_runtime to user_runtime_dir
+
+This makes this function name similar to user_config_home() and makes
+it match the name of the environment variable.
+---
+ src/core/unit.c          |  4 ++--
+ src/shared/install.c     |  2 +-
+ src/shared/path-lookup.c | 12 ++++++------
+ src/shared/path-lookup.h |  2 +-
+ 4 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 8a7df01284..399d202738 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -3083,7 +3083,7 @@ static int unit_drop_in_dir(Unit *u, UnitSetPropertiesMode mode, bool transient,
+                 if (mode == UNIT_PERSISTENT && !transient)
+                         r = user_config_home(dir);
+                 else
+-                        r = user_runtime(dir);
++                        r = user_runtime_dir(dir);
+ 
+                 if (r == 0)
+                         return -ENOENT;
+@@ -3232,7 +3232,7 @@ int unit_make_transient(Unit *u) {
+         if (u->manager->running_as == SYSTEMD_USER) {
+                 _cleanup_free_ char *c = NULL;
+ 
+-                r = user_runtime(&c);
++                r = user_runtime_dir(&c);
+                 if (r < 0)
+                         return r;
+                 if (r == 0)
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 302b5237a6..fa064c230f 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -109,7 +109,7 @@ static int get_config_path(UnitFileScope scope, bool runtime, const char *root_d
+                         return -EINVAL;
+ 
+                 if (runtime)
+-                        r = user_runtime(&p);
++                        r = user_runtime_dir(&p);
+                 else
+                         r = user_config_home(&p);
+ 
+diff --git a/src/shared/path-lookup.c b/src/shared/path-lookup.c
+index 3a6e117d28..d7ed6e9e3c 100644
+--- a/src/shared/path-lookup.c
++++ b/src/shared/path-lookup.c
+@@ -61,7 +61,7 @@ int user_config_home(char **config_home) {
+         return 0;
+ }
+ 
+-int user_runtime(char **user_runtime_path) {
++int user_runtime_dir(char **runtime_dir) {
+         const char *e;
+         char *r;
+ 
+@@ -71,7 +71,7 @@ int user_runtime(char **user_runtime_path) {
+                 if (!r)
+                         return -ENOMEM;
+ 
+-                *user_runtime_path = r;
++                *runtime_dir = r;
+                 return 1;
+         }
+ 
+@@ -101,7 +101,7 @@ static char** user_dirs(
+         };
+ 
+         const char *home, *e;
+-        _cleanup_free_ char *config_home = NULL, *user_runtime_dir = NULL, *data_home = NULL;
++        _cleanup_free_ char *config_home = NULL, *runtime_dir = NULL, *data_home = NULL;
+         _cleanup_strv_free_ char **config_dirs = NULL, **data_dirs = NULL;
+         char **r = NULL;
+ 
+@@ -117,7 +117,7 @@ static char** user_dirs(
+         if (user_config_home(&config_home) < 0)
+                 goto fail;
+ 
+-        if (user_runtime(&user_runtime_dir) < 0)
++        if (user_runtime_dir(&runtime_dir) < 0)
+                 goto fail;
+ 
+         home = getenv("HOME");
+@@ -162,8 +162,8 @@ static char** user_dirs(
+                 if (strv_extend(&r, config_home) < 0)
+                         goto fail;
+ 
+-        if (user_runtime_dir)
+-                if (strv_extend(&r, user_runtime_dir) < 0)
++        if (runtime_dir)
++                if (strv_extend(&r, runtime_dir) < 0)
+                         goto fail;
+ 
+         if (strv_extend(&r, runtime_unit_path) < 0)
+diff --git a/src/shared/path-lookup.h b/src/shared/path-lookup.h
+index 8da076a30b..b8a0aace83 100644
+--- a/src/shared/path-lookup.h
++++ b/src/shared/path-lookup.h
+@@ -39,7 +39,7 @@ typedef enum SystemdRunningAs {
+ } SystemdRunningAs;
+ 
+ int user_config_home(char **config_home);
+-int user_runtime(char **user_runtime_path);
++int user_runtime_dir(char **runtime_dir);
+ 
+ int lookup_paths_init(LookupPaths *p,
+                       SystemdRunningAs running_as,

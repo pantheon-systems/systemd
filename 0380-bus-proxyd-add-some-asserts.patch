@@ -1,0 +1,124 @@
+From 94a2c2f64a1379ca5c9ce4dbbee45ce17250ab51 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 25 Sep 2014 15:49:43 +0200
+Subject: [PATCH] bus-proxyd: add some asserts
+
+Both as documentation, and to make Coverity happy.
+
+Fixes CID #1241495 and #1241496.
+---
+ src/bus-proxyd/bus-policy.c | 19 +++++++++++++++++++
+ src/bus-proxyd/bus-proxyd.c |  8 ++++++++
+ 2 files changed, 27 insertions(+)
+
+diff --git a/src/bus-proxyd/bus-policy.c b/src/bus-proxyd/bus-policy.c
+index 165e763f57..0de7680d4b 100644
+--- a/src/bus-proxyd/bus-policy.c
++++ b/src/bus-proxyd/bus-policy.c
+@@ -611,11 +611,16 @@ struct policy_check_filter {
+ 
+ static int is_permissive(PolicyItem *i) {
+ 
++        assert(i);
++
+         return (i->type == POLICY_ITEM_ALLOW) ? ALLOW : DENY;
+ }
+ 
+ static int check_policy_item(PolicyItem *i, const struct policy_check_filter *filter) {
+ 
++        assert(i);
++        assert(filter);
++
+         switch (i->class) {
+         case POLICY_ITEM_SEND:
+         case POLICY_ITEM_RECV:
+@@ -643,21 +648,29 @@ static int check_policy_item(PolicyItem *i, const struct policy_check_filter *fi
+                 return is_permissive(i);
+ 
+         case POLICY_ITEM_OWN:
++                assert(filter->member);
++
+                 if (streq(i->name, filter->member))
+                         return is_permissive(i);
+                 break;
+ 
+         case POLICY_ITEM_OWN_PREFIX:
++                assert(filter->member);
++
+                 if (startswith(i->name, filter->member))
+                         return is_permissive(i);
+                 break;
+ 
+         case POLICY_ITEM_USER:
++                assert(filter->ucred);
++
+                 if ((streq_ptr(i->name, "*") || (i->uid_valid && i->uid == filter->ucred->uid)))
+                         return is_permissive(i);
+                 break;
+ 
+         case POLICY_ITEM_GROUP:
++                assert(filter->ucred);
++
+                 if ((streq_ptr(i->name, "*") || (i->gid_valid && i->gid == filter->ucred->gid)))
+                         return is_permissive(i);
+                 break;
+@@ -675,6 +688,9 @@ static int check_policy_items(PolicyItem *items, const struct policy_check_filte
+         PolicyItem *i;
+         int r, ret = DUNNO;
+ 
++        assert(items);
++        assert(filter);
++
+         /* Check all policies in a set - a broader one might be followed by a more specific one,
+          * and the order of rules in policy definitions matters */
+         LIST_FOREACH(items, i, items) {
+@@ -694,6 +710,9 @@ static int policy_check(Policy *p, const struct policy_check_filter *filter) {
+         PolicyItem *items;
+         int r;
+ 
++        assert(p);
++        assert(filter);
++
+         /*
+          * The policy check is implemented by the following logic:
+          *
+diff --git a/src/bus-proxyd/bus-proxyd.c b/src/bus-proxyd/bus-proxyd.c
+index a5387bb234..6a0fc7edfb 100644
+--- a/src/bus-proxyd/bus-proxyd.c
++++ b/src/bus-proxyd/bus-proxyd.c
+@@ -373,6 +373,8 @@ static int synthetic_reply_method_error(sd_bus_message *call, const sd_bus_error
+         _cleanup_bus_message_unref_ sd_bus_message *m = NULL;
+         int r;
+ 
++        assert(call);
++
+         if (call->header->flags & BUS_MESSAGE_NO_REPLY_EXPECTED)
+                 return 0;
+ 
+@@ -387,6 +389,8 @@ static int synthetic_reply_method_errno(sd_bus_message *call, int error, const s
+ 
+         _cleanup_bus_error_free_ sd_bus_error berror = SD_BUS_ERROR_NULL;
+ 
++        assert(call);
++
+         if (call->header->flags & BUS_MESSAGE_NO_REPLY_EXPECTED)
+                 return 0;
+ 
+@@ -402,6 +406,8 @@ static int synthetic_reply_method_return(sd_bus_message *call, const char *types
+         _cleanup_bus_message_unref_ sd_bus_message *m = NULL;
+         int r;
+ 
++        assert(call);
++
+         if (call->header->flags & BUS_MESSAGE_NO_REPLY_EXPECTED)
+                 return 0;
+ 
+@@ -426,6 +432,8 @@ static int synthetic_reply_return_strv(sd_bus_message *call, char **l) {
+         _cleanup_bus_message_unref_ sd_bus_message *m = NULL;
+         int r;
+ 
++        assert(call);
++
+         r = sd_bus_message_new_method_return(call, &m);
+         if (r < 0)
+                 return synthetic_reply_method_errno(call, r, NULL);

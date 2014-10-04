@@ -1,0 +1,21 @@
+From 45f15021e3524b04d574b9ff4e801cb3219daf3f Mon Sep 17 00:00:00 2001
+From: Emil Renner Berthing <systemd@esmil.dk>
+Date: Thu, 18 Sep 2014 15:24:42 +0200
+Subject: [PATCH] shared/label.h: add missing stdio.h include
+
+---
+ src/shared/label.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/shared/label.h b/src/shared/label.h
+index 72948205f6..cb2ec79eea 100644
+--- a/src/shared/label.h
++++ b/src/shared/label.h
+@@ -24,6 +24,7 @@
+ #include <sys/types.h>
+ #include <stdbool.h>
+ #include <sys/socket.h>
++#include <stdio.h>
+ 
+ int label_init(const char *prefix);
+ void label_finish(void);

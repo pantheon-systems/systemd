@@ -1,0 +1,30 @@
+From 1775f1ebc4a8e9e0e2e4a9af3e97e1408c9cb335 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 3 Oct 2014 19:16:11 -0400
+Subject: [PATCH] core/namespace: remove invalid check
+
+root cannot be NULL here, because it was allocated with alloca.
+
+CID #1237769.
+---
+ src/core/namespace.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/src/core/namespace.c b/src/core/namespace.c
+index f76d3891c3..f86092f6b1 100644
+--- a/src/core/namespace.c
++++ b/src/core/namespace.c
+@@ -341,11 +341,8 @@ fail:
+                 unlink(busnode);
+         }
+ 
+-        if (root) {
+-                umount(root);
+-                rmdir(root);
+-        }
+-
++        umount(root);
++        rmdir(root);
+         rmdir(temporary_mount);
+ 
+         return r;

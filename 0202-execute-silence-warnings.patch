@@ -1,0 +1,32 @@
+From 822a59607c4974915db0644b627070f001986825 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Mon, 8 Sep 2014 22:10:36 +0200
+Subject: [PATCH] execute: silence warnings
+
+Mark two function parameters as const
+---
+ src/core/execute.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 2b16b36c19..db755777c1 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -939,7 +939,7 @@ static void rename_process_from_path(const char *path) {
+ 
+ #ifdef HAVE_SECCOMP
+ 
+-static int apply_seccomp(ExecContext *c) {
++static int apply_seccomp(const ExecContext *c) {
+         uint32_t negative_action, action;
+         scmp_filter_ctx *seccomp;
+         Iterator i;
+@@ -988,7 +988,7 @@ finish:
+         return r;
+ }
+ 
+-static int apply_address_families(ExecContext *c) {
++static int apply_address_families(const ExecContext *c) {
+         scmp_filter_ctx *seccomp;
+         Iterator i;
+         int r;

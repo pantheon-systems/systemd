@@ -1,0 +1,28 @@
+From d9ab174bd7ec1dd5b382d3d84737d1c9ed1f4481 Mon Sep 17 00:00:00 2001
+From: Andreas Henriksson <andreas@fatal.se>
+Date: Tue, 16 Sep 2014 21:36:26 +0200
+Subject: [PATCH] shared: fix resource leak in config_parse_default_instance
+
+The recently allocated "printed" is not freed on error path.
+
+Found by coverity. Fixes: CID#1237745
+---
+ src/shared/install.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/install.c b/src/shared/install.c
+index 5d3fcf5e32..61e572bdf3 100644
+--- a/src/shared/install.c
++++ b/src/shared/install.c
+@@ -1025,8 +1025,10 @@ static int config_parse_default_instance(
+         if (r < 0)
+                 return r;
+ 
+-        if (!unit_instance_is_valid(printed))
++        if (!unit_instance_is_valid(printed)) {
++                free(printed);
+                 return -EINVAL;
++        }
+ 
+         free(i->default_instance);
+         i->default_instance = printed;

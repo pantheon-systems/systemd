@@ -1,0 +1,22 @@
+From 2b2332856bafe25c4aa17db2a90bdcddef1fec1a Mon Sep 17 00:00:00 2001
+From: Ronny Chevalier <chevalier.ronny@gmail.com>
+Date: Wed, 17 Sep 2014 20:10:44 +0200
+Subject: [PATCH] logind: fix typo
+
+---
+ src/login/logind-session-dbus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/login/logind-session-dbus.c b/src/login/logind-session-dbus.c
+index 7d81500426..58836fce25 100644
+--- a/src/login/logind-session-dbus.c
++++ b/src/login/logind-session-dbus.c
+@@ -249,7 +249,7 @@ static int method_set_idle_hint(sd_bus *bus, sd_bus_message *message, void *user
+                 return r;
+ 
+         if (uid != 0 && uid != s->user->uid)
+-                return sd_bus_error_setf(error, SD_BUS_ERROR_ACCESS_DENIED, "Only owner of session my set idle hint");
++                return sd_bus_error_setf(error, SD_BUS_ERROR_ACCESS_DENIED, "Only owner of session may set idle hint");
+ 
+         session_set_idle_hint(s, b);
+ 

@@ -1,0 +1,21 @@
+From e9385929c8eb591b64e657a5d53d187af418a3f7 Mon Sep 17 00:00:00 2001
+From: Patrik Flykt <patrik.flykt@linux.intel.com>
+Date: Mon, 1 Sep 2014 13:21:35 +0300
+Subject: [PATCH] TODO: Remove Elapsed Time DHCPv6 option as it is done
+
+---
+ TODO | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/TODO b/TODO
+index f036430c43..9ac6fac8cf 100644
+--- a/TODO
++++ b/TODO
+@@ -703,7 +703,6 @@ Features:
+    - implement reconfigure support, see 5.3., 15.11. and 22.20.
+    - implement information request, see 1.2. and 18.1.5.
+    - implement support for temporary adressess (IA_TA)
+-   - implement elapsed time option
+    - implement dhcpv6 authentication
+    - investigate the usefulness of Confirm messages; i.e. are there any
+      situations where the link changes without any loss in carrier detection

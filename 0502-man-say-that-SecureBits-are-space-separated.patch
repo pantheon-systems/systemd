@@ -1,0 +1,53 @@
+From e060073a8f05cfdfad621b1bb59abe944b17d5f9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 3 Oct 2014 21:06:52 -0400
+Subject: [PATCH] man: say that SecureBits= are space separated
+
+---
+ man/systemd.exec.xml | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index 6d0113f5cc..939983fb7e 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -776,20 +776,22 @@
+                         <varlistentry>
+                                 <term><varname>SecureBits=</varname></term>
+                                 <listitem><para>Controls the secure
+-                                bits set for the executed process. See
+-                                <citerefentry project='man-pages'><refentrytitle>capabilities</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+-                                for details. Takes a list of strings:
++                                bits set for the executed process.
++                                Takes a space-separated combination of
++                                options from the following list:
+                                 <option>keep-caps</option>,
+                                 <option>keep-caps-locked</option>,
+                                 <option>no-setuid-fixup</option>,
+                                 <option>no-setuid-fixup-locked</option>,
+-                                <option>noroot</option> and/or
++                                <option>noroot</option>, and
+                                 <option>noroot-locked</option>. This
+                                 option may appear more than once in
+-                                which case the secure bits are
+-                                ORed. If the empty string is assigned
+-                                to this option, the bits are reset to
+-                                0.</para></listitem>
++                                which case the secure bits are ORed.
++                                If the empty string is assigned to
++                                this option, the bits are reset to 0.
++                                See <citerefentry
++                                project='man-pages'><refentrytitle>capabilities</refentrytitle><manvolnum>7</manvolnum></citerefentry>
++                                for details.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+@@ -806,7 +808,7 @@
+                                 attached to the executed file. Due to
+                                 that
+                                 <varname>CapabilityBoundingSet=</varname>
+-                                is probably the much more useful
++                                is probably a much more useful
+                                 setting.</para></listitem>
+                         </varlistentry>
+ 

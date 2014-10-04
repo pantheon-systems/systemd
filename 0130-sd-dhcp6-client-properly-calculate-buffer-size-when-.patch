@@ -1,0 +1,47 @@
+From 44481a8b537839cd9ffead4d261491641f5b5260 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 30 Aug 2014 18:31:21 -0400
+Subject: [PATCH] sd-dhcp6-client: properly calculate buffer size when parsing
+ options
+
+Also make pointer calculations more explicit so they are
+easier to understand.
+---
+ src/libsystemd-network/sd-dhcp6-client.c   | 5 ++++-
+ src/libsystemd-network/test-dhcp6-client.c | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/libsystemd-network/sd-dhcp6-client.c b/src/libsystemd-network/sd-dhcp6-client.c
+index 342a231413..6860c66858 100644
+--- a/src/libsystemd-network/sd-dhcp6-client.c
++++ b/src/libsystemd-network/sd-dhcp6-client.c
+@@ -583,12 +583,15 @@ static int client_parse_message(sd_dhcp6_client *client,
+                                 DHCP6Message *message, size_t len,
+                                 sd_dhcp6_lease *lease) {
+         int r;
+-        uint8_t *optval, *option = (uint8_t *)(message + 1), *id = NULL;
++        uint8_t *optval, *option, *id = NULL;
+         uint16_t optcode, status;
+         size_t optlen, id_len;
+         bool clientid = false;
+         be32_t iaid_lease;
+ 
++        option = (uint8_t *)message + sizeof(DHCP6Message);
++        len -= sizeof(DHCP6Message);
++
+         while ((r = dhcp6_option_parse(&option, &len, &optcode, &optlen,
+                                        &optval)) >= 0) {
+                 switch (optcode) {
+diff --git a/src/libsystemd-network/test-dhcp6-client.c b/src/libsystemd-network/test-dhcp6-client.c
+index 259db33bcd..d102a796b4 100644
+--- a/src/libsystemd-network/test-dhcp6-client.c
++++ b/src/libsystemd-network/test-dhcp6-client.c
+@@ -205,7 +205,7 @@ static uint8_t msg_reply[173] = {
+ static int test_advertise_option(sd_event *e) {
+         _cleanup_dhcp6_lease_free_ sd_dhcp6_lease *lease = NULL;
+         DHCP6Message *advertise = (DHCP6Message *)msg_advertise;
+-        uint8_t *optval, *opt = &msg_advertise[sizeof(DHCP6Message)];
++        uint8_t *optval, *opt = msg_advertise + sizeof(DHCP6Message);
+         uint16_t optcode;
+         size_t optlen, len = sizeof(msg_advertise) - sizeof(DHCP6Message);
+         be32_t val;

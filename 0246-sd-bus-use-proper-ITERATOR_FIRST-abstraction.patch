@@ -1,0 +1,24 @@
+From 4dd6c5726d87a336888c0d871b9260c98f689016 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 4 Aug 2014 22:54:10 +0200
+Subject: [PATCH] sd-bus: use proper ITERATOR_FIRST abstraction
+
+Do not assume hashmap iterators are pointers.
+They may be structs in an alternative hashmap implementation.
+---
+ src/libsystemd/sd-bus/bus-track.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-track.c b/src/libsystemd/sd-bus/bus-track.c
+index 0a3322a4ee..4b6a8bfee9 100644
+--- a/src/libsystemd/sd-bus/bus-track.c
++++ b/src/libsystemd/sd-bus/bus-track.c
+@@ -245,7 +245,7 @@ _public_ const char* sd_bus_track_first(sd_bus_track *track) {
+                 return NULL;
+ 
+         track->modified = false;
+-        track->iterator = NULL;
++        track->iterator = ITERATOR_FIRST;
+ 
+         hashmap_iterate(track->names, &track->iterator, (const void**) &n);
+         return n;

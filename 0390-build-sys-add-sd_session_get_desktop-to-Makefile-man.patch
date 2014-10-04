@@ -1,0 +1,40 @@
+From 3a17521f5906b8028d6f01da99f0d84e442b02bc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 25 Sep 2014 17:27:21 -0400
+Subject: [PATCH] build-sys: add sd_session_get_desktop to Makefile-man.am
+
+Fixup for c72d5456e2d.
+---
+ Makefile-man.am | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Makefile-man.am b/Makefile-man.am
+index 1be6d3aafa..199c731e7e 100644
+--- a/Makefile-man.am
++++ b/Makefile-man.am
+@@ -1289,6 +1289,7 @@ MANPAGES_ALIAS += \
+ 	man/sd_seat_can_tty.3 \
+ 	man/sd_seat_get_sessions.3 \
+ 	man/sd_session_get_class.3 \
++	man/sd_session_get_desktop.3 \
+ 	man/sd_session_get_display.3 \
+ 	man/sd_session_get_remote_host.3 \
+ 	man/sd_session_get_remote_user.3 \
+@@ -1330,6 +1331,7 @@ man/sd_seat_can_multi_session.3: man/sd_seat_get_active.3
+ man/sd_seat_can_tty.3: man/sd_seat_get_active.3
+ man/sd_seat_get_sessions.3: man/sd_seat_get_active.3
+ man/sd_session_get_class.3: man/sd_session_is_active.3
++man/sd_session_get_desktop.3: man/sd_session_is_active.3
+ man/sd_session_get_display.3: man/sd_session_is_active.3
+ man/sd_session_get_remote_host.3: man/sd_session_is_active.3
+ man/sd_session_get_remote_user.3: man/sd_session_is_active.3
+@@ -1421,6 +1423,9 @@ man/sd_seat_get_sessions.html: man/sd_seat_get_active.html
+ man/sd_session_get_class.html: man/sd_session_is_active.html
+ 	$(html-alias)
+ 
++man/sd_session_get_desktop.html: man/sd_session_is_active.html
++	$(html-alias)
++
+ man/sd_session_get_display.html: man/sd_session_is_active.html
+ 	$(html-alias)
+ 

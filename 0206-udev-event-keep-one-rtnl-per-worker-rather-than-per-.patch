@@ -1,0 +1,185 @@
+From 4c83d994566718043e61e568cc214bdc4587f869 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Tue, 9 Sep 2014 11:15:37 +0200
+Subject: [PATCH] udev: event - keep one rtnl per worker, rather than per event
+
+Creating the rtnl context is cheap, but freeing it may not be, due to
+synchronous close().
+
+Also drop some excessive logging. We now log about the changing ifname
+exactly once.
+---
+ src/libsystemd/sd-rtnl/rtnl-util.c | 12 +++++++++---
+ src/libsystemd/sd-rtnl/rtnl-util.h |  2 +-
+ src/udev/udev-event.c              | 23 ++++++++---------------
+ src/udev/udev.h                    |  2 ++
+ src/udev/udevd.c                   |  8 ++++++++
+ 5 files changed, 28 insertions(+), 19 deletions(-)
+
+diff --git a/src/libsystemd/sd-rtnl/rtnl-util.c b/src/libsystemd/sd-rtnl/rtnl-util.c
+index 0bc2c9b1f5..fe0f34e125 100644
+--- a/src/libsystemd/sd-rtnl/rtnl-util.c
++++ b/src/libsystemd/sd-rtnl/rtnl-util.c
+@@ -26,7 +26,7 @@
+ #include "rtnl-util.h"
+ #include "rtnl-internal.h"
+ 
+-int rtnl_set_link_name(sd_rtnl *rtnl, int ifindex, const char *name) {
++int rtnl_set_link_name(sd_rtnl **rtnl, int ifindex, const char *name) {
+         _cleanup_rtnl_message_unref_ sd_rtnl_message *message = NULL;
+         int r;
+ 
+@@ -34,7 +34,13 @@ int rtnl_set_link_name(sd_rtnl *rtnl, int ifindex, const char *name) {
+         assert(ifindex > 0);
+         assert(name);
+ 
+-        r = sd_rtnl_message_new_link(rtnl, &message, RTM_SETLINK, ifindex);
++        if (!*rtnl) {
++                r = sd_rtnl_open(rtnl, 0);
++                if (r < 0)
++                        return r;
++        }
++
++        r = sd_rtnl_message_new_link(*rtnl, &message, RTM_SETLINK, ifindex);
+         if (r < 0)
+                 return r;
+ 
+@@ -42,7 +48,7 @@ int rtnl_set_link_name(sd_rtnl *rtnl, int ifindex, const char *name) {
+         if (r < 0)
+                 return r;
+ 
+-        r = sd_rtnl_call(rtnl, message, 0, NULL);
++        r = sd_rtnl_call(*rtnl, message, 0, NULL);
+         if (r < 0)
+                 return r;
+ 
+diff --git a/src/libsystemd/sd-rtnl/rtnl-util.h b/src/libsystemd/sd-rtnl/rtnl-util.h
+index 2963f02d3e..94af3b1720 100644
+--- a/src/libsystemd/sd-rtnl/rtnl-util.h
++++ b/src/libsystemd/sd-rtnl/rtnl-util.h
+@@ -34,7 +34,7 @@ bool rtnl_message_type_is_link(uint16_t type);
+ bool rtnl_message_type_is_addr(uint16_t type);
+ bool rtnl_message_type_is_route(uint16_t type);
+ 
+-int rtnl_set_link_name(sd_rtnl *rtnl, int ifindex, const char *name);
++int rtnl_set_link_name(sd_rtnl **rtnl, int ifindex, const char *name);
+ int rtnl_set_link_properties(sd_rtnl *rtnl, int ifindex, const char *alias, const struct ether_addr *mac, unsigned mtu);
+ 
+ int rtnl_log_parse_error(int r);
+diff --git a/src/udev/udev-event.c b/src/udev/udev-event.c
+index 18b92ca428..1bbf41e757 100644
+--- a/src/udev/udev-event.c
++++ b/src/udev/udev-event.c
+@@ -53,6 +53,7 @@ struct udev_event *udev_event_new(struct udev_device *dev) {
+ void udev_event_unref(struct udev_event *event) {
+         if (event == NULL)
+                 return;
++        sd_rtnl_unref(event->rtnl);
+         udev_list_cleanup(&event->run_list);
+         udev_list_cleanup(&event->seclabel_list);
+         free(event->program_result);
+@@ -746,30 +747,24 @@ out:
+ 
+ static int rename_netif(struct udev_event *event) {
+         struct udev_device *dev = event->dev;
+-        _cleanup_rtnl_unref_ sd_rtnl *rtnl = NULL;
+         char name[IFNAMSIZ];
+         const char *oldname;
+         int r;
+ 
+         oldname = udev_device_get_sysname(dev);
+ 
+-        log_debug("changing net interface name from '%s' to '%s'",
+-                  oldname, event->name);
+-
+         strscpy(name, IFNAMSIZ, event->name);
+ 
+-        r = sd_rtnl_open(&rtnl, 0);
+-        if (r < 0)
++        r = rtnl_set_link_name(&event->rtnl, udev_device_get_ifindex(dev), name);
++        if (r < 0) {
++                log_error("error changing net interface name '%s' to '%s': %s",
++                          oldname, name, strerror(-r));
+                 return r;
++        }
+ 
+-        r = rtnl_set_link_name(rtnl, udev_device_get_ifindex(dev), name);
+-        if (r < 0)
+-                log_error("error changing net interface name %s to %s: %s",
+-                          oldname, name, strerror(-r));
+-        else
+-                print_kmsg("renamed network interface %s to %s\n", oldname, name);
++        print_kmsg("renamed network interface '%s' to '%s'\n", oldname, name);
+ 
+-        return r;
++        return 0;
+ }
+ 
+ void udev_event_execute_rules(struct udev_event *event,
+@@ -832,8 +827,6 @@ void udev_event_execute_rules(struct udev_event *event,
+ 
+                         r = rename_netif(event);
+                         if (r >= 0) {
+-                                log_debug("renamed netif to '%s'", event->name);
+-
+                                 /* remember old name */
+                                 udev_device_add_property(dev, "INTERFACE_OLD", udev_device_get_sysname(dev));
+ 
+diff --git a/src/udev/udev.h b/src/udev/udev.h
+index faa8f566c2..ed01da30e4 100644
+--- a/src/udev/udev.h
++++ b/src/udev/udev.h
+@@ -23,6 +23,7 @@
+ #include <signal.h>
+ 
+ #include "macro.h"
++#include "sd-rtnl.h"
+ #include "libudev.h"
+ #include "libudev-private.h"
+ #include "util.h"
+@@ -44,6 +45,7 @@ struct udev_event {
+         int exec_delay;
+         usec_t birth_usec;
+         int fd_signal;
++        sd_rtnl *rtnl;
+         unsigned int builtin_run;
+         unsigned int builtin_ret;
+         bool sigterm;
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index e72c5b231e..be0acc3177 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -48,6 +48,7 @@
+ 
+ #include "udev.h"
+ #include "udev-util.h"
++#include "rtnl-util.h"
+ #include "sd-daemon.h"
+ #include "cgroup-util.h"
+ #include "dev-setup.h"
+@@ -200,6 +201,7 @@ static void worker_new(struct event *event) {
+         case 0: {
+                 struct udev_device *dev = NULL;
+                 int fd_monitor;
++                _cleanup_rtnl_unref_ sd_rtnl *rtnl = NULL;
+                 struct epoll_event ep_signal, ep_monitor;
+                 sigset_t mask;
+                 int rc = EXIT_SUCCESS;
+@@ -301,11 +303,17 @@ static void worker_new(struct event *event) {
+                                 }
+                         }
+ 
++                        /* needed for renaming netifs */
++                        udev_event->rtnl = rtnl;
++
+                         /* apply rules, create node, symlinks */
+                         udev_event_execute_rules(udev_event, event_timeout_usec, rules, &sigmask_orig);
+ 
+                         udev_event_execute_run(udev_event, event_timeout_usec, &sigmask_orig);
+ 
++                        /* in case rtnl was initialized */
++                        rtnl = sd_rtnl_ref(udev_event->rtnl);
++
+                         /* apply/restore inotify watch */
+                         if (udev_event->inotify_watch) {
+                                 udev_watch_begin(udev, dev);

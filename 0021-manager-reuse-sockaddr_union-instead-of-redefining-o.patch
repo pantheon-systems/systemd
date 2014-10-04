@@ -1,0 +1,30 @@
+From 55836941ff642d42403921fa9d5fd2f8376ae722 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Aug 2014 16:51:44 +0200
+Subject: [PATCH] manager: reuse sockaddr_union instead of redefining our own
+ version of it
+
+---
+ src/core/manager.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 445461b6b9..e488aba5f8 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -527,13 +527,10 @@ static int manager_setup_notify(Manager *m) {
+ 
+         if (m->notify_fd < 0) {
+                 _cleanup_close_ int fd = -1;
+-                union {
+-                        struct sockaddr sa;
+-                        struct sockaddr_un un;
+-                } sa = {
++                union sockaddr_union sa =  {
+                         .sa.sa_family = AF_UNIX,
+                 };
+-                int one = 1;
++                static const int one = 1;
+ 
+                 /* First free all secondary fields */
+                 free(m->notify_socket);

@@ -1,0 +1,44 @@
+From d457ff8319b1e7c522c146f75e272f1226f4720c Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 18 Sep 2014 19:07:02 +0200
+Subject: [PATCH] udevd: check return of various functions
+
+One reported by Coverity. Fixes CID #996252.
+---
+ src/udev/udevd.c | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index 95c6468029..9210da6c47 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -1139,13 +1139,26 @@ int main(int argc, char *argv[]) {
+                 goto exit;
+         }
+ 
+-        label_init("/dev");
++        r = label_init("/dev");
++        if (r < 0) {
++                log_error("could not initialize labelling: %s", strerror(-r));
++                goto exit;
++        }
+ 
+         /* set umask before creating any file/directory */
+-        chdir("/");
++        r = chdir("/");
++        if (r < 0) {
++                log_error("could not change dir to /: %m");
++                goto exit;
++        }
++
+         umask(022);
+ 
+-        mkdir("/run/udev", 0755);
++        r = mkdir("/run/udev", 0755);
++        if (r < 0) {
++                log_error("could not create /run/udev: %m");
++                goto exit;
++        }
+ 
+         dev_setup(NULL);
+ 

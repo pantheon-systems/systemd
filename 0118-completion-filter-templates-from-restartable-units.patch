@@ -1,0 +1,27 @@
+From ec15977a3cd82eff6c94bb13db72195f7cd512e8 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Fri, 29 Aug 2014 20:35:15 -0400
+Subject: [PATCH] completion: filter templates from restartable units
+
+Since c6a373a2634854, we might encounter unit templates via the
+'list-units' verb. These aren't restartable (and we throw errors), so
+make sure they're filtered out of the completion options.
+
+fixes downstream bug: https://bugs.archlinux.org/task/41719
+---
+ shell-completion/bash/systemctl.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/shell-completion/bash/systemctl.in b/shell-completion/bash/systemctl.in
+index 64b15df462..015001815f 100644
+--- a/shell-completion/bash/systemctl.in
++++ b/shell-completion/bash/systemctl.in
+@@ -182,7 +182,7 @@ _systemctl () {
+                 comps=$( __filter_units_by_property $mode CanStart yes \
+                       $( __get_all_units $mode \
+                         | while read -r line; do \
+-                                [[ "$line" =~ \.(device|snapshot|socket|timer)$ ]] || echo " $line"; \
++                                [[ "$line" =~ @\.|\.(device|snapshot|socket|timer)$ ]] || echo " $line"; \
+                         done ))
+                 compopt -o filenames
+ 

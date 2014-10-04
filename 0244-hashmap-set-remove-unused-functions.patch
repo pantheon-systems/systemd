@@ -1,0 +1,281 @@
+From 631b9deefbef76c5f69b165f33cb46690c938c95 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 31 Jul 2014 18:04:20 +0200
+Subject: [PATCH] hashmap, set: remove unused functions
+
+The following hashmap_* and set_* functions/macros have never had any
+users in systemd's history:
+
+  *_iterate_backwards
+  *_iterate_skip
+  *_last
+  *_FOREACH_BACKWARDS
+
+Remove this dead code.
+---
+ src/shared/hashmap.c    | 64 -------------------------------------------------
+ src/shared/hashmap.h    |  6 -----
+ src/shared/set.c        | 12 ----------
+ src/shared/set.h        |  6 -----
+ src/test/test-hashmap.c | 55 ------------------------------------------
+ 5 files changed, 143 deletions(-)
+
+diff --git a/src/shared/hashmap.c b/src/shared/hashmap.c
+index 715484ce7c..1eadeced5c 100644
+--- a/src/shared/hashmap.c
++++ b/src/shared/hashmap.c
+@@ -753,59 +753,6 @@ at_end:
+         return NULL;
+ }
+ 
+-void *hashmap_iterate_backwards(Hashmap *h, Iterator *i, const void **key) {
+-        struct hashmap_entry *e;
+-
+-        assert(i);
+-
+-        if (!h)
+-                goto at_beginning;
+-
+-        if (*i == ITERATOR_FIRST)
+-                goto at_beginning;
+-
+-        if (*i == ITERATOR_LAST && !h->iterate_list_tail)
+-                goto at_beginning;
+-
+-        e = *i == ITERATOR_LAST ? h->iterate_list_tail : (struct hashmap_entry*) *i;
+-
+-        if (e->iterate_previous)
+-                *i = (Iterator) e->iterate_previous;
+-        else
+-                *i = ITERATOR_FIRST;
+-
+-        if (key)
+-                *key = e->key;
+-
+-        return e->value;
+-
+-at_beginning:
+-        *i = ITERATOR_FIRST;
+-
+-        if (key)
+-                *key = NULL;
+-
+-        return NULL;
+-}
+-
+-void *hashmap_iterate_skip(Hashmap *h, const void *key, Iterator *i) {
+-        unsigned hash;
+-        struct hashmap_entry *e;
+-
+-        if (!h)
+-                return NULL;
+-
+-        hash = bucket_hash(h, key);
+-
+-        e = hash_scan(h, hash, key);
+-        if (!e)
+-                return NULL;
+-
+-        *i = (Iterator) e;
+-
+-        return e->value;
+-}
+-
+ void* hashmap_first(Hashmap *h) {
+ 
+         if (!h)
+@@ -828,17 +775,6 @@ void* hashmap_first_key(Hashmap *h) {
+         return (void*) h->iterate_list_head->key;
+ }
+ 
+-void* hashmap_last(Hashmap *h) {
+-
+-        if (!h)
+-                return NULL;
+-
+-        if (!h->iterate_list_tail)
+-                return NULL;
+-
+-        return h->iterate_list_tail->value;
+-}
+-
+ void* hashmap_steal_first(Hashmap *h) {
+         void *data;
+ 
+diff --git a/src/shared/hashmap.h b/src/shared/hashmap.h
+index 7385ebc5fa..e25840f47f 100644
+--- a/src/shared/hashmap.h
++++ b/src/shared/hashmap.h
+@@ -109,8 +109,6 @@ bool hashmap_isempty(Hashmap *h) _pure_;
+ unsigned hashmap_buckets(Hashmap *h) _pure_;
+ 
+ void *hashmap_iterate(Hashmap *h, Iterator *i, const void **key);
+-void *hashmap_iterate_backwards(Hashmap *h, Iterator *i, const void **key);
+-void *hashmap_iterate_skip(Hashmap *h, const void *key, Iterator *i);
+ 
+ void hashmap_clear(Hashmap *h);
+ void hashmap_clear_free(Hashmap *h);
+@@ -120,7 +118,6 @@ void *hashmap_steal_first(Hashmap *h);
+ void *hashmap_steal_first_key(Hashmap *h);
+ void *hashmap_first(Hashmap *h) _pure_;
+ void *hashmap_first_key(Hashmap *h) _pure_;
+-void *hashmap_last(Hashmap *h) _pure_;
+ 
+ void *hashmap_next(Hashmap *h, const void *key);
+ 
+@@ -132,9 +129,6 @@ char **hashmap_get_strv(Hashmap *h);
+ #define HASHMAP_FOREACH_KEY(e, k, h, i) \
+         for ((i) = ITERATOR_FIRST, (e) = hashmap_iterate((h), &(i), (const void**) &(k)); (e); (e) = hashmap_iterate((h), &(i), (const void**) &(k)))
+ 
+-#define HASHMAP_FOREACH_BACKWARDS(e, h, i) \
+-        for ((i) = ITERATOR_LAST, (e) = hashmap_iterate_backwards((h), &(i), NULL); (e); (e) = hashmap_iterate_backwards((h), &(i), NULL))
+-
+ DEFINE_TRIVIAL_CLEANUP_FUNC(Hashmap*, hashmap_free);
+ DEFINE_TRIVIAL_CLEANUP_FUNC(Hashmap*, hashmap_free_free);
+ DEFINE_TRIVIAL_CLEANUP_FUNC(Hashmap*, hashmap_free_free_free);
+diff --git a/src/shared/set.c b/src/shared/set.c
+index d4ffe056d5..ed16067bdc 100644
+--- a/src/shared/set.c
++++ b/src/shared/set.c
+@@ -125,14 +125,6 @@ void *set_iterate(Set *s, Iterator *i) {
+         return hashmap_iterate(MAKE_HASHMAP(s), i, NULL);
+ }
+ 
+-void *set_iterate_backwards(Set *s, Iterator *i) {
+-        return hashmap_iterate_backwards(MAKE_HASHMAP(s), i, NULL);
+-}
+-
+-void *set_iterate_skip(Set *s, void *value, Iterator *i) {
+-        return hashmap_iterate_skip(MAKE_HASHMAP(s), value, i);
+-}
+-
+ void *set_steal_first(Set *s) {
+         return hashmap_steal_first(MAKE_HASHMAP(s));
+ }
+@@ -141,10 +133,6 @@ void* set_first(Set *s) {
+         return hashmap_first(MAKE_HASHMAP(s));
+ }
+ 
+-void* set_last(Set *s) {
+-        return hashmap_last(MAKE_HASHMAP(s));
+-}
+-
+ int set_merge(Set *s, Set *other) {
+         return hashmap_merge(MAKE_HASHMAP(s), MAKE_HASHMAP(other));
+ }
+diff --git a/src/shared/set.h b/src/shared/set.h
+index e650b7e3fe..840ee0a7e4 100644
+--- a/src/shared/set.h
++++ b/src/shared/set.h
+@@ -57,24 +57,18 @@ unsigned set_size(Set *s);
+ bool set_isempty(Set *s);
+ 
+ void *set_iterate(Set *s, Iterator *i);
+-void *set_iterate_backwards(Set *s, Iterator *i);
+-void *set_iterate_skip(Set *s, void *value, Iterator *i);
+ 
+ void set_clear(Set *s);
+ void set_clear_free(Set *s);
+ 
+ void *set_steal_first(Set *s);
+ void* set_first(Set *s);
+-void* set_last(Set *s);
+ 
+ char **set_get_strv(Set *s);
+ 
+ #define SET_FOREACH(e, s, i) \
+         for ((i) = ITERATOR_FIRST, (e) = set_iterate((s), &(i)); (e); (e) = set_iterate((s), &(i)))
+ 
+-#define SET_FOREACH_BACKWARDS(e, s, i) \
+-        for ((i) = ITERATOR_LAST, (e) = set_iterate_backwards((s), &(i)); (e); (e) = set_iterate_backwards((s), &(i)))
+-
+ DEFINE_TRIVIAL_CLEANUP_FUNC(Set*, set_free);
+ DEFINE_TRIVIAL_CLEANUP_FUNC(Set*, set_free_free);
+ #define _cleanup_set_free_ _cleanup_(set_freep)
+diff --git a/src/test/test-hashmap.c b/src/test/test-hashmap.c
+index 95a7f8379d..d9863f8dab 100644
+--- a/src/test/test-hashmap.c
++++ b/src/test/test-hashmap.c
+@@ -343,44 +343,6 @@ static void test_hashmap_foreach(void) {
+         hashmap_free_free(m);
+ }
+ 
+-static void test_hashmap_foreach_backwards(void) {
+-        Hashmap *m;
+-        Iterator i;
+-        char *val1, *val2, *val3, *val4, *s;
+-        bool value_found[] = { false, false, false, false };
+-
+-        val1 = strdup("my val1");
+-        assert_se(val1);
+-        val2 = strdup("my val2");
+-        assert_se(val2);
+-        val3 = strdup("my val3");
+-        assert_se(val3);
+-        val4 = strdup("my val4");
+-        assert_se(val4);
+-
+-        m = hashmap_new(&string_hash_ops);
+-        hashmap_put(m, "Key 1", val1);
+-        hashmap_put(m, "Key 2", val2);
+-        hashmap_put(m, "Key 3", val3);
+-        hashmap_put(m, "Key 4", val4);
+-
+-        HASHMAP_FOREACH_BACKWARDS(s, m, i) {
+-                if (!value_found[0] && streq(s, val1))
+-                        value_found[0] = true;
+-                else if (!value_found[1] && streq(s, val2))
+-                        value_found[1] = true;
+-                else if (!value_found[2] && streq(s, val3))
+-                        value_found[2] = true;
+-                else if (!value_found[3] && streq(s, val4))
+-                        value_found[3] = true;
+-        }
+-
+-        assert_se(m);
+-        assert_se(value_found[0] && value_found[1] && value_found[2] && value_found[3]);
+-
+-        hashmap_free_free(m);
+-}
+-
+ static void test_hashmap_merge(void) {
+         Hashmap *m;
+         Hashmap *n;
+@@ -532,21 +494,6 @@ static void test_hashmap_first_key(void) {
+         assert_se(streq(hashmap_first_key(m), "key 2"));
+ }
+ 
+-static void test_hashmap_last(void) {
+-        _cleanup_hashmap_free_ Hashmap *m = NULL;
+-
+-        m = hashmap_new(&string_hash_ops);
+-        assert_se(m);
+-
+-        assert_se(!hashmap_last(m));
+-        assert_se(hashmap_put(m, "key 1", (void *) (const char *) "val 1") == 1);
+-        assert_se(streq(hashmap_last(m), "val 1"));
+-        assert_se(hashmap_put(m, "key 2", (void *) (const char *) "bar") == 1);
+-        assert_se(streq(hashmap_last(m), "bar"));
+-        assert_se(hashmap_remove(m, "key 2"));
+-        assert_se(streq(hashmap_last(m), "val 1"));
+-}
+-
+ static void test_hashmap_steal_first_key(void) {
+         _cleanup_hashmap_free_ Hashmap *m = NULL;
+ 
+@@ -604,7 +551,6 @@ int main(int argc, const char *argv[]) {
+         test_hashmap_remove_and_put();
+         test_hashmap_ensure_allocated();
+         test_hashmap_foreach();
+-        test_hashmap_foreach_backwards();
+         test_hashmap_foreach_key();
+         test_hashmap_contains();
+         test_hashmap_merge();
+@@ -613,7 +559,6 @@ int main(int argc, const char *argv[]) {
+         test_hashmap_size();
+         test_hashmap_many();
+         test_hashmap_first_key();
+-        test_hashmap_last();
+         test_hashmap_steal_first_key();
+         test_hashmap_clear_free_free();
+         test_uint64_compare_func();

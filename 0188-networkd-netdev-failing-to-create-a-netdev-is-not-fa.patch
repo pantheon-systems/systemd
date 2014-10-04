@@ -1,0 +1,23 @@
+From 1eb808756e3e4cc724ba17725a8513e562551c21 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sat, 6 Sep 2014 22:16:20 +0200
+Subject: [PATCH] networkd: netdev - failing to create a netdev is not fatal,
+ just fail that netdev
+
+---
+ src/network/networkd-netdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/network/networkd-netdev.c b/src/network/networkd-netdev.c
+index 1a436f75df..fd1f51ec56 100644
+--- a/src/network/networkd-netdev.c
++++ b/src/network/networkd-netdev.c
+@@ -721,7 +721,7 @@ static int netdev_load_one(Manager *manager, const char *filename) {
+         case NETDEV_CREATE_INDEPENDENT:
+                 r = netdev_create(netdev, NULL, NULL);
+                 if (r < 0)
+-                        return r;
++                        return 0;
+ 
+                 break;
+         default:

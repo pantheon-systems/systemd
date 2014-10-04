@@ -1,0 +1,29 @@
+From 39cf40e846754fe37f5c8a948f37227ce1ef8472 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sat, 20 Sep 2014 09:45:26 +0200
+Subject: [PATCH] terminal: reduce speed of morphing colors in modeset test
+
+The high frequency of the color-morphing is kinda irritating. Reduce it
+to a much lower frequency so you can actually look at it longer than few
+seconds.
+---
+ src/libsystemd-terminal/modeset.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/libsystemd-terminal/modeset.c b/src/libsystemd-terminal/modeset.c
+index 02ed1a8987..c1119c9e0f 100644
+--- a/src/libsystemd-terminal/modeset.c
++++ b/src/libsystemd-terminal/modeset.c
+@@ -252,9 +252,9 @@ static void modeset_draw(Modeset *m, const grdev_display_target *t) {
+ static void modeset_render(Modeset *m, grdev_display *d) {
+         const grdev_display_target *t;
+ 
+-        m->r = next_color(&m->r_up, m->r, 20);
+-        m->g = next_color(&m->g_up, m->g, 10);
+-        m->b = next_color(&m->b_up, m->b, 5);
++        m->r = next_color(&m->r_up, m->r, 4);
++        m->g = next_color(&m->g_up, m->g, 3);
++        m->b = next_color(&m->b_up, m->b, 2);
+ 
+         GRDEV_DISPLAY_FOREACH_TARGET(d, t, 0) {
+                 modeset_draw(m, t);

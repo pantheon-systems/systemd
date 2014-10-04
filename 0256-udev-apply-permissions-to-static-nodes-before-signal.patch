@@ -1,0 +1,58 @@
+From 4d6dac13ad376cb537647741c45185395beb3e9c Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 15 Sep 2014 12:04:29 +0200
+Subject: [PATCH] udev: apply permissions to static nodes before signallying
+ READY
+
+Processes expecting static nodes to have the right permissions may order themselves after systemd-udevd.service,
+make sure that actually guarantees what is expected.
+---
+ src/udev/udevd.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index cfa071eba9..e8b3602986 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -1199,6 +1199,20 @@ int main(int argc, char *argv[]) {
+ 
+         udev_monitor_set_receive_buffer_size(monitor, 128 * 1024 * 1024);
+ 
++        log_info("starting version " VERSION "\n");
++
++        udev_builtin_init(udev);
++
++        rules = udev_rules_new(udev, arg_resolve_names);
++        if (rules == NULL) {
++                log_error("error reading rules");
++                goto exit;
++        }
++
++        rc = udev_rules_apply_static_dev_perms(rules);
++        if (rc < 0)
++                log_error("failed to apply permissions on static device nodes - %s", strerror(-rc));
++
+         if (arg_daemonize) {
+                 pid_t pid;
+ 
+@@ -1222,20 +1236,6 @@ int main(int argc, char *argv[]) {
+                 sd_notify(1, "READY=1");
+         }
+ 
+-        log_info("starting version " VERSION "\n");
+-
+-        udev_builtin_init(udev);
+-
+-        rules = udev_rules_new(udev, arg_resolve_names);
+-        if (rules == NULL) {
+-                log_error("error reading rules");
+-                goto exit;
+-        }
+-
+-        rc = udev_rules_apply_static_dev_perms(rules);
+-        if (rc < 0)
+-                log_error("failed to apply permissions on static device nodes - %s", strerror(-rc));
+-
+         if (arg_children_max <= 0) {
+                 cpu_set_t cpu_set;
+ 

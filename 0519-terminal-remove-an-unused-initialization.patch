@@ -1,0 +1,22 @@
+From 0077776275cb753e478e0f92d4065dec5276c44a Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Sun, 5 Oct 2014 22:33:20 +0200
+Subject: [PATCH] terminal: remove an unused initialization
+
+---
+ src/libsystemd-terminal/term-screen.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/term-screen.c b/src/libsystemd-terminal/term-screen.c
+index 54bb04752c..5a053a31bd 100644
+--- a/src/libsystemd-terminal/term-screen.c
++++ b/src/libsystemd-terminal/term-screen.c
+@@ -4131,7 +4131,7 @@ int term_screen_feed_keyboard(term_screen *screen,
+                               unsigned int mods) {
+         _cleanup_free_ char *dyn = NULL;
+         static const size_t padding = 1;
+-        char buf[128], *start, *p = buf;
++        char buf[128], *start, *p;
+ 
+         assert_return(screen, -EINVAL);
+ 

@@ -1,0 +1,29 @@
+From 2ad8887a12aeff9108606bb31e1557103a3b95df Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Fri, 3 Oct 2014 03:58:51 +0200
+Subject: [PATCH] test-barrier: add checks after the barrier constructor
+
+Coverity seems to think that we can later end up with the "them"
+fd having a negative value. Even after a succesful barrier_create.
+Add some test to verify that the constructor went well. If coverity
+still complains then it must mean that it thinks the the value is
+overwritten later.
+---
+ src/test/test-barrier.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/test/test-barrier.c b/src/test/test-barrier.c
+index 36f27809ca..cb75f7314d 100644
+--- a/src/test/test-barrier.c
++++ b/src/test/test-barrier.c
+@@ -64,6 +64,10 @@ static void sleep_for(usec_t usecs) {
+                 pid_t pid1, pid2;                                       \
+                                                                         \
+                 assert_se(barrier_create(&b) >= 0);                     \
++                assert_se(b.me > 0);                                    \
++                assert_se(b.them > 0);                                  \
++                assert_se(b.pipe[0] > 0);                               \
++                assert_se(b.pipe[1] > 0);                               \
+                                                                         \
+                 pid1 = fork();                                          \
+                 assert_se(pid1 >= 0);                                   \

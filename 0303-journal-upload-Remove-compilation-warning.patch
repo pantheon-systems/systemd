@@ -1,0 +1,31 @@
+From b88a40a7e592e0a4a2e6e8eb1ed3721989ba5d0e Mon Sep 17 00:00:00 2001
+From: Philippe De Swert <philippedeswert@gmail.com>
+Date: Thu, 18 Sep 2014 18:56:55 +0300
+Subject: [PATCH] journal-upload: Remove compilation warning
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When compiling we see this curl warning popping up:
+src/journal-remote/journal-upload.c:194:17: warning: call to
+‘_curl_easy_setopt_err_error_buffer’ declared with attribute
+warning: curl_easy_setopt expects a char buffer of CURL_ERROR_SIZE
+as argument for this option [enabled by default]
+This patch removes the warning (which occurs twice).
+---
+ src/journal-remote/journal-upload.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal-remote/journal-upload.c b/src/journal-remote/journal-upload.c
+index 40c380aa9e..e16204484e 100644
+--- a/src/journal-remote/journal-upload.c
++++ b/src/journal-remote/journal-upload.c
+@@ -191,7 +191,7 @@ int start_upload(Uploader *u,
+                 easy_setopt(curl, CURLOPT_POST, 1L,
+                             LOG_ERR, return -EXFULL);
+ 
+-                easy_setopt(curl, CURLOPT_ERRORBUFFER, &u->error,
++                easy_setopt(curl, CURLOPT_ERRORBUFFER, u->error,
+                             LOG_ERR, return -EXFULL);
+ 
+                 /* set where to write to */

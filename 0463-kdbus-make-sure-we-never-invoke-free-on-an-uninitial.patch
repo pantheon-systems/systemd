@@ -1,0 +1,23 @@
+From 8e00bfc234f43f49b16aa0124fb4b3f1c8eae4ef Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 2 Oct 2014 20:36:58 +0200
+Subject: [PATCH] kdbus: make sure we never invoke free() on an uninitialized
+ pointer on OOM
+
+---
+ src/libsystemd/sd-bus/bus-kernel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-kernel.c b/src/libsystemd/sd-bus/bus-kernel.c
+index 236e8787b7..0e74f9136a 100644
+--- a/src/libsystemd/sd-bus/bus-kernel.c
++++ b/src/libsystemd/sd-bus/bus-kernel.c
+@@ -1411,7 +1411,7 @@ int bus_kernel_open_bus_fd(const char *bus, char **path) {
+ }
+ 
+ int bus_kernel_create_endpoint(const char *bus_name, const char *ep_name, char **ep_path) {
+-        _cleanup_free_ char *path;
++        _cleanup_free_ char *path = NULL;
+         struct kdbus_cmd_make *make;
+         struct kdbus_item *n;
+         size_t size;

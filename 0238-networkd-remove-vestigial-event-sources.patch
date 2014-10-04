@@ -1,0 +1,38 @@
+From 124f09e8125e1eae5b058b1f287e72c85a46d557 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 13 Sep 2014 14:10:33 -0400
+Subject: [PATCH] networkd: remove vestigial event sources
+
+187fe1db took advantage of floating events, but didn't remove pointers
+it made superfluous.
+---
+ src/network/networkd-manager.c | 2 --
+ src/network/networkd.h         | 2 --
+ 2 files changed, 4 deletions(-)
+
+diff --git a/src/network/networkd-manager.c b/src/network/networkd-manager.c
+index 5a4f93a06b..1614bc0091 100644
+--- a/src/network/networkd-manager.c
++++ b/src/network/networkd-manager.c
+@@ -146,8 +146,6 @@ void manager_free(Manager *m) {
+         udev_unref(m->udev);
+         sd_bus_unref(m->bus);
+         sd_event_source_unref(m->udev_event_source);
+-        sd_event_source_unref(m->sigterm_event_source);
+-        sd_event_source_unref(m->sigint_event_source);
+         sd_event_unref(m->event);
+ 
+         while ((link = hashmap_first(m->links)))
+diff --git a/src/network/networkd.h b/src/network/networkd.h
+index 7c5459b6ac..d4e79ab2f3 100644
+--- a/src/network/networkd.h
++++ b/src/network/networkd.h
+@@ -174,8 +174,6 @@ struct Manager {
+         struct udev *udev;
+         struct udev_monitor *udev_monitor;
+         sd_event_source *udev_event_source;
+-        sd_event_source *sigterm_event_source;
+-        sd_event_source *sigint_event_source;
+ 
+         char *state_file;
+ 

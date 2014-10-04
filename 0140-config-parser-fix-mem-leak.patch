@@ -1,0 +1,21 @@
+From 9e60277835e61597011358afcdbfb3dd712ce128 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Sun, 31 Aug 2014 23:13:12 +0200
+Subject: [PATCH] config-parser: fix mem leak
+
+---
+ src/shared/conf-parser.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index 439cfc58fc..ee6de653e1 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -710,6 +710,7 @@ int config_parse_strv(const char *unit,
+ 
+                 if (!utf8_is_valid(n)) {
+                         log_invalid_utf8(unit, LOG_ERR, filename, line, EINVAL, rvalue);
++                        free(n);
+                         continue;
+                 }
+ 

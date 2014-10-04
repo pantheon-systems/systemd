@@ -1,0 +1,42 @@
+From f44541bc934c6e2b02155559e9eeb17a13a09558 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 15 Aug 2014 16:33:03 +0200
+Subject: [PATCH] build: colorize gcc only if on tty
+
+Rather than forcing gcc to always produce colorized error messages
+whether on tty or not, enable automatic colorization by ensuring
+GCC_COLORS is set to a non-empty string.
+
+Doing it this way removes the need for workarounds in ~/.emacs or
+~/.vimrc for "M-x compile" or ":make", respectively, to work.
+---
+ Makefile.am  | 3 +++
+ configure.ac | 1 -
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index de40043c5b..5dc17f8fe7 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -24,6 +24,9 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+ AM_MAKEFLAGS = --no-print-directory
+ AUTOMAKE_OPTIONS = color-tests parallel-tests
+ 
++GCC_COLORS ?= 'ooh, shiny!'
++export GCC_COLORS
++
+ SUBDIRS = . po
+ 
+ # remove targets if the command fails
+diff --git a/configure.ac b/configure.ac
+index 99c01d2487..fb169042d8 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -190,7 +190,6 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+         -ffast-math \
+         -fno-common \
+         -fdiagnostics-show-option \
+-        -fdiagnostics-color \
+         -fno-strict-aliasing \
+         -fvisibility=hidden \
+         -ffunction-sections \

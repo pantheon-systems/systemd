@@ -1,0 +1,30 @@
+From 21978bc3c90ec192130a9ea9df62a75d1262b80c Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 11 Sep 2014 17:20:11 +0200
+Subject: [PATCH] terminal: fix uninitialized variable in strerror() log
+ message
+
+We currently print weird error-messages if xkbcommon fails (which cannot
+fail so far, but might in the future). Fix the uninitialized variable
+warnings by setting 'r' correctly.
+Thanks to Philippe De Swert for catching this (via coverity).
+---
+ src/libsystemd-terminal/idev-keyboard.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/idev-keyboard.c b/src/libsystemd-terminal/idev-keyboard.c
+index ab9e4811b3..d5936b7d23 100644
+--- a/src/libsystemd-terminal/idev-keyboard.c
++++ b/src/libsystemd-terminal/idev-keyboard.c
+@@ -770,8 +770,10 @@ static int keyboard_feed_evdev(idev_keyboard *k, idev_data *data) {
+                 /* TODO: update LEDs */
+         }
+ 
+-        if (num < 0)
++        if (num < 0) {
++                r = num;
+                 goto error;
++        }
+ 
+         r = keyboard_fill(k, &k->evdata, data->resync, ev->code, ev->value, num, keysyms);
+         if (r < 0)

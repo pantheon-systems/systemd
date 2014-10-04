@@ -1,0 +1,349 @@
+From 671174136525ddf208cdbe75d6d6bd159afa961f Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 11 Sep 2014 18:49:04 +0200
+Subject: [PATCH] udev: timeout - warn after a third of the timeout before
+ killing
+
+---
+ src/test/test-udev.c    |  4 ++--
+ src/udev/udev-event.c   | 40 ++++++++++++++++++++++++++++++----------
+ src/udev/udev-rules.c   |  8 +++++---
+ src/udev/udev.h         |  9 ++++++---
+ src/udev/udevadm-test.c |  2 +-
+ src/udev/udevd.c        | 40 +++++++++++++++++++++++++++-------------
+ 6 files changed, 71 insertions(+), 32 deletions(-)
+
+diff --git a/src/test/test-udev.c b/src/test/test-udev.c
+index 566a73a066..f085262b01 100644
+--- a/src/test/test-udev.c
++++ b/src/test/test-udev.c
+@@ -153,8 +153,8 @@ int main(int argc, char *argv[]) {
+                 }
+         }
+ 
+-        udev_event_execute_rules(event, USEC_PER_SEC, rules, &sigmask_orig);
+-        udev_event_execute_run(event, USEC_PER_SEC, NULL);
++        udev_event_execute_rules(event, 3 * USEC_PER_SEC, USEC_PER_SEC, rules, &sigmask_orig);
++        udev_event_execute_run(event, 3 * USEC_PER_SEC, USEC_PER_SEC, NULL);
+ out:
+         if (event != NULL && event->fd_signal >= 0)
+                 close(event->fd_signal);
+diff --git a/src/udev/udev-event.c b/src/udev/udev-event.c
+index a883edca07..e8d6676616 100644
+--- a/src/udev/udev-event.c
++++ b/src/udev/udev-event.c
+@@ -541,6 +541,7 @@ out:
+ 
+ static int spawn_wait(struct udev_event *event,
+                       usec_t timeout_usec,
++                      usec_t timeout_warn_usec,
+                       const char *cmd, pid_t pid) {
+         struct pollfd pfd[1];
+         int err = 0;
+@@ -550,6 +551,7 @@ static int spawn_wait(struct udev_event *event,
+ 
+         while (pid > 0) {
+                 int timeout;
++                int timeout_warn = 0;
+                 int fdcount;
+ 
+                 if (timeout_usec > 0) {
+@@ -558,13 +560,17 @@ static int spawn_wait(struct udev_event *event,
+                         age_usec = now(CLOCK_MONOTONIC) - event->birth_usec;
+                         if (age_usec >= timeout_usec)
+                                 timeout = 1000;
+-                        else
+-                                timeout = ((timeout_usec - age_usec) / USEC_PER_MSEC) + MSEC_PER_SEC;
++                        else {
++                                if (timeout_warn_usec > 0)
++                                        timeout_warn = ((timeout_warn_usec - age_usec) / USEC_PER_MSEC) + MSEC_PER_SEC;
++
++                                timeout = ((timeout_usec - timeout_warn_usec - age_usec) / USEC_PER_MSEC) + MSEC_PER_SEC;
++                        }
+                 } else {
+                         timeout = -1;
+                 }
+ 
+-                fdcount = poll(pfd, 1, timeout);
++                fdcount = poll(pfd, 1, timeout_warn);
+                 if (fdcount < 0) {
+                         if (errno == EINTR)
+                                 continue;
+@@ -573,8 +579,20 @@ static int spawn_wait(struct udev_event *event,
+                         goto out;
+                 }
+                 if (fdcount == 0) {
+-                        log_error("timeout: killing '%s' [%u]", cmd, pid);
+-                        kill(pid, SIGKILL);
++                        log_warning("slow: '%s' [%u]", cmd, pid);
++
++                        fdcount = poll(pfd, 1, timeout);
++                        if (fdcount < 0) {
++                                if (errno == EINTR)
++                                        continue;
++                                err = -errno;
++                                log_error("failed to poll: %m");
++                                goto out;
++                        }
++                        if (fdcount == 0) {
++                                log_error("timeout: killing '%s' [%u]", cmd, pid);
++                                kill(pid, SIGKILL);
++                        }
+                 }
+ 
+                 if (pfd[0].revents & POLLIN) {
+@@ -654,6 +672,7 @@ out:
+ 
+ int udev_event_spawn(struct udev_event *event,
+                      usec_t timeout_usec,
++                     usec_t timeout_warn_usec,
+                      const char *cmd, char **envp, const sigset_t *sigmask,
+                      char *result, size_t ressize) {
+         struct udev *udev = event->udev;
+@@ -730,7 +749,7 @@ int udev_event_spawn(struct udev_event *event,
+                            outpipe[READ_END], errpipe[READ_END],
+                            result, ressize);
+ 
+-                err = spawn_wait(event, timeout_usec, cmd, pid);
++                err = spawn_wait(event, timeout_usec, timeout_warn_usec, cmd, pid);
+         }
+ 
+ out:
+@@ -769,6 +788,7 @@ static int rename_netif(struct udev_event *event) {
+ 
+ void udev_event_execute_rules(struct udev_event *event,
+                               usec_t timeout_usec,
++                              usec_t timeout_warn_usec,
+                               struct udev_rules *rules, const sigset_t *sigmask) {
+         struct udev_device *dev = event->dev;
+ 
+@@ -783,7 +803,7 @@ void udev_event_execute_rules(struct udev_event *event,
+                 if (major(udev_device_get_devnum(dev)) != 0)
+                         udev_watch_end(event->udev, dev);
+ 
+-                udev_rules_apply_to_event(rules, event, timeout_usec, sigmask);
++                udev_rules_apply_to_event(rules, event, timeout_usec, timeout_warn_usec, sigmask);
+ 
+                 if (major(udev_device_get_devnum(dev)) != 0)
+                         udev_node_remove(dev);
+@@ -816,7 +836,7 @@ void udev_event_execute_rules(struct udev_event *event,
+                         }
+                 }
+ 
+-                udev_rules_apply_to_event(rules, event, timeout_usec, sigmask);
++                udev_rules_apply_to_event(rules, event, timeout_usec, timeout_warn_usec, sigmask);
+ 
+                 /* rename a new network interface, if needed */
+                 if (udev_device_get_ifindex(dev) > 0 && streq(udev_device_get_action(dev), "add") &&
+@@ -889,7 +909,7 @@ void udev_event_execute_rules(struct udev_event *event,
+         }
+ }
+ 
+-void udev_event_execute_run(struct udev_event *event, usec_t timeout_usec, const sigset_t *sigmask) {
++void udev_event_execute_run(struct udev_event *event, usec_t timeout_usec, usec_t timeout_warn_usec, const sigset_t *sigmask) {
+         struct udev_list_entry *list_entry;
+ 
+         udev_list_entry_foreach(list_entry, udev_list_get_entry(&event->run_list)) {
+@@ -912,7 +932,7 @@ void udev_event_execute_run(struct udev_event *event, usec_t timeout_usec, const
+ 
+                         udev_event_apply_format(event, cmd, program, sizeof(program));
+                         envp = udev_device_get_properties_envp(event->dev);
+-                        udev_event_spawn(event, timeout_usec, program, envp, sigmask, NULL, 0);
++                        udev_event_spawn(event, timeout_usec, timeout_warn_usec, program, envp, sigmask, NULL, 0);
+                 }
+         }
+ }
+diff --git a/src/udev/udev-rules.c b/src/udev/udev-rules.c
+index 9514dde751..db95442fda 100644
+--- a/src/udev/udev-rules.c
++++ b/src/udev/udev-rules.c
+@@ -615,6 +615,7 @@ static int import_file_into_properties(struct udev_device *dev, const char *file
+ 
+ static int import_program_into_properties(struct udev_event *event,
+                                           usec_t timeout_usec,
++                                          usec_t timeout_warn_usec,
+                                           const char *program, const sigset_t *sigmask) {
+         struct udev_device *dev = event->dev;
+         char **envp;
+@@ -623,7 +624,7 @@ static int import_program_into_properties(struct udev_event *event,
+         int err;
+ 
+         envp = udev_device_get_properties_envp(dev);
+-        err = udev_event_spawn(event, timeout_usec, program, envp, sigmask, result, sizeof(result));
++        err = udev_event_spawn(event, timeout_usec, timeout_warn_usec, program, envp, sigmask, result, sizeof(result));
+         if (err < 0)
+                 return err;
+ 
+@@ -1862,6 +1863,7 @@ enum escape_type {
+ int udev_rules_apply_to_event(struct udev_rules *rules,
+                               struct udev_event *event,
+                               usec_t timeout_usec,
++                              usec_t timeout_warn_usec,
+                               const sigset_t *sigmask) {
+         struct token *cur;
+         struct token *rule;
+@@ -2070,7 +2072,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules,
+                                   rules_str(rules, rule->rule.filename_off),
+                                   rule->rule.filename_line);
+ 
+-                        if (udev_event_spawn(event, timeout_usec, program, envp, sigmask, result, sizeof(result)) < 0) {
++                        if (udev_event_spawn(event, timeout_usec, timeout_warn_usec, program, envp, sigmask, result, sizeof(result)) < 0) {
+                                 if (cur->key.op != OP_NOMATCH)
+                                         goto nomatch;
+                         } else {
+@@ -2106,7 +2108,7 @@ int udev_rules_apply_to_event(struct udev_rules *rules,
+                                   rules_str(rules, rule->rule.filename_off),
+                                   rule->rule.filename_line);
+ 
+-                        if (import_program_into_properties(event, timeout_usec, import, sigmask) != 0)
++                        if (import_program_into_properties(event, timeout_usec, timeout_warn_usec, import, sigmask) != 0)
+                                 if (cur->key.op != OP_NOMATCH)
+                                         goto nomatch;
+                         break;
+diff --git a/src/udev/udev.h b/src/udev/udev.h
+index ed01da30e4..765ba9e86d 100644
+--- a/src/udev/udev.h
++++ b/src/udev/udev.h
+@@ -73,7 +73,8 @@ struct udev_rules;
+ struct udev_rules *udev_rules_new(struct udev *udev, int resolve_names);
+ struct udev_rules *udev_rules_unref(struct udev_rules *rules);
+ bool udev_rules_check_timestamp(struct udev_rules *rules);
+-int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event, usec_t timeout_usec, const sigset_t *sigmask);
++int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event, usec_t timeout_usec, usec_t timeout_warn_usec,
++                              const sigset_t *sigmask);
+ int udev_rules_apply_static_dev_perms(struct udev_rules *rules);
+ 
+ /* udev-event.c */
+@@ -84,10 +85,12 @@ int udev_event_apply_subsys_kernel(struct udev_event *event, const char *string,
+                                    char *result, size_t maxsize, int read_value);
+ int udev_event_spawn(struct udev_event *event,
+                      usec_t timeout_usec,
++                     usec_t timeout_warn_usec,
+                      const char *cmd, char **envp, const sigset_t *sigmask,
+                      char *result, size_t ressize);
+-void udev_event_execute_rules(struct udev_event *event, usec_t timeout_usec, struct udev_rules *rules, const sigset_t *sigset);
+-void udev_event_execute_run(struct udev_event *event, usec_t timeout_usec, const sigset_t *sigset);
++void udev_event_execute_rules(struct udev_event *event, usec_t timeout_usec, usec_t timeout_warn_usec,
++                              struct udev_rules *rules, const sigset_t *sigset);
++void udev_event_execute_run(struct udev_event *event, usec_t timeout_usec, usec_t timeout_warn_usec, const sigset_t *sigset);
+ int udev_build_argv(struct udev *udev, char *cmd, int *argc, char *argv[]);
+ 
+ /* udev-watch.c */
+diff --git a/src/udev/udevadm-test.c b/src/udev/udevadm-test.c
+index 809adb6d9a..4738b611c3 100644
+--- a/src/udev/udevadm-test.c
++++ b/src/udev/udevadm-test.c
+@@ -136,7 +136,7 @@ static int adm_test(struct udev *udev, int argc, char *argv[]) {
+                 goto out;
+         }
+ 
+-        udev_event_execute_rules(event, 60 * USEC_PER_SEC, rules, &sigmask_orig);
++        udev_event_execute_rules(event, 60 * USEC_PER_SEC, 20 * USEC_PER_SEC, rules, &sigmask_orig);
+ 
+         udev_list_entry_foreach(entry, udev_device_get_properties_list_entry(dev))
+                 printf("%s=%s\n", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index a7f8cbdf5b..e54bfec3b3 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -75,6 +75,7 @@ static int children;
+ static int children_max;
+ static int exec_delay;
+ static usec_t event_timeout_usec = 180 * USEC_PER_SEC;
++static usec_t event_timeout_warn_usec = 180 * USEC_PER_SEC / 3;
+ static sigset_t sigmask_orig;
+ static UDEV_LIST(event_list);
+ static UDEV_LIST(worker_list);
+@@ -125,6 +126,7 @@ struct worker {
+         enum worker_state state;
+         struct event *event;
+         usec_t event_start_usec;
++        bool event_warned;
+ };
+ 
+ /* passed from worker to main process */
+@@ -307,9 +309,9 @@ static void worker_new(struct event *event) {
+                         udev_event->rtnl = rtnl;
+ 
+                         /* apply rules, create node, symlinks */
+-                        udev_event_execute_rules(udev_event, event_timeout_usec, rules, &sigmask_orig);
++                        udev_event_execute_rules(udev_event, event_timeout_usec, event_timeout_warn_usec, rules, &sigmask_orig);
+ 
+-                        udev_event_execute_run(udev_event, event_timeout_usec, &sigmask_orig);
++                        udev_event_execute_run(udev_event, event_timeout_usec, event_timeout_warn_usec, &sigmask_orig);
+ 
+                         /* in case rtnl was initialized */
+                         rtnl = sd_rtnl_ref(udev_event->rtnl);
+@@ -403,6 +405,7 @@ out:
+                 worker->pid = pid;
+                 worker->state = WORKER_RUNNING;
+                 worker->event_start_usec = now(CLOCK_MONOTONIC);
++                worker->event_warned = false;
+                 worker->event = event;
+                 event->state = EVENT_RUNNING;
+                 udev_list_node_append(&worker->node, &worker_list);
+@@ -433,6 +436,7 @@ static void event_run(struct event *event) {
+                 worker->event = event;
+                 worker->state = WORKER_RUNNING;
+                 worker->event_start_usec = now(CLOCK_MONOTONIC);
++                worker->event_warned = false;
+                 event->state = EVENT_RUNNING;
+                 return;
+         }
+@@ -986,6 +990,7 @@ static void kernel_cmdline_options(struct udev *udev) {
+                         exec_delay = strtoul(opt + 16, NULL, 0);
+                 } else if (startswith(opt, "udev.event-timeout=")) {
+                         event_timeout_usec = strtoul(opt + 16, NULL, 0) * USEC_PER_SEC;
++                        event_timeout_warn_usec = (event_timeout_usec / 3) ? : 1;
+                 }
+ 
+                 free(s);
+@@ -1048,6 +1053,7 @@ int main(int argc, char *argv[]) {
+                         break;
+                 case 't':
+                         event_timeout_usec = strtoul(optarg, NULL, 0) * USEC_PER_SEC;
++                        event_timeout_warn_usec = (event_timeout_usec / 3) ? : 1;
+                         break;
+                 case 'D':
+                         debug = true;
+@@ -1383,21 +1389,29 @@ int main(int argc, char *argv[]) {
+                         /* check for hanging events */
+                         udev_list_node_foreach(loop, &worker_list) {
+                                 struct worker *worker = node_to_worker(loop);
++                                usec_t ts;
+ 
+                                 if (worker->state != WORKER_RUNNING)
+                                         continue;
+ 
+-                                if ((now(CLOCK_MONOTONIC) - worker->event_start_usec) > event_timeout_usec) {
+-                                        log_error("worker [%u] %s timeout; kill it", worker->pid, worker->event->devpath);
+-                                        kill(worker->pid, SIGKILL);
+-                                        worker->state = WORKER_KILLED;
+-
+-                                        /* drop reference taken for state 'running' */
+-                                        worker_unref(worker);
+-                                        log_error("seq %llu '%s' killed", udev_device_get_seqnum(worker->event->dev), worker->event->devpath);
+-                                        worker->event->exitcode = -64;
+-                                        event_queue_delete(worker->event);
+-                                        worker->event = NULL;
++                                ts = now(CLOCK_MONOTONIC);
++
++                                if ((ts - worker->event_start_usec) > event_timeout_warn_usec) {
++                                        if ((ts - worker->event_start_usec) > event_timeout_usec) {
++                                                log_error("worker [%u] %s timeout; kill it", worker->pid, worker->event->devpath);
++                                                kill(worker->pid, SIGKILL);
++                                                worker->state = WORKER_KILLED;
++
++                                                /* drop reference taken for state 'running' */
++                                                worker_unref(worker);
++                                                log_error("seq %llu '%s' killed", udev_device_get_seqnum(worker->event->dev), worker->event->devpath);
++                                                worker->event->exitcode = -64;
++                                                event_queue_delete(worker->event);
++                                                worker->event = NULL;
++                                        } else if (!worker->event_warned) {
++                                                log_warning("worker [%u] %s is taking a long time", worker->pid, worker->event->devpath);
++                                                worker->event_warned = true;
++                                        }
+                                 }
+                         }
+ 

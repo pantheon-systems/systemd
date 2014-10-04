@@ -1,0 +1,30 @@
+From b1604b341bcd190d67894f416d842990a082a4a4 Mon Sep 17 00:00:00 2001
+From: Andreas Henriksson <andreas@fatal.se>
+Date: Thu, 18 Sep 2014 17:52:54 +0200
+Subject: [PATCH] journal-remote: check return code of sd_event_default
+
+Handle sd_event_default returning error and bail out properly
+as done in every other caller of this function.
+
+Found by coverity. Fixes: CID#1238957
+---
+ src/journal-remote/journal-remote.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal-remote/journal-remote.c b/src/journal-remote/journal-remote.c
+index 12de820330..f06c2cb249 100644
+--- a/src/journal-remote/journal-remote.c
++++ b/src/journal-remote/journal-remote.c
+@@ -808,7 +808,11 @@ static int remoteserver_init(RemoteServer *s,
+                 return -EINVAL;
+         }
+ 
+-        sd_event_default(&s->events);
++        r = sd_event_default(&s->events);
++        if (r < 0) {
++                log_error("Failed to allocate event loop: %s", strerror(-r));
++                return r;
++        }
+ 
+         setup_signals(s);
+ 

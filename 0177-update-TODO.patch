@@ -1,0 +1,22 @@
+From 3bcde97e8502c48b53f7420e2433ca68e601662d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 5 Sep 2014 21:49:23 +0200
+Subject: [PATCH] update TODO
+
+---
+ TODO | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/TODO b/TODO
+index 380fd494f2..7029769770 100644
+--- a/TODO
++++ b/TODO
+@@ -26,6 +26,8 @@ External:
+ 
+ Features:
+ 
++* man: maybe use the word "inspect" rather than "introspect"?
++
+ * introduce machines.target to order after all nspawn instances
+ 
+ * systemd-nspawn@.service should fail if some nspawn arg is invalid, with Type=notify

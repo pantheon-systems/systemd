@@ -1,0 +1,210 @@
+From bb7dd0b04a6e89674100476eed0bbd05c6a4cbd8 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <zonque@gmail.com>
+Date: Mon, 18 Aug 2014 19:55:32 +0200
+Subject: [PATCH] bus: add kdbus endpoint types
+
+Add types to describe endpoints and associated policy entries,
+and add a BusEndpoint instace to ExecContext.
+---
+ Makefile.am             |  2 ++
+ src/core/bus-endpoint.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++++
+ src/core/bus-endpoint.h | 42 +++++++++++++++++++++++
+ src/core/execute.c      |  3 ++
+ src/core/execute.h      |  4 +++
+ 5 files changed, 141 insertions(+)
+ create mode 100644 src/core/bus-endpoint.c
+ create mode 100644 src/core/bus-endpoint.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 68a78963c1..35c877fe2a 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1028,6 +1028,8 @@ libsystemd_core_la_SOURCES = \
+ 	src/core/busname.h \
+ 	src/core/bus-common.c \
+ 	src/core/bus-common.h \
++	src/core/bus-endpoint.c \
++	src/core/bus-endpoint.h \
+ 	src/core/target.c \
+ 	src/core/target.h \
+ 	src/core/snapshot.c \
+diff --git a/src/core/bus-endpoint.c b/src/core/bus-endpoint.c
+new file mode 100644
+index 0000000000..8d11974db4
+--- /dev/null
++++ b/src/core/bus-endpoint.c
+@@ -0,0 +1,90 @@
++/***
++  This file is part of systemd.
++
++  Copyright 2014 Daniel Mack
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <stdlib.h>
++
++#include "bus-endpoint.h"
++
++int bus_endpoint_new(BusEndpoint **ep)
++{
++        assert(ep);
++
++        *ep = new0(BusEndpoint, 1);
++        if (!*ep)
++                return -ENOMEM;
++
++        return 0;
++}
++
++int bus_endpoint_add_policy(BusEndpoint *ep, const char *name, BusPolicyAccess access)
++{
++        _cleanup_free_ BusEndpointPolicy *po;
++        _cleanup_free_ char *key;
++        int r;
++
++        assert(ep);
++        assert(name);
++        assert(access > _BUS_POLICY_ACCESS_INVALID && access < _BUS_POLICY_ACCESS_MAX);
++
++        /* check if we already have this name in the policy list. If we do, see if the new access level
++         * is higher than the exising one, and upgrade the entry in that case. Otherwise, do nothing.
++         */
++
++        if (ep->policy_hash) {
++                po = hashmap_get(ep->policy_hash, name);
++                if (po) {
++                        if (po->access < access)
++                                po->access = access;
++
++                        return 0;
++                }
++        } else {
++                ep->policy_hash = hashmap_new(string_hash_func, string_compare_func);
++                if (!ep->policy_hash)
++                        return -ENOMEM;
++        }
++
++        po = new0(BusEndpointPolicy, 1);
++        if (!po)
++                return -ENOMEM;
++
++        key = strdup(name);
++        if (!key)
++                return -ENOMEM;
++
++        po->name = key;
++        po->access = access;
++
++        r = hashmap_put(ep->policy_hash, key, po);
++        if (r < 0)
++                return r;
++
++        po = NULL;
++        key = NULL;
++        return 0;
++}
++
++void bus_endpoint_free(BusEndpoint *endpoint)
++{
++        if (!endpoint)
++                return;
++
++        hashmap_free_free_free(endpoint->policy_hash);
++        free(endpoint);
++}
+diff --git a/src/core/bus-endpoint.h b/src/core/bus-endpoint.h
+new file mode 100644
+index 0000000000..2c5415f34e
+--- /dev/null
++++ b/src/core/bus-endpoint.h
+@@ -0,0 +1,42 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++#pragma once
++
++/***
++  This file is part of systemd.
++
++  Copyright 2014 Daniel Mack
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++typedef struct BusEndpoint BusEndpoint;
++typedef struct BusEndpointPolicy BusEndpointPolicy;
++
++#include "bus-common.h"
++#include "hashmap.h"
++
++struct BusEndpointPolicy {
++        char *name;
++        BusPolicyAccess access;
++};
++
++struct BusEndpoint {
++        Hashmap *policy_hash;
++};
++
++int bus_endpoint_new(BusEndpoint **ep);
++void bus_endpoint_free(BusEndpoint *endpoint);
++
++int bus_endpoint_add_policy(BusEndpoint *ep, const char *name, BusPolicyAccess access);
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 0a5914759f..a88e1b1953 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1908,6 +1908,9 @@ void exec_context_done(ExecContext *c) {
+ 
+         strv_free(c->runtime_directory);
+         c->runtime_directory = NULL;
++
++        bus_endpoint_free(c->bus_endpoint);
++        c->bus_endpoint = NULL;
+ }
+ 
+ int exec_context_destroy_runtime_directory(ExecContext *c, const char *runtime_prefix) {
+diff --git a/src/core/execute.h b/src/core/execute.h
+index f31f0c9f27..e3cebfd72c 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -41,6 +41,7 @@ typedef struct ExecParameters ExecParameters;
+ #include "fdset.h"
+ #include "missing.h"
+ #include "namespace.h"
++#include "bus-endpoint.h"
+ 
+ typedef enum ExecInput {
+         EXEC_INPUT_NULL,
+@@ -188,6 +189,9 @@ struct ExecContext {
+         bool ioprio_set:1;
+         bool cpu_sched_set:1;
+         bool no_new_privileges_set:1;
++
++        /* custom dbus enpoint */
++        BusEndpoint *bus_endpoint;
+ };
+ 
+ #include "cgroup.h"

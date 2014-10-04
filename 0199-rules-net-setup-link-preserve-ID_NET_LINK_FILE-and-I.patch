@@ -1,0 +1,24 @@
+From e4d7c49050769877c7f10184bbe2a1e77d0b5333 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 8 Sep 2014 17:16:24 +0200
+Subject: [PATCH] rules: net-setup-link - preserve ID_NET_LINK_FILE and
+ ID_NET_NAME after MOVE
+
+---
+ rules/80-net-setup-link.rules | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/rules/80-net-setup-link.rules b/rules/80-net-setup-link.rules
+index f390fcb0dd..27c43b9437 100644
+--- a/rules/80-net-setup-link.rules
++++ b/rules/80-net-setup-link.rules
+@@ -4,7 +4,8 @@ SUBSYSTEM!="net", GOTO="net_setup_link_end"
+ 
+ IMPORT{builtin}="path_id"
+ 
+-ACTION=="move", IMPORT{db}="ID_NET_DRIVER"
++ACTION=="move", IMPORT{db}="ID_NET_DRIVER", IMPORT{db}="ID_NET_LINK_FILE",
++IMPORT{db}="ID_NET_NAME"
+ 
+ ACTION!="add", GOTO="net_setup_link_end"
+ 

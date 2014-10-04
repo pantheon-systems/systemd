@@ -1,0 +1,47 @@
+From 24a5d6b04e17d447cf122f02a8a2dedd843cce45 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 26 Aug 2014 21:03:20 +0200
+Subject: [PATCH] util: make sure reset_all_signal_handlers() continues with
+ all other signal handlers when one sigaction() fails
+
+After all, we usually don't check for failures here, and it is better to
+do as much as we can...
+---
+ src/shared/util.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index fc6f668726..4af2d3ceba 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -937,7 +937,7 @@ int readlink_and_canonicalize(const char *p, char **r) {
+ }
+ 
+ int reset_all_signal_handlers(void) {
+-        int sig;
++        int sig, r = 0;
+ 
+         for (sig = 1; sig < _NSIG; sig++) {
+                 struct sigaction sa = {
+@@ -945,17 +945,18 @@ int reset_all_signal_handlers(void) {
+                         .sa_flags = SA_RESTART,
+                 };
+ 
++                /* These two cannot be caught... */
+                 if (sig == SIGKILL || sig == SIGSTOP)
+                         continue;
+ 
+                 /* On Linux the first two RT signals are reserved by
+                  * glibc, and sigaction() will return EINVAL for them. */
+                 if ((sigaction(sig, &sa, NULL) < 0))
+-                        if (errno != EINVAL)
+-                                return -errno;
++                        if (errno != EINVAL && r == 0)
++                                r = -errno;
+         }
+ 
+-        return 0;
++        return r;
+ }
+ 
+ char *strstrip(char *s) {

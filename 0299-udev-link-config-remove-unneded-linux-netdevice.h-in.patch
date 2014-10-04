@@ -1,0 +1,21 @@
+From 58c9846d32e55799b6e4607136a34e2727c919ac Mon Sep 17 00:00:00 2001
+From: Emil Renner Berthing <systemd@esmil.dk>
+Date: Thu, 18 Sep 2014 15:24:39 +0200
+Subject: [PATCH] udev: link-config: remove unneded linux/netdevice.h include
+
+---
+ src/udev/net/link-config.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/udev/net/link-config.c b/src/udev/net/link-config.c
+index ee2865a863..25e3cc8dfb 100644
+--- a/src/udev/net/link-config.c
++++ b/src/udev/net/link-config.c
+@@ -20,7 +20,6 @@
+ ***/
+ 
+ #include <netinet/ether.h>
+-#include <linux/netdevice.h>
+ 
+ #include "sd-id128.h"
+ 

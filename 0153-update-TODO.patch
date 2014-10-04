@@ -1,0 +1,27 @@
+From 64e84dbb14463afe63418357e64a17ad5b04040b Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Wed, 3 Sep 2014 13:59:59 +0200
+Subject: [PATCH] update TODO
+
+Yum was creating <container>/var/run/yum.pid and hence this directory
+was created before filesystem package could create the symlink
+/var/run -> /run.
+This should be now fixed in yum.
+---
+ TODO | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/TODO b/TODO
+index 221b39f1a9..299b938c44 100644
+--- a/TODO
++++ b/TODO
+@@ -11,9 +11,6 @@ Bugfixes:
+ * properly handle .mount unit state tracking when two mount points are stacked one on top of another on the exact same mount point.
+ 
+ External:
+-* Fedora: when installing fedora with yum --installroot /var/run is a directory, not a symlink
+-   https://bugzilla.redhat.com/show_bug.cgi?id=975864
+-
+ * Fedora: add an rpmlint check that verifies that all unit files in the RPM are listed in %systemd_post macros.
+ 
+ * Fedora: post FPC ticket to move add %tmpfiles_create to the packaging guidelines

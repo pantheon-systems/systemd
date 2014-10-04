@@ -1,0 +1,146 @@
+From f2a15d86ccd0729e1442f40679cd393417e1e177 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Mon, 22 Sep 2014 17:37:21 +0200
+Subject: [PATCH] terminal: allow user-context to be retrieved/stored
+
+Add "userdata" storage to a bunch of external objects, namely displays and
+sessions. Furthermore, add some property retrieval helpers.
+
+This is required if we want external API users to not duplicate our own
+object hashtables, but retrieve context from the objects themselves.
+---
+ src/libsystemd-terminal/grdev-internal.h   |  1 +
+ src/libsystemd-terminal/grdev.c            | 18 ++++++++++++++++++
+ src/libsystemd-terminal/grdev.h            |  5 +++++
+ src/libsystemd-terminal/sysview-internal.h |  1 +
+ src/libsystemd-terminal/sysview.c          | 18 ++++++++++++++++++
+ src/libsystemd-terminal/sysview.h          |  4 ++++
+ 6 files changed, 47 insertions(+)
+
+diff --git a/src/libsystemd-terminal/grdev-internal.h b/src/libsystemd-terminal/grdev-internal.h
+index f5915b16e8..ee182695ce 100644
+--- a/src/libsystemd-terminal/grdev-internal.h
++++ b/src/libsystemd-terminal/grdev-internal.h
+@@ -94,6 +94,7 @@ DEFINE_TRIVIAL_CLEANUP_FUNC(grdev_tile*, grdev_tile_free);
+ struct grdev_display {
+         grdev_session *session;
+         char *name;
++        void *userdata;
+ 
+         size_t n_leafs;
+         grdev_tile *tile;
+diff --git a/src/libsystemd-terminal/grdev.c b/src/libsystemd-terminal/grdev.c
+index 43d0c7c9bf..e34112ee7c 100644
+--- a/src/libsystemd-terminal/grdev.c
++++ b/src/libsystemd-terminal/grdev.c
+@@ -282,6 +282,24 @@ grdev_display *grdev_display_free(grdev_display *display) {
+         return NULL;
+ }
+ 
++void grdev_display_set_userdata(grdev_display *display, void *userdata) {
++        assert(display);
++
++        display->userdata = userdata;
++}
++
++void *grdev_display_get_userdata(grdev_display *display) {
++        assert_return(display, NULL);
++
++        return display->userdata;
++}
++
++const char *grdev_display_get_name(grdev_display *display) {
++        assert_return(display, NULL);
++
++        return display->name;
++}
++
+ bool grdev_display_is_enabled(grdev_display *display) {
+         return display && display->enabled;
+ }
+diff --git a/src/libsystemd-terminal/grdev.h b/src/libsystemd-terminal/grdev.h
+index 9924a257b6..5f745aaad4 100644
+--- a/src/libsystemd-terminal/grdev.h
++++ b/src/libsystemd-terminal/grdev.h
+@@ -108,6 +108,11 @@ struct grdev_display_target {
+         const grdev_fb *fb;
+ };
+ 
++void grdev_display_set_userdata(grdev_display *display, void *userdata);
++void *grdev_display_get_userdata(grdev_display *display);
++
++const char *grdev_display_get_name(grdev_display *display);
++
+ bool grdev_display_is_enabled(grdev_display *display);
+ void grdev_display_enable(grdev_display *display);
+ void grdev_display_disable(grdev_display *display);
+diff --git a/src/libsystemd-terminal/sysview-internal.h b/src/libsystemd-terminal/sysview-internal.h
+index 9299fabb82..d9f7fe3301 100644
+--- a/src/libsystemd-terminal/sysview-internal.h
++++ b/src/libsystemd-terminal/sysview-internal.h
+@@ -64,6 +64,7 @@ struct sysview_session {
+         sysview_seat *seat;
+         char *name;
+         char *path;
++        void *userdata;
+ 
+         sd_bus_slot *slot_take_control;
+ 
+diff --git a/src/libsystemd-terminal/sysview.c b/src/libsystemd-terminal/sysview.c
+index 5b623c1e6c..208c6ce25c 100644
+--- a/src/libsystemd-terminal/sysview.c
++++ b/src/libsystemd-terminal/sysview.c
+@@ -104,6 +104,12 @@ sysview_device *sysview_device_free(sysview_device *device) {
+         return NULL;
+ }
+ 
++const char *sysview_device_get_name(sysview_device *device) {
++        assert_return(device, NULL);
++
++        return device->name;
++}
++
+ unsigned int sysview_device_get_type(sysview_device *device) {
+         assert_return(device, (unsigned)-1);
+ 
+@@ -243,6 +249,18 @@ sysview_session *sysview_session_free(sysview_session *session) {
+         return NULL;
+ }
+ 
++void sysview_session_set_userdata(sysview_session *session, void *userdata) {
++        assert(session);
++
++        session->userdata = userdata;
++}
++
++void *sysview_session_get_userdata(sysview_session *session) {
++        assert_return(session, NULL);
++
++        return session->userdata;
++}
++
+ const char *sysview_session_get_name(sysview_session *session) {
+         assert_return(session, NULL);
+ 
+diff --git a/src/libsystemd-terminal/sysview.h b/src/libsystemd-terminal/sysview.h
+index 4d800f8d69..f691e492d5 100644
+--- a/src/libsystemd-terminal/sysview.h
++++ b/src/libsystemd-terminal/sysview.h
+@@ -116,6 +116,7 @@ enum {
+         SYSVIEW_DEVICE_CNT
+ };
+ 
++const char *sysview_device_get_name(sysview_device *device);
+ unsigned int sysview_device_get_type(sysview_device *device);
+ struct udev_device *sysview_device_get_ud(sysview_device *device);
+ 
+@@ -123,6 +124,9 @@ struct udev_device *sysview_device_get_ud(sysview_device *device);
+  * Sessions
+  */
+ 
++void sysview_session_set_userdata(sysview_session *session, void *userdata);
++void *sysview_session_get_userdata(sysview_session *session);
++
+ const char *sysview_session_get_name(sysview_session *session);
+ 
+ int sysview_session_take_control(sysview_session *session);

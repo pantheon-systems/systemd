@@ -1,0 +1,34 @@
+From 3d1b90bd7fb562fdb3d15e0d7750ae0c36bc15b6 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 25 Sep 2014 18:16:04 +0200
+Subject: [PATCH] delta: warn if diff failed
+
+Found by Coverity. Fixes CID #1237541.
+---
+ src/delta/delta.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/delta/delta.c b/src/delta/delta.c
+index 91f8592b40..2fdbeeae81 100644
+--- a/src/delta/delta.c
++++ b/src/delta/delta.c
+@@ -159,7 +159,7 @@ static int notify_override_unchanged(const char *f) {
+ 
+ static int found_override(const char *top, const char *bottom) {
+         _cleanup_free_ char *dest = NULL;
+-        int k;
++        int k, r;
+         pid_t pid;
+ 
+         assert(top);
+@@ -194,7 +194,9 @@ static int found_override(const char *top, const char *bottom) {
+                 _exit(1);
+         }
+ 
+-        wait_for_terminate(pid, NULL);
++        r = wait_for_terminate(pid, NULL);
++        if (r < 0)
++                log_warning("Failed to wait for diff: %s", strerror(-r));
+ 
+         putchar('\n');
+ 

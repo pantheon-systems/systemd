@@ -1,0 +1,28 @@
+From b4170aed36e667e52ce4a353bda1964e3872ab34 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Tue, 23 Sep 2014 13:38:09 +0200
+Subject: [PATCH] terminal: fix tile-offset calculation
+
+Binary operators with two pointers as arguments always operate on
+object-size, not bytes. That is, "int *a, *b", (a - b) calculates the
+number of integers between b and a, not the number of bytes.
+
+Fix our cache-offset calculation to not use sizeof() with full-ptr
+arithmetic.
+---
+ src/libsystemd-terminal/grdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/grdev.c b/src/libsystemd-terminal/grdev.c
+index c5ea524c69..80a71beeb9 100644
+--- a/src/libsystemd-terminal/grdev.c
++++ b/src/libsystemd-terminal/grdev.c
+@@ -345,7 +345,7 @@ const grdev_display_target *grdev_display_next_target(grdev_display *display, co
+                 assert(cache->pipe->tile->display == display);
+                 assert(display->pipes >= cache);
+ 
+-                idx = (cache - display->pipes) / sizeof(*cache) + 1;
++                idx = cache - display->pipes + 1;
+         } else {
+                 idx = 0;
+         }

@@ -1,0 +1,22 @@
+From 7889087d6ecf865f332eb325d8f68ff49be8277e Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 3 Oct 2014 08:43:53 +0200
+Subject: [PATCH] man: fix sd_event_set_name compilation
+
+---
+ man/sd_event_set_name.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/sd_event_set_name.xml b/man/sd_event_set_name.xml
+index 406d124972..551eef3de7 100644
+--- a/man/sd_event_set_name.xml
++++ b/man/sd_event_set_name.xml
+@@ -21,7 +21,7 @@ You should have received a copy of the GNU Lesser General Public License
+ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ -->
+ 
+-<refentry id="sd_event_get_fd" conditional="ENABLE_KDBUS"
++<refentry id="sd_event_set_name" conditional="ENABLE_KDBUS"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+ 
+   <refentryinfo>

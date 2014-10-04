@@ -1,0 +1,23 @@
+From 07610e108e2d3f046da683a3a69c4d5cccd2cf8e Mon Sep 17 00:00:00 2001
+From: Miroslav Lichvar <mlichvar@redhat.com>
+Date: Wed, 27 Aug 2014 16:47:17 +0200
+Subject: [PATCH] timesyncd: check if stratum is valid
+
+---
+ src/timesync/timesyncd-manager.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/timesync/timesyncd-manager.c b/src/timesync/timesyncd-manager.c
+index d80c72ff5c..60f39c638d 100644
+--- a/src/timesync/timesyncd-manager.c
++++ b/src/timesync/timesyncd-manager.c
+@@ -574,7 +574,8 @@ static int manager_receive_response(sd_event_source *source, int fd, uint32_t re
+                 return manager_connect(m);
+         }
+ 
+-        if (NTP_FIELD_LEAP(ntpmsg.field) == NTP_LEAP_NOTINSYNC) {
++        if (NTP_FIELD_LEAP(ntpmsg.field) == NTP_LEAP_NOTINSYNC ||
++            ntpmsg.stratum == 0 || ntpmsg.stratum >= 16) {
+                 log_debug("Server is not synchronized. Disconnecting.");
+                 return manager_connect(m);
+         }

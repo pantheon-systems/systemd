@@ -1,0 +1,23 @@
+From c00524c9cc7fb498c7244350e25823b8352f078c Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Fri, 19 Sep 2014 23:02:00 +0200
+Subject: [PATCH] nspawn: don't try to create veth link with too long ifname
+
+Reported by: James Lott <james@lottspot.com>
+---
+ src/nspawn/nspawn.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 5af89c9b32..c22d0cb598 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -1657,7 +1657,7 @@ static int setup_veth(pid_t pid, char iface_name[IFNAMSIZ], int *ifi) {
+ 
+         /* Use two different interface name prefixes depending whether
+          * we are in bridge mode or not. */
+-        snprintf(iface_name, IFNAMSIZ, "%s-%s",
++        snprintf(iface_name, IFNAMSIZ - 1, "%s-%s",
+                  arg_network_bridge ? "vb" : "ve", arg_machine);
+ 
+         r = generate_mac(&mac_container, CONTAINER_HASH_KEY);

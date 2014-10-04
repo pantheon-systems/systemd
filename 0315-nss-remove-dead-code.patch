@@ -1,0 +1,63 @@
+From 66a16e7e9fc501d371b57cbe2ae5d130fe930c6d Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Thu, 18 Sep 2014 23:55:46 +0200
+Subject: [PATCH] nss: remove dead code
+
+c > 0 is already guaranteed from earlier checks.
+
+We go from
+
+ms = ALIGN(l+1) +
+        sizeof(char*) +
+        (c > 0 ? c : 1) * ALIGN(alen) +
+        (c > 0 ? c+1 : 2) * sizeof(char*);
+
+to
+
+ms = ALIGN(l+1) +
+        sizeof(char*) +
+        c * ALIGN(alen) +
+        (c+1) * sizeof(char*);
+
+to
+
+ms = ALIGN(l+1) + c * ALIGN(alen) + (c+2) * sizeof(char*);
+
+Found by coverity. Fixes: CID#1237570 and CID#1237610
+---
+ src/nss-mymachines/nss-mymachines.c | 5 +----
+ src/nss-resolve/nss-resolve.c       | 5 +----
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/src/nss-mymachines/nss-mymachines.c b/src/nss-mymachines/nss-mymachines.c
+index abeb8253c3..9476ad1694 100644
+--- a/src/nss-mymachines/nss-mymachines.c
++++ b/src/nss-mymachines/nss-mymachines.c
+@@ -289,10 +289,7 @@ enum nss_status _nss_mymachines_gethostbyname3_r(
+         alen = FAMILY_ADDRESS_SIZE(af);
+         l = strlen(name);
+ 
+-        ms = ALIGN(l+1) +
+-                sizeof(char*) +
+-                (c > 0 ? c : 1) * ALIGN(alen) +
+-                (c > 0 ? c+1 : 2) * sizeof(char*);
++        ms = ALIGN(l+1) + c * ALIGN(alen) + (c+2) * sizeof(char*);
+ 
+         if (buflen < ms) {
+                 *errnop = ENOMEM;
+diff --git a/src/nss-resolve/nss-resolve.c b/src/nss-resolve/nss-resolve.c
+index 39b73203d2..6a029a331b 100644
+--- a/src/nss-resolve/nss-resolve.c
++++ b/src/nss-resolve/nss-resolve.c
+@@ -404,10 +404,7 @@ enum nss_status _nss_resolve_gethostbyname3_r(
+         alen = FAMILY_ADDRESS_SIZE(af);
+         l = strlen(canonical);
+ 
+-        ms = ALIGN(l+1) +
+-                sizeof(char*) +
+-                (c > 0 ? c : 1) * ALIGN(alen) +
+-                (c > 0 ? c+1 : 2) * sizeof(char*);
++        ms = ALIGN(l+1) + c * ALIGN(alen) + (c+2) * sizeof(char*);
+ 
+         if (buflen < ms) {
+                 *errnop = ENOMEM;

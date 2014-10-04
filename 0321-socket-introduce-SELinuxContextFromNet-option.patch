@@ -1,0 +1,397 @@
+From 16115b0a7b7cdf08fb38084d857d572d8a9088dc Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Thu, 24 Jul 2014 10:40:28 +0200
+Subject: [PATCH] socket: introduce SELinuxContextFromNet option
+
+This makes possible to spawn service instances triggered by socket with
+MLS/MCS SELinux labels which are created based on information provided by
+connected peer.
+
+Implementation of label_get_child_mls_label derived from xinetd.
+
+Reviewed-by: Paul Moore <pmoore@redhat.com>
+---
+ man/systemd.socket.xml                |  26 ++++++++
+ src/core/execute.c                    |  29 +++++++--
+ src/core/execute.h                    |   1 +
+ src/core/load-fragment-gperf.gperf.m4 |   3 +
+ src/core/service.c                    |   4 +-
+ src/core/service.h                    |   3 +-
+ src/core/socket.c                     |  16 +++--
+ src/core/socket.h                     |   2 +
+ src/shared/label.c                    | 113 ++++++++++++++++++++++++++++++++++
+ src/shared/label.h                    |   2 +
+ 10 files changed, 187 insertions(+), 12 deletions(-)
+
+diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
+index 7a63348caf..dad0267467 100644
+--- a/man/systemd.socket.xml
++++ b/man/systemd.socket.xml
+@@ -676,6 +676,32 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                          <term><varname>SELinuxContextFromNet=</varname></term>
++                                 <listitem><para>Takes a boolean
++                                 argument. When true systemd will attempt
++                                 to figure out the SELinux label used
++                                 for the instantiated service from the
++                                 information handed by the peer over the
++                                 network. Note that only the security
++                                 level is used from the information
++                                 provided by the peer. Other parts of
++                                 the resulting SELinux context originate
++                                 from either the target binary that is
++                                 effectively triggered by socket unit
++                                 are taken from the value of the
++                                 <varname>SELinuxContext=</varname>
++                                 option.This configuration option only
++                                 affects sockets with
++                                 <varname>Accept=</varname> mode set to
++                                 <literal>true</literal>. Also note that
++                                 this option is useful only when
++                                 MLS/MCS SELinux policy is
++                                 deployed. Defaults to
++                                 <literal>false</literal>.
++                                 </para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>PipeSize=</varname></term>
+                                 <listitem><para>Takes a size in
+                                 bytes. Controls the pipe buffer size
+diff --git a/src/core/execute.c b/src/core/execute.c
+index db755777c1..8c9dfde00a 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -84,6 +84,7 @@
+ #include "mkdir.h"
+ #include "apparmor-util.h"
+ #include "bus-kernel.h"
++#include "label.h"
+ 
+ #ifdef HAVE_SECCOMP
+ #include "seccomp-util.h"
+@@ -1665,11 +1666,29 @@ static int exec_child(ExecCommand *command,
+ #endif
+ 
+ #ifdef HAVE_SELINUX
+-                if (context->selinux_context && use_selinux()) {
+-                        err = setexeccon(context->selinux_context);
+-                        if (err < 0 && !context->selinux_context_ignore) {
+-                                *error = EXIT_SELINUX_CONTEXT;
+-                                return err;
++                if (use_selinux()) {
++                        if (context->selinux_context) {
++                                err = setexeccon(context->selinux_context);
++                                if (err < 0 && !context->selinux_context_ignore) {
++                                        *error = EXIT_SELINUX_CONTEXT;
++                                        return err;
++                                }
++                        }
++
++                        if (params->selinux_context_net && socket_fd >= 0) {
++                                _cleanup_free_ char *label = NULL;
++
++                                err = label_get_child_mls_label(socket_fd, command->path, &label);
++                                if (err < 0) {
++                                        *error = EXIT_SELINUX_CONTEXT;
++                                        return err;
++                                }
++
++                                err = setexeccon(label);
++                                if (err < 0) {
++                                        *error = EXIT_SELINUX_CONTEXT;
++                                        return err;
++                                }
+                         }
+                 }
+ #endif
+diff --git a/src/core/execute.h b/src/core/execute.h
+index 9c1f249cd4..6f35736eda 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -204,6 +204,7 @@ struct ExecParameters {
+         bool apply_chroot;
+         bool apply_tty_stdin;
+         bool confirm_spawn;
++        bool selinux_context_net;
+         CGroupControllerMask cgroup_supported;
+         const char *cgroup_path;
+         const char *runtime_prefix;
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index e764d68ce4..050c5d819f 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -265,6 +265,9 @@ Socket.SmackLabelIPOut,          config_parse_string,                0,
+ `Socket.SmackLabel,              config_parse_warn_compat,           0,                             0
+ Socket.SmackLabelIPIn,           config_parse_warn_compat,           0,                             0
+ Socket.SmackLabelIPOut,          config_parse_warn_compat,           0,                             0')
++m4_ifdef(`HAVE_SELINUX',
++`Socket.SELinuxContextFromNet,   config_parse_bool,                  0,                             offsetof(Socket, selinux_context_from_net)',
++`Socket.SELinuxContextFromNet,   config_parse_warn_compat,           0,                             0')
+ EXEC_CONTEXT_CONFIG_ITEMS(Socket)m4_dnl
+ CGROUP_CONTEXT_CONFIG_ITEMS(Socket)m4_dnl
+ KILL_CONTEXT_CONFIG_ITEMS(Socket)m4_dnl
+diff --git a/src/core/service.c b/src/core/service.c
+index 3f6595c5c8..395e0ca8c6 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -901,6 +901,7 @@ static int service_spawn(
+                 .apply_chroot      = apply_chroot,
+                 .apply_tty_stdin   = apply_tty_stdin,
+                 .bus_endpoint_fd   = -1,
++                .selinux_context_net = s->socket_fd_selinux_context_net
+         };
+ 
+         assert(s);
+@@ -2748,7 +2749,7 @@ static void service_bus_name_owner_change(
+         }
+ }
+ 
+-int service_set_socket_fd(Service *s, int fd, Socket *sock) {
++int service_set_socket_fd(Service *s, int fd, Socket *sock, bool selinux_context_net) {
+         _cleanup_free_ char *peer = NULL;
+         int r;
+ 
+@@ -2786,6 +2787,7 @@ int service_set_socket_fd(Service *s, int fd, Socket *sock) {
+         }
+ 
+         s->socket_fd = fd;
++        s->socket_fd_selinux_context_net = selinux_context_net;
+ 
+         unit_ref_set(&s->accept_socket, UNIT(sock));
+ 
+diff --git a/src/core/service.h b/src/core/service.h
+index ad0b3b381e..0db0c4d64c 100644
+--- a/src/core/service.h
++++ b/src/core/service.h
+@@ -161,6 +161,7 @@ struct Service {
+ 
+         pid_t main_pid, control_pid;
+         int socket_fd;
++        bool socket_fd_selinux_context_net;
+ 
+         int bus_endpoint_fd;
+ 
+@@ -205,7 +206,7 @@ extern const UnitVTable service_vtable;
+ 
+ struct Socket;
+ 
+-int service_set_socket_fd(Service *s, int fd, struct Socket *socket);
++int service_set_socket_fd(Service *s, int fd, struct Socket *socket, bool selinux_context_net);
+ 
+ const char* service_state_to_string(ServiceState i) _const_;
+ ServiceState service_state_from_string(const char *s) _pure_;
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 68e21e60ac..00d5fd1192 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -489,7 +489,8 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
+                 "%sPassCredentials: %s\n"
+                 "%sPassSecurity: %s\n"
+                 "%sTCPCongestion: %s\n"
+-                "%sRemoveOnStop: %s\n",
++                "%sRemoveOnStop: %s\n"
++                "%sSELinuxContextFromNet: %s\n",
+                 prefix, socket_state_to_string(s->state),
+                 prefix, socket_result_to_string(s->result),
+                 prefix, socket_address_bind_ipv6_only_to_string(s->bind_ipv6_only),
+@@ -504,7 +505,8 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
+                 prefix, yes_no(s->pass_cred),
+                 prefix, yes_no(s->pass_sec),
+                 prefix, strna(s->tcp_congestion),
+-                prefix, yes_no(s->remove_on_stop));
++                prefix, yes_no(s->remove_on_stop),
++                prefix, yes_no(s->selinux_context_from_net));
+ 
+         if (s->control_pid > 0)
+                 fprintf(f,
+@@ -1128,8 +1130,12 @@ static int socket_open_fds(Socket *s) {
+                         continue;
+ 
+                 if (p->type == SOCKET_SOCKET) {
+-
+-                        if (!know_label) {
++                        if (!know_label && s->selinux_context_from_net) {
++                                r = label_get_our_label(&label);
++                                if (r < 0)
++                                        return r;
++                                know_label = true;
++                        } else if (!know_label) {
+ 
+                                 r = socket_instantiate_service(s);
+                                 if (r < 0)
+@@ -1821,7 +1827,7 @@ static void socket_enter_running(Socket *s, int cfd) {
+ 
+                 unit_choose_id(UNIT(service), name);
+ 
+-                r = service_set_socket_fd(service, cfd, s);
++                r = service_set_socket_fd(service, cfd, s, s->selinux_context_from_net);
+                 if (r < 0)
+                         goto fail;
+ 
+diff --git a/src/core/socket.h b/src/core/socket.h
+index eede70564a..a2e08998c0 100644
+--- a/src/core/socket.h
++++ b/src/core/socket.h
+@@ -165,6 +165,8 @@ struct Socket {
+         char *smack_ip_in;
+         char *smack_ip_out;
+ 
++        bool selinux_context_from_net;
++
+         char *user, *group;
+ };
+ 
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 25a8b361b7..02b41f02d8 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -31,6 +31,7 @@
+ #ifdef HAVE_SELINUX
+ #include <selinux/selinux.h>
+ #include <selinux/label.h>
++#include <selinux/context.h>
+ #endif
+ 
+ #include "label.h"
+@@ -41,6 +42,12 @@
+ #include "smack-util.h"
+ 
+ #ifdef HAVE_SELINUX
++DEFINE_TRIVIAL_CLEANUP_FUNC(security_context_t, freecon);
++DEFINE_TRIVIAL_CLEANUP_FUNC(context_t, context_free);
++
++#define _cleanup_security_context_free_ _cleanup_(freeconp)
++#define _cleanup_context_free_ _cleanup_(context_freep)
++
+ static struct selabel_handle *label_hnd = NULL;
+ #endif
+ 
+@@ -243,6 +250,112 @@ fail:
+         return r;
+ }
+ 
++int label_get_our_label(char **label) {
++        int r = -EOPNOTSUPP;
++        char *l = NULL;
++
++#ifdef HAVE_SELINUX
++        r = getcon(&l);
++        if (r < 0)
++                return r;
++
++        *label = l;
++#endif
++
++        return r;
++}
++
++int label_get_child_mls_label(int socket_fd, const char *exe, char **label) {
++        int r = -EOPNOTSUPP;
++
++#ifdef HAVE_SELINUX
++
++        _cleanup_security_context_free_ security_context_t mycon = NULL, peercon = NULL, fcon = NULL, ret = NULL;
++        _cleanup_context_free_ context_t pcon = NULL, bcon = NULL;
++        security_class_t sclass;
++
++        const char *range = NULL;
++
++        assert(socket_fd >= 0);
++        assert(exe);
++        assert(label);
++
++        r = getcon(&mycon);
++        if (r < 0) {
++                r = -EINVAL;
++                goto out;
++        }
++
++        r = getpeercon(socket_fd, &peercon);
++        if (r < 0) {
++                r = -EINVAL;
++                goto out;
++        }
++
++        r = getexeccon(&fcon);
++        if (r < 0) {
++                r = -EINVAL;
++                goto out;
++        }
++
++        if (!fcon) {
++                /* If there is no context set for next exec let's use context
++                   of target executable */
++                r = getfilecon(exe, &fcon);
++                if (r < 0) {
++                        r = -errno;
++                        goto out;
++                }
++        }
++
++        bcon = context_new(mycon);
++        if (!bcon) {
++                r = -ENOMEM;
++                goto out;
++        }
++
++        pcon = context_new(peercon);
++        if (!pcon) {
++                r = -ENOMEM;
++                goto out;
++        }
++
++        range = context_range_get(pcon);
++        if (!range) {
++                r = -errno;
++                goto out;
++        }
++
++        r = context_range_set(bcon, range);
++        if (r) {
++                r = -errno;
++                goto out;
++        }
++
++        freecon(mycon);
++        mycon = context_str(bcon);
++        if (!mycon) {
++                r = -errno;
++                goto out;
++        }
++
++        sclass = string_to_security_class("process");
++        r = security_compute_create(mycon, fcon, sclass, &ret);
++        if (r < 0) {
++                r = -EINVAL;
++                goto out;
++        }
++
++        *label = ret;
++        r = 0;
++
++out:
++        if (r < 0 && security_getenforce() == 1)
++                return r;
++#endif
++        return r;
++}
++
+ int label_context_set(const char *path, mode_t mode) {
+         int r = 0;
+ 
+diff --git a/src/shared/label.h b/src/shared/label.h
+index cb2ec79eea..ce1e5c3f57 100644
+--- a/src/shared/label.h
++++ b/src/shared/label.h
+@@ -40,6 +40,8 @@ void label_context_clear(void);
+ void label_free(const char *label);
+ 
+ int label_get_create_label_from_exe(const char *exe, char **label);
++int label_get_our_label(char **label);
++int label_get_child_mls_label(int socket_fd, const char *exec, char **label);
+ 
+ int label_mkdir(const char *path, mode_t mode);
+ 

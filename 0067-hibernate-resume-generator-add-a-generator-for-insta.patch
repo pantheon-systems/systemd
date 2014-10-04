@@ -1,0 +1,330 @@
+From d2c68822c47e37b582820f45b496b2e7d1f9e642 Mon Sep 17 00:00:00 2001
+From: Ivan Shapovalov <intelfx100@gmail.com>
+Date: Wed, 27 Aug 2014 00:17:45 +0400
+Subject: [PATCH] hibernate-resume-generator: add a generator for instantiating
+ the resume unit.
+
+hibernate-resume-generator understands resume= kernel command line parameter
+and instantiates the systemd-resume@.service accordingly if it is passed.
+
+This enables resume from hibernation using device specified on the kernel
+command line, and it may be specified either as "/dev/disk/by-foo/bar"
+or "FOO=bar", not only "/dev/sdXY" which is understood by the in-kernel
+implementation.
+
+So now resume= is brought on par with root= in terms of possible ways to
+specify a device.
+---
+ .gitignore                                 |  1 +
+ Makefile-man.am                            |  2 +
+ Makefile.am                                | 11 +++-
+ man/kernel-command-line.xml                | 14 ++++-
+ man/systemd-hibernate-resume-generator.xml | 93 +++++++++++++++++++++++++++++
+ src/resume-generator/Makefile              |  1 +
+ src/resume-generator/resume-generator.c    | 95 ++++++++++++++++++++++++++++++
+ 7 files changed, 215 insertions(+), 2 deletions(-)
+ create mode 100644 man/systemd-hibernate-resume-generator.xml
+ create mode 120000 src/resume-generator/Makefile
+ create mode 100644 src/resume-generator/resume-generator.c
+
+diff --git a/.gitignore b/.gitignore
+index 0b5608ccf9..8aed0b9ba6 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -76,6 +76,7 @@
+ /systemd-gnome-ask-password-agent
+ /systemd-gpt-auto-generator
+ /systemd-hibernate-resume
++/systemd-hibernate-resume-generator
+ /systemd-hostnamed
+ /systemd-inhibit
+ /systemd-initctl
+diff --git a/Makefile-man.am b/Makefile-man.am
+index 09a10383a9..5c27937152 100644
+--- a/Makefile-man.am
++++ b/Makefile-man.am
+@@ -70,6 +70,7 @@ MANPAGES += \
+ 	man/systemd-getty-generator.8 \
+ 	man/systemd-gpt-auto-generator.8 \
+ 	man/systemd-halt.service.8 \
++	man/systemd-hibernate-resume-generator.8 \
+ 	man/systemd-hibernate-resume@.service.8 \
+ 	man/systemd-inhibit.1 \
+ 	man/systemd-initctl.service.8 \
+@@ -1625,6 +1626,7 @@ EXTRA_DIST += \
+ 	man/systemd-getty-generator.xml \
+ 	man/systemd-gpt-auto-generator.xml \
+ 	man/systemd-halt.service.xml \
++	man/systemd-hibernate-resume-generator.xml \
+ 	man/systemd-hibernate-resume@.service.xml \
+ 	man/systemd-hostnamed.service.xml \
+ 	man/systemd-inhibit.xml \
+diff --git a/Makefile.am b/Makefile.am
+index a487caa7bc..cbdf551fa8 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -385,7 +385,8 @@ systemgenerator_PROGRAMS = \
+ 	systemd-getty-generator \
+ 	systemd-fstab-generator \
+ 	systemd-system-update-generator \
+-	systemd-debug-generator
++	systemd-debug-generator \
++	systemd-hibernate-resume-generator
+ 
+ dist_bashcompletion_DATA = \
+ 	shell-completion/bash/busctl \
+@@ -2146,6 +2147,14 @@ systemd_system_update_generator_LDADD = \
+ 	libsystemd-label.la \
+ 	libsystemd-shared.la
+ 
++# ------------------------------------------------------------------------------
++systemd_hibernate_resume_generator_SOURCES = \
++	src/resume-generator/resume-generator.c
++
++systemd_hibernate_resume_generator_LDADD = \
++	libsystemd-label.la \
++	libsystemd-shared.la
++
+ if ENABLE_EFI
+ # ------------------------------------------------------------------------------
+ systemgenerator_PROGRAMS +=  \
+diff --git a/man/kernel-command-line.xml b/man/kernel-command-line.xml
+index 36428aaa94..d872e6d5b9 100644
+--- a/man/kernel-command-line.xml
++++ b/man/kernel-command-line.xml
+@@ -351,6 +351,17 @@
+                                 </listitem>
+                         </varlistentry>
+ 
++                        <varlistentry>
++                                <term><varname>resume=</varname></term>
++
++                                <listitem>
++                                        <para>Enables resume from hibernation
++                                        using the specified device.
++                                        All <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>-like
++                                        pathes are supported. For details, see
++                                        <citerefentry><refentrytitle>systemd-hibernate-resume-generator</refentrytitle><manvolnum>8</manvolnum></citerefentry>.</para>
++                                </listitem>
++                        </varlistentry>
+                 </variablelist>
+ 
+         </refsect1>
+@@ -373,7 +384,8 @@
+                           <citerefentry><refentrytitle>systemd-gpt-auto-generator</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd-modules-load.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd-backlight@.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+-                          <citerefentry><refentrytitle>systemd-rfkill@.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                          <citerefentry><refentrytitle>systemd-rfkill@.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>systemd-hibernate-resume-generator</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+                   </para>
+         </refsect1>
+ 
+diff --git a/man/systemd-hibernate-resume-generator.xml b/man/systemd-hibernate-resume-generator.xml
+new file mode 100644
+index 0000000000..1a4b99ced4
+--- /dev/null
++++ b/man/systemd-hibernate-resume-generator.xml
+@@ -0,0 +1,93 @@
++<?xml version="1.0"?>
++<!--*-nxml-*-->
++<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
++<!--
++  This file is part of systemd.
++
++  Copyright 2014 Ivan Shapovalov
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++<refentry id="systemd-hibernate-resume-generator">
++
++        <refentryinfo>
++                <title>systemd-hibernate-resume-generator</title>
++                <productname>systemd</productname>
++
++                <authorgroup>
++                        <author>
++                                <contrib>Developer</contrib>
++                                <firstname>Ivan</firstname>
++                                <surname>Shapovalov</surname>
++                                <email>intelfx100@gmail.com</email>
++                        </author>
++                </authorgroup>
++        </refentryinfo>
++
++        <refmeta>
++                <refentrytitle>systemd-hibernate-resume-generator</refentrytitle>
++                <manvolnum>8</manvolnum>
++        </refmeta>
++
++        <refnamediv>
++                <refname>systemd-hibernate-resume-generator</refname>
++                <refpurpose>Unit generator for resume= kernel parameter</refpurpose>
++        </refnamediv>
++
++        <refsynopsisdiv>
++                <para><filename>/usr/lib/systemd/system-generators/systemd-hibernate-resume-generator</filename></para>
++        </refsynopsisdiv>
++
++        <refsect1>
++                <title>Description</title>
++
++                <para><filename>systemd-hibernate-resume-generator</filename> is
++                a generator that instantiates
++                <citerefentry><refentrytitle>systemd-hibernate-resume@.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
++                unit according to the value of <option>resume=</option>
++                parameter specified on the kernel command line.</para>
++        </refsect1>
++
++        <refsect1>
++                <title>Kernel Command Line</title>
++
++                <para><filename>systemd-hibernate-resume-generator</filename> understands
++                the following kernel command line parameters:</para>
++
++                <variablelist class='kernel-commandline-options'>
++
++                        <varlistentry>
++                                <term><varname>resume=</varname></term>
++
++                                <listitem><para>Takes a path to the resume
++                                device. Both persistent block device pathes like
++                                <filename>/dev/disk/by-foo/bar</filename> and
++                                <citerefentry><refentrytitle>fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>-style
++                                specifiers like <literal>FOO=bar</literal>
++                                are supported.</para></listitem>
++                        </varlistentry>
++
++                </variablelist>
++        </refsect1>
++
++        <refsect1>
++                <title>See Also</title>
++                <para>
++                        <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd-hibernate-resume@.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>kernel-command-line</refentrytitle><manvolnum>7</manvolnum></citerefentry>
++                </para>
++        </refsect1>
++
++</refentry>
+diff --git a/src/resume-generator/Makefile b/src/resume-generator/Makefile
+new file mode 120000
+index 0000000000..d0b0e8e008
+--- /dev/null
++++ b/src/resume-generator/Makefile
+@@ -0,0 +1 @@
++../Makefile
+\ No newline at end of file
+diff --git a/src/resume-generator/resume-generator.c b/src/resume-generator/resume-generator.c
+new file mode 100644
+index 0000000000..f40721662e
+--- /dev/null
++++ b/src/resume-generator/resume-generator.c
+@@ -0,0 +1,95 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2014 Ivan Shapovalov
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <stdio.h>
++#include <errno.h>
++
++#include "log.h"
++#include "util.h"
++#include "special.h"
++#include "mkdir.h"
++#include "unit-name.h"
++
++static const char *arg_dest = "/tmp";
++static char *arg_resume_dev = NULL;
++
++static int parse_proc_cmdline_item(const char *key, const char *value) {
++        if (streq(key, "resume") && value) {
++                free(arg_resume_dev);
++                arg_resume_dev = fstab_node_to_udev_node(value);
++                if (!arg_resume_dev)
++                        return log_oom();
++        }
++
++        return 0;
++}
++
++static int process_resume(void) {
++        _cleanup_free_ char *name = NULL, *lnk = NULL;
++
++        name = unit_name_from_path_instance("systemd-hibernate-resume", arg_resume_dev, ".service");
++        if (!name)
++                return log_oom();
++
++        lnk = strjoin(arg_dest, "/" SPECIAL_SYSINIT_TARGET ".wants/", name, NULL);
++        if (!lnk)
++                return log_oom();
++
++        mkdir_parents_label(lnk, 0755);
++        if (symlink(SYSTEM_DATA_UNIT_PATH "/systemd-hibernate-resume@.service", lnk) < 0) {
++                log_error("Failed to create symlink %s: %m", lnk);
++                return -errno;
++        }
++
++        return 0;
++}
++
++int main(int argc, char *argv[]) {
++        int r = 0;
++
++        if (argc > 1 && argc != 4) {
++                log_error("This program takes three or no arguments.");
++                return EXIT_FAILURE;
++        }
++
++        if (argc > 1)
++                arg_dest = argv[1];
++
++        log_set_target(LOG_TARGET_SAFE);
++        log_parse_environment();
++        log_open();
++
++        umask(0022);
++
++        /* Don't even consider resuming outside of initramfs. */
++        if (!in_initrd())
++                return EXIT_SUCCESS;
++
++        if (parse_proc_cmdline(parse_proc_cmdline_item) < 0)
++                return EXIT_FAILURE;
++
++        if (arg_resume_dev != NULL)
++                r = process_resume();
++
++        free(arg_resume_dev);
++
++        return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
++}

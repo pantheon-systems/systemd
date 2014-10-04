@@ -1,0 +1,26 @@
+From 04c553e322680b6fcdf5b271e84b0b4b0ad8d5f9 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Tue, 23 Sep 2014 21:34:21 +0200
+Subject: [PATCH] bus: remove unused check
+
+strerror_r does not return null here and even if it did we would have
+problems already at the preceding strlen call.
+
+Found by coverity. Fixes: CID#1237770
+---
+ src/libsystemd/sd-bus/bus-error.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-error.c b/src/libsystemd/sd-bus/bus-error.c
+index c2e41fb016..abdfd73204 100644
+--- a/src/libsystemd/sd-bus/bus-error.c
++++ b/src/libsystemd/sd-bus/bus-error.c
+@@ -312,7 +312,7 @@ static void bus_error_strerror(sd_bus_error *e, int error) {
+                         continue;
+                 }
+ 
+-                if (!x || errno) {
++                if (errno) {
+                         free(m);
+                         return;
+                 }

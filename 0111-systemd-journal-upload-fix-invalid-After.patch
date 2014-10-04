@@ -1,0 +1,28 @@
+From fd5ab841e7582342b23c9c08ba24ce0cca266690 Mon Sep 17 00:00:00 2001
+From: Marius Tessmann <mus.svz@gmail.com>
+Date: Thu, 28 Aug 2014 22:01:46 +0200
+Subject: [PATCH] systemd-journal-upload: fix invalid After=
+
+After= belongs into [Unit], not [Install]. Found with systemd-analyze
+verify.
+---
+ units/systemd-journal-upload.service.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/systemd-journal-upload.service.in b/units/systemd-journal-upload.service.in
+index e79f962043..359ff10e25 100644
+--- a/units/systemd-journal-upload.service.in
++++ b/units/systemd-journal-upload.service.in
+@@ -7,6 +7,7 @@
+ 
+ [Unit]
+ Description=Journal Remote Upload Service
++After=network.target
+ 
+ [Service]
+ ExecStart=@rootlibexecdir@/systemd-journal-upload \
+@@ -18,4 +19,3 @@ WatchdogSec=20min
+ 
+ [Install]
+ WantedBy=multi-user.target
+-After=network.target

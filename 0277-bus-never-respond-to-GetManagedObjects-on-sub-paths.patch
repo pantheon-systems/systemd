@@ -1,0 +1,139 @@
+From 943c3f94e2f8b8b35ef6a40220bbe4c06510930c Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed, 17 Sep 2014 09:28:09 +0200
+Subject: [PATCH] bus: never respond to GetManagedObjects() on sub-paths
+
+The dbus-spec clearly specifies that GetManagedObjects() should only work
+on the root-path of an object-tree. But on that path, it works regardless
+whether there are any objects available or not.
+
+We could, technically, define all sub-paths as a root-path of its own
+sub-tree. However, if we do that, we enter undefined territory:
+
+    Imagine only a fallback vtable is registered. We want
+    GetManagedObjects() to *NOT* fail with UNKNOWN_METHOD if it is called
+    on a valid sub-tree of the fallback. On the other hand, we don't want
+    it to work on arbitrary sub-tree. Something like:
+        /path/to/fallback/foobar/foobar/foobar/invalid/foobar
+    should not work.
+    However, there is no way to know which paths on a fallback are valid
+    without looking at there registered objects. If no objects are
+    registered, we have no way to figure it out.
+
+Therefore, we now try to follow the dbus spec by only returning valid data
+on registered root-paths. We treat each path as root which was registered
+an object-manager on via add_object_manager(). So applications can now
+directly control which paths to place an object-manager on.
+
+We also fix the introspection to not return object-manager interfaces on
+non-root paths.
+
+Also fixes some dead-code paths initially reported by Philippe De Swert.
+---
+ src/libsystemd/sd-bus/bus-objects.c | 63 ++++++++-----------------------------
+ 1 file changed, 13 insertions(+), 50 deletions(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-objects.c b/src/libsystemd/sd-bus/bus-objects.c
+index 81c840f129..ecac73a94d 100644
+--- a/src/libsystemd/sd-bus/bus-objects.c
++++ b/src/libsystemd/sd-bus/bus-objects.c
+@@ -820,19 +820,6 @@ static int property_get_all_callbacks_run(
+         return 1;
+ }
+ 
+-static bool bus_node_with_object_manager(sd_bus *bus, struct node *n) {
+-        assert(bus);
+-        assert(n);
+-
+-        if (n->object_managers)
+-                return true;
+-
+-        if (n->parent)
+-                return bus_node_with_object_manager(bus, n->parent);
+-
+-        return false;
+-}
+-
+ static bool bus_node_exists(
+                 sd_bus *bus,
+                 struct node *n,
+@@ -902,7 +889,7 @@ static int process_introspect(
+         if (r < 0)
+                 return r;
+ 
+-        r = introspect_write_default_interfaces(&intro, bus_node_with_object_manager(bus, n));
++        r = introspect_write_default_interfaces(&intro, !require_fallback && n->object_managers);
+         if (r < 0)
+                 return r;
+ 
+@@ -1142,7 +1129,8 @@ static int process_get_managed_objects(
+         _cleanup_bus_error_free_ sd_bus_error error = SD_BUS_ERROR_NULL;
+         _cleanup_bus_message_unref_ sd_bus_message *reply = NULL;
+         _cleanup_set_free_free_ Set *s = NULL;
+-        bool empty;
++        Iterator i;
++        char *path;
+         int r;
+ 
+         assert(bus);
+@@ -1150,7 +1138,11 @@ static int process_get_managed_objects(
+         assert(n);
+         assert(found_object);
+ 
+-        if (!bus_node_with_object_manager(bus, n))
++        /* Spec says, GetManagedObjects() is only implemented on the root of a
++         * sub-tree. Therefore, we require a registered object-manager on
++         * exactly the queried path, otherwise, we refuse to respond. */
++
++        if (require_fallback || !n->object_managers)
+                 return 0;
+ 
+         r = get_child_nodes(bus, m->path, n, &s, &error);
+@@ -1167,42 +1159,13 @@ static int process_get_managed_objects(
+         if (r < 0)
+                 return r;
+ 
+-        empty = set_isempty(s);
+-        if (empty) {
+-                struct node_vtable *c;
+-
+-                /* Hmm, so we have no children? Then let's check
+-                 * whether we exist at all, i.e. whether at least one
+-                 * vtable exists. */
+-
+-                LIST_FOREACH(vtables, c, n->vtables) {
+-
+-                        if (require_fallback && !c->is_fallback)
+-                                continue;
+-
+-                        if (r < 0)
+-                                return r;
+-                        if (r == 0)
+-                                continue;
+-
+-                        empty = false;
+-                        break;
+-                }
++        SET_FOREACH(path, s, i) {
++                r = object_manager_serialize_path_and_fallbacks(bus, reply, path, &error);
++                if (r < 0)
++                        return r;
+ 
+-                if (empty)
++                if (bus->nodes_modified)
+                         return 0;
+-        } else {
+-                Iterator i;
+-                char *path;
+-
+-                SET_FOREACH(path, s, i) {
+-                        r = object_manager_serialize_path_and_fallbacks(bus, reply, path, &error);
+-                        if (r < 0)
+-                                return r;
+-
+-                        if (bus->nodes_modified)
+-                                return 0;
+-                }
+         }
+ 
+         r = sd_bus_message_close_container(reply);

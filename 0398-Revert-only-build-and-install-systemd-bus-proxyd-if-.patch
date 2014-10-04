@@ -1,0 +1,44 @@
+From 440c61c500ead1bdc6f987b8ba7c5e7f7a9c9f59 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 25 Sep 2014 19:02:42 -0400
+Subject: [PATCH] Revert "only build and install systemd-bus-proxyd if
+ --enable-kdbus"
+
+This reverts commit ef99aec4d25087dec995b3f00b6957dcee6b13e9.
+
+systemd-stdio-bridge is used on non-kdbus systems.
+---
+ Makefile.am | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 1bdc91c239..0f54c5c014 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -387,6 +387,7 @@ rootlibexec_PROGRAMS = \
+ 	systemd-ac-power \
+ 	systemd-sysctl \
+ 	systemd-sleep \
++	systemd-bus-proxyd \
+ 	systemd-socket-proxyd \
+ 	systemd-update-done
+ 
+@@ -2428,10 +2429,6 @@ systemd_run_LDADD = \
+ 	libsystemd-shared.la
+ 
+ # ------------------------------------------------------------------------------
+-if ENABLE_KDBUS
+-rootlibexec_PROGRAMS += \
+-	systemd-bus-proxyd
+-
+ systemd_bus_proxyd_SOURCES = \
+ 	src/bus-proxyd/bus-proxyd.c \
+ 	src/bus-proxyd/bus-policy.c \
+@@ -2453,6 +2450,7 @@ bus-proxyd-uninstall-hook:
+ INSTALL_EXEC_HOOKS += bus-proxyd-install-hook
+ UNINSTALL_EXEC_HOOKS += bus-proxyd-uninstall-hook
+ 
++if ENABLE_KDBUS
+ nodist_systemunit_DATA += \
+ 	units/systemd-bus-proxyd@.service
+ 

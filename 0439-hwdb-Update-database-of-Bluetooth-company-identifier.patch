@@ -1,0 +1,35 @@
+From 2e3390ea4684b954edce66b7758b5371d3338a9f Mon Sep 17 00:00:00 2001
+From: Marcel Holtmann <marcel@holtmann.org>
+Date: Thu, 2 Oct 2014 07:53:15 +0200
+Subject: [PATCH] hwdb: Update database of Bluetooth company identifiers
+
+---
+ hwdb/20-bluetooth-vendor-product.hwdb | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/hwdb/20-bluetooth-vendor-product.hwdb b/hwdb/20-bluetooth-vendor-product.hwdb
+index 14aee74a1a..ee2efdff2e 100644
+--- a/hwdb/20-bluetooth-vendor-product.hwdb
++++ b/hwdb/20-bluetooth-vendor-product.hwdb
+@@ -1148,3 +1148,21 @@ bluetooth:v017B*
+ 
+ bluetooth:v017C*
+  ID_VENDOR_FROM_DATABASE=Daimler AG
++
++bluetooth:v017D*
++ ID_VENDOR_FROM_DATABASE=BatAndCat
++
++bluetooth:v017E*
++ ID_VENDOR_FROM_DATABASE=BluDotz Ltd
++
++bluetooth:v017F*
++ ID_VENDOR_FROM_DATABASE=XTel ApS
++
++bluetooth:v0180*
++ ID_VENDOR_FROM_DATABASE=Gigaset Communications GmbH
++
++bluetooth:v0181*
++ ID_VENDOR_FROM_DATABASE=Gecko Health Innovations, Inc.
++
++bluetooth:v0182*
++ ID_VENDOR_FROM_DATABASE=HOP Ubiquitous

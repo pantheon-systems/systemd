@@ -1,0 +1,106 @@
+From 46b0c76e2c355c0d0cc4792abb98cde07b28bc53 Mon Sep 17 00:00:00 2001
+From: Emil Renner Berthing <systemd@esmil.dk>
+Date: Fri, 5 Sep 2014 11:56:02 +0200
+Subject: [PATCH] networkd: add preferred source to dhcp4 gateway route
+
+This makes DHCPv4 and IPv4LL coexist peacefully.
+
+[tomegun: apply to both the dhcp routes, use in_addr_is_null() rather than a
+separate variable to indicate when prefsrc should be applied]
+---
+ src/network/networkd-dhcp4.c | 11 +++++++++++
+ src/network/networkd-route.c | 22 ++++++++++++++++++++++
+ src/network/networkd.h       |  1 +
+ 3 files changed, 34 insertions(+)
+
+diff --git a/src/network/networkd-dhcp4.c b/src/network/networkd-dhcp4.c
+index 5e4ff2b80b..b87fa73082 100644
+--- a/src/network/networkd-dhcp4.c
++++ b/src/network/networkd-dhcp4.c
+@@ -67,9 +67,18 @@ static int link_set_dhcp_routes(Link *link) {
+                 return r;
+         }
+         if (r >= 0) {
++                struct in_addr address;
+                 _cleanup_route_free_ Route *route = NULL;
+                 _cleanup_route_free_ Route *route_gw = NULL;
+ 
++                r = sd_dhcp_lease_get_address(link->dhcp_lease, &address);
++                if (r < 0) {
++                        log_warning_link(link,
++                                         "DHCP error: could not get address: %s",
++                                         strerror(-r));
++                        return r;
++                }
++
+                 r = route_new_dynamic(&route, RTPROT_DHCP);
+                 if (r < 0) {
+                         log_error_link(link,
+@@ -92,6 +101,7 @@ static int link_set_dhcp_routes(Link *link) {
+                 route_gw->family = AF_INET;
+                 route_gw->dst_addr.in = gateway;
+                 route_gw->dst_prefixlen = 32;
++                route_gw->prefsrc_addr.in = address;
+                 route_gw->scope = RT_SCOPE_LINK;
+                 route_gw->metrics = DHCP_ROUTE_METRIC;
+ 
+@@ -107,6 +117,7 @@ static int link_set_dhcp_routes(Link *link) {
+ 
+                 route->family = AF_INET;
+                 route->in_addr.in = gateway;
++                route->prefsrc_addr.in = address;
+                 route->metrics = DHCP_ROUTE_METRIC;
+ 
+                 r = route_configure(route, link, &dhcp4_route_handler);
+diff --git a/src/network/networkd-route.c b/src/network/networkd-route.c
+index aead4fbb9e..10d8cd902a 100644
+--- a/src/network/networkd-route.c
++++ b/src/network/networkd-route.c
+@@ -144,6 +144,17 @@ int route_drop(Route *route, Link *link,
+                 }
+         }
+ 
++        if (!in_addr_is_null(route->family, &route->prefsrc_addr)) {
++                if (route->family == AF_INET)
++                        r = sd_rtnl_message_append_in_addr(req, RTA_PREFSRC, &route->prefsrc_addr.in);
++                else if (route->family == AF_INET6)
++                        r = sd_rtnl_message_append_in6_addr(req, RTA_PREFSRC, &route->prefsrc_addr.in6);
++                if (r < 0) {
++                        log_error("Could not append RTA_PREFSRC attribute: %s", strerror(-r));
++                        return r;
++                }
++        }
++
+         r = sd_rtnl_message_route_set_scope(req, route->scope);
+         if (r < 0) {
+                 log_error("Could not set scope: %s", strerror(-r));
+@@ -218,6 +229,17 @@ int route_configure(Route *route, Link *link,
+                 }
+         }
+ 
++        if (!in_addr_is_null(route->family, &route->prefsrc_addr)) {
++                if (route->family == AF_INET)
++                        r = sd_rtnl_message_append_in_addr(req, RTA_PREFSRC, &route->prefsrc_addr.in);
++                else if (route->family == AF_INET6)
++                        r = sd_rtnl_message_append_in6_addr(req, RTA_PREFSRC, &route->prefsrc_addr.in6);
++                if (r < 0) {
++                        log_error("Could not append RTA_PREFSRC attribute: %s", strerror(-r));
++                        return r;
++                }
++        }
++
+         r = sd_rtnl_message_route_set_scope(req, route->scope);
+         if (r < 0) {
+                 log_error("Could not set scope: %s", strerror(-r));
+diff --git a/src/network/networkd.h b/src/network/networkd.h
+index ab5df1aa3c..c6e6b22c38 100644
+--- a/src/network/networkd.h
++++ b/src/network/networkd.h
+@@ -150,6 +150,7 @@ struct Route {
+ 
+         union in_addr_union in_addr;
+         union in_addr_union dst_addr;
++        union in_addr_union prefsrc_addr;
+ 
+         LIST_FIELDS(Route, routes);
+ };

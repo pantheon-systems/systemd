@@ -1,0 +1,41 @@
+From 056e86ee7fdae86d358aa068303845dff2cbb598 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed, 1 Oct 2014 11:25:27 +0200
+Subject: [PATCH] terminal: move unifont-map to datadir
+
+Lets avoid putting stuff into /usr/shared/unifont/, but keep it in
+/usr/share/systemd/. Upstream lacks interest in this, so don't bother for
+now.
+---
+ Makefile.am                           | 4 +---
+ src/libsystemd-terminal/unifont-def.h | 2 +-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index da36a8c1c2..5fa4e4a5e8 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -3025,9 +3025,7 @@ noinst_PROGRAMS += \
+ 	systemd-modeset \
+ 	systemd-subterm
+ 
+-unifontdatadir=$(datadir)/unifont
+-
+-dist_unifontdata_DATA = \
++dist_pkgdata_DATA += \
+ 	src/libsystemd-terminal/unifont-glyph-array.bin
+ 
+ tests += \
+diff --git a/src/libsystemd-terminal/unifont-def.h b/src/libsystemd-terminal/unifont-def.h
+index 7a0d48505a..2b0b859eb0 100644
+--- a/src/libsystemd-terminal/unifont-def.h
++++ b/src/libsystemd-terminal/unifont-def.h
+@@ -115,7 +115,7 @@ typedef struct unifont_glyph_header unifont_glyph_header;
+  */
+ 
+ /* path to binary file */
+-#define UNIFONT_PATH "/usr/share/unifont/unifont-glyph-array.bin"
++#define UNIFONT_PATH "/usr/share/systemd/unifont-glyph-array.bin"
+ 
+ /* header-size of version 1 */
+ #define UNIFONT_HEADER_SIZE_MIN 32

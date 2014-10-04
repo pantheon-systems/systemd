@@ -1,0 +1,75 @@
+From 40a1eebde6be7ac3f1885147fc24e06ad1da260c Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 22 Aug 2014 13:55:57 +0200
+Subject: [PATCH] shared: add MAXSIZE() and use it in resolved
+
+The MAXSIZE() macro takes two types and returns the size of the larger
+one. It is much simpler to use than MAX(sizeof(A), sizeof(B)) and also
+avoids any compiler-extensions, unlike CONST_MAX() and MAX() (which are
+needed to avoid evaluating arguments more than once). This was suggested
+by Daniele Nicolodi <daniele@grinta.net>.
+
+Also make resolved use this macro instead of CONST_MAX(). This enhances
+readability quite a bit.
+---
+ src/resolve/resolved-dns-stream.c | 2 +-
+ src/resolve/resolved-manager.c    | 2 +-
+ src/shared/macro.h                | 3 +++
+ src/test/test-util.c              | 4 ++++
+ 4 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/resolve/resolved-dns-stream.c b/src/resolve/resolved-dns-stream.c
+index 8b3a3ced4b..8aad5e4df1 100644
+--- a/src/resolve/resolved-dns-stream.c
++++ b/src/resolve/resolved-dns-stream.c
+@@ -64,7 +64,7 @@ static int dns_stream_complete(DnsStream *s, int error) {
+ static int dns_stream_identify(DnsStream *s) {
+         union {
+                 struct cmsghdr header; /* For alignment */
+-                uint8_t buffer[CMSG_SPACE(CONST_MAX(sizeof(struct in_pktinfo), sizeof(struct in6_pktinfo)))
++                uint8_t buffer[CMSG_SPACE(MAXSIZE(struct in_pktinfo, struct in6_pktinfo))
+                                + EXTRA_CMSG_SPACE /* kernel appears to require extra space */];
+         } control;
+         struct msghdr mh = {};
+diff --git a/src/resolve/resolved-manager.c b/src/resolve/resolved-manager.c
+index 56baf8730d..659b1dacc8 100644
+--- a/src/resolve/resolved-manager.c
++++ b/src/resolve/resolved-manager.c
+@@ -841,7 +841,7 @@ int manager_recv(Manager *m, int fd, DnsProtocol protocol, DnsPacket **ret) {
+         _cleanup_(dns_packet_unrefp) DnsPacket *p = NULL;
+         union {
+                 struct cmsghdr header; /* For alignment */
+-                uint8_t buffer[CMSG_SPACE(CONST_MAX(sizeof(struct in_pktinfo), sizeof(struct in6_pktinfo)))
++                uint8_t buffer[CMSG_SPACE(MAXSIZE(struct in_pktinfo, struct in6_pktinfo))
+                                + CMSG_SPACE(int) /* ttl/hoplimit */
+                                + EXTRA_CMSG_SPACE /* kernel appears to require extra buffer space */];
+         } control;
+diff --git a/src/shared/macro.h b/src/shared/macro.h
+index 179b24c983..43fa3e556f 100644
+--- a/src/shared/macro.h
++++ b/src/shared/macro.h
+@@ -149,6 +149,9 @@ static inline unsigned long ALIGN_POWER2(unsigned long u) {
+                 ((_A) > (_B)) ? (_A) : (_B),                            \
+                 (void)0))
+ 
++/* takes two types and returns the size of the larger one */
++#define MAXSIZE(A, B) (sizeof(union _packed_ { typeof(A) a; typeof(B) b; }))
++
+ #define MAX3(x,y,z)                                     \
+         __extension__ ({                                \
+                         const typeof(x) _c = MAX(x,y);  \
+diff --git a/src/test/test-util.c b/src/test/test-util.c
+index ac1afce86b..34d5f2ed7d 100644
+--- a/src/test/test-util.c
++++ b/src/test/test-util.c
+@@ -90,6 +90,10 @@ static void test_max(void) {
+         assert_se(val1.a == 100);
+         assert_se(MAX(++d, 0) == 1);
+         assert_se(d == 1);
++
++        assert_cc(MAXSIZE(char[3], uint16_t) == 3);
++        assert_cc(MAXSIZE(char[3], uint32_t) == 4);
++        assert_cc(MAXSIZE(char, long) == sizeof(long));
+ }
+ 
+ static void test_first_word(void) {

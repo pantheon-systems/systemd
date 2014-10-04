@@ -1,0 +1,28 @@
+From 378c4eed029eb37eec31e56bd82ca5df2dee1e73 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sun, 5 Oct 2014 15:48:32 +0200
+Subject: [PATCH] terminal/subterm: leave bold-light conversion to parent
+
+We rely on the parent terminal to do color conversion, so also leave
+bold->light conversion to the parent. Otherwise, it will be performed
+twice and we might apply it on the wrong color.
+---
+ src/libsystemd-terminal/subterm.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/src/libsystemd-terminal/subterm.c b/src/libsystemd-terminal/subterm.c
+index dda6759709..93c06bea83 100644
+--- a/src/libsystemd-terminal/subterm.c
++++ b/src/libsystemd-terminal/subterm.c
+@@ -428,10 +428,7 @@ static int output_draw_cell_fn(term_screen *screen,
+                 output_printf(o, "\e[38;2;%u;%u;%um", attr->fg.red, attr->fg.green, attr->fg.blue);
+                 break;
+         case TERM_CCODE_BLACK ... TERM_CCODE_WHITE:
+-                if (attr->bold)
+-                        output_printf(o, "\e[%um", attr->fg.ccode - TERM_CCODE_BLACK + 90);
+-                else
+-                        output_printf(o, "\e[%um", attr->fg.ccode - TERM_CCODE_BLACK + 30);
++                output_printf(o, "\e[%um", attr->fg.ccode - TERM_CCODE_BLACK + 30);
+                 break;
+         case TERM_CCODE_LIGHT_BLACK ... TERM_CCODE_LIGHT_WHITE:
+                 output_printf(o, "\e[%um", attr->fg.ccode - TERM_CCODE_LIGHT_BLACK + 90);

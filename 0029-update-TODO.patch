@@ -1,0 +1,22 @@
+From 1954ea346dc28226c0fffde848d49a297165b0a9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Aug 2014 18:01:47 +0200
+Subject: [PATCH] update TODO
+
+---
+ TODO | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/TODO b/TODO
+index 868518ab75..16b61d045c 100644
+--- a/TODO
++++ b/TODO
+@@ -40,8 +40,6 @@ Features:
+ 
+ * merge ~/.local/share and ~/.local/lib into one similar /usr/lib and /usr/share....
+ 
+-* make "systemctl suspend" block until we are back from suspend
+-
+ * remove readahead in 217
+ 
+ * journald: allows specification of UID range for splitting up journal files

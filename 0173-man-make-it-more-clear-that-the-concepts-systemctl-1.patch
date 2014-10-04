@@ -1,0 +1,31 @@
+From a4390b6be8869172ccdd16fef208803fc6c7a114 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 4 Sep 2014 21:41:54 +0200
+Subject: [PATCH] man: make it more clear that the concepts systemctl(1) manage
+ are introduced in systemd(1)
+
+Based on a suggestion of Ken Coar.
+---
+ man/systemctl.xml | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 2818bcb999..b28a3b7e8a 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -60,10 +60,12 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+   <refsect1>
+     <title>Description</title>
+ 
+-    <para><command>systemctl</command> may be used to
+-    introspect and control the state of the
++    <para><command>systemctl</command> may be used to introspect and
++    control the state of the <literal>systemd</literal> system and
++    service manager. Please refer to
+     <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+-    system and service manager.</para>
++    for an introduction into the basic concepts and functionality this
++    tool manages.</para>
+   </refsect1>
+ 
+   <refsect1>

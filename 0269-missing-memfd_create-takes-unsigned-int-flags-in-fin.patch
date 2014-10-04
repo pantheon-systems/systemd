@@ -1,0 +1,23 @@
+From 06b7f7bd7fa8cde840dd693c7a68dbd954c119ec Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Cristian=20Rodr=C3=ADguez?= <crrodriguez@opensuse.org>
+Date: Tue, 16 Sep 2014 14:17:01 -0300
+Subject: [PATCH] missing: memfd_create takes unsigned int flags in final
+ version
+
+---
+ src/shared/missing.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/missing.h b/src/shared/missing.h
+index 023c680ec6..b441149945 100644
+--- a/src/shared/missing.h
++++ b/src/shared/missing.h
+@@ -209,7 +209,7 @@ static inline int fanotify_mark(int fanotify_fd, unsigned int flags, uint64_t ma
+ #endif
+ 
+ #ifndef HAVE_MEMFD_CREATE
+-static inline int memfd_create(const char *name, uint64_t flags) {
++static inline int memfd_create(const char *name, unsigned int flags) {
+         return syscall(__NR_memfd_create, name, flags);
+ }
+ #endif

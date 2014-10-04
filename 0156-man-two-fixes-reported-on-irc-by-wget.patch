@@ -1,0 +1,36 @@
+From 2915a7bdc5c6db2298041cd39fa992cf252cd8a0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 3 Sep 2014 19:31:22 +0200
+Subject: [PATCH] man: two fixes, reported on irc by 'wget'
+
+---
+ man/systemd.unit.xml | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index c8d9300d95..a1fcfd8781 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -1256,9 +1256,10 @@
+         <refsect1>
+                 <title>[Install] Section Options</title>
+ 
+-                <para>Unit file may include a [Install] section, which
+-                carries installation information for the unit. This
+-                section is not interpreted by
++                <para>Unit file may include an
++                <literal>[Install]</literal> section, which carries
++                installation information for the unit. This section is
++                not interpreted by
+                 <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                 during runtime. It is used exclusively by the
+                 <command>enable</command> and
+@@ -1270,7 +1271,7 @@
+                         <varlistentry>
+                                 <term><varname>Alias=</varname></term>
+ 
+-                                <listitem><para>A space-seperated list
++                                <listitem><para>A space-separated list
+                                 of additional names this unit shall be
+                                 installed under. The names listed here
+                                 must have the same suffix (i.e. type)

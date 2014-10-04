@@ -1,0 +1,30 @@
+From 20f8d3cf1be4ad76234ffb85eeae7f9892ee72cd Mon Sep 17 00:00:00 2001
+From: Steven Noonan <steven@uplinklabs.net>
+Date: Sat, 30 Aug 2014 05:58:06 -0700
+Subject: [PATCH] timesyncd-manager: don't clear current_server_name if
+ ServerAddress is NULL
+
+https://bugs.freedesktop.org/show_bug.cgi?id=83091
+
+[zj: add comment]
+---
+ src/timesync/timesyncd-manager.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/timesync/timesyncd-manager.c b/src/timesync/timesyncd-manager.c
+index 9b8b7d3eb6..696dd10e69 100644
+--- a/src/timesync/timesyncd-manager.c
++++ b/src/timesync/timesyncd-manager.c
+@@ -766,8 +766,11 @@ void manager_set_server_address(Manager *m, ServerAddress *a) {
+         if (m->current_server_address == a)
+                 return;
+ 
+-        m->current_server_name = a ? a->name : NULL;
+         m->current_server_address = a;
++        /* If a is NULL, we are just clearing the address, without
++         * changing the name. Keep the existing name in that case. */
++        if (a)
++                m->current_server_name = a->name;
+ 
+         manager_disconnect(m);
+ 

@@ -1,0 +1,60 @@
+From c2977e5cb874e696994bcb93b8148f52c315b901 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed, 1 Oct 2014 11:23:02 +0200
+Subject: [PATCH] terminal: move unifont-internal.h to unifont.h
+
+All the definitions are for outside users, so drop the -internal suffix.
+Internal definitions are in unifont-def.h and unifont.c, no need to share
+those.
+---
+ Makefile.am                                               | 3 ++-
+ src/libsystemd-terminal/test-unifont.c                    | 2 +-
+ src/libsystemd-terminal/unifont.c                         | 2 +-
+ src/libsystemd-terminal/{unifont-internal.h => unifont.h} | 0
+ 4 files changed, 4 insertions(+), 3 deletions(-)
+ rename src/libsystemd-terminal/{unifont-internal.h => unifont.h} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 9e087bd9fb..da36a8c1c2 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -3059,7 +3059,8 @@ libsystemd_terminal_la_SOURCES = \
+ 	src/libsystemd-terminal/term-parser.c \
+ 	src/libsystemd-terminal/term-screen.c \
+ 	src/libsystemd-terminal/term-wcwidth.c \
+-	src/libsystemd-terminal/unifont-internal.h \
++	src/libsystemd-terminal/unifont.h \
++	src/libsystemd-terminal/unifont-def.h \
+ 	src/libsystemd-terminal/unifont.c
+ 
+ libsystemd_terminal_la_LIBADD = \
+diff --git a/src/libsystemd-terminal/test-unifont.c b/src/libsystemd-terminal/test-unifont.c
+index 2c415941fb..cfeef61a47 100644
+--- a/src/libsystemd-terminal/test-unifont.c
++++ b/src/libsystemd-terminal/test-unifont.c
+@@ -30,7 +30,7 @@
+ #include <string.h>
+ #include "macro.h"
+ #include "unifont-def.h"
+-#include "unifont-internal.h"
++#include "unifont.h"
+ #include "util.h"
+ 
+ static void render(char *w, const unifont_glyph *g) {
+diff --git a/src/libsystemd-terminal/unifont.c b/src/libsystemd-terminal/unifont.c
+index 9e0f718665..aa91794410 100644
+--- a/src/libsystemd-terminal/unifont.c
++++ b/src/libsystemd-terminal/unifont.c
+@@ -37,7 +37,7 @@
+ #include <unistd.h>
+ #include "macro.h"
+ #include "unifont-def.h"
+-#include "unifont-internal.h"
++#include "unifont.h"
+ #include "util.h"
+ 
+ struct unifont {
+diff --git a/src/libsystemd-terminal/unifont-internal.h b/src/libsystemd-terminal/unifont.h
+similarity index 100%
+rename from src/libsystemd-terminal/unifont-internal.h
+rename to src/libsystemd-terminal/unifont.h

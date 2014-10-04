@@ -1,0 +1,37 @@
+From 55534fb5e4742b0db9ae5e1e0202c53804147697 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <daniel@zonque.org>
+Date: Tue, 7 Oct 2014 12:36:09 +0200
+Subject: [PATCH] bus-proxyd: check return values of getpeercred() and
+ getpeersec()
+
+If we can't get the remote peer or security creds, bail out.
+
+Spotted by coverity.
+---
+ src/bus-proxyd/bus-proxyd.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/src/bus-proxyd/bus-proxyd.c b/src/bus-proxyd/bus-proxyd.c
+index cbec04933c..ce571fa753 100644
+--- a/src/bus-proxyd/bus-proxyd.c
++++ b/src/bus-proxyd/bus-proxyd.c
+@@ -1146,8 +1146,17 @@ int main(int argc, char *argv[]) {
+                 sd_is_socket(out_fd, AF_UNIX, 0, 0) > 0;
+ 
+         if (is_unix) {
+-                getpeercred(in_fd, &ucred);
+-                getpeersec(in_fd, &peersec);
++                r = getpeercred(in_fd, &ucred);
++                if (r < 0) {
++                        log_error("Failed to get peer creds: %s", strerror(-r));
++                        goto finish;
++                }
++
++                r = getpeersec(in_fd, &peersec);
++                if (r < 0) {
++                        log_error("Failed to get security creds: %s", strerror(-r));
++                        goto finish;
++                }
+         }
+ 
+         if (arg_drop_privileges) {

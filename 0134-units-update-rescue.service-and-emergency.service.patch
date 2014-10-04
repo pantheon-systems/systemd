@@ -1,0 +1,38 @@
+From 42377d6bb771c31bff931f83163972fdcb224d0c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 30 Aug 2014 22:34:56 -0400
+Subject: [PATCH] units: update rescue.service and emergency.service
+
+^D works in emergency.service too. One needs to log in when in rescue
+mode too.
+---
+ units/emergency.service.in | 2 +-
+ units/rescue.service.in    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/units/emergency.service.in b/units/emergency.service.in
+index 224a434f72..18973e78fa 100644
+--- a/units/emergency.service.in
++++ b/units/emergency.service.in
+@@ -17,7 +17,7 @@ Before=shutdown.target
+ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStartPre=-/bin/plymouth quit
+-ExecStartPre=-/bin/echo -e 'Welcome to emergency mode! After logging in, type "journalctl -xb" to view\\nsystem logs, "systemctl reboot" to reboot, "systemctl default" to try again\\nto boot into default mode.'
++ExecStartPre=-/bin/echo -e 'Welcome to emergency mode! After logging in, type "journalctl -xb" to view\\nsystem logs, "systemctl reboot" to reboot, "systemctl default" or ^D to\\ntry again to boot into default mode.'
+ ExecStart=-/bin/sh -c "/sbin/sulogin; @SYSTEMCTL@ --fail --no-block default"
+ Type=idle
+ StandardInput=tty-force
+diff --git a/units/rescue.service.in b/units/rescue.service.in
+index ef5436960f..fc93f1e160 100644
+--- a/units/rescue.service.in
++++ b/units/rescue.service.in
+@@ -17,7 +17,7 @@ Before=shutdown.target
+ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStartPre=-/bin/plymouth quit
+-ExecStartPre=-/bin/echo -e 'Welcome to rescue mode! Type "systemctl default" or ^D to enter default mode.\\nType "journalctl -xb" to view system logs. Type "systemctl reboot" to reboot.'
++ExecStartPre=-/bin/echo -e 'Welcome to emergency mode! After logging in, type "journalctl -xb" to view\\nsystem logs, "systemctl reboot" to reboot, "systemctl default" or ^D to\\nboot into default mode.'
+ ExecStart=-/bin/sh -c "/sbin/sulogin; @SYSTEMCTL@ --fail --no-block default"
+ Type=idle
+ StandardInput=tty-force

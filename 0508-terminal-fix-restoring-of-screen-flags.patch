@@ -1,0 +1,24 @@
+From b7af2c8740e91a73348457fade97609b93e70a8d Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sat, 4 Oct 2014 23:03:15 +0200
+Subject: [PATCH] terminal: fix restoring of screen flags
+
+---
+ src/libsystemd-terminal/term-screen.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/libsystemd-terminal/term-screen.c b/src/libsystemd-terminal/term-screen.c
+index 145dcdaee5..9026c25efe 100644
+--- a/src/libsystemd-terminal/term-screen.c
++++ b/src/libsystemd-terminal/term-screen.c
+@@ -1259,8 +1259,8 @@ static int screen_DECRC(term_screen *screen, const term_seq *seq) {
+         screen->gr = screen->saved.gr;
+         screen->glt = screen->saved.glt;
+         screen->grt = screen->saved.grt;
+-        set_reset(screen, TERM_FLAG_AUTO_WRAP, screen->flags & TERM_FLAG_AUTO_WRAP);
+-        set_reset(screen, TERM_FLAG_ORIGIN_MODE, screen->flags & TERM_FLAG_ORIGIN_MODE);
++        set_reset(screen, TERM_FLAG_AUTO_WRAP, screen->saved.flags & TERM_FLAG_AUTO_WRAP);
++        set_reset(screen, TERM_FLAG_ORIGIN_MODE, screen->saved.flags & TERM_FLAG_ORIGIN_MODE);
+         screen_cursor_set(screen, screen->saved.cursor_x, screen->saved.cursor_y);
+ 
+         return 0;

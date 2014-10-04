@@ -1,0 +1,61 @@
+From 427c71629ea375e4ca1841a55902b40de21f2ab4 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 28 Aug 2014 15:24:00 +0200
+Subject: [PATCH] bus: don't skip interfaces in
+ bus_message_map_properties_changed()
+
+Skipping interfaces randomly without the caller specifying it is nasty.
+Avoid this and let the caller do that themselves.
+---
+ src/libsystemd-terminal/idev-keyboard.c | 15 +++++++++++----
+ src/libsystemd/sd-bus/bus-util.c        |  3 ---
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/src/libsystemd-terminal/idev-keyboard.c b/src/libsystemd-terminal/idev-keyboard.c
+index 03f54bb74f..ab9e4811b3 100644
+--- a/src/libsystemd-terminal/idev-keyboard.c
++++ b/src/libsystemd-terminal/idev-keyboard.c
+@@ -317,11 +317,14 @@ static int kbdctx_locale_props_changed_fn(sd_bus *bus,
+ 
+         kc->slot_locale_get_all = sd_bus_slot_unref(kc->slot_locale_get_all);
+ 
++        /* skip interface name */
++        r = sd_bus_message_skip(signal, "s");
++        if (r < 0)
++                goto error;
++
+         r = bus_message_map_properties_changed(bus, signal, kbdctx_locale_map, kc);
+-        if (r < 0) {
+-                log_debug("idev-keyboard: cannot handle PropertiesChanged from locale1: %s", strerror(-r));
+-                return r;
+-        }
++        if (r < 0)
++                goto error;
+ 
+         if (r > 0) {
+                 r = kbdctx_query_locale(kc);
+@@ -331,6 +334,10 @@ static int kbdctx_locale_props_changed_fn(sd_bus *bus,
+ 
+         kbdctx_refresh_keymap(kc);
+         return 0;
++
++error:
++        log_debug("idev-keyboard: cannot handle PropertiesChanged from locale1: %s", strerror(-r));
++        return r;
+ }
+ 
+ static int kbdctx_setup_bus(kbdctx *kc) {
+diff --git a/src/libsystemd/sd-bus/bus-util.c b/src/libsystemd/sd-bus/bus-util.c
+index aed3889b12..a85d36180e 100644
+--- a/src/libsystemd/sd-bus/bus-util.c
++++ b/src/libsystemd/sd-bus/bus-util.c
+@@ -1051,9 +1051,6 @@ int bus_message_map_properties_changed(sd_bus *bus,
+         assert(m);
+         assert(map);
+ 
+-        /* skip interface, but allow callers to do that themselves */
+-        sd_bus_message_skip(m, "s");
+-
+         r = bus_message_map_all_properties(bus, m, map, userdata);
+         if (r < 0)
+                 return r;

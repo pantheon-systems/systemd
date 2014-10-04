@@ -1,0 +1,40 @@
+From d182960ae974a0074010a058d0d909846a2f3f79 Mon Sep 17 00:00:00 2001
+From: Patrik Flykt <patrik.flykt@linux.intel.com>
+Date: Fri, 29 Aug 2014 09:20:46 +0300
+Subject: [PATCH] test-dhcp6-client: Fix option length
+
+The whole DHCPv6 test message length was incorrectly used as the length
+of DHCPv6 options causing the following bad memory access:
+
+$ build/test-dhcp6-client
+Assertion 'interface_index >= -1' failed at ../src/libsystemd-network/sd-dhcp6-client.c:129, function sd_dhcp6_client_set_index(). Ignoring.
+=================================================================
+==29135==ERROR: AddressSanitizer: global-buffer-overflow on address 0x7fe204aa9148 at pc 0x7fe204a5958f bp 0x7fff3e47d470 sp 0x7fff3e47d460
+READ of size 1 at 0x7fe204aa9148 thread T0
+    #0 0x7fe204a5958e in option_parse_hdr ../src/libsystemd-network/dhcp6-option.c:145
+    #1 0x7fe204a59884 in dhcp6_option_parse ../src/libsystemd-network/dhcp6-option.c:165
+    #2 0x7fe204a4eb9c in test_advertise_option ../src/libsystemd-network/test-dhcp6-client.c:227
+    #3 0x7fe204a51c58 in main ../src/libsystemd-network/test-dhcp6-client.c:584
+    #4 0x7fe2031590df in __libc_start_main (/lib64/libc.so.6+0x200df)
+    #5 0x7fe204a4cc5b (/home/test/systemd/build/test-dhcp6-client+0x25c5b)
+
+0x7fe204aa9148 is located 2 bytes to the right of global variable 'msg_advertise' from '../src/libsystemd-network/test-dhcp6-client.c' (0x7fe204aa9080) of size 198
+0x7fe204aa9148 is located 56 bytes to the left of global variable 'msg_reply' from '../src/libsystemd-network/test-dhcp6-client.c' (0x7fe204aa9180) of size 173
+SUMMARY: AddressSanitizer: global-buffer-overflow ../src/libsystemd-network/dhcp6-option.c:145 option_parse_hdr
+---
+ src/libsystemd-network/test-dhcp6-client.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-network/test-dhcp6-client.c b/src/libsystemd-network/test-dhcp6-client.c
+index 96c68e1feb..259db33bcd 100644
+--- a/src/libsystemd-network/test-dhcp6-client.c
++++ b/src/libsystemd-network/test-dhcp6-client.c
+@@ -207,7 +207,7 @@ static int test_advertise_option(sd_event *e) {
+         DHCP6Message *advertise = (DHCP6Message *)msg_advertise;
+         uint8_t *optval, *opt = &msg_advertise[sizeof(DHCP6Message)];
+         uint16_t optcode;
+-        size_t optlen, len = sizeof(msg_advertise);
++        size_t optlen, len = sizeof(msg_advertise) - sizeof(DHCP6Message);
+         be32_t val;
+         uint8_t preference = 255;
+         struct in6_addr addr;

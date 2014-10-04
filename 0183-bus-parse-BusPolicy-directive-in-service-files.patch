@@ -1,0 +1,159 @@
+From 501996231293506a85bf4d610938a655ddc8cb92 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <zonque@gmail.com>
+Date: Mon, 18 Aug 2014 22:42:28 +0200
+Subject: [PATCH] bus: parse BusPolicy directive in service files
+
+Add a new directive called BusPolicy to define custom endpoint policies. If
+one such directive is given, an endpoint object in the service's ExecContext is
+created and the given policy is added to it.
+---
+ man/systemd.service.xml               | 40 +++++++++++++++++++++++++
+ src/core/load-fragment-gperf.gperf.m4 |  3 ++
+ src/core/load-fragment.c              | 56 +++++++++++++++++++++++++++++++++++
+ src/core/load-fragment.h              |  1 +
+ 4 files changed, 100 insertions(+)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index c84a5254b3..a82dfb2c86 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -308,6 +308,46 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>BusPolicy=</varname></term>
++
++                                <listitem><para>If specfied, a custom kdbus
++                                endpoint will be created and installed as the
++                                default bus node for the service. Such a custom
++                                endpoint can hold an own set of policy rules
++                                that are enforced on top of the bus-wide ones.
++                                The custom endpoint is named after the service
++                                it was created for, and its node will be
++                                bind-mounted over the default bus node
++                                location, so the service can only access the
++                                bus through its own endpoint. Note that custom
++                                bus endpoints default to a 'deny all' policy.
++                                Hence, if at least one
++                                <varname>BusPolicy=</varname> directive is
++                                given, you have to make sure to add explicit
++                                rules for everything the service should be able
++                                to do.</para>
++                                <para>The value of this directive is comprised
++                                of two parts; the bus name, and a verb to
++                                specify to granted access, which is one of
++                                <option>see</option>,
++                                <option>talk</option> or
++                                <option>own</option>.
++                                <option>talk</option> implies
++                                <option>see</option>, and <option>own</option>
++                                implies both <option>talk</option> and
++                                <option>see</option>.
++                                If multiple access levels are specified for the
++                                same bus name, the most powerful one takes
++                                effect.
++                                </para>
++                                <para>Examples:</para>
++                                <programlisting>BusPolicy=org.freedesktop.systemd1 talk</programlisting>
++                                <programlisting>BusPolicy=org.foo.bar see</programlisting>
++                                <para>This option is only available on kdbus enabled systems.</para>
++                                </listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>ExecStart=</varname></term>
+                                 <listitem><para>Commands with their
+                                 arguments that are executed when this
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 24aa80d9ea..e764d68ce4 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -205,6 +205,9 @@ Service.NonBlocking,             config_parse_bool,                  0,
+ Service.BusName,                 config_parse_unit_string_printf,    0,                             offsetof(Service, bus_name)
+ Service.NotifyAccess,            config_parse_notify_access,         0,                             offsetof(Service, notify_access)
+ Service.Sockets,                 config_parse_service_sockets,       0,                             0
++m4_ifdef(`ENABLE_KDBUS',
++`Service.BusPolicy,              config_parse_bus_endpoint_policy,   0,                             offsetof(Service, exec_context)',
++`Service.BusPolicy,              config_parse_warn_compat,           0,                             0')
+ EXEC_CONTEXT_CONFIG_ITEMS(Service)m4_dnl
+ CGROUP_CONTEXT_CONFIG_ITEMS(Service)m4_dnl
+ KILL_CONTEXT_CONFIG_ITEMS(Service)m4_dnl
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index b4da6a550e..2f3acd7cbe 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -1752,6 +1752,62 @@ int config_parse_bus_policy(
+         return 0;
+ }
+ 
++int config_parse_bus_endpoint_policy(
++                const char *unit,
++                const char *filename,
++                unsigned line,
++                const char *section,
++                unsigned section_line,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++        _cleanup_free_ char *name = NULL;
++        BusPolicyAccess access;
++        ExecContext *c = data;
++        char *access_str;
++        int r;
++
++        assert(filename);
++        assert(lvalue);
++        assert(rvalue);
++        assert(data);
++
++        name = strdup(rvalue);
++        if (!name)
++                return log_oom();
++
++        access_str = strpbrk(name, WHITESPACE);
++        if (!access_str) {
++                log_syntax(unit, LOG_ERR, filename, line, EINVAL,
++                           "Invalid endpoint policy value '%s'", rvalue);
++                return 0;
++        }
++
++        *access_str = '\0';
++        access_str++;
++        access_str += strspn(access_str, WHITESPACE);
++
++        access = bus_policy_access_from_string(access_str);
++        if (access <= _BUS_POLICY_ACCESS_INVALID ||
++            access >= _BUS_POLICY_ACCESS_MAX) {
++                log_syntax(unit, LOG_ERR, filename, line, EINVAL,
++                           "Invalid endpoint policy access type '%s'", access_str);
++                return 0;
++        }
++
++        if (!c->bus_endpoint) {
++                r = bus_endpoint_new(&c->bus_endpoint);
++
++                if (r < 0)
++                        return r;
++        }
++
++        return bus_endpoint_add_policy(c->bus_endpoint, name, access);
++}
++
+ int config_parse_unit_env_file(const char *unit,
+                                const char *filename,
+                                unsigned line,
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index 9a1d7c5aac..65100c9bd7 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -67,6 +67,7 @@ int config_parse_service_sockets(const char *unit, const char *filename, unsigne
+ int config_parse_busname_service(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_bus_policy(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_bus_policy_world(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
++int config_parse_bus_endpoint_policy(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_unit_env_file(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_ip_tos(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ int config_parse_unit_condition_path(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);

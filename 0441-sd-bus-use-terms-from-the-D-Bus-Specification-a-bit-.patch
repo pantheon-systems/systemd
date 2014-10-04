@@ -1,0 +1,60 @@
+From d20a3daaa79edfa4c8d84d243f2a98c82dddd5c6 Mon Sep 17 00:00:00 2001
+From: Simon McVittie <simon.mcvittie@collabora.co.uk>
+Date: Wed, 1 Oct 2014 16:11:59 +0100
+Subject: [PATCH] sd-bus: use terms from the D-Bus Specification a bit more
+
+D-Bus' type hierarchy as described in the spec is:
+
+\- basic
+   \- fixed type (u, i, etc.)
+   \- string-like type (s, o, g)
+\- container
+
+Someone seems to have referred to basic types as "simple types" at
+some point, but that term isn't defined in the D-Bus Specification,
+and seems redundant.
+
+So far I haven't renamed functions that use "trivial" in their names
+to mean "fixed type", to avoid confusion about whether a struct of
+constant length, like (iu), is a fixed type. The answer is that it is
+fixed-length, but is not a "fixed type", so I can see that something
+like bus_type_is_fixed() might be ambiguous.
+---
+ src/libsystemd/sd-bus/PORTING-DBUS1 | 10 +++++-----
+ src/libsystemd/sd-bus/bus-type.h    |  2 ++
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/src/libsystemd/sd-bus/PORTING-DBUS1 b/src/libsystemd/sd-bus/PORTING-DBUS1
+index 63c345b11a..81e94132b3 100644
+--- a/src/libsystemd/sd-bus/PORTING-DBUS1
++++ b/src/libsystemd/sd-bus/PORTING-DBUS1
+@@ -156,11 +156,11 @@ multiple items. Some restrictions apply however:
+    contained in the payload, as well is immediately before framing of a
+    Gvariant, as well after as any padding bytes if there are any. The
+    padding bytes must be wholly contained in the preceding
+-   PAYLOAD_VEC/PAYLOAD_MEMFD item. You may not split up simple types
+-   nor arrays of trivial types. The latter is necessary to allow APIs
+-   to return direct pointers to linear chunks of fixed size trivial
+-   arrays. Examples: The simple types "u", "s", "t" have to be in the
+-   same payload item. The array of simple types "ay", "ai" have to be
++   PAYLOAD_VEC/PAYLOAD_MEMFD item. You may not split up basic types
++   nor arrays of fixed types. The latter is necessary to allow APIs
++   to return direct pointers to linear arrays of numeric
++   values. Examples: The basic types "u", "s", "t" have to be in the
++   same payload item. The array of fixed types "ay", "ai" have to be
+    fully in contained in the same payload item. For an array "as" or
+    "a(si)" the only restriction however is to keep each string
+    individually in an uninterrupted item, to keep the framing of each
+diff --git a/src/libsystemd/sd-bus/bus-type.h b/src/libsystemd/sd-bus/bus-type.h
+index 2e423bbfdb..581e8d5841 100644
+--- a/src/libsystemd/sd-bus/bus-type.h
++++ b/src/libsystemd/sd-bus/bus-type.h
+@@ -29,6 +29,8 @@
+ bool bus_type_is_valid(char c) _const_;
+ bool bus_type_is_valid_in_signature(char c) _const_;
+ bool bus_type_is_basic(char c) _const_;
++/* "trivial" is systemd's term for what the D-Bus Specification calls
++ * a "fixed type": that is, a basic type of fixed length */
+ bool bus_type_is_trivial(char c) _const_;
+ bool bus_type_is_container(char c) _const_;
+ 

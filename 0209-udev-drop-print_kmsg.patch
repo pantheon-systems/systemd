@@ -1,0 +1,69 @@
+From 9d19a679f23c7a72c326cbbbf44e0c9f423dec5d Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Tue, 9 Sep 2014 22:48:07 +0200
+Subject: [PATCH] udev - drop print_kmsg
+
+The only remaining user was 'starting version XXX', which is now logged using log_info().
+---
+ src/libudev/libudev-private.h |  1 -
+ src/libudev/libudev-util.c    | 25 -------------------------
+ src/udev/udevd.c              |  2 +-
+ 3 files changed, 1 insertion(+), 27 deletions(-)
+
+diff --git a/src/libudev/libudev-private.h b/src/libudev/libudev-private.h
+index ae975575dc..cd1c1fb8b3 100644
+--- a/src/libudev/libudev-private.h
++++ b/src/libudev/libudev-private.h
+@@ -170,6 +170,5 @@ int util_delete_path(struct udev *udev, const char *path);
+ uid_t util_lookup_user(struct udev *udev, const char *user);
+ gid_t util_lookup_group(struct udev *udev, const char *group);
+ int util_resolve_subsys_kernel(struct udev *udev, const char *string, char *result, size_t maxsize, int read_value);
+-ssize_t print_kmsg(const char *fmt, ...) _printf_(1, 2);
+ 
+ #endif
+diff --git a/src/libudev/libudev-util.c b/src/libudev/libudev-util.c
+index d9cdde1751..9e19e31407 100644
+--- a/src/libudev/libudev-util.c
++++ b/src/libudev/libudev-util.c
+@@ -415,28 +415,3 @@ uint64_t util_string_bloom64(const char *str)
+         bits |= 1LLU << ((hash >> 18) & 63);
+         return bits;
+ }
+-
+-ssize_t print_kmsg(const char *fmt, ...)
+-{
+-        _cleanup_close_ int fd = -1;
+-        va_list ap;
+-        char text[1024];
+-        ssize_t len;
+-        ssize_t ret;
+-
+-        fd = open("/dev/kmsg", O_WRONLY|O_NOCTTY|O_CLOEXEC);
+-        if (fd < 0)
+-                return -errno;
+-
+-        len = snprintf(text, sizeof(text), "<30>systemd-udevd[%u]: ", getpid());
+-
+-        va_start(ap, fmt);
+-        len += vsnprintf(text + len, sizeof(text) - len, fmt, ap);
+-        va_end(ap);
+-
+-        ret = write(fd, text, len);
+-        if (ret < 0)
+-                return -errno;
+-
+-        return ret;
+-}
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index be0acc3177..b023b6ee4c 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -1200,7 +1200,7 @@ int main(int argc, char *argv[]) {
+                 sd_notify(1, "READY=1");
+         }
+ 
+-        print_kmsg("starting version " VERSION "\n");
++        log_info("starting version " VERSION "\n");
+ 
+         if (!debug) {
+                 int fd;

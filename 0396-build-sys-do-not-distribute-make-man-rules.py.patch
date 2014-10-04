@@ -1,0 +1,23 @@
+From 0b094b10b4268383c836fa4f285e02ba25ed3ad0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 25 Sep 2014 17:39:56 -0400
+Subject: [PATCH] build-sys: do not distribute make-man-rules.py
+
+It was added to EXTRA_DIST in 3c3e5f4276a893791110b03984735654372aa33a,
+but this script only makes sense for developers.
+---
+ Makefile.am | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 065d688ebb..bf860cdc00 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -720,7 +720,6 @@ EXTRA_DIST += \
+ 	$(man_MANS) \
+ 	tools/make-man-index.py \
+ 	tools/make-directive-index.py \
+-	tools/make-man-rules.py \
+ 	tools/xml_helper.py
+ 
+ # ------------------------------------------------------------------------------

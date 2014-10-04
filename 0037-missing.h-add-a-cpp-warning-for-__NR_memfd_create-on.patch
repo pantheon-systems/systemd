@@ -1,0 +1,23 @@
+From 2de1851fe3611c59abf77127c6b5bc1b91eb7cba Mon Sep 17 00:00:00 2001
+From: Daniel Mack <zonque@gmail.com>
+Date: Fri, 22 Aug 2014 16:10:02 +0200
+Subject: [PATCH] missing.h: add a cpp warning for __NR_memfd_create on MIPS
+
+---
+ src/shared/missing.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/missing.h b/src/shared/missing.h
+index 3051cb5640..a9dd274274 100644
+--- a/src/shared/missing.h
++++ b/src/shared/missing.h
+@@ -168,7 +168,8 @@ static inline int pivot_root(const char *new_root, const char *put_old) {
+ #    endif
+ #  endif
+ #  ifndef __NR_memfd_create
+-#    define __NR_memfd_create 0xffffffff /* FIXME */
++#    warning "__NR_memfd_create not yet defined for MIPS"
++#    define __NR_memfd_create 0xffffffff
+ #  endif
+ #else
+ #  ifndef __NR_fanotify_init

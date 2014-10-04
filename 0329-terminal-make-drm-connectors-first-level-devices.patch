@@ -1,0 +1,25 @@
+From c1102405c1c151b693cf92f1b704a4eb8aacee73 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sat, 20 Sep 2014 09:44:14 +0200
+Subject: [PATCH] terminal: make drm-connectors first-level devices
+
+So far, we only forward DRM cards via sysview APIs. However, with MST,
+connectors can be hotplugged, too. Forward the connectors as first-level
+devices via sysview so API users can react to changing DRM connectors.
+---
+ src/libsystemd-terminal/sysview.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/sysview.c b/src/libsystemd-terminal/sysview.c
+index 23d564d6a0..161ea117a4 100644
+--- a/src/libsystemd-terminal/sysview.c
++++ b/src/libsystemd-terminal/sysview.c
+@@ -895,7 +895,7 @@ static int context_ud_hotplug(sysview_context *c, struct udev_device *d) {
+ 
+                 if (streq(subsystem, "input") && startswith(sysname, "event") && safe_atou(sysname + 5, &t) >= 0)
+                         type = SYSVIEW_DEVICE_EVDEV;
+-                else if (streq(subsystem, "drm") && startswith(sysname, "card") && safe_atou(sysname + 4, &t) >= 0)
++                else if (streq(subsystem, "drm") && startswith(sysname, "card"))
+                         type = SYSVIEW_DEVICE_DRM;
+                 else
+                         type = (unsigned)-1;

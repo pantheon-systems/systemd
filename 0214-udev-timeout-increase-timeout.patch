@@ -1,0 +1,25 @@
+From b5338a19864ac3f5632aee48069a669479621dca Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Wed, 10 Sep 2014 10:56:26 +0200
+Subject: [PATCH] udev: timeout - increase timeout
+
+Some kernel modules still take more than one minute to insmod, we no longer rely on the timeout
+killing insmod within a given period of time, so just bump this to a much higher value. Its only
+purpose is to make sure that nothing stays aronud forever.
+---
+ src/udev/udevd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index b023b6ee4c..a7f8cbdf5b 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -74,7 +74,7 @@ static bool reload;
+ static int children;
+ static int children_max;
+ static int exec_delay;
+-static usec_t event_timeout_usec = 60 * USEC_PER_SEC;
++static usec_t event_timeout_usec = 180 * USEC_PER_SEC;
+ static sigset_t sigmask_orig;
+ static UDEV_LIST(event_list);
+ static UDEV_LIST(worker_list);

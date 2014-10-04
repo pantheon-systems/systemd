@@ -1,0 +1,22 @@
+From 25773e7fc59b4ce53d67da4e18bfe4d13ab0b14b Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 18 Sep 2014 21:57:49 +0200
+Subject: [PATCH] udevd: don't fail if /run/udev exists
+
+---
+ src/udev/udevd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index 37db81c8bb..29ccb518e6 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -1155,7 +1155,7 @@ int main(int argc, char *argv[]) {
+         umask(022);
+ 
+         r = mkdir("/run/udev", 0755);
+-        if (r < 0) {
++        if (r < 0 && errno != EEXIST) {
+                 log_error("could not create /run/udev: %m");
+                 goto exit;
+         }

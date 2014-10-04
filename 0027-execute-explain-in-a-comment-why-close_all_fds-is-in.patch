@@ -1,0 +1,25 @@
+From f461c8073dee9cd10bfae5ae3586e785ec8a5d07 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 21 Aug 2014 17:35:19 +0200
+Subject: [PATCH] execute: explain in a comment, why close_all_fds() is invoked
+ the second time differently
+
+---
+ src/core/execute.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 2544a2470c..b5b22472d5 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1635,7 +1635,9 @@ int exec_spawn(ExecCommand *command,
+                 }
+ 
+                 /* We repeat the fd closing here, to make sure that
+-                 * nothing is leaked from the PAM modules */
++                 * nothing is leaked from the PAM modules. Note that
++                 * we are more aggressive this time since socket_fd
++                 * and the netns fds we don#t need anymore. */
+                 err = close_all_fds(fds, n_fds);
+                 if (err >= 0)
+                         err = shift_fds(fds, n_fds);

@@ -1,0 +1,24 @@
+From ac528e3e3b93981cc9692250556b113acce7eb17 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 28 Aug 2014 20:24:12 +0200
+Subject: [PATCH] hibernate-resume: refuse to run outside of an initrd
+
+---
+ src/hibernate-resume/hibernate-resume.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/hibernate-resume/hibernate-resume.c b/src/hibernate-resume/hibernate-resume.c
+index 8f68f81f9e..b234a0b49a 100644
+--- a/src/hibernate-resume/hibernate-resume.c
++++ b/src/hibernate-resume/hibernate-resume.c
+@@ -46,6 +46,10 @@ int main(int argc, char *argv[]) {
+ 
+         umask(0022);
+ 
++        /* Refuse to run unless we are in an initrd() */
++        if (!in_initrd())
++                return EXIT_SUCCESS;
++
+         device = argv[1];
+ 
+         if (stat(device, &st) < 0) {

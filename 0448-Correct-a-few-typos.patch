@@ -1,0 +1,36 @@
+From 4cf07da260b6c21596fec9a6a03a615729f617dc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Torstein=20Huseb=C3=B8?= <torstein@huseboe.net>
+Date: Tue, 30 Sep 2014 15:25:47 +0200
+Subject: [PATCH] Correct a few typos
+
+---
+ man/systemd-debug-generator.xml                     | 2 +-
+ src/tty-ask-password-agent/tty-ask-password-agent.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd-debug-generator.xml b/man/systemd-debug-generator.xml
+index ce4750e530..a2bef5fe28 100644
+--- a/man/systemd-debug-generator.xml
++++ b/man/systemd-debug-generator.xml
+@@ -68,7 +68,7 @@
+                 <para>If the <option>systemd.wants=</option> option is
+                 specified and followed by a unit name, a start job for
+                 this unit is added to the initial transaction. This is
+-                useful to start one ore more additional units at
++                useful to start one or more additional units at
+                 boot. May be specified more than once.</para>
+ 
+                 <para>If the <option>systemd.debug-shell</option>
+diff --git a/src/tty-ask-password-agent/tty-ask-password-agent.c b/src/tty-ask-password-agent/tty-ask-password-agent.c
+index 8a02fb0b5e..e7cbde285c 100644
+--- a/src/tty-ask-password-agent/tty-ask-password-agent.c
++++ b/src/tty-ask-password-agent/tty-ask-password-agent.c
+@@ -183,7 +183,7 @@ static int ask_password_plymouth(
+                         uint32_t size;
+                         char **l;
+ 
+-                        /* One ore more answers */
++                        /* One or more answers */
+                         if (p < 5)
+                                 continue;
+ 

@@ -1,0 +1,59 @@
+From 0975b63fb31263e535a2d26ed41e66e23f468bc5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 22 Aug 2014 12:44:17 +0200
+Subject: [PATCH] dbus1-generator: properly free the FILE*
+
+Also, rework the code to make use of fflush_and_check().
+
+Issue discovered by Simon Danner.
+---
+ src/dbus1-generator/dbus1-generator.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/src/dbus1-generator/dbus1-generator.c b/src/dbus1-generator/dbus1-generator.c
+index e1ffc5515f..3c4522b589 100644
+--- a/src/dbus1-generator/dbus1-generator.c
++++ b/src/dbus1-generator/dbus1-generator.c
+@@ -40,6 +40,7 @@ static int create_dbus_files(
+ 
+         _cleanup_free_ char *b = NULL, *s = NULL, *lnk = NULL;
+         _cleanup_fclose_ FILE *f = NULL;
++        int r;
+ 
+         assert(path);
+         assert(name);
+@@ -100,12 +101,15 @@ static int create_dbus_files(
+                         }
+                 }
+ 
+-                fflush(f);
+-                if (ferror(f)) {
+-                        log_error("Failed to write %s: %m", a);
+-                        return -errno;
++                r = fflush_and_check(f);
++                if (r < 0) {
++                        log_error("Failed to write %s: %s", a, strerror(-r));
++                        return r;
+                 }
+ 
++                fclose(f);
++                f = NULL;
++
+                 service = s;
+         }
+ 
+@@ -134,10 +138,10 @@ static int create_dbus_files(
+                 name,
+                 service);
+ 
+-        fflush(f);
+-        if (ferror(f)) {
+-                log_error("Failed to write %s: %m", b);
+-                return -errno;
++        r = fflush_and_check(f);
++        if (r < 0) {
++                log_error("Failed to write %s: %s", b, strerror(-r));
++                return r;
+         }
+ 
+         lnk = strjoin(arg_dest_late, "/" SPECIAL_BUSNAMES_TARGET ".wants/", name, ".busname", NULL);

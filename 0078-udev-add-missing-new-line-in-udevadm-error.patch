@@ -1,0 +1,26 @@
+From 92e63a51052e9ba2fbe6e47a173b6264ae292a58 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed, 27 Aug 2014 18:02:17 +0200
+Subject: [PATCH] udev: add missing new-line in udevadm error
+
+fprintf() does not add new-lines automatically like log_*() does. Add the
+missing \n specified so "udevadm" invoked without arguments adds a newline
+to:
+    udevadm: missing or unknown command
+---
+ src/udev/udevadm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udev/udevadm.c b/src/udev/udevadm.c
+index 2c11550467..df546dd823 100644
+--- a/src/udev/udevadm.c
++++ b/src/udev/udevadm.c
+@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
+                                 goto out;
+                         }
+ 
+-        fprintf(stderr, "%s: missing or unknown command", program_invocation_short_name);
++        fprintf(stderr, "%s: missing or unknown command\n", program_invocation_short_name);
+         rc = 2;
+ out:
+         label_finish();

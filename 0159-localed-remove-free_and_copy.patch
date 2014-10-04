@@ -1,0 +1,188 @@
+From af76d302c1e26f916494202f1b3663f15710bdcd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 3 Sep 2014 22:53:23 -0400
+Subject: [PATCH] localed: remove free_and_copy
+
+It was mostly a duplicate of free_and_strdup().
+---
+ src/locale/localed.c | 67 +++++++++++++++++++---------------------------------
+ src/shared/util.c    | 18 --------------
+ src/shared/util.h    |  2 --
+ 3 files changed, 24 insertions(+), 63 deletions(-)
+
+diff --git a/src/locale/localed.c b/src/locale/localed.c
+index c9f7105bb3..ac8477ad39 100644
+--- a/src/locale/localed.c
++++ b/src/locale/localed.c
+@@ -92,20 +92,8 @@ typedef struct Context {
+         Hashmap *polkit_registry;
+ } Context;
+ 
+-static int free_and_copy(char **s, const char *v) {
+-        int r;
+-        char *t;
+-
+-        assert(s);
+-
+-        r = strdup_or_null(isempty(v) ? NULL : v, &t);
+-        if (r < 0)
+-                return r;
+-
+-        free(*s);
+-        *s = t;
+-
+-        return 0;
++static const char* nonempty(const char *s) {
++        return isempty(s) ? NULL : s;
+ }
+ 
+ static void free_and_replace(char **s, char *v) {
+@@ -144,10 +132,8 @@ static void locale_simplify(Context *c) {
+         int p;
+ 
+         for (p = LOCALE_LANG+1; p < _LOCALE_MAX; p++)
+-                if (isempty(c->locale[p]) || streq_ptr(c->locale[LOCALE_LANG], c->locale[p])) {
+-                        free(c->locale[p]);
+-                        c->locale[p] = NULL;
+-                }
++                if (isempty(c->locale[p]) || streq_ptr(c->locale[LOCALE_LANG], c->locale[p]))
++                        free_and_replace(&c->locale[p], NULL);
+ }
+ 
+ static int locale_read_data(Context *c) {
+@@ -179,7 +165,8 @@ static int locale_read_data(Context *c) {
+                 for (p = 0; p < _LOCALE_MAX; p++) {
+                         assert(names[p]);
+ 
+-                        r = free_and_copy(&c->locale[p], getenv(names[p]));
++                        r = free_and_strdup(&c->locale[p],
++                                            nonempty(getenv(names[p])));
+                         if (r < 0)
+                                 return r;
+                 }
+@@ -503,8 +490,8 @@ static int vconsole_reload(sd_bus *bus) {
+         return r;
+ }
+ 
+-static char *strnulldash(const char *s) {
+-        return s == NULL || *s == 0 || (s[0] == '-' && s[1] == 0) ? NULL : (char*) s;
++static const char* strnulldash(const char *s) {
++        return isempty(s) || streq(s, "-") ? NULL : s;
+ }
+ 
+ static int read_next_mapping(FILE *f, unsigned *n, char ***a) {
+@@ -588,10 +575,10 @@ static int vconsole_convert_to_x11(Context *c, sd_bus *bus) {
+                             !streq_ptr(c->x11_variant, strnulldash(a[3])) ||
+                             !streq_ptr(c->x11_options, strnulldash(a[4]))) {
+ 
+-                                if (free_and_copy(&c->x11_layout, strnulldash(a[1])) < 0 ||
+-                                    free_and_copy(&c->x11_model, strnulldash(a[2])) < 0 ||
+-                                    free_and_copy(&c->x11_variant, strnulldash(a[3])) < 0 ||
+-                                    free_and_copy(&c->x11_options, strnulldash(a[4])) < 0)
++                                if (free_and_strdup(&c->x11_layout, strnulldash(a[1])) < 0 ||
++                                    free_and_strdup(&c->x11_model, strnulldash(a[2])) < 0 ||
++                                    free_and_strdup(&c->x11_variant, strnulldash(a[3])) < 0 ||
++                                    free_and_strdup(&c->x11_options, strnulldash(a[4])) < 0)
+                                         return -ENOMEM;
+ 
+                                 modified = true;
+@@ -713,10 +700,9 @@ static int find_legacy_keymap(Context *c, char **new_keymap) {
+                 if (matching > best_matching) {
+                         best_matching = matching;
+ 
+-                        free(*new_keymap);
+-                        *new_keymap = strdup(a[0]);
+-                        if (!*new_keymap)
+-                                return -ENOMEM;
++                        r = free_and_strdup(new_keymap, a[0]);
++                        if (r < 0)
++                                return r;
+                 }
+         }
+ 
+@@ -868,14 +854,9 @@ static int method_set_locale(sd_bus *bus, sd_bus_message *m, void *userdata, sd_
+ 
+                                 k = strlen(names[p]);
+                                 if (startswith(*i, names[p]) && (*i)[k] == '=') {
+-                                        char *t;
+-
+-                                        t = strdup(*i + k + 1);
+-                                        if (!t)
+-                                                return -ENOMEM;
+-
+-                                        free(c->locale[p]);
+-                                        c->locale[p] = t;
++                                        r = free_and_strdup(&c->locale[p], *i + k + 1);
++                                        if (r < 0)
++                                                return r;
+                                         break;
+                                 }
+                         }
+@@ -937,8 +918,8 @@ static int method_set_vc_keyboard(sd_bus *bus, sd_bus_message *m, void *userdata
+                 if (r == 0)
+                         return 1; /* No authorization for now, but the async polkit stuff will call us again when it has it */
+ 
+-                if (free_and_copy(&c->vc_keymap, keymap) < 0 ||
+-                    free_and_copy(&c->vc_keymap_toggle, keymap_toggle) < 0)
++                if (free_and_strdup(&c->vc_keymap, keymap) < 0 ||
++                    free_and_strdup(&c->vc_keymap_toggle, keymap_toggle) < 0)
+                         return -ENOMEM;
+ 
+                 r = vconsole_write_data(c);
+@@ -1007,10 +988,10 @@ static int method_set_x11_keyboard(sd_bus *bus, sd_bus_message *m, void *userdat
+                 if (r == 0)
+                         return 1; /* No authorization for now, but the async polkit stuff will call us again when it has it */
+ 
+-                if (free_and_copy(&c->x11_layout, layout) < 0 ||
+-                    free_and_copy(&c->x11_model, model) < 0 ||
+-                    free_and_copy(&c->x11_variant, variant) < 0 ||
+-                    free_and_copy(&c->x11_options, options) < 0)
++                if (free_and_strdup(&c->x11_layout, layout) < 0 ||
++                    free_and_strdup(&c->x11_model, model) < 0 ||
++                    free_and_strdup(&c->x11_variant, variant) < 0 ||
++                    free_and_strdup(&c->x11_options, options) < 0)
+                         return -ENOMEM;
+ 
+                 r = write_data_x11(c);
+diff --git a/src/shared/util.c b/src/shared/util.c
+index cf9d487b82..502b3675b1 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -4981,24 +4981,6 @@ bool kexec_loaded(void) {
+        return loaded;
+ }
+ 
+-int strdup_or_null(const char *a, char **b) {
+-        char *c;
+-
+-        assert(b);
+-
+-        if (!a) {
+-                *b = NULL;
+-                return 0;
+-        }
+-
+-        c = strdup(a);
+-        if (!c)
+-                return -ENOMEM;
+-
+-        *b = c;
+-        return 0;
+-}
+-
+ int prot_from_flags(int flags) {
+ 
+         switch (flags & O_ACCMODE) {
+diff --git a/src/shared/util.h b/src/shared/util.h
+index 3401280d09..08d556fc92 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -583,8 +583,6 @@ int block_get_whole_disk(dev_t d, dev_t *ret);
+ 
+ int file_is_priv_sticky(const char *p);
+ 
+-int strdup_or_null(const char *a, char **b);
+-
+ #define NULSTR_FOREACH(i, l)                                    \
+         for ((i) = (l); (i) && *(i); (i) = strchr((i), 0)+1)
+ 

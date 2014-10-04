@@ -1,0 +1,119 @@
+From fb835651aff79a1e7fc5795086c9b26e59a8e6ca Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 22 Aug 2014 14:41:37 +0200
+Subject: [PATCH] shared: make container_of() use unique variable names
+
+If you stack container_of() macros, you will get warnings due to shadowing
+variables of the parent context. To avoid this, use unique names for
+variables.
+
+Two new helpers are added:
+  UNIQ: This evaluates to a truly unique value never returned by any
+        evaluation of this macro. It's a shortcut for __COUNTER__.
+  UNIQ_T: Takes two arguments and concatenates them. It is a shortcut for
+          CONCATENATE, but meant to defined typed local variables.
+
+As you usually want to use variables that you just defined, you need to
+reference the same unique value at least two times. However, UNIQ returns
+a new value on each evaluation, therefore, you have to pass the unique
+values into the macro like this:
+
+    #define my_macro(a, b) __max_macro(UNIQ, UNIQ, (a), (b))
+    #define __my_macro(uniqa, uniqb, a, b) ({
+                typeof(a) UNIQ_T(A, uniqa) = (a);
+                typeof(b) UNIQ_T(B, uniqb) = (b);
+                MY_UNSAFE_MACRO(UNIQ_T(A, uniqa), UNIQ_T(B, uniqb));
+        })
+
+This way, MY_UNSAFE_MACRO() can safely evaluate it's arguments multiple
+times as they are local variables. But you can also stack invocations to
+the macro my_macro() without clashing names.
+
+This is the same as if you did:
+
+    #define my_macro(a, b) __max_macro(__COUNTER__, __COUNTER__, (a), (b))
+    #define __my_macro(prefixa, prefixb, a, b) ({
+                typeof(a) CONCATENATE(A, prefixa) = (a);
+                typeof(b) CONCATENATE(B, prefixb) = (b);
+                MY_UNSAFE_MACRO(CONCATENATE(A, prefixa), CONCATENATE(B, prefixb));
+        })
+
+...but in my opinion, the first macro is easier to write and read.
+
+This patch starts by converting container_of() to use this new helper.
+Other macros may follow (like MIN, MAX, CLAMP, ...).
+---
+ src/shared/macro.h   | 13 ++++++++-----
+ src/test/test-util.c | 19 +++++++++++++++++++
+ 2 files changed, 27 insertions(+), 5 deletions(-)
+
+diff --git a/src/shared/macro.h b/src/shared/macro.h
+index 2807bc74e8..e6734804bd 100644
+--- a/src/shared/macro.h
++++ b/src/shared/macro.h
+@@ -79,6 +79,9 @@
+ #define XCONCATENATE(x, y) x ## y
+ #define CONCATENATE(x, y) XCONCATENATE(x, y)
+ 
++#define UNIQ_T(x, uniq) CONCATENATE(__unique_prefix_, CONCATENATE(x, uniq))
++#define UNIQ __COUNTER__
++
+ /* Rounds up */
+ 
+ #define ALIGN4(l) (((l) + 3) & ~3)
+@@ -122,13 +125,13 @@ static inline unsigned long ALIGN_POWER2(unsigned long u) {
+  * @ptr: the pointer to the member.
+  * @type: the type of the container struct this is embedded in.
+  * @member: the name of the member within the struct.
+- *
+  */
+-#define container_of(ptr, type, member)                                 \
++#define container_of(ptr, type, member) __container_of(UNIQ, (ptr), type, member)
++#define __container_of(uniq, ptr, type, member)                         \
+         __extension__ ({                                                \
+-                        const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+-                        (type *)( (char *)__mptr - offsetof(type,member) ); \
+-                })
++                const typeof( ((type*)0)->member ) *UNIQ_T(A, uniq) = (ptr); \
++                (type*)( (char *)UNIQ_T(A, uniq) - offsetof(type,member) ); \
++        })
+ 
+ #undef MAX
+ #define MAX(a,b)                                        \
+diff --git a/src/test/test-util.c b/src/test/test-util.c
+index 4d9b28f9c8..795f3a1b3d 100644
+--- a/src/test/test-util.c
++++ b/src/test/test-util.c
+@@ -96,6 +96,24 @@ static void test_max(void) {
+         assert_cc(MAXSIZE(char, long) == sizeof(long));
+ }
+ 
++static void test_container_of(void) {
++        struct mytype {
++                uint8_t pad1[3];
++                uint64_t v1;
++                uint8_t pad2[2];
++                uint32_t v2;
++        } _packed_ myval = { };
++
++        assert_cc(sizeof(myval) == 17);
++        assert_se(container_of(&myval.v1, struct mytype, v1) == &myval);
++        assert_se(container_of(&myval.v2, struct mytype, v2) == &myval);
++        assert_se(container_of(&container_of(&myval.v2,
++                                             struct mytype,
++                                             v2)->v1,
++                               struct mytype,
++                               v1) == &myval);
++}
++
+ static void test_first_word(void) {
+         assert_se(first_word("Hello", ""));
+         assert_se(first_word("Hello", "Hello"));
+@@ -1218,6 +1236,7 @@ int main(int argc, char *argv[]) {
+         test_streq_ptr();
+         test_align_power2();
+         test_max();
++        test_container_of();
+         test_first_word();
+         test_close_many();
+         test_parse_boolean();

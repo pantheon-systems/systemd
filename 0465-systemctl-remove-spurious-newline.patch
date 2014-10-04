@@ -1,0 +1,24 @@
+From cc19881a694c26af2d941246f72221df7e76ee02 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 2 Oct 2014 20:37:50 +0200
+Subject: [PATCH] systemctl: remove spurious newline
+
+---
+ src/systemctl/systemctl.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 901212852d..1c6fef484e 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -4466,9 +4466,7 @@ static int cat(sd_bus *bus, char **args) {
+         STRV_FOREACH(name, names) {
+                 _cleanup_bus_error_free_ sd_bus_error error = SD_BUS_ERROR_NULL;
+                 _cleanup_strv_free_ char **dropin_paths = NULL;
+-                _cleanup_free_ char *fragment_path = NULL;
+-                _cleanup_free_ char *unit = NULL;
+-
++                _cleanup_free_ char *fragment_path = NULL, *unit = NULL;
+                 char **path;
+ 
+                 unit = unit_dbus_path_from_name(*name);

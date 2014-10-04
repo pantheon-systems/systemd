@@ -1,0 +1,47 @@
+From b67ddc7bbe31cde7f69f9814204d9bb1d4623c47 Mon Sep 17 00:00:00 2001
+From: Philippe De Swert <philippedeswert@gmail.com>
+Date: Wed, 10 Sep 2014 12:20:41 +0300
+Subject: [PATCH] journal: do not leak mmaps on OOM
+
+After a section of memory is succesfully allocated, some of the following
+actions can still fail due to lack of memory. In this case -ENOMEM is
+returned without actually freeing the already mapped memory.
+Found with coverity. Fixes: CID#1237762
+---
+ src/journal/mmap-cache.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/src/journal/mmap-cache.c b/src/journal/mmap-cache.c
+index 7dbbb5ef38..908562da27 100644
+--- a/src/journal/mmap-cache.c
++++ b/src/journal/mmap-cache.c
+@@ -496,15 +496,15 @@ static int add_mmap(
+ 
+         c = context_add(m, context);
+         if (!c)
+-                return -ENOMEM;
++                goto outofmem;
+ 
+         f = fd_add(m, fd);
+         if (!f)
+-                return -ENOMEM;
++                goto outofmem;
+ 
+         w = window_add(m);
+         if (!w)
+-                return -ENOMEM;
++                goto outofmem;
+ 
+         w->keep_always = keep_always;
+         w->ptr = d;
+@@ -522,6 +522,10 @@ static int add_mmap(
+         if (ret)
+                 *ret = (uint8_t*) w->ptr + (offset - w->offset);
+         return 1;
++
++outofmem:
++        munmap(d, wsize);
++        return -ENOMEM;
+ }
+ 
+ int mmap_cache_get(

@@ -1,0 +1,29 @@
+From ba7408a6e9fa2f79f7e69052de78f82e12c613f6 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 15 Sep 2014 14:21:00 +0200
+Subject: [PATCH] udev: util - use log_level_from_string()
+
+---
+ src/libudev/libudev-util.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/src/libudev/libudev-util.c b/src/libudev/libudev-util.c
+index a7125fa63f..f3fdf3b5aa 100644
+--- a/src/libudev/libudev-util.c
++++ b/src/libudev/libudev-util.c
+@@ -162,13 +162,8 @@ int util_log_priority(const char *priority)
+         prio = strtol(priority, &endptr, 10);
+         if (endptr[0] == '\0' || isspace(endptr[0]))
+                 return prio;
+-        if (startswith(priority, "err"))
+-                return LOG_ERR;
+-        if (startswith(priority, "info"))
+-                return LOG_INFO;
+-        if (startswith(priority, "debug"))
+-                return LOG_DEBUG;
+-        return 0;
++
++        return log_level_from_string(priority);
+ }
+ 
+ size_t util_path_encode(const char *src, char *dest, size_t size)
