@@ -906,6 +906,10 @@ ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd
 ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/graphical.target.wants/
 ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/reboot.target.wants/
 
+mkdir -p %{buildroot}%{_localstatedir}/{run,log}/
+touch %{buildroot}%{_localstatedir}/run/utmp
+touch %{buildroot}%{_localstatedir}/log/{w,b}tmp
+
 # Make sure the user generators dir exists too
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-generators
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
@@ -953,6 +957,7 @@ rm -rf %{buildroot}%{_docdir}/LICENSE*
 
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
+getent group utmp >/dev/null 2>&1 || groupadd -r -g 22 utmp >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
 getent group input >/dev/null 2>&1 || groupadd -r input >/dev/null 2>&1 || :
@@ -1128,6 +1133,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %ghost %{_localstatedir}/lib/systemd/clock
 %ghost %{_localstatedir}/lib/systemd/catalog/database
 %{_localstatedir}/log/README
+%ghost %attr(0664,root,utmp) %{_localstatedir}/run/utmp
+%ghost %attr(0664,root,utmp) %{_localstatedir}/log/wtmp
+%ghost %attr(0600,root,utmp) %{_localstatedir}/log/btmp
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
