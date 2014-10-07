@@ -573,6 +573,7 @@ Patch0531:      0531-Update-TODO.patch
 Patch0532:      0532-proc-sys-prefixes-are-not-necessary-for-sysctl-anymo.patch
 Patch0533:      0533-core-don-t-allow-enabling-if-unit-is-masked.patch
 Patch0534:      0534-fedora-disable-resolv.conf-symlink.patch
+Patch0535:      0535-fedora-add-bridge-sysctl-configuration.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1222,6 +1223,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_prefix}/lib/tmpfiles.d/etc.conf
 %{_prefix}/lib/sysctl.d/50-default.conf
 %{_prefix}/lib/sysctl.d/50-coredump.conf
+%{_prefix}/lib/sysctl.d/50-bridge.conf
 %{_prefix}/lib/sysusers.d/basic.conf
 %{_prefix}/lib/sysusers.d/systemd.conf
 %{_prefix}/lib/systemd/system-preset/85-display-manager.preset
