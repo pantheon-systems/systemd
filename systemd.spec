@@ -34,6 +34,7 @@ Source3:        85-display-manager.preset
 # Prevent accidental removal of the systemd package
 Source4:        yum-protect-systemd.conf
 Source5:        inittab
+Source6:        sysctl.conf.README
 
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v216..master
@@ -877,6 +878,10 @@ chmod 600 %{buildroot}/etc/crypttab
 
 install -m 0644 %{SOURCE5} %{buildroot}/etc/
 
+mkdir -p %{buildroot}/etc/sysctl.d
+install -m 0644 %{SOURCE6} %{buildroot}/etc/sysctl.conf
+ln -s ../sysctl.conf %{buildroot}/etc/sysctl.d/99-sysctl.conf
+
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the user deleted
 # them.
@@ -1103,6 +1108,8 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %dir %{_sysconfdir}/udev/rules.d
 %ghost %verify(not md5 size mtime) %config(noreplace,missingok) /etc/crypttab
 /etc/inittab
+%config(noreplace) %{_sysconfdir}/sysctl.conf
+%{_sysconfdir}/sysctl.d/99-sysctl.conf
 %dir %{_prefix}/lib/systemd
 %{_prefix}/lib/systemd/system-generators
 %{_prefix}/lib/systemd/user-generators
