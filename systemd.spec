@@ -29,10 +29,11 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 %endif
 # Fedora's default preset policy
 Source1:        90-default.preset
-Source7:        99-default-disable.preset
-Source5:        85-display-manager.preset
+Source2:        99-default-disable.preset
+Source3:        85-display-manager.preset
 # Prevent accidental removal of the systemd package
-Source6:        yum-protect-systemd.conf
+Source4:        yum-protect-systemd.conf
+Source5:        inittab
 
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v216..master
@@ -870,6 +871,12 @@ ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
+# Compatiblity and documentation files
+touch %{buildroot}/etc/crypttab
+chmod 600 %{buildroot}/etc/crypttab
+
+install -m 0644 %{SOURCE5} %{buildroot}/etc/
+
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the user deleted
 # them.
@@ -917,8 +924,8 @@ touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
 install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-install -m 0644 %{SOURCE7} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -m 0644 %{SOURCE2} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -m 0644 %{SOURCE3} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -937,7 +944,7 @@ touch %{buildroot}%{_localstatedir}/lib/systemd/clock
 
 # Install yum protection fragment
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
-install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
+install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
 # Delete LICENSE files from _docdir (we'll get them in as %%license)
 rm -rf %{buildroot}%{_docdir}/LICENSE*
@@ -1089,6 +1096,8 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %dir %{_sysconfdir}/binfmt.d
 %dir %{_sysconfdir}/udev
 %dir %{_sysconfdir}/udev/rules.d
+%ghost %verify(not md5 size mtime) %config(noreplace,missingok) /etc/crypttab
+/etc/inittab
 %dir %{_prefix}/lib/systemd
 %{_prefix}/lib/systemd/system-generators
 %{_prefix}/lib/systemd/user-generators
