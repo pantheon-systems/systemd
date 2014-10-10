@@ -1,0 +1,36 @@
+From 4f47bb8c5e5f234c614dc14532a9483328e61002 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 9 Oct 2014 22:25:01 -0500
+Subject: [PATCH] build-sys: use -Wno-typedef-redefinition only for clang
+
+Our checks for -Wno-xxx switches do not work with gcc [1].
+
+[1] https://gcc.gnu.org/wiki/FAQ#wnowarning
+---
+ configure.ac | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index caf1f0e54e..d04f6f464f 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -183,7 +183,6 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+         -Wno-unused-parameter \
+         -Wno-missing-field-initializers \
+         -Wno-unused-result \
+-        -Wno-typedef-redefinition \
+         -Werror=overflow \
+         -Wdate-time \
+         -Wnested-externs \
+@@ -198,6 +197,11 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+         -fstack-protector-strong \
+         -fPIE \
+         --param=ssp-buffer-size=4])
++
++AS_CASE([$CC], [*clang*],
++        [CC_CHECK_FLAGS_APPEND([with_cppflags], [CPPFLAGS], [\
++               -Wno-typedef-redefinition])])
++
+ AS_CASE([$CFLAGS], [*-O[[12345\ ]]*],
+         [CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+                -flto -ffat-lto-objects])],

@@ -1,0 +1,30 @@
+From b3a2a7ceb7b0db3003c205bc49853fd62df155dc Mon Sep 17 00:00:00 2001
+From: Rahul Sundaram <metherid@gmail.com>
+Date: Thu, 9 Oct 2014 22:14:36 -0400
+Subject: [PATCH] man: clarify what "microsoft" and "oracle" stand for
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1150477
+---
+ man/systemd-detect-virt.xml | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemd-detect-virt.xml b/man/systemd-detect-virt.xml
+index 1e8230c555..d3969e1f82 100644
+--- a/man/systemd-detect-virt.xml
++++ b/man/systemd-detect-virt.xml
+@@ -68,10 +68,11 @@
+                 virtualization technology. The following technologies
+                 are currently identified: <varname>qemu</varname>,
+                 <varname>kvm</varname>, <varname>vmware</varname>,
+-                <varname>microsoft</varname>,
+-                <varname>oracle</varname>, <varname>xen</varname>,
+-                <varname>bochs</varname>, <varname>chroot</varname>,
+-                <varname>uml</varname>,
++                <varname>microsoft</varname> (Hyper-V, also known as
++                Viridian or Windows Server Virtualization),
++                <varname>oracle</varname> (VirtualBox),
++                <varname>xen</varname>, <varname>bochs</varname>,
++                <varname>chroot</varname>, <varname>uml</varname>,
+                 <varname>openvz</varname>, <varname>lxc</varname>,
+                 <varname>lxc-libvirt</varname>,
+                 <varname>systemd-nspawn</varname>,

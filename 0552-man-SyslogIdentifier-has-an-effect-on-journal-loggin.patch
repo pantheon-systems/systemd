@@ -1,0 +1,40 @@
+From 2134b5ef6b5c944036d051381f4bd7b7e61ef373 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 9 Oct 2014 11:36:34 +0200
+Subject: [PATCH] man: SyslogIdentifier= has an effect on journal logging too
+
+---
+ man/systemd.exec.xml | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index 939983fb7e..e9af4abd6d 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -572,15 +572,19 @@
+                         <varlistentry>
+                                 <term><varname>SyslogIdentifier=</varname></term>
+                                 <listitem><para>Sets the process name
+-                                to prefix log lines sent to syslog or
+-                                the kernel log buffer with. If not set,
+-                                defaults to the process name of the
+-                                executed process. This option is only
+-                                useful when
++                                to prefix log lines sent to the
++                                logging system or the kernel log
++                                buffer with. If not set, defaults to
++                                the process name of the executed
++                                process. This option is only useful
++                                when
+                                 <varname>StandardOutput=</varname> or
+                                 <varname>StandardError=</varname> are
+-                                set to <option>syslog</option> or
+-                                <option>kmsg</option>.</para></listitem>
++                                set to <option>syslog</option>,
++                                <option>journal</option> or
++                                <option>kmsg</option> (or to the same
++                                settings in combination with
++                                <option>+console</option>).</para></listitem>
+                         </varlistentry>
+                         <varlistentry>
+                                 <term><varname>SyslogFacility=</varname></term>

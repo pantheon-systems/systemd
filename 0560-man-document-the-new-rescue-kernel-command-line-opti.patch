@@ -1,0 +1,49 @@
+From f280bcfb21aacce03abf17b3ad732c1351df42b9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 9 Oct 2014 18:26:47 +0200
+Subject: [PATCH] man: document the new "rescue" kernel command line option
+
+---
+ man/kernel-command-line.xml | 1 +
+ man/systemd.xml             | 8 +++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/man/kernel-command-line.xml b/man/kernel-command-line.xml
+index 3263b77cea..2552c79c11 100644
+--- a/man/kernel-command-line.xml
++++ b/man/kernel-command-line.xml
+@@ -154,6 +154,7 @@
+                         <varlistentry>
+                                 <term><varname>-b</varname></term>
+                                 <term><varname>emergency</varname></term>
++                                <term><varname>rescue</varname></term>
+                                 <term><varname>single</varname></term>
+                                 <term><varname>s</varname></term>
+                                 <term><varname>S</varname></term>
+diff --git a/man/systemd.xml b/man/systemd.xml
+index 0d017575b6..bf7a7a6f67 100644
+--- a/man/systemd.xml
++++ b/man/systemd.xml
+@@ -1125,17 +1125,19 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
+-                                <term><varname>-b</varname></term>
+                                 <term><varname>emergency</varname></term>
++                                <term><varname>-b</varname></term>
+ 
+                                 <listitem><para>Boot into emergency
+                                 mode. This is equivalent to
+                                 <varname>systemd.unit=emergency.target</varname>
+-                                and provided for compatibility
+-                                reasons and to be easier to type.</para></listitem>
++                                and provided for compatibility reasons
++                                and to be easier to
++                                type.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>rescue</varname></term>
+                                 <term><varname>single</varname></term>
+                                 <term><varname>s</varname></term>
+                                 <term><varname>S</varname></term>

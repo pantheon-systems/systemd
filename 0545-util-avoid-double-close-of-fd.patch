@@ -1,0 +1,29 @@
+From 6f53e671aa7539cab02c9f739d84d28a343ca5bc Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Wed, 8 Oct 2014 23:57:32 +0200
+Subject: [PATCH] util: avoid double close of fd
+
+We could end with a double close if we close the fd loop and flush_fd
+fails. That would make us goto fail and there we close the fd once
+again. This patch sets the fd to the return value for safe_close: -1
+A fd with negative value will be ignored by the next call to
+safe_close.
+
+CID#996223
+---
+ src/shared/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index bbd9bd11d6..5f6249eb04 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -2074,7 +2074,7 @@ int acquire_terminal(
+                  * ended our handle will be dead. It's important that
+                  * we do this after sleeping, so that we don't enter
+                  * an endless loop. */
+-                safe_close(fd);
++                fd = safe_close(fd);
+         }
+ 
+         safe_close(notify);

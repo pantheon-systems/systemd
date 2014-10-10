@@ -1,0 +1,24 @@
+From 25dbe4f50f93fb6398844ba67ea197f76adc237a Mon Sep 17 00:00:00 2001
+From: Susant Sahani <susant@redhat.com>
+Date: Thu, 9 Oct 2014 19:01:11 +0530
+Subject: [PATCH] socket-proxyd: Unchecked return value from library
+
+CID 1237543 (#1 of 1): Unchecked return value from library
+(CHECKED_RETURN)
+---
+ src/socket-proxy/socket-proxyd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/socket-proxy/socket-proxyd.c b/src/socket-proxy/socket-proxyd.c
+index ff2b24f452..3041903757 100644
+--- a/src/socket-proxy/socket-proxyd.c
++++ b/src/socket-proxy/socket-proxyd.c
+@@ -125,7 +125,7 @@ static int connection_create_pipes(Connection *c, int buffer[2], size_t *sz) {
+                 return -errno;
+         }
+ 
+-        fcntl(buffer[0], F_SETPIPE_SZ, BUFFER_SIZE);
++        (void) fcntl(buffer[0], F_SETPIPE_SZ, BUFFER_SIZE);
+ 
+         r = fcntl(buffer[0], F_GETPIPE_SZ);
+         if (r < 0) {

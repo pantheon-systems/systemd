@@ -1,0 +1,296 @@
+From 06cc69d44c8ff2b652527357f28acd4cbe77c814 Mon Sep 17 00:00:00 2001
+From: Jan Janssen <medhefgo@web.de>
+Date: Sat, 6 Sep 2014 10:36:34 +0200
+Subject: [PATCH] sd-journal: fix sd_journal_enumerate_unique skipping values
+
+sd_journal_enumerate_unique will lock its mmap window to prevent it
+from being released by calling mmap_cache_get with keep_always=true.
+This call may return windows that are wider, but compatible with the
+parameters provided to it.
+
+This can result in a mismatch where the window to be released cannot
+properly be selected, because we have more than one window matching the
+parameters of mmap_cache_release. Therefore, introduce a release_cookie
+to be used when releasing the window.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=79380
+---
+ src/journal/journal-file.c    |  2 +-
+ src/journal/journal-file.h    | 11 ++++-------
+ src/journal/journal-verify.c  |  2 +-
+ src/journal/mmap-cache.c      | 32 +++++++++++++++++++-------------
+ src/journal/mmap-cache.h      |  8 +++-----
+ src/journal/sd-journal.c      | 11 ++++++-----
+ src/journal/test-mmap-cache.c | 10 +++++-----
+ 7 files changed, 39 insertions(+), 37 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index f25cda6ddc..038b437e1f 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -391,7 +391,7 @@ static int journal_file_move_to(JournalFile *f, int context, bool keep_always, u
+                         return -EADDRNOTAVAIL;
+         }
+ 
+-        return mmap_cache_get(f->mmap, f->fd, f->prot, context, keep_always, offset, size, &f->last_stat, ret);
++        return mmap_cache_get(f->mmap, f->fd, f->prot, context, keep_always, offset, size, &f->last_stat, ret, NULL);
+ }
+ 
+ static uint64_t minimum_header_size(Object *o) {
+diff --git a/src/journal/journal-file.h b/src/journal/journal-file.h
+index 6b4bf0d5ae..fa5b943e46 100644
+--- a/src/journal/journal-file.h
++++ b/src/journal/journal-file.h
+@@ -212,17 +212,14 @@ static unsigned type_to_context(int type) {
+         return type > 0 && type < _OBJECT_TYPE_MAX ? type : 0;
+ }
+ 
+-static inline int journal_file_object_keep(JournalFile *f, Object *o, uint64_t offset) {
++static inline int journal_file_object_keep(JournalFile *f, Object *o, uint64_t offset, void **release_cookie) {
+         unsigned context = type_to_context(o->object.type);
+         uint64_t s = le64toh(o->object.size);
+ 
+         return mmap_cache_get(f->mmap, f->fd, f->prot, context, true,
+-                              offset, s, &f->last_stat, NULL);
++                              offset, s, &f->last_stat, NULL, release_cookie);
+ }
+ 
+-static inline int journal_file_object_release(JournalFile *f, Object *o, uint64_t offset) {
+-        unsigned context = type_to_context(o->object.type);
+-        uint64_t s = le64toh(o->object.size);
+-
+-        return mmap_cache_release(f->mmap, f->fd, f->prot, context, offset, s);
++static inline int journal_file_object_release(JournalFile *f, void *release_cookie) {
++        return mmap_cache_release(f->mmap, f->fd, release_cookie);
+ }
+diff --git a/src/journal/journal-verify.c b/src/journal/journal-verify.c
+index b4e8f73c41..f74adcbc89 100644
+--- a/src/journal/journal-verify.c
++++ b/src/journal/journal-verify.c
+@@ -368,7 +368,7 @@ static int contains_uint64(MMapCache *m, int fd, uint64_t n, uint64_t p) {
+ 
+                 c = (a + b) / 2;
+ 
+-                r = mmap_cache_get(m, fd, PROT_READ|PROT_WRITE, 0, false, c * sizeof(uint64_t), sizeof(uint64_t), NULL, (void **) &z);
++                r = mmap_cache_get(m, fd, PROT_READ|PROT_WRITE, 0, false, c * sizeof(uint64_t), sizeof(uint64_t), NULL, (void **) &z, NULL);
+                 if (r < 0)
+                         return r;
+ 
+diff --git a/src/journal/mmap-cache.c b/src/journal/mmap-cache.c
+index 2d268fc332..b7db6f1da5 100644
+--- a/src/journal/mmap-cache.c
++++ b/src/journal/mmap-cache.c
+@@ -352,7 +352,8 @@ static int try_context(
+                 bool keep_always,
+                 uint64_t offset,
+                 size_t size,
+-                void **ret) {
++                void **ret,
++                void **release_cookie) {
+ 
+         Context *c;
+ 
+@@ -381,6 +382,8 @@ static int try_context(
+ 
+         if (ret)
+                 *ret = (uint8_t*) c->window->ptr + (offset - c->window->offset);
++        if (keep_always && release_cookie)
++                *release_cookie = c->window;
+         return 1;
+ }
+ 
+@@ -392,7 +395,8 @@ static int find_mmap(
+                 bool keep_always,
+                 uint64_t offset,
+                 size_t size,
+-                void **ret) {
++                void **ret,
++                void **release_cookie) {
+ 
+         FileDescriptor *f;
+         Window *w;
+@@ -425,6 +429,8 @@ static int find_mmap(
+ 
+         if (ret)
+                 *ret = (uint8_t*) w->ptr + (offset - w->offset);
++        if (keep_always && release_cookie)
++                *release_cookie = c->window;
+         return 1;
+ }
+ 
+@@ -437,7 +443,8 @@ static int add_mmap(
+                 uint64_t offset,
+                 size_t size,
+                 struct stat *st,
+-                void **ret) {
++                void **ret,
++                void **release_cookie) {
+ 
+         uint64_t woffset, wsize;
+         Context *c;
+@@ -521,6 +528,8 @@ static int add_mmap(
+ 
+         if (ret)
+                 *ret = (uint8_t*) w->ptr + (offset - w->offset);
++        if (keep_always && release_cookie)
++                *release_cookie = c->window;
+         return 1;
+ 
+ outofmem:
+@@ -537,7 +546,8 @@ int mmap_cache_get(
+                 uint64_t offset,
+                 size_t size,
+                 struct stat *st,
+-                void **ret) {
++                void **ret,
++                void **release_cookie) {
+ 
+         int r;
+ 
+@@ -547,14 +557,14 @@ int mmap_cache_get(
+         assert(size > 0);
+ 
+         /* Check whether the current context is the right one already */
+-        r = try_context(m, fd, prot, context, keep_always, offset, size, ret);
++        r = try_context(m, fd, prot, context, keep_always, offset, size, ret, release_cookie);
+         if (r != 0) {
+                 m->n_hit ++;
+                 return r;
+         }
+ 
+         /* Search for a matching mmap */
+-        r = find_mmap(m, fd, prot, context, keep_always, offset, size, ret);
++        r = find_mmap(m, fd, prot, context, keep_always, offset, size, ret, release_cookie);
+         if (r != 0) {
+                 m->n_hit ++;
+                 return r;
+@@ -563,16 +573,13 @@ int mmap_cache_get(
+         m->n_missed++;
+ 
+         /* Create a new mmap */
+-        return add_mmap(m, fd, prot, context, keep_always, offset, size, st, ret);
++        return add_mmap(m, fd, prot, context, keep_always, offset, size, st, ret, release_cookie);
+ }
+ 
+ int mmap_cache_release(
+                 MMapCache *m,
+                 int fd,
+-                int prot,
+-                unsigned context,
+-                uint64_t offset,
+-                size_t size) {
++                void *release_cookie) {
+ 
+         FileDescriptor *f;
+         Window *w;
+@@ -580,7 +587,6 @@ int mmap_cache_release(
+         assert(m);
+         assert(m->n_ref > 0);
+         assert(fd >= 0);
+-        assert(size > 0);
+ 
+         f = hashmap_get(m->fds, INT_TO_PTR(fd + 1));
+         if (!f)
+@@ -589,7 +595,7 @@ int mmap_cache_release(
+         assert(f->fd == fd);
+ 
+         LIST_FOREACH(by_fd, w, f->windows)
+-                if (window_matches(w, fd, prot, offset, size))
++                if (w == release_cookie)
+                         break;
+ 
+         if (!w)
+diff --git a/src/journal/mmap-cache.h b/src/journal/mmap-cache.h
+index 647555a73e..76e5316248 100644
+--- a/src/journal/mmap-cache.h
++++ b/src/journal/mmap-cache.h
+@@ -40,14 +40,12 @@ int mmap_cache_get(
+         uint64_t offset,
+         size_t size,
+         struct stat *st,
+-        void **ret);
++        void **ret,
++        void **release_cookie);
+ int mmap_cache_release(
+         MMapCache *m,
+         int fd,
+-        int prot,
+-        unsigned context,
+-        uint64_t offset,
+-        size_t size);
++        void *release_cookie);
+ void mmap_cache_close_fd(MMapCache *m, int fd);
+ void mmap_cache_close_context(MMapCache *m, unsigned context);
+ 
+diff --git a/src/journal/sd-journal.c b/src/journal/sd-journal.c
+index b72a0867e7..479444c8df 100644
+--- a/src/journal/sd-journal.c
++++ b/src/journal/sd-journal.c
+@@ -2528,6 +2528,7 @@ _public_ int sd_journal_enumerate_unique(sd_journal *j, const void **data, size_
+                 size_t ol;
+                 bool found;
+                 int r;
++                void *release_cookie;
+ 
+                 /* Proceed to next data object in the field's linked list */
+                 if (j->unique_offset == 0) {
+@@ -2568,7 +2569,7 @@ _public_ int sd_journal_enumerate_unique(sd_journal *j, const void **data, size_
+                         return -EBADMSG;
+                 }
+ 
+-                r = journal_file_object_keep(j->unique_file, o, j->unique_offset);
++                r = journal_file_object_keep(j->unique_file, o, j->unique_offset, &release_cookie);
+                 if (r < 0)
+                         return r;
+ 
+@@ -2616,13 +2617,13 @@ _public_ int sd_journal_enumerate_unique(sd_journal *j, const void **data, size_
+                                 found = true;
+                 }
+ 
+-                if (found)
+-                        continue;
+-
+-                r = journal_file_object_release(j->unique_file, o, j->unique_offset);
++                r = journal_file_object_release(j->unique_file, release_cookie);
+                 if (r < 0)
+                         return r;
+ 
++                if (found)
++                        continue;
++
+                 r = return_data(j, j->unique_file, o, data, l);
+                 if (r < 0)
+                         return r;
+diff --git a/src/journal/test-mmap-cache.c b/src/journal/test-mmap-cache.c
+index b7bb260fcf..778e884c3f 100644
+--- a/src/journal/test-mmap-cache.c
++++ b/src/journal/test-mmap-cache.c
+@@ -49,23 +49,23 @@ int main(int argc, char *argv[]) {
+         assert(z >= 0);
+         unlink(pz);
+ 
+-        r = mmap_cache_get(m, x, PROT_READ, 0, false, 1, 2, NULL, &p);
++        r = mmap_cache_get(m, x, PROT_READ, 0, false, 1, 2, NULL, &p, NULL);
+         assert(r >= 0);
+ 
+-        r = mmap_cache_get(m, x, PROT_READ, 0, false, 2, 2, NULL, &q);
++        r = mmap_cache_get(m, x, PROT_READ, 0, false, 2, 2, NULL, &q, NULL);
+         assert(r >= 0);
+ 
+         assert((uint8_t*) p + 1 == (uint8_t*) q);
+ 
+-        r = mmap_cache_get(m, x, PROT_READ, 1, false, 3, 2, NULL, &q);
++        r = mmap_cache_get(m, x, PROT_READ, 1, false, 3, 2, NULL, &q, NULL);
+         assert(r >= 0);
+ 
+         assert((uint8_t*) p + 2 == (uint8_t*) q);
+ 
+-        r = mmap_cache_get(m, x, PROT_READ, 0, false, 16ULL*1024ULL*1024ULL, 2, NULL, &p);
++        r = mmap_cache_get(m, x, PROT_READ, 0, false, 16ULL*1024ULL*1024ULL, 2, NULL, &p, NULL);
+         assert(r >= 0);
+ 
+-        r = mmap_cache_get(m, x, PROT_READ, 1, false, 16ULL*1024ULL*1024ULL+1, 2, NULL, &q);
++        r = mmap_cache_get(m, x, PROT_READ, 1, false, 16ULL*1024ULL*1024ULL+1, 2, NULL, &q, NULL);
+         assert(r >= 0);
+ 
+         assert((uint8_t*) p + 1 == (uint8_t*) q);

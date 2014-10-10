@@ -1,4 +1,4 @@
-From ea3a099cb842beca5292d71e78f54c9dddde0ac6 Mon Sep 17 00:00:00 2001
+From 30353eb466fe1ef768dc7bc1ccc1239b97dab70c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 7 Oct 2014 01:49:10 -0400
 Subject: [PATCH] fedora: add bridge sysctl configuration

@@ -1,0 +1,22 @@
+From cab9b000f28a940e92d1d4241d967cad94c650e3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 9 Oct 2014 19:52:31 -0400
+Subject: [PATCH] journalctl: use pager for --list-boots
+
+---
+ src/journal/journalctl.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 7f4bc3229c..328e40b416 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -837,6 +837,8 @@ static int list_boots(sd_journal *j) {
+         if (r < 0)
+                 return r;
+ 
++        pager_open_if_enabled();
++
+         SD_JOURNAL_FOREACH_UNIQUE(j, data, length) {
+                 assert(startswith(data, "_BOOT_ID="));
+ 

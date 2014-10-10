@@ -1,0 +1,39 @@
+From e737ef153c41435f1ad42b51233eedfb279e2ff7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 10 Oct 2014 12:37:21 +0200
+Subject: [PATCH] man: reference table in systemd-detect-virt(1) from
+ ConditionVirtualization= documentation
+
+---
+ man/systemd.unit.xml | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index ec7ca5634e..e9395ff16f 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -1018,13 +1018,17 @@
+                                 <varname>openvz</varname>,
+                                 <varname>lxc</varname>,
+                                 <varname>lxc-libvirt</varname>,
+-                                <varname>systemd-nspawn</varname> to
+-                                test against a specific
+-                                implementation. If multiple
+-                                virtualization technologies are nested,
+-                                only the innermost is considered. The
+-                                test may be negated by prepending an
+-                                exclamation mark.</para>
++                                <varname>systemd-nspawn</varname>,
++                                <varname>docker</varname> to test
++                                against a specific implementation. See
++                                <citerefentry><refentrytitle>systemd-detect-virt</refentrytitle><manvolnum>1</manvolnum></citerefentry>
++                                for a full list of known
++                                virtualization technologies and their
++                                identifiers. If multiple
++                                virtualization technologies are
++                                nested, only the innermost is
++                                considered. The test may be negated by
++                                prepending an exclamation mark.</para>
+ 
+                                 <para><varname>ConditionHost=</varname>
+                                 may be used to match against the

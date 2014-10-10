@@ -1,4 +1,4 @@
-From 85fa479ca5358d9472245eb0da6a86b5d644ccf9 Mon Sep 17 00:00:00 2001
+From f7101b7368dfe41dbc8b7203e06133cccb589c01 Mon Sep 17 00:00:00 2001
 From: Jan Synacek <jsynacek@redhat.com>
 Date: Tue, 7 Oct 2014 13:35:41 +0200
 Subject: [PATCH] core: don't allow enabling if unit is masked

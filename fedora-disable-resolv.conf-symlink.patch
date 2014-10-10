@@ -1,4 +1,4 @@
-From e2c48e9a4cff991e432472cd12a7b47a3049ece9 Mon Sep 17 00:00:00 2001
+From 6da80d4bbfaa3d8a2a8952995a108d6dbd6a1e3f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 3 Oct 2014 21:34:14 -0400
 Subject: [PATCH] fedora: disable resolv.conf symlink

@@ -1,0 +1,27 @@
+From b1543c4c93855b61b40118e9f14a0423dac2e078 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <daniel@zonque.org>
+Date: Thu, 9 Oct 2014 11:26:09 +0200
+Subject: [PATCH] sd-bus: check return value of asprintf()
+
+Check for OOM conditions of asprintf() in bus_set_address_user().
+---
+ src/libsystemd/sd-bus/sd-bus.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/libsystemd/sd-bus/sd-bus.c b/src/libsystemd/sd-bus/sd-bus.c
+index bc4376fb51..549f9e0943 100644
+--- a/src/libsystemd/sd-bus/sd-bus.c
++++ b/src/libsystemd/sd-bus/sd-bus.c
+@@ -1163,7 +1163,11 @@ int bus_set_address_user(sd_bus *b) {
+ #endif
+         } else {
+ #ifdef ENABLE_KDBUS
+-                asprintf(&b->address, KERNEL_USER_BUS_FMT, getuid());
++                int r;
++
++                r = asprintf(&b->address, KERNEL_USER_BUS_FMT, getuid());
++                if (r < 0)
++                        return -ENOMEM;
+ #else
+                 return -ECONNREFUSED;
+ #endif

@@ -1,0 +1,122 @@
+From ee3a5027f7c56df2ef47a774970433d7045c9e9f Mon Sep 17 00:00:00 2001
+From: Patrik Flykt <patrik.flykt@linux.intel.com>
+Date: Wed, 8 Oct 2014 11:00:07 +0300
+Subject: [PATCH] sd-dhcp6-lease: Name the structure containing IAADDR data
+
+With this change the DHCP6_OPTION_IAADDR_LEN define can be removed in
+favor of using sizeof(). Using the name of the struct and sizeof()
+makes it clearer how much and what data is being copied from the
+DHCPv6 message.
+---
+ src/libsystemd-network/dhcp6-internal.h |  2 +-
+ src/libsystemd-network/dhcp6-option.c   | 21 ++++++++++-----------
+ src/libsystemd-network/sd-dhcp6-lease.c | 10 ++++++----
+ 3 files changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/src/libsystemd-network/dhcp6-internal.h b/src/libsystemd-network/dhcp6-internal.h
+index 94e3a5d408..6cc0aa8a8d 100644
+--- a/src/libsystemd-network/dhcp6-internal.h
++++ b/src/libsystemd-network/dhcp6-internal.h
+@@ -38,7 +38,7 @@ struct DHCP6Address {
+                 struct in6_addr address;
+                 be32_t lifetime_preferred;
+                 be32_t lifetime_valid;
+-        } _packed_;
++        } iaaddr _packed_;
+ };
+ 
+ struct DHCP6IA {
+diff --git a/src/libsystemd-network/dhcp6-option.c b/src/libsystemd-network/dhcp6-option.c
+index e9b382c170..e6a31778f4 100644
+--- a/src/libsystemd-network/dhcp6-option.c
++++ b/src/libsystemd-network/dhcp6-option.c
+@@ -32,7 +32,6 @@
+ #define DHCP6_OPTION_HDR_LEN                    4
+ #define DHCP6_OPTION_IA_NA_LEN                  12
+ #define DHCP6_OPTION_IA_TA_LEN                  4
+-#define DHCP6_OPTION_IAADDR_LEN                 24
+ 
+ static int option_append_hdr(uint8_t **buf, size_t *buflen, uint16_t optcode,
+                              size_t optlen) {
+@@ -111,16 +110,16 @@ int dhcp6_option_append_ia(uint8_t **buf, size_t *buflen, DHCP6IA *ia) {
+ 
+         LIST_FOREACH(addresses, addr, ia->addresses) {
+                 r = option_append_hdr(buf, buflen, DHCP6_OPTION_IAADDR,
+-                                      DHCP6_OPTION_IAADDR_LEN);
++                                      sizeof(addr->iaaddr));
+                 if (r < 0)
+                         return r;
+ 
+-                memcpy(*buf, &addr->address, DHCP6_OPTION_IAADDR_LEN);
++                memcpy(*buf, &addr->iaaddr, sizeof(addr->iaaddr));
+ 
+-                *buf += DHCP6_OPTION_IAADDR_LEN;
+-                *buflen -= DHCP6_OPTION_IAADDR_LEN;
++                *buf += sizeof(addr->iaaddr);
++                *buflen -= sizeof(addr->iaaddr);
+ 
+-                ia_addrlen += DHCP6_OPTION_HDR_LEN + DHCP6_OPTION_IAADDR_LEN;
++                ia_addrlen += DHCP6_OPTION_HDR_LEN + sizeof(addr->iaaddr);
+         }
+ 
+         r = option_append_hdr(&ia_hdr, &ia_buflen, ia->type, len + ia_addrlen);
+@@ -192,7 +191,7 @@ int dhcp6_option_parse_ia(uint8_t **buf, size_t *buflen, uint16_t iatype,
+         case DHCP6_OPTION_IA_NA:
+ 
+                 if (*buflen < DHCP6_OPTION_IA_NA_LEN + DHCP6_OPTION_HDR_LEN +
+-                    DHCP6_OPTION_IAADDR_LEN) {
++                    sizeof(addr->iaaddr)) {
+                         r = -ENOBUFS;
+                         goto error;
+                 }
+@@ -214,7 +213,7 @@ int dhcp6_option_parse_ia(uint8_t **buf, size_t *buflen, uint16_t iatype,
+ 
+         case DHCP6_OPTION_IA_TA:
+                 if (*buflen < DHCP6_OPTION_IA_TA_LEN + DHCP6_OPTION_HDR_LEN +
+-                    DHCP6_OPTION_IAADDR_LEN) {
++                    sizeof(addr->iaaddr)) {
+                         r = -ENOBUFS;
+                         goto error;
+                 }
+@@ -250,10 +249,10 @@ int dhcp6_option_parse_ia(uint8_t **buf, size_t *buflen, uint16_t iatype,
+ 
+                         LIST_INIT(addresses, addr);
+ 
+-                        memcpy(&addr->address, *buf, DHCP6_OPTION_IAADDR_LEN);
++                        memcpy(&addr->iaaddr, *buf, sizeof(addr->iaaddr));
+ 
+-                        lt_valid = be32toh(addr->lifetime_valid);
+-                        lt_pref = be32toh(addr->lifetime_valid);
++                        lt_valid = be32toh(addr->iaaddr.lifetime_valid);
++                        lt_pref = be32toh(addr->iaaddr.lifetime_valid);
+ 
+                         if (!lt_valid || lt_pref > lt_valid) {
+                                 log_dhcp6_client(client, "IA preferred %ds > valid %ds",
+diff --git a/src/libsystemd-network/sd-dhcp6-lease.c b/src/libsystemd-network/sd-dhcp6-lease.c
+index b9d0503642..e2715ea659 100644
+--- a/src/libsystemd-network/sd-dhcp6-lease.c
++++ b/src/libsystemd-network/sd-dhcp6-lease.c
+@@ -41,7 +41,7 @@ int dhcp6_lease_ia_rebind_expire(const DHCP6IA *ia, uint32_t *expire) {
+         assert_return(expire, -EINVAL);
+ 
+         LIST_FOREACH(addresses, addr, ia->addresses) {
+-                t = be32toh(addr->lifetime_valid);
++                t = be32toh(addr->iaaddr.lifetime_valid);
+                 if (valid < t)
+                         valid = t;
+         }
+@@ -156,9 +156,11 @@ int sd_dhcp6_lease_get_next_address(sd_dhcp6_lease *lease,
+         if (!lease->addr_iter)
+                 return -ENOMSG;
+ 
+-        memcpy(addr, &lease->addr_iter->address, sizeof(struct in6_addr));
+-        *lifetime_preferred = be32toh(lease->addr_iter->lifetime_preferred);
+-        *lifetime_valid = be32toh(lease->addr_iter->lifetime_valid);
++        memcpy(addr, &lease->addr_iter->iaaddr.address,
++                sizeof(struct in6_addr));
++        *lifetime_preferred =
++                be32toh(lease->addr_iter->iaaddr.lifetime_preferred);
++        *lifetime_valid = be32toh(lease->addr_iter->iaaddr.lifetime_valid);
+ 
+         lease->addr_iter = lease->addr_iter->addresses_next;
+ 

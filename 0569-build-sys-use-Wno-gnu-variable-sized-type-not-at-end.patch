@@ -1,0 +1,26 @@
+From 65e3a2cf7c3b399853dd309f702ca5078b7d16ea Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 9 Oct 2014 22:30:45 -0500
+Subject: [PATCH] build-sys: use -Wno-gnu-variable-sized-type-not-at-end under
+ clang
+
+Otherwise we get useless warnings about journal code.
+---
+ configure.ac | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index d04f6f464f..945adfcbee 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -200,7 +200,9 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+ 
+ AS_CASE([$CC], [*clang*],
+         [CC_CHECK_FLAGS_APPEND([with_cppflags], [CPPFLAGS], [\
+-               -Wno-typedef-redefinition])])
++               -Wno-typedef-redefinition \
++               -Wno-gnu-variable-sized-type-not-at-end \
++        ])])
+ 
+ AS_CASE([$CFLAGS], [*-O[[12345\ ]]*],
+         [CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\

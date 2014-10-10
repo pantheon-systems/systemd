@@ -1,0 +1,23 @@
+From 1e98337f26cb6805a684eff9bc5eb842512ac8fa Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 7 Oct 2014 21:41:14 -0400
+Subject: [PATCH] man: mention docker as type of virtualization
+
+---
+ man/systemd-detect-virt.xml | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd-detect-virt.xml b/man/systemd-detect-virt.xml
+index bdf220eb28..1e8230c555 100644
+--- a/man/systemd-detect-virt.xml
++++ b/man/systemd-detect-virt.xml
+@@ -74,7 +74,8 @@
+                 <varname>uml</varname>,
+                 <varname>openvz</varname>, <varname>lxc</varname>,
+                 <varname>lxc-libvirt</varname>,
+-                <varname>systemd-nspawn</varname>.</para>
++                <varname>systemd-nspawn</varname>,
++                <varname>docker</varname>.</para>
+ 
+                 <para>If multiple virtualization solutions are used,
+                 only the "innermost" is detected and identified. That

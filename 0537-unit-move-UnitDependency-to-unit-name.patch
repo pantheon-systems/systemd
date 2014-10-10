@@ -1,0 +1,235 @@
+From cb87a73b45503eaa6bead291423a529b00d27156 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Wed, 8 Oct 2014 11:58:57 +0200
+Subject: [PATCH] unit: move UnitDependency to unit-name
+
+---
+ src/core/unit.c        | 29 ----------------------------
+ src/core/unit.h        | 51 --------------------------------------------------
+ src/shared/unit-name.c | 29 ++++++++++++++++++++++++++++
+ src/shared/unit-name.h | 51 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 80 insertions(+), 80 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 399d202738..0389e6e440 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -3457,32 +3457,3 @@ static const char* const unit_active_state_table[_UNIT_ACTIVE_STATE_MAX] = {
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(unit_active_state, UnitActiveState);
+-
+-static const char* const unit_dependency_table[_UNIT_DEPENDENCY_MAX] = {
+-        [UNIT_REQUIRES] = "Requires",
+-        [UNIT_REQUIRES_OVERRIDABLE] = "RequiresOverridable",
+-        [UNIT_REQUISITE] = "Requisite",
+-        [UNIT_REQUISITE_OVERRIDABLE] = "RequisiteOverridable",
+-        [UNIT_WANTS] = "Wants",
+-        [UNIT_BINDS_TO] = "BindsTo",
+-        [UNIT_PART_OF] = "PartOf",
+-        [UNIT_REQUIRED_BY] = "RequiredBy",
+-        [UNIT_REQUIRED_BY_OVERRIDABLE] = "RequiredByOverridable",
+-        [UNIT_WANTED_BY] = "WantedBy",
+-        [UNIT_BOUND_BY] = "BoundBy",
+-        [UNIT_CONSISTS_OF] = "ConsistsOf",
+-        [UNIT_CONFLICTS] = "Conflicts",
+-        [UNIT_CONFLICTED_BY] = "ConflictedBy",
+-        [UNIT_BEFORE] = "Before",
+-        [UNIT_AFTER] = "After",
+-        [UNIT_ON_FAILURE] = "OnFailure",
+-        [UNIT_TRIGGERS] = "Triggers",
+-        [UNIT_TRIGGERED_BY] = "TriggeredBy",
+-        [UNIT_PROPAGATES_RELOAD_TO] = "PropagatesReloadTo",
+-        [UNIT_RELOAD_PROPAGATED_FROM] = "ReloadPropagatedFrom",
+-        [UNIT_JOINS_NAMESPACE_OF] = "JoinsNamespaceOf",
+-        [UNIT_REFERENCES] = "References",
+-        [UNIT_REFERENCED_BY] = "ReferencedBy",
+-};
+-
+-DEFINE_STRING_TABLE_LOOKUP(unit_dependency, UnitDependency);
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 3e61067f84..a773762f36 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -28,7 +28,6 @@
+ typedef struct Unit Unit;
+ typedef struct UnitVTable UnitVTable;
+ typedef enum UnitActiveState UnitActiveState;
+-typedef enum UnitDependency UnitDependency;
+ typedef struct UnitRef UnitRef;
+ typedef struct UnitStatusMessageFormats UnitStatusMessageFormats;
+ 
+@@ -70,53 +69,6 @@ static inline bool UNIT_IS_INACTIVE_OR_FAILED(UnitActiveState t) {
+         return t == UNIT_INACTIVE || t == UNIT_FAILED;
+ }
+ 
+-enum UnitDependency {
+-        /* Positive dependencies */
+-        UNIT_REQUIRES,
+-        UNIT_REQUIRES_OVERRIDABLE,
+-        UNIT_REQUISITE,
+-        UNIT_REQUISITE_OVERRIDABLE,
+-        UNIT_WANTS,
+-        UNIT_BINDS_TO,
+-        UNIT_PART_OF,
+-
+-        /* Inverse of the above */
+-        UNIT_REQUIRED_BY,             /* inverse of 'requires' and 'requisite' is 'required_by' */
+-        UNIT_REQUIRED_BY_OVERRIDABLE, /* inverse of 'requires_overridable' and 'requisite_overridable' is 'soft_required_by' */
+-        UNIT_WANTED_BY,               /* inverse of 'wants' */
+-        UNIT_BOUND_BY,                /* inverse of 'binds_to' */
+-        UNIT_CONSISTS_OF,             /* inverse of 'part_of' */
+-
+-        /* Negative dependencies */
+-        UNIT_CONFLICTS,               /* inverse of 'conflicts' is 'conflicted_by' */
+-        UNIT_CONFLICTED_BY,
+-
+-        /* Order */
+-        UNIT_BEFORE,                  /* inverse of 'before' is 'after' and vice versa */
+-        UNIT_AFTER,
+-
+-        /* On Failure */
+-        UNIT_ON_FAILURE,
+-
+-        /* Triggers (i.e. a socket triggers a service) */
+-        UNIT_TRIGGERS,
+-        UNIT_TRIGGERED_BY,
+-
+-        /* Propagate reloads */
+-        UNIT_PROPAGATES_RELOAD_TO,
+-        UNIT_RELOAD_PROPAGATED_FROM,
+-
+-        /* Joins namespace of */
+-        UNIT_JOINS_NAMESPACE_OF,
+-
+-        /* Reference information for GC logic */
+-        UNIT_REFERENCES,              /* Inverse of 'references' is 'referenced_by' */
+-        UNIT_REFERENCED_BY,
+-
+-        _UNIT_DEPENDENCY_MAX,
+-        _UNIT_DEPENDENCY_INVALID = -1
+-};
+-
+ #include "manager.h"
+ #include "job.h"
+ 
+@@ -629,9 +581,6 @@ int unit_require_mounts_for(Unit *u, const char *path);
+ const char *unit_active_state_to_string(UnitActiveState i) _const_;
+ UnitActiveState unit_active_state_from_string(const char *s) _pure_;
+ 
+-const char *unit_dependency_to_string(UnitDependency i) _const_;
+-UnitDependency unit_dependency_from_string(const char *s) _pure_;
+-
+ /* Macros which append UNIT= or USER_UNIT= to the message */
+ 
+ #define log_full_unit(level, unit, ...) log_meta_object(level, __FILE__, __LINE__, __func__, getpid() == 1 ? "UNIT=" : "USER_UNIT=", unit, __VA_ARGS__)
+diff --git a/src/shared/unit-name.c b/src/shared/unit-name.c
+index a2d62d3151..2ef85450e7 100644
+--- a/src/shared/unit-name.c
++++ b/src/shared/unit-name.c
+@@ -592,3 +592,32 @@ int build_subslice(const char *slice, const char*name, char **subslice) {
+         *subslice = ret;
+         return 0;
+ }
++
++static const char* const unit_dependency_table[_UNIT_DEPENDENCY_MAX] = {
++        [UNIT_REQUIRES] = "Requires",
++        [UNIT_REQUIRES_OVERRIDABLE] = "RequiresOverridable",
++        [UNIT_REQUISITE] = "Requisite",
++        [UNIT_REQUISITE_OVERRIDABLE] = "RequisiteOverridable",
++        [UNIT_WANTS] = "Wants",
++        [UNIT_BINDS_TO] = "BindsTo",
++        [UNIT_PART_OF] = "PartOf",
++        [UNIT_REQUIRED_BY] = "RequiredBy",
++        [UNIT_REQUIRED_BY_OVERRIDABLE] = "RequiredByOverridable",
++        [UNIT_WANTED_BY] = "WantedBy",
++        [UNIT_BOUND_BY] = "BoundBy",
++        [UNIT_CONSISTS_OF] = "ConsistsOf",
++        [UNIT_CONFLICTS] = "Conflicts",
++        [UNIT_CONFLICTED_BY] = "ConflictedBy",
++        [UNIT_BEFORE] = "Before",
++        [UNIT_AFTER] = "After",
++        [UNIT_ON_FAILURE] = "OnFailure",
++        [UNIT_TRIGGERS] = "Triggers",
++        [UNIT_TRIGGERED_BY] = "TriggeredBy",
++        [UNIT_PROPAGATES_RELOAD_TO] = "PropagatesReloadTo",
++        [UNIT_RELOAD_PROPAGATED_FROM] = "ReloadPropagatedFrom",
++        [UNIT_JOINS_NAMESPACE_OF] = "JoinsNamespaceOf",
++        [UNIT_REFERENCES] = "References",
++        [UNIT_REFERENCED_BY] = "ReferencedBy",
++};
++
++DEFINE_STRING_TABLE_LOOKUP(unit_dependency, UnitDependency);
+diff --git a/src/shared/unit-name.h b/src/shared/unit-name.h
+index d06d2b2353..daeb56a860 100644
+--- a/src/shared/unit-name.h
++++ b/src/shared/unit-name.h
+@@ -29,6 +29,7 @@
+ 
+ typedef enum UnitType UnitType;
+ typedef enum UnitLoadState UnitLoadState;
++typedef enum UnitDependency UnitDependency;
+ 
+ enum UnitType {
+         UNIT_SERVICE = 0,
+@@ -59,6 +60,53 @@ enum UnitLoadState {
+         _UNIT_LOAD_STATE_INVALID = -1
+ };
+ 
++enum UnitDependency {
++        /* Positive dependencies */
++        UNIT_REQUIRES,
++        UNIT_REQUIRES_OVERRIDABLE,
++        UNIT_REQUISITE,
++        UNIT_REQUISITE_OVERRIDABLE,
++        UNIT_WANTS,
++        UNIT_BINDS_TO,
++        UNIT_PART_OF,
++
++        /* Inverse of the above */
++        UNIT_REQUIRED_BY,             /* inverse of 'requires' and 'requisite' is 'required_by' */
++        UNIT_REQUIRED_BY_OVERRIDABLE, /* inverse of 'requires_overridable' and 'requisite_overridable' is 'soft_required_by' */
++        UNIT_WANTED_BY,               /* inverse of 'wants' */
++        UNIT_BOUND_BY,                /* inverse of 'binds_to' */
++        UNIT_CONSISTS_OF,             /* inverse of 'part_of' */
++
++        /* Negative dependencies */
++        UNIT_CONFLICTS,               /* inverse of 'conflicts' is 'conflicted_by' */
++        UNIT_CONFLICTED_BY,
++
++        /* Order */
++        UNIT_BEFORE,                  /* inverse of 'before' is 'after' and vice versa */
++        UNIT_AFTER,
++
++        /* On Failure */
++        UNIT_ON_FAILURE,
++
++        /* Triggers (i.e. a socket triggers a service) */
++        UNIT_TRIGGERS,
++        UNIT_TRIGGERED_BY,
++
++        /* Propagate reloads */
++        UNIT_PROPAGATES_RELOAD_TO,
++        UNIT_RELOAD_PROPAGATED_FROM,
++
++        /* Joins namespace of */
++        UNIT_JOINS_NAMESPACE_OF,
++
++        /* Reference information for GC logic */
++        UNIT_REFERENCES,              /* Inverse of 'references' is 'referenced_by' */
++        UNIT_REFERENCED_BY,
++
++        _UNIT_DEPENDENCY_MAX,
++        _UNIT_DEPENDENCY_INVALID = -1
++};
++
+ const char *unit_type_to_string(UnitType i) _const_;
+ UnitType unit_type_from_string(const char *s) _pure_;
+ 
+@@ -112,3 +160,6 @@ char *unit_name_mangle(const char *name, enum unit_name_mangle allow_globs);
+ char *unit_name_mangle_with_suffix(const char *name, enum unit_name_mangle allow_globs, const char *suffix);
+ 
+ int build_subslice(const char *slice, const char*name, char **subslice);
++
++const char *unit_dependency_to_string(UnitDependency i) _const_;
++UnitDependency unit_dependency_from_string(const char *s) _pure_;

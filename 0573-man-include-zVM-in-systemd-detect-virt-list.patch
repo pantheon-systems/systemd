@@ -1,0 +1,59 @@
+From 26d32dc5ee6d288108001f3fb7d45e25be441e14 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 10 Oct 2014 12:36:57 +0200
+Subject: [PATCH] man: include zVM in systemd-detect-virt list
+
+---
+ man/systemd-detect-virt.xml | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/man/systemd-detect-virt.xml b/man/systemd-detect-virt.xml
+index e167bddd07..eed0fe0ce9 100644
+--- a/man/systemd-detect-virt.xml
++++ b/man/systemd-detect-virt.xml
+@@ -69,7 +69,7 @@
+                 are currently identified:</para>
+ 
+                 <table>
+-                  <title>Known VM virtualization technologies</title>
++                  <title>Known VM virtualization technologies (i.e. full hardware virtualization)</title>
+                   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+                     <colspec colname="id" />
+                     <colspec colname="product" />
+@@ -84,12 +84,18 @@
+                         <entry><varname>qemu</varname></entry>
+                         <entry>QEMU software virtualization</entry>
+                       </row>
++
+                       <row>
+                         <entry><varname>kvm</varname></entry>
+                         <entry>Linux KVM kernel virtual machine</entry>
+                       </row>
+ 
+                       <row>
++                        <entry><varname>zvm</varname></entry>
++                        <entry>s390 z/VM</entry>
++                      </row>
++
++                      <row>
+                         <entry><varname>vmware</varname></entry>
+                         <entry>VMware Workstation or Server, and related products</entry>
+                       </row>
+@@ -106,7 +112,7 @@
+ 
+                       <row>
+                         <entry><varname>xen</varname></entry>
+-                        <entry>Xen hypervisor</entry>
++                        <entry>Xen hypervisor (only domU, not dom0)</entry>
+                       </row>
+ 
+                       <row>
+@@ -124,7 +130,7 @@
+                 </table>
+ 
+                 <table>
+-                  <title>Known container virtualization technologies</title>
++                  <title>Known container virtualization technologies (i.e. shared kernel virtualization)</title>
+                   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+                     <colspec colname="id" />
+                     <colspec colname="product" />

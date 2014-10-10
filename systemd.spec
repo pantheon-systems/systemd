@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -571,10 +571,54 @@ Patch0529:      0529-man-move-commandline-parsing-to-a-separate-section.patch
 Patch0530:      0530-man-document-stripping-of-quotes.patch
 Patch0531:      0531-Update-TODO.patch
 Patch0532:      0532-proc-sys-prefixes-are-not-necessary-for-sysctl-anymo.patch
-Patch0533:      0533-core-don-t-allow-enabling-if-unit-is-masked.patch
-Patch0534:      0534-fedora-disable-resolv.conf-symlink.patch
-Patch0535:      0535-fedora-add-bridge-sysctl-configuration.patch
+Patch0533:      0533-bus-proxyd-assorted-cleanups-and-fixes.patch
+Patch0534:      0534-core-don-t-allow-enabling-if-unit-is-masked.patch
+Patch0535:      0535-man-mention-docker-as-type-of-virtualization.patch
+Patch0536:      0536-NEWS-update-for-217.patch
+Patch0537:      0537-unit-move-UnitDependency-to-unit-name.patch
+Patch0538:      0538-systemctl-add-add-wants-and-add-requires-verbs.patch
+Patch0539:      0539-note-on-relative-symlink-in-os-release.patch
+Patch0540:      0540-nspawn-copy-dev-net-tun-from-host.patch
+Patch0541:      0541-sd-bus-sync-kdbus.h-ABI-break.patch
+Patch0542:      0542-Update-TODO.patch
+Patch0543:      0543-core-map-the-rescue-argument-to-rescue.target.patch
+Patch0544:      0544-time-functions-named-internal-really-shouldn-t-be-ex.patch
+Patch0545:      0545-util-avoid-double-close-of-fd.patch
+Patch0546:      0546-man-systemctl-document-enable-on-masked-units.patch
+Patch0547:      0547-sd-event-be-more-careful-when-enabling-disabling-sig.patch
+Patch0548:      0548-sd-event-also-update-signal-mask-when-disconnecting-.patch
+Patch0549:      0549-update-TODO.patch
+Patch0550:      0550-systemctl-suggest-xe-not-xn.patch
+Patch0551:      0551-sd-bus-check-return-value-of-asprintf.patch
+Patch0552:      0552-man-SyslogIdentifier-has-an-effect-on-journal-loggin.patch
+Patch0553:      0553-logind-mount-per-user-tmpfs-with-smackfsroot-for-sma.patch
+Patch0554:      0554-bus-policy-move-name-list-iteration-to-policy-users.patch
+Patch0555:      0555-sd-dhcp6-lease-Name-the-structure-containing-IAADDR-.patch
+Patch0556:      0556-socket-proxyd-Unchecked-return-value-from-library.patch
+Patch0557:      0557-bus-proxy-allow-getpeersec-to-fail.patch
+Patch0558:      0558-update-TODO.patch
+Patch0559:      0559-service-enter-SERVICE_STOP_SIGTERM-state-after-getti.patch
+Patch0560:      0560-man-document-the-new-rescue-kernel-command-line-opti.patch
+Patch0561:      0561-sd-journal-do-not-reset-sd_j_enumerate_unique-positi.patch
+Patch0562:      0562-sd-journal-change-check-to-assert.patch
+Patch0563:      0563-sd-journal-fix-sd_journal_enumerate_unique-skipping-.patch
+Patch0564:      0564-journalctl-use-pager-for-list-boots.patch
+Patch0565:      0565-systemctl-remove-casts-in-formatting.patch
+Patch0566:      0566-man-clarify-what-microsoft-and-oracle-stand-for.patch
+Patch0567:      0567-Update-TODO.patch
+Patch0568:      0568-build-sys-use-Wno-typedef-redefinition-only-for-clan.patch
+Patch0569:      0569-build-sys-use-Wno-gnu-variable-sized-type-not-at-end.patch
+Patch0570:      0570-systemd-hibernate-resume-.service-remove-unnecessary.patch
+Patch0571:      0571-nspawn-actually-allow-access-to-dev-net-tun-in-the-c.patch
+Patch0572:      0572-man-rework-VM-container-identifier-list-into-a-table.patch
+Patch0573:      0573-man-include-zVM-in-systemd-detect-virt-list.patch
+Patch0574:      0574-man-reference-table-in-systemd-detect-virt-1-from-Co.patch
+Patch0575:      0575-kdbus-fix-buffer-overflow-in-bus_get_owner_kdbus-fun.patch
+Patch0576:      0576-fstab-generator-Honor-mount.usr-on-kernel-command-li.patch
+Patch0577:      0577-mount-setup-skip-relabelling-when-SELinux-and-SMACK-.patch
 
+Patch0998:      fedora-disable-resolv.conf-symlink.patch
+Patch0999:      fedora-add-bridge-sysctl-configuration.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -1354,9 +1398,13 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Oct 10 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-10
+- Fix a problem with voluntary daemon exits and some other bugs
+  (#1150477, #1095962, #1150289)
+
 * Fri Oct 03 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-9
 - Update to latest git, but without the readahead removal patch
-  (#1114786, #1141137)
+  (#1114786, #634736)
 
 * Wed Oct 01 2014 Kay Sievers <kay@redhat.com> - 216-8
 - revert "don't reset selinux context during CHANGE events"

@@ -1,0 +1,143 @@
+From 5ab99e076c72a44f2e174e48abd9945cd0180d76 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 8 Oct 2014 22:37:45 +0200
+Subject: [PATCH] time: functions named "internal" really shouldn't be exported
+
+Also, let's try to make function names descriptive, instead of using
+bools for flags.
+---
+ src/journal/journalctl.c | 22 +++++++++++++++-------
+ src/shared/logs-show.c   |  4 +++-
+ src/shared/time-util.c   | 16 ++++++++++++++--
+ src/shared/time-util.h   |  5 +++--
+ 4 files changed, 35 insertions(+), 12 deletions(-)
+
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 816934ee6b..feb53bd203 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -127,6 +127,14 @@ static void pager_open_if_enabled(void) {
+         pager_open(arg_pager_end);
+ }
+ 
++static char *format_timestamp_maybe_utc(char *buf, size_t l, usec_t t) {
++
++        if (arg_utc)
++                return format_timestamp_utc(buf, l, t);
++
++        return format_timestamp(buf, l, t);
++}
++
+ static int parse_boot_descriptor(const char *x, sd_id128_t *boot_id, int *offset) {
+         sd_id128_t id = SD_ID128_NULL;
+         int off = 0, r;
+@@ -890,8 +898,8 @@ static int list_boots(sd_journal *j) {
+                 printf("% *i " SD_ID128_FORMAT_STR " %s—%s\n",
+                        w, i - count + 1,
+                        SD_ID128_FORMAT_VAL(id->id),
+-                       format_timestamp_internal(a, sizeof(a), id->first, arg_utc),
+-                       format_timestamp_internal(b, sizeof(b), id->last, arg_utc));
++                       format_timestamp_maybe_utc(a, sizeof(a), id->first),
++                       format_timestamp_maybe_utc(b, sizeof(b), id->last));
+         }
+ 
+         return 0;
+@@ -1502,8 +1510,8 @@ static int verify(sd_journal *j) {
+                         if (arg_verify_key && JOURNAL_HEADER_SEALED(f->header)) {
+                                 if (validated > 0) {
+                                         log_info("=> Validated from %s to %s, final %s entries not sealed.",
+-                                                 format_timestamp_internal(a, sizeof(a), first, arg_utc),
+-                                                 format_timestamp_internal(b, sizeof(b), validated, arg_utc),
++                                                 format_timestamp_maybe_utc(a, sizeof(a), first),
++                                                 format_timestamp_maybe_utc(b, sizeof(b), validated),
+                                                  format_timespan(c, sizeof(c), last > validated ? last - validated : 0, 0));
+                                 } else if (last > 0)
+                                         log_info("=> No sealing yet, %s of entries not sealed.",
+@@ -1898,11 +1906,11 @@ int main(int argc, char *argv[]) {
+                 if (r > 0) {
+                         if (arg_follow)
+                                 printf("-- Logs begin at %s. --\n",
+-                                       format_timestamp_internal(start_buf, sizeof(start_buf), start, arg_utc));
++                                       format_timestamp_maybe_utc(start_buf, sizeof(start_buf), start));
+                         else
+                                 printf("-- Logs begin at %s, end at %s. --\n",
+-                                       format_timestamp_internal(start_buf, sizeof(start_buf), start, arg_utc),
+-                                       format_timestamp_internal(end_buf, sizeof(end_buf), end, arg_utc));
++                                       format_timestamp_maybe_utc(start_buf, sizeof(start_buf), start),
++                                       format_timestamp_maybe_utc(end_buf, sizeof(end_buf), end));
+                 }
+         }
+ 
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index e30e6865ac..3d742491c9 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -447,7 +447,9 @@ static int output_verbose(
+         }
+ 
+         fprintf(f, "%s [%s]\n",
+-                format_timestamp_us(ts, sizeof(ts), realtime, flags & OUTPUT_UTC),
++                flags & OUTPUT_UTC ?
++                format_timestamp_us_utc(ts, sizeof(ts), realtime) :
++                format_timestamp_us(ts, sizeof(ts), realtime),
+                 cursor);
+ 
+         JOURNAL_FOREACH_DATA_RETVAL(j, data, length, r) {
+diff --git a/src/shared/time-util.c b/src/shared/time-util.c
+index 09f4a21354..433c262dfa 100644
+--- a/src/shared/time-util.c
++++ b/src/shared/time-util.c
+@@ -152,7 +152,7 @@ struct timeval *timeval_store(struct timeval *tv, usec_t u) {
+         return tv;
+ }
+ 
+-char *format_timestamp_internal(char *buf, size_t l, usec_t t, bool utc) {
++static char *format_timestamp_internal(char *buf, size_t l, usec_t t, bool utc) {
+         struct tm tm;
+         time_t sec;
+ 
+@@ -178,7 +178,11 @@ char *format_timestamp(char *buf, size_t l, usec_t t) {
+         return format_timestamp_internal(buf, l, t, false);
+ }
+ 
+-char *format_timestamp_us(char *buf, size_t l, usec_t t, bool utc) {
++char *format_timestamp_utc(char *buf, size_t l, usec_t t) {
++        return format_timestamp_internal(buf, l, t, true);
++}
++
++static char *format_timestamp_internal_us(char *buf, size_t l, usec_t t, bool utc) {
+         struct tm tm;
+         time_t sec;
+ 
+@@ -203,6 +207,14 @@ char *format_timestamp_us(char *buf, size_t l, usec_t t, bool utc) {
+         return buf;
+ }
+ 
++char *format_timestamp_us(char *buf, size_t l, usec_t t) {
++        return format_timestamp_internal_us(buf, l, t, false);
++}
++
++char *format_timestamp_us_utc(char *buf, size_t l, usec_t t) {
++        return format_timestamp_internal_us(buf, l, t, true);
++}
++
+ char *format_timestamp_relative(char *buf, size_t l, usec_t t) {
+         const char *s;
+         usec_t n, d;
+diff --git a/src/shared/time-util.h b/src/shared/time-util.h
+index 16cc593cf5..05369d295b 100644
+--- a/src/shared/time-util.h
++++ b/src/shared/time-util.h
+@@ -84,9 +84,10 @@ struct timespec *timespec_store(struct timespec *ts, usec_t u);
+ usec_t timeval_load(const struct timeval *tv) _pure_;
+ struct timeval *timeval_store(struct timeval *tv, usec_t u);
+ 
+-char *format_timestamp_internal(char *buf, size_t l, usec_t t, bool utc);
+ char *format_timestamp(char *buf, size_t l, usec_t t);
+-char *format_timestamp_us(char *buf, size_t l, usec_t t, bool utc);
++char *format_timestamp_utc(char *buf, size_t l, usec_t t);
++char *format_timestamp_us(char *buf, size_t l, usec_t t);
++char *format_timestamp_us_utc(char *buf, size_t l, usec_t t);
+ char *format_timestamp_relative(char *buf, size_t l, usec_t t);
+ char *format_timespan(char *buf, size_t l, usec_t t, usec_t accuracy);
+ 

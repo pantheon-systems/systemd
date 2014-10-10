@@ -1,0 +1,33 @@
+From 5a94946cdf38d3574bd32cd3151b32003df60e6a Mon Sep 17 00:00:00 2001
+From: Rahul Sundaram <metherid@gmail.com>
+Date: Wed, 8 Oct 2014 01:42:59 -0400
+Subject: [PATCH] note on relative symlink in os-release
+
+---
+ man/os-release.xml | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/man/os-release.xml b/man/os-release.xml
+index 4e02f800b6..b298304943 100644
+--- a/man/os-release.xml
++++ b/man/os-release.xml
+@@ -90,11 +90,15 @@
+                 files at the same
+                 time. <filename>/usr/lib/os-release</filename> is the
+                 recommended place to store OS release information as
+-                part of vendor trees. Frequently,
+-                <filename>/etc/os-release</filename> is simply a
+-                symlink to <filename>/usr/lib/os-release</filename>,
++                part of vendor trees.
++                <filename>/etc/os-release</filename> should be a
++                relative symlink to
++                <filename>/usr/lib/os-release</filename>,
+                 to provide compatibility with applications only
+-                looking at <filename>/etc</filename>.</para>
++                looking at <filename>/etc</filename>. A relative
++                symlink instead of an absolute symlink is
++                necessary to avoid breaking the link in a chroot or
++                initrd environment such as dracut.</para>
+ 
+                 <para><filename>os-release</filename> contains data
+                 that is defined by the operating system vendor and
