@@ -1,0 +1,29 @@
+From fc292b5f5854f83379301affe97d909c7c18d702 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 13 Oct 2014 10:07:05 +0200
+Subject: [PATCH] test-dhcp-client: add more asserts
+
+---
+ src/libsystemd-network/test-dhcp-client.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/libsystemd-network/test-dhcp-client.c b/src/libsystemd-network/test-dhcp-client.c
+index 7dab97de2f..0515440e4e 100644
+--- a/src/libsystemd-network/test-dhcp-client.c
++++ b/src/libsystemd-network/test-dhcp-client.c
+@@ -485,12 +485,12 @@ static void test_addr_acq(sd_event *e) {
+         res = sd_dhcp_client_start(client);
+         assert_se(res == 0 || res == -EINPROGRESS);
+ 
+-        sd_event_loop(e);
++        assert_se(sd_event_loop(e) >= 0);
+ 
+         test_hangcheck = sd_event_source_unref(test_hangcheck);
+ 
+-        sd_dhcp_client_set_callback(client, NULL, NULL);
+-        sd_dhcp_client_stop(client);
++        assert_se(sd_dhcp_client_set_callback(client, NULL, NULL) >= 0);
++        assert_se(sd_dhcp_client_stop(client) >= 0);
+         sd_dhcp_client_unref(client);
+ 
+         test_fd[1] = safe_close(test_fd[1]);

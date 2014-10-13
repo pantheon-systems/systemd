@@ -1,0 +1,23 @@
+From e7aab5412829ed6b50d109f670bd0b1b365838a7 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 11 Oct 2014 20:35:06 -0400
+Subject: [PATCH] tmpfiles: compare return against correct errno
+
+name_to_handle_at returns -EOPNOTSUPP, not -ENOTSUP.
+---
+ src/tmpfiles/tmpfiles.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index dafb9aee2f..8108b43042 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -259,7 +259,7 @@ static int dir_is_mount_point(DIR *d, const char *subdir) {
+ 
+         /* got only one handle; assume different mount points if one
+          * of both queries was not supported by the filesystem */
+-        if (r_p == -ENOSYS || r_p == -ENOTSUP || r == -ENOSYS || r == -ENOTSUP)
++        if (r_p == -ENOSYS || r_p == -EOPNOTSUPP || r == -ENOSYS || r == -EOPNOTSUPP)
+                 return true;
+ 
+         /* return error */

@@ -1,0 +1,26 @@
+From 5482192e5774f52f2af0665a3b58539295e9c0a4 Mon Sep 17 00:00:00 2001
+From: Michael Scherer <misc@zarb.org>
+Date: Sat, 11 Oct 2014 04:13:43 -0400
+Subject: [PATCH] Report aa_change_onexec error code
+
+Since aa_change_onexec return the error code in errno, and return
+-1, the current code do not give any useful information when
+something fail. This make apparmor easier to debug, as seen on
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=760526
+---
+ src/core/execute.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 8b9bb27137..b165b33af0 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1698,7 +1698,7 @@ static int exec_child(ExecCommand *command,
+                         err = aa_change_onexec(context->apparmor_profile);
+                         if (err < 0 && !context->apparmor_profile_ignore) {
+                                 *error = EXIT_APPARMOR_PROFILE;
+-                                return err;
++                                return -errno;
+                         }
+                 }
+ #endif

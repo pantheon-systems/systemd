@@ -1,0 +1,46 @@
+From f08f302732c0597c83ec6b8022aa82faffb116f9 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Sat, 11 Oct 2014 18:49:20 +0200
+Subject: [PATCH] terminal/grdrm: force deep modeset on enter
+
+Usually, when our session is activated (or re-configurated) we should be
+able to try a page-flip to our buffer. The kernel driver should reject it
+if it is incompatible. As it turns out, drivers don't do this. Therefore,
+we now force a deep modeset if we're not sure what mode is set.
+
+This has the side-effect that we might get glitches on session-switches
+(depending on driver behavior). However, there's no way around this and it
+is what everyone does so far. Most drivers still detect if we keep the
+mode and so don't touch the clocks. Therefore, we just get a regular async
+flip.
+---
+ src/libsystemd-terminal/grdev-drm.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/src/libsystemd-terminal/grdev-drm.c b/src/libsystemd-terminal/grdev-drm.c
+index 232321c0e2..dba6db2691 100644
+--- a/src/libsystemd-terminal/grdev-drm.c
++++ b/src/libsystemd-terminal/grdev-drm.c
+@@ -1158,8 +1158,21 @@ static int grdrm_crtc_commit_flip(grdrm_crtc *crtc, grdev_fb *basefb) {
+         assert(basefb);
+         assert(pipe);
+ 
+-        if (!crtc->applied && !grdrm_modes_compatible(&crtc->kern.mode, &crtc->set.mode))
++        if (!crtc->applied) {
++                if (!grdrm_modes_compatible(&crtc->kern.mode, &crtc->set.mode))
++                        return 0;
++
++                /* TODO: Theoretically, we should be able to page-flip to our
++                 * framebuffer here. We didn't perform any deep modeset, but the
++                 * DRM driver is really supposed to reject our page-flip in case
++                 * the FB is not compatible. We then properly fall back to a
++                 * deep modeset.
++                 * As it turns out, drivers don't to this. Therefore, we need to
++                 * perform a full modeset on enter now. We might avoid this in
++                 * the future with fixed drivers.. */
++
+                 return 0;
++        }
+ 
+         fb = fb_from_base(basefb);
+ 

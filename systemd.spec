@@ -616,6 +616,19 @@ Patch0574:      0574-man-reference-table-in-systemd-detect-virt-1-from-Co.patch
 Patch0575:      0575-kdbus-fix-buffer-overflow-in-bus_get_owner_kdbus-fun.patch
 Patch0576:      0576-fstab-generator-Honor-mount.usr-on-kernel-command-li.patch
 Patch0577:      0577-mount-setup-skip-relabelling-when-SELinux-and-SMACK-.patch
+Patch0578:      0578-bus-proxyd-fix-compatibility-with-old-dbus-1.patch
+Patch0579:      0579-Report-aa_change_onexec-error-code.patch
+Patch0580:      0580-sd-dhcp-client-support-non-Ethernet-hardware-address.patch
+Patch0581:      0581-terminal-grdrm-force-deep-modeset-on-enter.patch
+Patch0582:      0582-NEWS-don-t-mention-noinst_-debug-programs.patch
+Patch0583:      0583-Modernization.patch
+Patch0584:      0584-Set-NOTIFY_SOCKET-for-control-procs-if-NotifyAccess-.patch
+Patch0585:      0585-tests-fix-some-tests-to-pass-in-koji.patch
+Patch0586:      0586-man-join-tables-in-systemd-detect-virt-1.patch
+Patch0587:      0587-tmpfiles-compare-return-against-correct-errno.patch
+Patch0588:      0588-test-dhcp-client-add-more-asserts.patch
+Patch0589:      0589-fi-latin1-console-keymap-is-no-more.patch
+
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
 Patch0999:      fedora-add-bridge-sysctl-configuration.patch
