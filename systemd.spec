@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        216
-Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        11%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -711,6 +711,7 @@ Provides:       systemd-analyze = 198
 # systemd-sysv-convert was removed in f20: https://fedorahosted.org/fpc/ticket/308
 Obsoletes:      systemd-sysv < 206
 Provides:       systemd-sysv = 206
+Conflicts:      initscripts < 9.56.1
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -1411,6 +1412,10 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Oct 13 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-11
+- Conflict with old versions of initscripts (#1152183)
+- Remove obsolete Finnish keymap (#1151958)
+
 * Fri Oct 10 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 216-10
 - Fix a problem with voluntary daemon exits and some other bugs
   (#1150477, #1095962, #1150289)
