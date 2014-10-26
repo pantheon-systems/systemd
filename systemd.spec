@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        24%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        25%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -684,7 +684,7 @@ systemd APIs
 Summary:        Libraries for adding libudev support to applications that use glib
 Conflicts:      filesystem < 3
 License:        LGPLv2+
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}-libs = %{version}-%{release}
 
 %description -n libgudev1
 This package contains the libraries that make it easier to use libudev
@@ -1210,6 +1210,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Oct 26 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-25
+- Change libgudev1 to only require systemd-libs (#727499), there's
+  no need to require full systemd stack.
+
 * Wed Oct 01 2014 Kay Sievers <kay@redhat.com> - 208-24
 - revert "don't reset selinux context during CHANGE events"
 
