@@ -1,0 +1,32 @@
+From fd764e8bee33e7a65647a8c77a360da741407afc Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Tue, 14 Oct 2014 07:54:56 -0400
+Subject: [PATCH] python-systemd: avoid hitting assert in __exit__
+
+Reader_close() asserts that 'args' is always NULL, but the __exit__
+function forwards a non-NULL args.
+
+(cherry picked from commit 9ff5ff320ec71fec7f2c841223380665794afd07)
+
+Conflicts:
+	src/python-systemd/_reader.c
+---
+ src/python-systemd/_reader.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/src/python-systemd/_reader.c b/src/python-systemd/_reader.c
+index 0c889263a4..d1e05a4e48 100644
+--- a/src/python-systemd/_reader.c
++++ b/src/python-systemd/_reader.c
+@@ -325,9 +325,8 @@ PyDoc_STRVAR(Reader___exit____doc__,
+              "__exit__(type, value, traceback) -> None\n\n"
+              "Part of the context manager protocol.\n"
+              "Closes the journal.\n");
+-static PyObject* Reader___exit__(Reader *self, PyObject *args)
+-{
+-    return Reader_close(self, args);
++static PyObject* Reader___exit__(Reader *self, PyObject *args) {
++        return Reader_close(self, NULL);
+ }
+ 
+ 

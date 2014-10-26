@@ -1,0 +1,25 @@
+From d616ea839bd822bb82d83f69b3a4207517f94bea Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 25 Oct 2014 11:59:36 -0400
+Subject: [PATCH] calendarspec: fix typo in "annually"
+
+https://bugs.freedesktop.org/show_bug.cgi?id=85447
+(cherry picked from commit e90efc70900f8e69cfbafd9e9508bdeb4d40dad7)
+---
+ src/shared/calendarspec.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/calendarspec.c b/src/shared/calendarspec.c
+index 7075159183..934f94dcb1 100644
+--- a/src/shared/calendarspec.c
++++ b/src/shared/calendarspec.c
+@@ -686,7 +686,8 @@ int calendar_spec_from_string(const char *p, CalendarSpec **spec) {
+                 if (r < 0)
+                         goto fail;
+ 
+-        } else if (strcaseeq(p, "anually") || strcaseeq(p, "yearly")) {
++        } else if (strcaseeq(p, "annually") || strcaseeq(p, "yearly")
++                   || strcaseeq(p, "anually") /* backwards compatibility */ ) {
+                 r = const_chain(1, &c->month);
+                 if (r < 0)
+                         goto fail;

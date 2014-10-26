@@ -1,0 +1,34 @@
+From e413924ba5f2a256162e5866795c6e8b58a9130e Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Fri, 15 Aug 2014 14:39:05 +0200
+Subject: [PATCH] kernel-install/90-loaderentry.install: fixed cmdline parsing
+
+If /etc/kernel/cmdline is missing or empty, we read /proc/cmdline and
+want to filter out the initrd line. Due to a bug, the whole contents was
+filtered out.
+
+(cherry picked from commit 2f3a215f61d758cd59b3be5b65976a12401ac4ff)
+---
+ src/kernel-install/90-loaderentry.install | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/src/kernel-install/90-loaderentry.install b/src/kernel-install/90-loaderentry.install
+index a6a8abc2bd..4a990c3b43 100644
+--- a/src/kernel-install/90-loaderentry.install
++++ b/src/kernel-install/90-loaderentry.install
+@@ -45,11 +45,10 @@ if [[ -f /etc/kernel/cmdline ]]; then
+ fi
+ 
+ if ! [[ ${BOOT_OPTIONS[*]} ]]; then
+-    readarray -t line < /proc/cmdline
+-    for i in ${line[*]}; do
+-        if [[ "${i#initrd=*}" == "$i" ]]; then
+-            BOOT_OPTIONS[${#BOOT_OPTIONS[@]}]="$i"
+-        fi
++    read -ar line < /proc/cmdline
++    for i in "${line[@]}"; do
++        [[ "${i#initrd=*}" != "$i" ]] && continue
++        BOOT_OPTIONS[${#BOOT_OPTIONS[@]}]="$i"
+     done
+ fi
+ 

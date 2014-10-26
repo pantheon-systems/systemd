@@ -1,0 +1,35 @@
+From dea052ea745baf632edd40bea3e5ccc39f4ed3cb Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 15 Aug 2014 02:41:14 +0200
+Subject: [PATCH] man: drop references to removed and obsolete 'systemctl load'
+ command
+
+(cherry picked from commit d0a3fb7556d77c44c2bc38a560e99d4ad0abcf33)
+---
+ man/systemctl.xml | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 6492b0ef96..934bc540b7 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -626,8 +626,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
+             file.</para>
+ 
+             <para>This command should not be confused with the
+-            <command>daemon-reload</command> or <command>load</command>
+-            commands.</para>
++            <command>daemon-reload</command> command.</para>
+           </listitem>
+ 
+         </varlistentry>
+@@ -1190,8 +1189,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
+             tree. While the daemon is being reloaded, all sockets systemd
+             listens on on behalf of user configuration will stay
+             accessible.</para> <para>This command should not be confused
+-            with the <command>load</command> or
+-            <command>reload</command> commands.</para>
++            with the <command>reload</command> command.</para>
+           </listitem>
+         </varlistentry>
+         <varlistentry>

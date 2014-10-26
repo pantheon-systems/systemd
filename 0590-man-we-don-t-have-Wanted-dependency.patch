@@ -1,0 +1,27 @@
+From 9033ca38cec8621cc619e158c8423278789bbbd1 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Wed, 15 Oct 2014 09:28:31 +0200
+Subject: [PATCH] man: we don't have 'Wanted' dependency
+
+(cherry picked from commit 3e883473a0f36c220fc45ecf61d6878c9ac308b4)
+---
+ man/systemd.unit.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 9164717e44..acf980040c 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -175,10 +175,10 @@
+                 <filename>foo.service.wants/</filename> may exist. All
+                 unit files symlinked from such a directory are
+                 implicitly added as dependencies of type
+-                <varname>Wanted=</varname> to the unit. This is useful
++                <varname>Wants=</varname> to the unit. This is useful
+                 to hook units into the start-up of other units,
+                 without having to modify their unit files. For details
+-                about the semantics of <varname>Wanted=</varname>, see
++                about the semantics of <varname>Wants=</varname>, see
+                 below. The preferred way to create symlinks in the
+                 <filename>.wants/</filename> directory of a unit file
+                 is with the <command>enable</command> command of the

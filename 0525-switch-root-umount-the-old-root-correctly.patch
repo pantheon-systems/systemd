@@ -1,0 +1,29 @@
+From 41a050837d27d6ef095e804c707509de1819fa75 Mon Sep 17 00:00:00 2001
+From: Dan Dedrick <dan.dedrick@gmail.com>
+Date: Tue, 29 Jul 2014 15:31:23 -0400
+Subject: [PATCH] switch-root: umount the old root correctly
+
+The unmount occurs after the pivot_root, so the path used to unmount
+should take into account the new root directory. This will allow the
+umount to actually succeed.
+
+(cherry picked from commit 23f25b1496c31ef4c20b8f3ee8328f7b1d5f3a54)
+---
+ src/core/switch-root.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/switch-root.c b/src/core/switch-root.c
+index 518ec1f0a7..a2ded1484d 100644
+--- a/src/core/switch-root.c
++++ b/src/core/switch-root.c
+@@ -117,8 +117,8 @@ int switch_root(const char *new_root) {
+ 
+                 /* Immediately get rid of the old root. Since we are
+                  * running off it we need to do this lazily. */
+-                if (umount2(temporary_old_root, MNT_DETACH) < 0) {
+-                        log_error("Failed to umount old root dir %s: %m", temporary_old_root);
++                if (umount2("/mnt", MNT_DETACH) < 0) {
++                        log_error("Failed to umount old root dir /mnt: %m");
+                         return -errno;
+                 }
+ 

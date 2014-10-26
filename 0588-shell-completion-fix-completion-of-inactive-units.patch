@@ -1,0 +1,97 @@
+From 26df33449f6800097a4afea0d4a43a5d87183591 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 14 Oct 2014 20:20:07 -0400
+Subject: [PATCH] shell-completion: fix completion of inactive units
+
+Units which not loaded were not proposed properly. OTOH, we should
+filter units from get-unit-files by their state if they are currently
+loaded. Bring zsh completions in line with bash completion, the same
+logic should be used in both implementations.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1024379
+https://bugzilla.redhat.com/show_bug.cgi?id=790768
+https://bugs.freedesktop.org/show_bug.cgi?id=84720
+(cherry picked from commit f29c77bc0179b0fa57407dbe30b495be9f5ad2e8)
+---
+ shell-completion/bash/systemctl.in | 17 +++++++++--------
+ shell-completion/zsh/_systemctl.in | 16 +++++++++-------
+ 2 files changed, 18 insertions(+), 15 deletions(-)
+
+diff --git a/shell-completion/bash/systemctl.in b/shell-completion/bash/systemctl.in
+index e779a70a66..4ca57fb1b1 100644
+--- a/shell-completion/bash/systemctl.in
++++ b/shell-completion/bash/systemctl.in
+@@ -55,10 +55,14 @@ __get_all_units      () { { __systemctl $1 list-unit-files; __systemctl $1 list-
+         | { while read -r a b; do echo " $a"; done; }; }
+ __get_active_units   () { __systemctl $1 list-units       \
+         | { while read -r a b; do echo " $a"; done; }; }
+-__get_startable_units () { {
+-        __systemctl $1 list-units --all -t service,timer,socket,mount,automount,path,snapshot,swap
+-        __systemctl $1 list-unit-files -t service,timer,socket,mount,automount,path,snapshot,swap; } \
+-        | { while read -r a b c d; do [[ $c == "inactive" || $c == "failed" ]] && echo " $a"; done; }; }
++__get_startable_units () {
++        # find inactive or failed units, filter out masked and not-found
++        __systemctl $1 list-units --state inactive,failed -- $( __get_all_units ) | \
++                { while read -r a b c d; do [[ $b == "loaded" ]] && echo " $a"; done; }; }
++__get_restartable_units () {
++        # find !masked, filter out masked and not-found
++        __systemctl $1 list-units --state active,inactive,failed -- $( __get_all_units ) | \
++                { while read -r a b c d; do [[ $b == "loaded" ]] && echo " $a"; done; }; }
+ __get_failed_units   () { __systemctl $1 list-units       \
+         | { while read -r a b c d; do [[ $c == "failed"   ]] && echo " $a"; done; }; }
+ __get_enabled_units  () { __systemctl $1 list-unit-files  \
+@@ -180,10 +184,7 @@ _systemctl () {
+ 
+         elif __contains_word "$verb" ${VERBS[RESTARTABLE_UNITS]}; then
+                 comps=$( __filter_units_by_property $mode CanStart yes \
+-                      $( __get_all_units $mode \
+-                        | while read -r line; do \
+-                                [[ "$line" =~ @\.|\.(device|snapshot|socket|timer)$ ]] || echo " $line"; \
+-                        done ))
++                      $( __get_restartable_units $mode))
+                 compopt -o filenames
+ 
+         elif __contains_word "$verb" ${VERBS[STOPPABLE_UNITS]}; then
+diff --git a/shell-completion/zsh/_systemctl.in b/shell-completion/zsh/_systemctl.in
+index 74304e2e11..1e9ee4d3f4 100644
+--- a/shell-completion/zsh/_systemctl.in
++++ b/shell-completion/zsh/_systemctl.in
+@@ -136,8 +136,11 @@ _filter_units_by_property() {
+   done
+ }
+ 
++_systemctl_all_units() { { __systemctl list-unit-files; __systemctl list-units --all; } | { while read -r a b; do echo -E - " $a"; done; } }
++
+ _systemctl_active_units()  {_sys_active_units=(  $(__systemctl list-units          | { while read -r a b; do echo -E - " $a"; done; }) )}
+-_systemctl_inactive_units(){_sys_inactive_units=($(__systemctl list-units --all    | { while read -r a b c d; do [[ $c == "inactive" || $c == "failed" ]] && echo -E - " $a"; done; }) )}
++_systemctl_startable_units(){_sys_startable_units=($(__systemctl list-units --state inactive,failed -- $(_systemctl_all_units) | { while read -r a b c d; do [[ $b == "loaded" ]] && echo -E - " $a"; done; }) )}
++_systemctl_restartable_units(){_sys_restartable_units=($(__systemctl list-units --state inactive,failed,active -- $(_systemctl_all_units) | { while read -r a b c d; do [[ $b == "loaded" ]] && echo -E - " $a"; done; }) )}
+ _systemctl_failed_units()  {_sys_failed_units=(  $(__systemctl list-units --failed | { while read -r a b; do echo -E - " $a"; done; }) )}
+ _systemctl_enabled_units() {_sys_enabled_units=( $(__systemctl list-unit-files     | { while read -r a b; do [[ $b == "enabled" ]] && echo -E - " $a"; done; }) )}
+ _systemctl_disabled_units(){_sys_disabled_units=($(__systemctl list-unit-files     | { while read -r a b; do [[ $b == "disabled" ]] && echo -E - " $a"; done; }) )}
+@@ -179,8 +182,9 @@ done
+ # Completion functions for STARTABLE_UNITS
+ (( $+functions[_systemctl_start] )) || _systemctl_start()
+ {
+-  _systemctl_inactive_units
+-  compadd "$@" -a - _sys_inactive_units
++   _systemctl_startable_units
++   compadd "$@" - $( _filter_units_by_property CanStart yes \
++      ${_sys_startable_units[*]} )
+ }
+ 
+ # Completion functions for STOPPABLE_UNITS
+@@ -215,11 +219,9 @@ done
+ for fun in restart reload-or-restart ; do
+   (( $+functions[_systemctl_$fun] )) || _systemctl_$fun()
+   {
+-    _systemctl_all_units
++    _systemctl_restartable_units
+     compadd "$@" - $( _filter_units_by_property CanStart yes \
+-      ${_sys_all_units[*]} | while read -r line; do \
+-      [[ "$line" =~ \.device$ ]] || echo -E - " $line"; \
+-      done )
++      ${_sys_restartable_units[*]} )
+   }
+ done
+ 

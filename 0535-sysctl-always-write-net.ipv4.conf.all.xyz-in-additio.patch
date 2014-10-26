@@ -1,0 +1,34 @@
+From 001ad24794748ec1f89dd335769dfd020ed89a93 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 15 Aug 2014 12:07:33 +0200
+Subject: [PATCH] sysctl: always write net.ipv4.conf.all.xyz= in addition to
+ net.ipv4.conf.default.xyz=
+
+Otherwise we have a boot-time race, where interfaces that popped up
+after the sysctl service would get the settings applied, but all others
+wouldn't.
+
+(cherry picked from commit 1836bf9e1d70240c8079e4db4312309f4f1f91fd)
+
+Conflicts:
+	sysctl.d/50-default.conf
+---
+ sysctl.d/50-default.conf | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sysctl.d/50-default.conf b/sysctl.d/50-default.conf
+index 46bae210c7..20f0bd9fe7 100644
+--- a/sysctl.d/50-default.conf
++++ b/sysctl.d/50-default.conf
+@@ -15,9 +15,11 @@ kernel.core_uses_pid = 1
+ 
+ # Source route verification
+ net.ipv4.conf.default.rp_filter = 1
++net.ipv4.conf.all.rp_filter = 1
+ 
+ # Do not accept source routing
+ net.ipv4.conf.default.accept_source_route = 0
++net.ipv4.conf.all.accept_source_route = 0
+ 
+ # Enable hard and soft link protection
+ fs.protected_hardlinks = 1

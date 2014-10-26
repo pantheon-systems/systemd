@@ -1,0 +1,42 @@
+From 8b2e770d7d8e4d1c75402fe3beb0118f47257ba3 Mon Sep 17 00:00:00 2001
+From: Jan Synacek <jsynacek@redhat.com>
+Date: Wed, 8 Oct 2014 08:04:52 +0200
+Subject: [PATCH] man/systemctl: document enable on masked units
+
+(cherry picked from commit 751ea8deaf96cabd4f1321735cd86535840a3faf)
+
+Conflicts:
+	man/systemctl.xml
+---
+ man/systemctl.xml | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 934bc540b7..c73fa80623 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -888,6 +888,9 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
+             the system, or for all future logins of all users, or only this
+             boot.  Note that in the last case, no systemd daemon
+             configuration is reloaded.</para>
++
++            <para>Using <command>enable</command> on masked units
++            results in an error.</para>
+           </listitem>
+         </varlistentry>
+ 
+@@ -1025,10 +1028,10 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
+             <filename>/dev/null</filename>, making it impossible to
+             start them. This is a stronger version of
+             <command>disable</command>, since it prohibits all kinds of
+-            activation of the unit, including manual activation. Use
+-            this option with care. This honors the
+-            <option>--runtime</option> option, to only mask temporarily
+-            until the next reoobt of the system.</para>
++            activation of the unit, including enablement and manual
++            activation. Use this option with care. This honors the
++            <option>--runtime</option> option to only mask temporarily
++            until the next reboot of the system.</para>
+           </listitem>
+         </varlistentry>
+ 

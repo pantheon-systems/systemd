@@ -1,0 +1,113 @@
+From 54a21e301cd1d6ceb1e25711d4ea497216521c54 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 14 Oct 2014 21:10:02 -0400
+Subject: [PATCH] shell-completion: propose templates for
+ disable/[re]enable/[re]start
+
+Templates can be [re]enabled, on their own if the have DefaultInstance set,
+and with an instance suffix in all cases. Propose just the template name
+ending in @, to underline the instance suffix may have to be appended.
+
+Likewise for start/restart.
+
+This means that sometimes superflous units that one will not really
+want to operate on will be proposed, but this seems better than
+proposing a very incomplete set of names.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=66912
+(cherry picked from commit e9a19bd882ff8a2c8aef5c63b39525ea231e5fb9)
+---
+ shell-completion/bash/systemctl.in | 15 +++++++++++----
+ shell-completion/zsh/_systemctl.in | 20 +++++++++++++-------
+ 2 files changed, 24 insertions(+), 11 deletions(-)
+
+diff --git a/shell-completion/bash/systemctl.in b/shell-completion/bash/systemctl.in
+index 4ca57fb1b1..3c52d2b20d 100644
+--- a/shell-completion/bash/systemctl.in
++++ b/shell-completion/bash/systemctl.in
+@@ -53,6 +53,9 @@ __filter_units_by_property () {
+ 
+ __get_all_units      () { { __systemctl $1 list-unit-files; __systemctl $1 list-units --all; } \
+         | { while read -r a b; do echo " $a"; done; }; }
++__get_template_names () { __systemctl $1 list-unit-files \
++        | { while read -r a b; do [[ $a =~ @\. ]] && echo " ${a%%@.*}@"; done; }; }
++
+ __get_active_units   () { __systemctl $1 list-units       \
+         | { while read -r a b; do echo " $a"; done; }; }
+ __get_startable_units () {
+@@ -169,22 +172,26 @@ _systemctl () {
+                 compopt -o filenames
+ 
+         elif __contains_word "$verb" ${VERBS[DISABLED_UNITS]}; then
+-                comps=$( __get_disabled_units $mode )
++                comps=$( __get_disabled_units $mode;
++                        __get_template_names $mode)
+                 compopt -o filenames
+ 
+         elif __contains_word "$verb" ${VERBS[REENABLABLE_UNITS]}; then
+                 comps=$( __get_disabled_units $mode;
+-                         __get_enabled_units $mode )
++                         __get_enabled_units $mode;
++                         __get_template_names $mode)
+                 compopt -o filenames
+ 
+         elif __contains_word "$verb" ${VERBS[STARTABLE_UNITS]}; then
+                 comps=$( __filter_units_by_property $mode CanStart yes \
+-                      $( __get_startable_units $mode))
++                        $( __get_startable_units $mode);
++                        __get_template_names $mode)
+                 compopt -o filenames
+ 
+         elif __contains_word "$verb" ${VERBS[RESTARTABLE_UNITS]}; then
+                 comps=$( __filter_units_by_property $mode CanStart yes \
+-                      $( __get_restartable_units $mode))
++                        $( __get_restartable_units $mode); \
++                        __get_template_names $mode)
+                 compopt -o filenames
+ 
+         elif __contains_word "$verb" ${VERBS[STOPPABLE_UNITS]}; then
+diff --git a/shell-completion/zsh/_systemctl.in b/shell-completion/zsh/_systemctl.in
+index 1e9ee4d3f4..89b04e193f 100644
+--- a/shell-completion/zsh/_systemctl.in
++++ b/shell-completion/zsh/_systemctl.in
+@@ -137,6 +137,8 @@ _filter_units_by_property() {
+ }
+ 
+ _systemctl_all_units() { { __systemctl list-unit-files; __systemctl list-units --all; } | { while read -r a b; do echo -E - " $a"; done; } }
++_systemctl_get_template_names() { __systemctl list-unit-files | { while read -r a b; do  [[ $a =~ @\. ]] && echo -E - " ${a%%@.*}@"; done; } }
++
+ 
+ _systemctl_active_units()  {_sys_active_units=(  $(__systemctl list-units          | { while read -r a b; do echo -E - " $a"; done; }) )}
+ _systemctl_startable_units(){_sys_startable_units=($(__systemctl list-units --state inactive,failed -- $(_systemctl_all_units) | { while read -r a b c d; do [[ $b == "loaded" ]] && echo -E - " $a"; done; }) )}
+@@ -156,20 +158,24 @@ for fun in is-active is-failed is-enabled status show mask preset help list-depe
+ done
+ 
+ # Completion functions for ENABLED_UNITS
+-for fun in disable reenable ; do
+-  (( $+functions[_systemctl_$fun] )) || _systemctl_$fun()
+-  {
++(( $+functions[_systemctl_disable] )) || _systemctl_disable()
++{
++    _systemctl_enabled_units
++    compadd "$@" -a - _sys_enabled_units
++}
++
++(( $+functions[_systemctl_reenable] )) || _systemctl_reenable()
++{
+     _systemctl_enabled_units
+     _systemctl_disabled_units
+-    compadd "$@" -a - _sys_enabled_units _sys_disabled_units
+-  }
+-done
++    compadd "$@" -a - _sys_enabled_units _sys_disabled_units $(_systemctl_get_template_names)
++}
+ 
+ # Completion functions for DISABLED_UNITS
+ (( $+functions[_systemctl_enable] )) || _systemctl_enable()
+ {
+   _systemctl_disabled_units
+-  compadd "$@" -a - _sys_disabled_units
++  compadd "$@" -a - _sys_disabled_units $(_systemctl_get_template_names)
+ }
+ 
+ # Completion functions for FAILED_UNITS

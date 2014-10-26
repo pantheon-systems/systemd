@@ -1,0 +1,28 @@
+From e03c0dd482dc2e19bc7ea4f4d0a7d796c1131563 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 2 Aug 2014 23:50:22 -0400
+Subject: [PATCH] build-sys: fix conftest.c to work on arm
+
+All tests for compiler support were failing with:
+
+/usr/bin/ld: /tmp/ccwnVc2A.o: relocation R_ARM_MOVW_ABS_NC against `a' can not be used when making a shared object; recompile with -fPIC
+
+(cherry picked from commit 0943f4b7b22fb676fcd9ede50f8133bf6d4a270b)
+(cherry picked from commit 5f6262c1129e4909e72382bba41fdde036f27eee)
+---
+ m4/attributes.m4 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/m4/attributes.m4 b/m4/attributes.m4
+index aa53ef2380..7bd5ad8ef6 100644
+--- a/m4/attributes.m4
++++ b/m4/attributes.m4
+@@ -42,7 +42,7 @@ AC_DEFUN([CC_CHECK_FLAG_APPEND], [
+                  AS_TR_SH([cc_cv_$2_$3]),
+           [eval "AS_TR_SH([cc_save_$2])='${$2}'"
+            eval "AS_TR_SH([$2])='-Werror $3'"
+-           AC_LINK_IFELSE([AC_LANG_SOURCE([int a = 0; int main(void) { return a; } ])],
++           AC_LINK_IFELSE([AC_LANG_SOURCE([int main(void) { return 0; } ])],
+                           [eval "AS_TR_SH([cc_cv_$2_$3])='yes'"],
+                           [eval "AS_TR_SH([cc_cv_$2_$3])='no'"])
+            eval "AS_TR_SH([$2])='$cc_save_$2'"])

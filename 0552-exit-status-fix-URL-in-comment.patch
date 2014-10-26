@@ -1,0 +1,25 @@
+From ddcef72e03255c08e767d76a6016afc50130eafb Mon Sep 17 00:00:00 2001
+From: Daniel Mack <daniel@zonque.org>
+Date: Fri, 5 Sep 2014 13:48:05 +0200
+Subject: [PATCH] exit-status: fix URL in comment
+
+The LSB sites have moved, so update the URL.
+
+(cherry picked from commit 5b89f67f03dce933c0b30408ce81e2ac539ed544)
+---
+ src/shared/exit-status.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/exit-status.h b/src/shared/exit-status.h
+index babef31879..94b406fac0 100644
+--- a/src/shared/exit-status.h
++++ b/src/shared/exit-status.h
+@@ -37,7 +37,7 @@ typedef enum ExitStatus {
+          * use them here under the assumption that they hence are
+          * unused by init scripts.
+          *
+-         * http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html */
++         * http://refspecs.linuxfoundation.org/LSB_3.2.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html */
+ 
+         EXIT_CHDIR = 200,
+         EXIT_NICE,

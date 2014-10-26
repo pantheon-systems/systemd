@@ -1,0 +1,25 @@
+From 704dd9ab74b4c619be23e9b50f3990000f84ddf3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 11 Aug 2014 18:23:47 +0200
+Subject: [PATCH] bootchart: it's not OK to return -1 from a main program
+
+(cherry picked from commit 4155f7d4be5053d5f34a26e5437fd85e1fe00fa3)
+---
+ src/bootchart/bootchart.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/bootchart/bootchart.c b/src/bootchart/bootchart.c
+index 9f99c1f6b1..eadf17c357 100644
+--- a/src/bootchart/bootchart.c
++++ b/src/bootchart/bootchart.c
+@@ -346,8 +346,8 @@ int main(int argc, char *argv[]) {
+ 
+                 sampledata = new0(struct list_sample_data, 1);
+                 if (sampledata == NULL) {
+-                        log_error("Failed to allocate memory for a node: %m");
+-                        return -1;
++                        log_oom();
++                        return EXIT_FAILURE;
+                 }
+ 
+                 sampledata->sampletime = gettime_ns();

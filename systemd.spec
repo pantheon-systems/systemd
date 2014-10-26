@@ -560,7 +560,84 @@ Patch518:       0518-build-sys-don-t-move-libgudev-to-lib.patch
 Patch519:       0519-core-nicer-message-when-inotify-watches-are-exhauste.patch
 Patch520:       0520-journal-reduce-test-journal-send-timeout-from-10s-to.patch
 Patch521:       0521-socket-add-SocketUser-and-SocketGroup-for-chown-ing-.patch
-Patch522:       0522-nspawn-allow-EEXIST-on-mkdir_safe_label.patch
+Patch522:       0522-analyze-fix-crash-on-invalid-commandline.patch
+Patch523:       0523-build-sys-fix-conftest.c-to-work-on-arm.patch
+Patch524:       0524-nspawn-allow-EEXIST-on-mkdir_safe-home-uid.patch
+Patch525:       0525-switch-root-umount-the-old-root-correctly.patch
+Patch526:       0526-udev-builtin-keyboard-Allow-numeric-key-codes.patch
+Patch527:       0527-keymap-Fix-HP-Pavillon-DV7.patch
+Patch528:       0528-man-correct-references-to-DefaultTimeout-Sec.patch
+Patch529:       0529-hwdb-update-format-description-and-document-reloadin.patch
+Patch530:       0530-util-avoid-considering-dpkg-temporary-files-relevant.patch
+Patch531:       0531-man-document-that-we-look-for-both-the-instance-s-an.patch
+Patch532:       0532-bootchart-it-s-not-OK-to-return-1-from-a-main-progra.patch
+Patch533:       0533-journald-Fix-off-by-one-error-in-Missed-X-kernel-mes.patch
+Patch534:       0534-man-drop-references-to-removed-and-obsolete-systemct.patch
+Patch535:       0535-sysctl-always-write-net.ipv4.conf.all.xyz-in-additio.patch
+Patch536:       0536-kernel-install-90-loaderentry.install-fixed-cmdline-.patch
+Patch537:       0537-units-fix-BindsTo-logic-when-applied-relative-to-ser.patch
+Patch538:       0538-util-try-to-be-a-bit-more-NFS-compatible-when-checki.patch
+Patch539:       0539-update-hwdb.patch
+Patch540:       0540-systemctl-fail-in-the-case-that-no-unit-files-were-f.patch
+Patch541:       0541-udev-hwdb-do-not-look-at-usb_device-parents.patch
+Patch542:       0542-Document-.-.-udev-match-syntax.patch
+Patch543:       0543-sd-journal-properly-convert-object-size-on-big-endia.patch
+Patch544:       0544-sd-journal-verify-that-object-start-with-the-field-n.patch
+Patch545:       0545-units-make-emergency.service-conflict-with-rescue.se.patch
+Patch546:       0546-units-m4-is-not-needed-for-rescue.service.patch
+Patch547:       0547-units-update-rescue.service-and-emergency.service.patch
+Patch548:       0548-config-parser-fix-mem-leak.patch
+Patch549:       0549-localed-log-locale-keymap-changes-in-detail.patch
+Patch550:       0550-localed-introduce-helper-function-to-simplify-matchi.patch
+Patch551:       0551-localed-check-for-partially-matching-converted-keyma.patch
+Patch552:       0552-exit-status-fix-URL-in-comment.patch
+Patch553:       0553-man-fix-references-to-systemctl-man-page-which-is-no.patch
+Patch554:       0554-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch555:       0555-hwdb-update.patch
+Patch556:       0556-journal-do-not-leak-mmaps-on-OOM.patch
+Patch557:       0557-manager-use-correct-cleanup-function.patch
+Patch558:       0558-analyze-avoid-a-null-dereference.patch
+Patch559:       0559-core-smack-setup-Actually-allow-for-succesfully-load.patch
+Patch560:       0560-core-fix-a-potential-mem-leak.patch
+Patch561:       0561-core-use-correct-function-to-free-CalendarSpec.patch
+Patch562:       0562-udev-rules-close-empty-file.patch
+Patch563:       0563-man-use-the-escape-for-in-example-instead-of-space.patch
+Patch564:       0564-logind-add-support-for-Triton2-Power-Button.patch
+Patch565:       0565-systemd-tmpfiles-Fix-IGNORE_DIRECTORY_PATH-age-handl.patch
+Patch566:       0566-shell-completion-zsh-journalctl-s-b-changes.patch
+Patch567:       0567-logind-add-support-for-TPS65217-Power-Button.patch
+Patch568:       0568-journalctl-do-not-output-reboot-markers-when-running.patch
+Patch569:       0569-hwdb-Update-database-of-Bluetooth-company-identifier.patch
+Patch570:       0570-bootchart-use-n-a-if-PRETTY_NAME-is-not-found.patch
+Patch571:       0571-fileio-label-return-error-when-writing-fails.patch
+Patch572:       0572-core-don-t-allow-enabling-if-unit-is-masked.patch
+Patch573:       0573-core-map-the-rescue-argument-to-rescue.target.patch
+Patch574:       0574-man-systemctl-document-enable-on-masked-units.patch
+Patch575:       0575-man-document-the-new-rescue-kernel-command-line-opti.patch
+Patch576:       0576-sd-journal-do-not-reset-sd_j_enumerate_unique-positi.patch
+Patch577:       0577-sd-journal-change-check-to-assert.patch
+Patch578:       0578-sd-journal-fix-sd_journal_enumerate_unique-skipping-.patch
+Patch579:       0579-journalctl-use-pager-for-list-boots.patch
+Patch580:       0580-python-systemd-avoid-hitting-assert-in-__exit__.patch
+Patch581:       0581-shell-completion-restore-completion-for-p.patch
+Patch582:       0582-zsh-completion-Move-output-modes-to-autoload.patch
+Patch583:       0583-shell-completion-systemd-analyze-verify-systemctl-li.patch
+Patch584:       0584-shell-completion-prevent-mangling-unit-names.patch
+Patch585:       0585-bash-completion-use-list-unit-files-to-get-all-units.patch
+Patch586:       0586-shell-completion-prevent-mangling-unit-names-bash.patch
+Patch587:       0587-completion-filter-templates-from-restartable-units.patch
+Patch588:       0588-shell-completion-fix-completion-of-inactive-units.patch
+Patch589:       0589-shell-completion-propose-templates-for-disable-re-en.patch
+Patch590:       0590-man-we-don-t-have-Wanted-dependency.patch
+Patch591:       0591-man-fix-localectl-set-x11-keymap-syntax-description.patch
+Patch592:       0592-journalctl-correct-help-text-for-until.patch
+Patch593:       0593-calendarspec-fix-typo-in-annually.patch
+Patch594:       0594-systemctl-do-not-ignore-errors-in-symlink-removal.patch
+Patch595:       0595-journalctl-man-allow-only-between-terms.patch
+Patch596:       0596-core-some-more-_cleanup_free_.patch
+Patch597:       0597-core-do-not-add-dependencies-to-self.patch
+Patch598:       0598-udev-timeout-increase-timeout.patch
+Patch599:       0599-Update-hwdb-60-keyboard.hwdb-to-version-from-master.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1211,6 +1288,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 
 %changelog
 * Sun Oct 26 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-25
+- Various journal reading fixes (#1052262, #1110712, possibly #1073830, #1095962, and #1139694)
+- Increase udev worker timeout to 180 seconds (#1109478, possibly #1091513)
+- Shell completion for inactive units is improved (#790768)
+- Other small fixes (#1128360, #1149069, #1124843, #1049306)
 - Change libgudev1 to only require systemd-libs (#727499), there's
   no need to require full systemd stack.
 

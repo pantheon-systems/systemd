@@ -1,0 +1,74 @@
+From 7919b87d1f9fd25a63296fe3e62d5576aab90d08 Mon Sep 17 00:00:00 2001
+From: William Giokas <1007380@gmail.com>
+Date: Thu, 7 Nov 2013 16:00:52 -0600
+Subject: [PATCH] zsh-completion: Move output modes to autoload
+
+(cherry picked from commit a02c5fe7cbad3ca0536286ceab0bde5fb1c0ba13)
+---
+ shell-completion/zsh/_journalctl     | 8 +-------
+ shell-completion/zsh/_sd_outputmodes | 5 +++++
+ shell-completion/zsh/_systemctl.in   | 8 +-------
+ 3 files changed, 7 insertions(+), 14 deletions(-)
+ create mode 100644 shell-completion/zsh/_sd_outputmodes
+
+diff --git a/shell-completion/zsh/_journalctl b/shell-completion/zsh/_journalctl
+index a8f3a28f7c..a469bbc9a7 100644
+--- a/shell-completion/zsh/_journalctl
++++ b/shell-completion/zsh/_journalctl
+@@ -1,11 +1,5 @@
+ #compdef journalctl
+ 
+-_outputmodes() {
+-    local -a _output_opts
+-    _output_opts=(short short-monotonic verbose export json json-pretty json-see cat)
+-    _describe -t output 'output mode' _output_opts || compadd "$@"
+-}
+-
+ _list_fields() {
+     local -a journal_fields
+     journal_fields=(MESSAGE{,_ID} PRIORITY CODE_{FILE,LINE,FUNC}
+@@ -65,7 +59,7 @@ _arguments -s \
+     {-n+,--lines=}'[Number of journal entries to show]:integer' \
+     '--no-tail[Show all lines, even in follow mode]' \
+     {-r,--reverse}'[Reverse output]' \
+-    {-o+,--output=}'[Change journal output mode]:output modes:_outputmodes' \
++    {-o+,--output=}'[Change journal output mode]:output modes:_sd_outputmodes' \
+     {-x,--catalog}'[Show explanatory texts with each log line]' \
+     {-q,--quiet}"[Don't show privilege warning]" \
+     {-m,--merge}'[Show entries from all available journals]' \
+diff --git a/shell-completion/zsh/_sd_outputmodes b/shell-completion/zsh/_sd_outputmodes
+new file mode 100644
+index 0000000000..dae8a5c0dd
+--- /dev/null
++++ b/shell-completion/zsh/_sd_outputmodes
+@@ -0,0 +1,5 @@
++#autoload
++
++local -a _output_opts
++_output_opts=(short short-monotonic verbose export json json-pretty json-see cat)
++_describe -t output 'output mode' _output_opts || compadd "$@"
+diff --git a/shell-completion/zsh/_systemctl.in b/shell-completion/zsh/_systemctl.in
+index 2593b82a28..0652349d5a 100644
+--- a/shell-completion/zsh/_systemctl.in
++++ b/shell-completion/zsh/_systemctl.in
+@@ -287,12 +287,6 @@ _systemctl_caching_policy()
+   return 1
+ }
+ 
+-_outputmodes() {
+-    local -a _output_opts
+-    _output_opts=(short short-monotonic verbose export json json-pretty json-see cat)
+-    _describe -t output 'output mode' _output_opts || compadd "$@"
+-}
+-
+ _unit_states() {
+     local -a _states
+     _states=(loaded failed active inactive not-found listening running waiting plugged mounted exited dead masked)
+@@ -353,6 +347,6 @@ _arguments -s \
+     {-H+,--host=}'[Show information for remote host]:userathost:_sd_hosts_or_user_at_host' \
+     {-P,--privileged}'[Acquire privileges before execution]' \
+     {-n+,--lines=}'[Journal entries to show]:number of entries' \
+-    {-o+,--output=}'[Change journal output mode]:modes:_outputmodes' \
++    {-o+,--output=}'[Change journal output mode]:modes:_sd_outputmodes' \
+     '--plain[When used with list-dependencies, print output as a list]' \
+     '*::systemctl command:_systemctl_command'

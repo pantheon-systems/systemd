@@ -1,0 +1,24 @@
+From 41d0281745491369633589604c9192e737680881 Mon Sep 17 00:00:00 2001
+From: Santiago Vila <sanvila@unex.es>
+Date: Sat, 25 Oct 2014 10:40:30 -0400
+Subject: [PATCH] journalctl: correct help text for --until
+
+http://bugs.debian.org/766598
+(cherry picked from commit 7558251eef610e71595a0aa48952479906cb899a)
+---
+ src/journal/journalctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 8a32de3e7a..ca2ea05ef5 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -168,7 +168,7 @@ static int help(void) {
+                "     --system              Show only the system journal\n"
+                "     --user                Show only the user journal for the current user\n"
+                "     --since=DATE          Start showing entries on or newer than the specified date\n"
+-               "     --until=DATE          Stop showing entries on or older than the specified date\n"
++               "     --until=DATE          Stop showing entries on or newer than the specified date\n"
+                "  -c --cursor=CURSOR       Start showing entries from the specified cursor\n"
+                "     --after-cursor=CURSOR Start showing entries from after the specified cursor\n"
+                "     --show-cursor         Print the cursor after all the entries\n"

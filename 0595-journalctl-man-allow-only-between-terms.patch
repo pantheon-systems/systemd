@@ -1,0 +1,110 @@
+From 36f1284c3f36ad7244e5add7c960fd631d238fa9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 19 Jul 2014 21:05:07 -0400
+Subject: [PATCH] journalctl,man: allow + only between terms
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1110712
+(cherry picked from commit 4e6029435111adcad71489aca2dd68bc65aeffd4)
+
+Conflicts:
+	man/journalctl.xml
+---
+ man/journalctl.xml       | 19 +++++++++++++++----
+ src/journal/journalctl.c | 20 +++++++++++++++++---
+ 2 files changed, 32 insertions(+), 7 deletions(-)
+
+diff --git a/man/journalctl.xml b/man/journalctl.xml
+index 623d96695d..55eaa2c579 100644
+--- a/man/journalctl.xml
++++ b/man/journalctl.xml
+@@ -83,10 +83,11 @@
+                 field, then they are automatically matched as
+                 alternatives, i.e. the resulting output will show
+                 entries matching any of the specified matches for the
+-                same field. Finally, if the character
+-                <literal>+</literal> appears as separate word on the
+-                command line, all matches before and after are combined
+-                in a disjunction (i.e. logical OR).</para>
++                same field. Finally, the character
++                <literal>+</literal> may appears as a separate word
++                between other terms on the command line. This causes
++                all matches before and after to be combined in a
++                disjunction (i.e. logical OR).</para>
+ 
+                 <para>As shortcuts for a few types of field/value
+                 matches, file paths may be specified. If a file path
+@@ -97,11 +98,21 @@
+                 <literal>_KERNEL_DEVICE=</literal> match for the
+                 device.</para>
+ 
++                <para>Additional contraints may be added using options
++                <option>--boot</option>, <option>--unit=</option>,
++                etc, to futher limit what entries will be shown
++                (logical AND).</para>
++
+                 <para>Output is interleaved from all accessible
+                 journal files, whether they are rotated or currently
+                 being written, and regardless of whether they belong to the
+                 system itself or are accessible user journals.</para>
+ 
++                <para>The set of journal files which will be used
++                can be modified using the <option>--user</option>,
++                <option>--system</option>, <option>--directory</option>,
++                and <option>--file</option> options, see below.</para>
++
+                 <para>All users are granted access to their private
+                 per-user journals. However, by default, only root and
+                 users who are members of the <literal>systemd-journal</literal>
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index ca2ea05ef5..f330b77bf6 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -687,15 +687,20 @@ static int generate_new_id128(void) {
+ 
+ static int add_matches(sd_journal *j, char **args) {
+         char **i;
++        bool have_term = false;
+ 
+         assert(j);
+ 
+         STRV_FOREACH(i, args) {
+                 int r;
+ 
+-                if (streq(*i, "+"))
++                if (streq(*i, "+")) {
++                        if (!have_term)
++                                break;
+                         r = sd_journal_add_disjunction(j);
+-                else if (path_is_absolute(*i)) {
++                        have_term = false;
++
++                } else if (path_is_absolute(*i)) {
+                         _cleanup_free_ char *p, *t = NULL, *t2 = NULL;
+                         const char *path;
+                         _cleanup_free_ char *interpreter = NULL;
+@@ -744,8 +749,12 @@ static int add_matches(sd_journal *j, char **args) {
+                         r = sd_journal_add_match(j, t, 0);
+                         if (t2)
+                                 r = sd_journal_add_match(j, t2, 0);
+-                } else
++                        have_term = true;
++
++                } else {
+                         r = sd_journal_add_match(j, *i, 0);
++                        have_term = true;
++                }
+ 
+                 if (r < 0) {
+                         log_error("Failed to add match '%s': %s", *i, strerror(-r));
+@@ -753,6 +762,11 @@ static int add_matches(sd_journal *j, char **args) {
+                 }
+         }
+ 
++        if (!strv_isempty(args) && !have_term) {
++                log_error("\"+\" can only be used between terms");
++                return -EINVAL;
++        }
++
+         return 0;
+ }
+ 

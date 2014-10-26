@@ -1,0 +1,56 @@
+From 2442be32ad0b27e50792e454ea5a03759aeeabcb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 30 Aug 2014 23:59:37 -0400
+Subject: [PATCH] units: m4 is not needed for rescue.service
+
+(cherry picked from commit 9c0804278b42261b4dce20ea0ea79bcbad291639)
+
+Conflicts:
+	Makefile.am
+	units/.gitignore
+---
+ Makefile.am                                       | 5 ++---
+ units/.gitignore                                  | 1 -
+ units/{rescue.service.m4.in => rescue.service.in} | 0
+ 3 files changed, 2 insertions(+), 4 deletions(-)
+ rename units/{rescue.service.m4.in => rescue.service.in} (100%)
+
+diff --git a/Makefile.am b/Makefile.am
+index 205ea50e35..48300ebc1b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -475,7 +475,7 @@ EXTRA_DIST += \
+ 	units/serial-getty@.service.m4 \
+ 	units/console-shell.service.m4.in \
+ 	units/console-getty.service.m4.in \
+-	units/rescue.service.m4.in \
++	units/rescue.service.in \
+ 	units/systemd-initctl.service.in \
+ 	units/systemd-shutdownd.service.in \
+ 	units/systemd-remount-fs.service.in \
+@@ -510,8 +510,7 @@ EXTRA_DIST += \
+ 
+ CLEANFILES += \
+ 	units/console-shell.service.m4 \
+-	units/console-getty.service.m4 \
+-	units/rescue.service.m4
++	units/console-getty.service.m4
+ 
+ if HAVE_SYSV_COMPAT
+ nodist_systemunit_DATA += \
+diff --git a/units/.gitignore b/units/.gitignore
+index 9c65075c0a..ea99dfb930 100644
+--- a/units/.gitignore
++++ b/units/.gitignore
+@@ -19,7 +19,6 @@
+ /systemd-sysctl.service
+ /systemd-ask-password-console.service
+ /rescue.service
+-/rescue.service.m4
+ /systemd-ask-password-wall.service
+ /systemd-quotacheck.service
+ /quotaon.service
+diff --git a/units/rescue.service.m4.in b/units/rescue.service.in
+similarity index 100%
+rename from units/rescue.service.m4.in
+rename to units/rescue.service.in

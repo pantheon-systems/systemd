@@ -1,0 +1,92 @@
+From a13b6a4a92c215a4f3df7bc42c0019870f88fdc7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 18 Aug 2014 22:21:42 +0200
+Subject: [PATCH] units: fix BindsTo= logic when applied relative to services
+ with Type=oneshot
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Start jobs for Type=oneshot units are successful when the unit state
+transition activating → inactive took place. In such a case all units
+that BindsTo= on it previously would continue to run, even though the unit
+they dependet on was actually already gone.
+
+(cherry picked from commit ff50244582bf69e8489bba6ce59a21663d7f8274)
+---
+ src/core/unit.c | 48 ++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 5226963522..035340bc5d 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1299,12 +1299,44 @@ static void unit_check_unneeded(Unit *u) {
+                 if (unit_active_or_pending(other))
+                         return;
+ 
+-        log_info_unit(u->id, "Service %s is not needed anymore. Stopping.", u->id);
++        log_info_unit(u->id, "Unit %s is not needed anymore. Stopping.", u->id);
+ 
+         /* Ok, nobody needs us anymore. Sniff. Then let's commit suicide */
+         manager_add_job(u->manager, JOB_STOP, u, JOB_FAIL, true, NULL, NULL);
+ }
+ 
++static void unit_check_binds_to(Unit *u) {
++        bool stop = false;
++        Unit *other;
++        Iterator i;
++
++        assert(u);
++
++        if (u->job)
++                return;
++
++        if (unit_active_state(u) != UNIT_ACTIVE)
++                return;
++
++        SET_FOREACH(other, u->dependencies[UNIT_BINDS_TO], i) {
++                if (other->job)
++                        continue;
++
++                if (!UNIT_IS_INACTIVE_OR_FAILED(unit_active_state(other)))
++                        continue;
++
++                stop = true;
++        }
++
++        if (!stop)
++                return;
++
++        log_info_unit(u->id, "Unit %s is bound to inactive service. Stopping, too.", u->id);
++
++        /* A unit we need to run is gone. Sniff. Let's stop this. */
++        manager_add_job(u->manager, JOB_STOP, u, JOB_FAIL, true, NULL, NULL);
++}
++
+ static void retroactively_start_dependencies(Unit *u) {
+         Iterator i;
+         Unit *other;
+@@ -1608,11 +1640,19 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su
+         manager_recheck_journal(m);
+         unit_trigger_notify(u);
+ 
+-        /* Maybe we finished startup and are now ready for being
+-         * stopped because unneeded? */
+-        if (u->manager->n_reloading <= 0)
++        if (u->manager->n_reloading <= 0) {
++                /* Maybe we finished startup and are now ready for
++                 * being stopped because unneeded? */
+                 unit_check_unneeded(u);
+ 
++                /* Maybe we finished startup, but something we needed
++                 * has vanished? Let's die then. (This happens when
++                 * something BindsTo= to a Type=oneshot unit, as these
++                 * units go directly from starting to inactive,
++                 * without ever entering started.) */
++                unit_check_binds_to(u);
++        }
++
+         unit_add_to_dbus_queue(u);
+         unit_add_to_gc_queue(u);
+ }

@@ -1,0 +1,28 @@
+From 135dced9073335e3d2131df0cfb0e4c4bf2295ef Mon Sep 17 00:00:00 2001
+From: Eelco Dolstra <eelco.dolstra@logicblox.com>
+Date: Wed, 6 Aug 2014 13:14:51 +0200
+Subject: [PATCH] journald: Fix off-by-one error in "Missed X kernel messages"
+ warning
+
+On receiving a message, "kernel_seqnum" is set to "serial + 1". So
+subtracting 1 will cause messages like "Missed 0 kernel messages",
+which should be "Missed 1 kernel messages".
+
+(cherry picked from commit b9c488f60050248b35640f28e4d00958702ba1c3)
+---
+ src/journal/journald-kmsg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journald-kmsg.c b/src/journal/journald-kmsg.c
+index 4c2f6e7767..4f22864e4c 100644
+--- a/src/journal/journald-kmsg.c
++++ b/src/journal/journald-kmsg.c
+@@ -152,7 +152,7 @@ static void dev_kmsg_record(Server *s, char *p, size_t l) {
+                 /* Did we lose any? */
+                 if (serial > *s->kernel_seqnum)
+                         server_driver_message(s, SD_MESSAGE_JOURNAL_MISSED, "Missed %"PRIu64" kernel messages",
+-                                              serial - *s->kernel_seqnum - 1);
++                                              serial - *s->kernel_seqnum);
+ 
+                 /* Make sure we never read this one again. Note that
+                  * we always store the next message serial we expect

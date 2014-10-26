@@ -1,0 +1,29 @@
+From f9a500bd5b41e796a19492dbbf4922bb8e3c2c89 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Sat, 13 Sep 2014 12:35:06 +0200
+Subject: [PATCH] core: fix a potential mem leak
+
+Found with Coverity. Fixes: CID#996438
+
+(cherry picked from commit 4d5e13a125cf8d77d432225ab69826caa1d1cf59)
+---
+ src/core/load-fragment.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 45b36b97c4..2b736af4ea 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -1191,8 +1191,11 @@ int config_parse_timer(const char *unit,
+         }
+ 
+         v = new0(TimerValue, 1);
+-        if (!v)
++        if (!v) {
++                if (c)
++                        free(c);
+                 return log_oom();
++        }
+ 
+         v->base = b;
+         v->clock_id = id;

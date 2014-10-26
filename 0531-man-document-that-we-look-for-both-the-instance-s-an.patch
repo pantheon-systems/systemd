@@ -1,0 +1,29 @@
+From ce6906933486400d6a579e6fddd0b39a46b14db8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 11 Aug 2014 16:41:05 +0200
+Subject: [PATCH] man: document that we look for both the instance's and the
+ template's .d/ directory when looking for unit file drop-ins.
+
+(cherry picked from commit 96ddbf819a5675dba23ffadc35099462fdb2579f)
+---
+ man/systemd.unit.xml | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index eb8b13deee..b94555f406 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -198,7 +198,12 @@
+                 settings to a unit, without having to modify their
+                 unit files. Make sure that the file that is included
+                 has the appropriate section headers before any
+-                directive.</para>
++                directive. Note that for instanced units this logic
++                will first look for the instance
++                <literal>.d/</literal> subdirectory and read its
++                <literal>.conf</literal> files, followed by the
++                template <literal>.d/</literal> subdirectory and reads
++                its <literal>.conf</literal> files.</para>
+ 
+                 <para>If a line starts with <option>.include</option>
+                 followed by a filename, the specified file will be

@@ -1,0 +1,26 @@
+From 50a1e52b12298cc60b1f96d093fec7d1696942e9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 26 Sep 2014 10:49:55 -0400
+Subject: [PATCH] journalctl: do not output --reboot-- markers when running
+ non-interactively
+
+They are not legal in the export format.
+
+(cherry picked from commit 4bed248505da4da94d82078fe60326a374970e97)
+---
+ src/journal/journalctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 9886a2fe4a..e57a5474de 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -1723,7 +1723,7 @@ int main(int argc, char *argv[]) {
+                                         goto finish;
+                         }
+ 
+-                        if (!arg_merge) {
++                        if (!arg_merge && !arg_quiet) {
+                                 sd_id128_t boot_id;
+ 
+                                 r = sd_journal_get_monotonic_usec(j, NULL, &boot_id);

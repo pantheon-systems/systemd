@@ -1,0 +1,29 @@
+From a4a7569ab7e4e7b4939e74a7fc03ee913511ee15 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Thu, 11 Sep 2014 23:41:44 +0200
+Subject: [PATCH] analyze: avoid a null dereference
+
+If we have an error in the early sd_bus_* calls then unit_times
+will still be null.
+
+Found with coverity. Fixes: CID#996464
+
+(cherry picked from commit d725a138c5c311ba06567d6841933aa5b7b6a435)
+---
+ src/analyze/systemd-analyze.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/analyze/systemd-analyze.c b/src/analyze/systemd-analyze.c
+index db5d6e6078..67fcb4c0a3 100644
+--- a/src/analyze/systemd-analyze.c
++++ b/src/analyze/systemd-analyze.c
+@@ -275,7 +275,8 @@ static int acquire_time_data(DBusConnection *bus, struct unit_times **out) {
+         return c;
+ 
+ fail:
+-        free_unit_times(unit_times, (unsigned) c);
++        if (unit_times)
++                free_unit_times(unit_times, (unsigned) c);
+         return r;
+ }
+ 

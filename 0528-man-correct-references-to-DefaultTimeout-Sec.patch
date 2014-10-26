@@ -1,0 +1,109 @@
+From 6e529058d047ad7184d6c247d65eebbb51692f71 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 7 Aug 2014 20:46:34 -0400
+Subject: [PATCH] man: correct references to DefaultTimeout*Sec
+
+Noticed by thp on #systemd.
+
+(cherry picked from commit 5e34b37c9fec5da130f6549ddabd8a2af5c9faac)
+
+Conflicts:
+	man/systemd.socket.xml
+	man/systemd.swap.xml
+---
+ man/systemd.service.xml | 10 ++++++----
+ man/systemd.socket.xml  | 10 ++++++----
+ man/systemd.swap.xml    |  8 +++++---
+ src/core/socket.c       |  2 +-
+ 4 files changed, 18 insertions(+), 12 deletions(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index f549e89ee0..279e415c6c 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -605,11 +605,12 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}</programlisting>
+                                 time span value such as "5min
+                                 20s". Pass <literal>0</literal> to
+                                 disable the timeout logic. Defaults to
+-                                <varname>TimeoutStartSec=</varname> from
++                                <varname>DefaultTimeoutStartSec=</varname> from
+                                 the manager configuration file, except
+                                 when <varname>Type=oneshot</varname> is
+                                 used, in which case the timeout
+-                                is disabled by default.
++                                is disabled by default
++                                (see <citerefentry><refentrytitle>systemd-systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
+                                 </para></listitem>
+                         </varlistentry>
+ 
+@@ -628,8 +629,9 @@ ExecStart=/bin/echo $ONE $TWO ${TWO}</programlisting>
+                                 time span value such as "5min
+                                 20s". Pass <literal>0</literal> to disable
+                                 the timeout logic. Defaults to
+-                                <varname>TimeoutStartSec=</varname> from the
+-                                manager configuration file.
++                                <varname>DefaultTimeoutStopSec=</varname> from the
++                                manager configuration file
++                                (see <citerefentry><refentrytitle>systemd-systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
+                                 </para></listitem>
+                         </varlistentry>
+ 
+diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
+index d0c2595022..699c5a3bfd 100644
+--- a/man/systemd.socket.xml
++++ b/man/systemd.socket.xml
+@@ -717,16 +717,18 @@
+                                 finish. If a command does not exit
+                                 within the configured time, the socket
+                                 will be considered failed and be shut
+-                                down again. All commands still running,
++                                down again. All commands still running
+                                 will be terminated forcibly via
+                                 <constant>SIGTERM</constant>, and after another delay of
+                                 this time with <constant>SIGKILL</constant>. (See
+                                 <option>KillMode=</option> in <citerefentry><refentrytitle>systemd.kill</refentrytitle><manvolnum>5</manvolnum></citerefentry>.)
+                                 Takes a unit-less value in seconds, or
+                                 a time span value such as "5min
+-                                20s". Pass 0 to disable the timeout
+-                                logic. Defaults to <varname>TimeoutStartSec=</varname> in
+-                                manager configuration file.</para></listitem>
++                                20s". Pass <literal>0</literal> to disable the timeout
++                                logic. Defaults to <varname>DefaultTimeoutStartSec=</varname> from the
++                                manager configuration file
++                                (see <citerefentry><refentrytitle>systemd-systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
++                                </para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/man/systemd.swap.xml b/man/systemd.swap.xml
+index 5e8b25fdd8..61901d268e 100644
+--- a/man/systemd.swap.xml
++++ b/man/systemd.swap.xml
+@@ -185,9 +185,11 @@
+                                 <citerefentry><refentrytitle>systemd.kill</refentrytitle><manvolnum>5</manvolnum></citerefentry>.)
+                                 Takes a unit-less value in seconds, or
+                                 a time span value such as "5min
+-                                20s". Pass 0 to disable the timeout
+-                                logic. Defaults to <varname>TimeoutStartSec=</varname> in
+-                                manager configuration file.</para></listitem>
++                                20s". Pass <literal>0</literal> to disable the timeout
++                                logic. Defaults to <varname>DefaultTimeoutStartSec=</varname> from the
++                                manager configuration file
++                                (see <citerefentry><refentrytitle>systemd-systemd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
++                                </para></listitem>
+                         </varlistentry>
+                 </variablelist>
+ 
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 1bf1f0574e..5a5fa11996 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -29,7 +29,7 @@
+ #include <arpa/inet.h>
+ #include <mqueue.h>
+ #ifdef HAVE_XATTR
+-#include <attr/xattr.h>
++//#include <attr/xattr.h>
+ #endif
+ 
+ #include "unit.h"

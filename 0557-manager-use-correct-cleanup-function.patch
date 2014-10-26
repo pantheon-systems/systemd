@@ -1,0 +1,29 @@
+From 8653aa4acb7fd541dc46c36700db57527d0eb0b7 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Thu, 11 Sep 2014 21:14:53 +0200
+Subject: [PATCH] manager: use correct cleanup function
+
+Close the dir instead of attempt to free it.
+
+Introduced in 874310b7b68c4c0d36ff07397db30a959bb7dae5
+
+Found with coverity. Fixes: CID#996368
+
+(cherry picked from commit 807d0cca2b0daf4cd725298c1b5e062b1126f15b)
+---
+ src/core/manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index e75550bb4e..720537d11d 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -816,7 +816,7 @@ int manager_coldplug(Manager *m) {
+ 
+ static void manager_build_unit_path_cache(Manager *m) {
+         char **i;
+-        _cleanup_free_ DIR *d = NULL;
++        _cleanup_closedir_ DIR *d = NULL;
+         int r;
+ 
+         assert(m);

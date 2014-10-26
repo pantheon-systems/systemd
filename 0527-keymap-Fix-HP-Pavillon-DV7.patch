@@ -1,0 +1,26 @@
+From 40f1cc308dff0480c4b8493570b52d3071fe3842 Mon Sep 17 00:00:00 2001
+From: Martin Pitt <martin.pitt@ubuntu.com>
+Date: Tue, 5 Aug 2014 12:29:27 +0200
+Subject: [PATCH] keymap: Fix HP Pavillon DV7
+
+Properly disable scan code 94 instead of producing KEY_0.
+
+https://launchpad.net/bugs/1322770
+(cherry picked from commit efb4bf4e419e14a13eead6289ea40165579a816f)
+---
+ hwdb/60-keyboard.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
+index 3071c61987..ea94df57b1 100644
+--- a/hwdb/60-keyboard.hwdb
++++ b/hwdb/60-keyboard.hwdb
+@@ -366,7 +366,7 @@ keyboard:dmi:bvn*:bvr*:bd*:svnHewlett-Packard*:pnHP*Pavilion*dv7*Notebook*PC:pvr
+  KEYBOARD_KEY_b7=print
+  KEYBOARD_KEY_c2=media                                  # FIXME: quick play
+  KEYBOARD_KEY_c6=break
+- KEYBOARD_KEY_94=0
++ KEYBOARD_KEY_94=reserved
+ 
+ # Elitebook
+ keyboard:dmi:bvn*:bvr*:bd*:svnHewlett-Packard*:pn*Compaq*:pvr*

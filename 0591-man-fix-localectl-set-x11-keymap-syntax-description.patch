@@ -1,0 +1,23 @@
+From e565759b07170c09e1769ae31b2768efde686b55 Mon Sep 17 00:00:00 2001
+From: Jan Synacek <jsynacek@redhat.com>
+Date: Mon, 20 Oct 2014 12:43:39 +0200
+Subject: [PATCH] man: fix localectl set-x11-keymap syntax description
+
+(cherry picked from commit cd4c6fb12598435fe24431f1dd616f9582f0e3bd)
+---
+ man/localectl.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/localectl.xml b/man/localectl.xml
+index ad4f3d41f0..97c5dc0469 100644
+--- a/man/localectl.xml
++++ b/man/localectl.xml
+@@ -208,7 +208,7 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
+-                                <term><command>set-x11-keymap LAYOUT [MODEL] [VARIANT] [OPTIONS]</command></term>
++                                <term><command>set-x11-keymap LAYOUT [MODEL [VARIANT [OPTIONS]]]</command></term>
+ 
+                                 <listitem><para>Set the system default
+                                 keyboard mapping for X11. This takes a
