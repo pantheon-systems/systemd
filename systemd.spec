@@ -189,7 +189,7 @@ systemd APIs
 Summary:        Libraries for adding libudev support to applications that use glib
 Conflicts:      filesystem < 3
 License:        LGPLv2+
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}-libs = %{version}-%{release}
 
 %description -n libgudev1
 This package contains the libraries that make it easier to use libudev
