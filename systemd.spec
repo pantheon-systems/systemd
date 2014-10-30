@@ -1294,7 +1294,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Sun Oct 30 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-26
+* Wed Oct 29 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-26
 - Better fixes for completion (#790768)
 - Do not change device permissions with tmpfiles after boot (#1147248)
 
