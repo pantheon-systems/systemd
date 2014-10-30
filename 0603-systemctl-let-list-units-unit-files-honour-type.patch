@@ -1,0 +1,36 @@
+From 281593c1e9ba587165442ef33cb8bec2c52f2494 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 29 Oct 2014 22:46:30 -0400
+Subject: [PATCH] systemctl: let list-{units,unit-files } honour --type
+
+The docs don't clarify what is expected, but I don't see any reason
+why --type should be ignored.
+
+Also restucture the compund conditions into separate clauses for
+easier reading.
+
+(cherry picked from commit 6c71341aeecc3d092ed90f66e1b2c481b8e260ff)
+
+Conflicts:
+	src/systemctl/systemctl.c
+---
+ src/systemctl/systemctl.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 7bb3d0cc07..cca1fbbea0 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -277,8 +277,10 @@ static int compare_unit_info(const void *a, const void *b) {
+ static bool output_show_unit(const struct unit_info *u) {
+         const char *dot;
+ 
+-        if (!strv_isempty(arg_states))
+-                return strv_contains(arg_states, u->load_state) || strv_contains(arg_states, u->sub_state) || strv_contains(arg_states, u->active_state);
++        if (!strv_isempty(arg_states)) {
++                if (!strv_contains(arg_states, u->load_state) && !strv_contains(arg_states, u->sub_state) && !strv_contains(arg_states, u->active_state))
++                        return false;
++        }
+ 
+         return (!arg_types || ((dot = strrchr(u->id, '.')) &&
+                                strv_find(arg_types, dot+1))) &&

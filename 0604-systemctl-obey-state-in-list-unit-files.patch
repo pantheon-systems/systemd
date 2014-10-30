@@ -1,0 +1,29 @@
+From f971bf69e3e7d188e1cd7fa77fc7cd990e1b904e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 29 Oct 2014 22:51:00 -0400
+Subject: [PATCH] systemctl: obey --state in list-unit-files
+
+(cherry picked from commit fec1530e6b5b8d6dc352c7338010357126e84621)
+
+Conflicts:
+	src/systemctl/systemctl.c
+---
+ src/systemctl/systemctl.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index cca1fbbea0..85798e28dd 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -777,6 +777,11 @@ static int compare_unit_file_list(const void *a, const void *b) {
+ static bool output_show_unit_file(const UnitFileList *u) {
+         const char *dot;
+ 
++        if (!strv_isempty(arg_states)) {
++                if (!strv_find(arg_states, unit_file_state_to_string(u->state)))
++                        return false;
++        }
++
+         return !arg_types || ((dot = strrchr(u->path, '.')) && strv_find(arg_types, dot+1));
+ }
+ 

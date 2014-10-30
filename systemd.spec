@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        25%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        26%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -638,6 +638,13 @@ Patch596:       0596-core-some-more-_cleanup_free_.patch
 Patch597:       0597-core-do-not-add-dependencies-to-self.patch
 Patch598:       0598-udev-timeout-increase-timeout.patch
 Patch599:       0599-Update-hwdb-60-keyboard.hwdb-to-version-from-master.patch
+Patch600:       0600-units-tmpfiles-setup-dev-allow-unsafe-file-creation-.patch
+Patch601:       0601-shell-completion-systemctl-set-default-get-default-i.patch
+Patch602:       0602-bash-completion-rework-startable-restartable-units-o.patch
+Patch603:       0603-systemctl-let-list-units-unit-files-honour-type.patch
+Patch604:       0604-systemctl-obey-state-in-list-unit-files.patch
+Patch605:       0605-bash-completion-use-improved-filtering-to-make-thing.patch
+Patch606:       0606-zsh-completion-update-start-restart-completions.patch
 
 
 # kernel-install patch for grubby, drop if grubby is obsolete
@@ -1287,6 +1294,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Sun Oct 30 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-26
+- Better fixes for completion (#790768)
+- Do not change device permissions with tmpfiles after boot (#1147248)
+
 * Sun Oct 26 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-25
 - Various journal reading fixes (#1052262, #1110712, possibly #1073830, #1095962, and #1139694)
 - Increase udev worker timeout to 180 seconds (#1109478, possibly #1091513)

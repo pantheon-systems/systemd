@@ -1,0 +1,62 @@
+From 2a7401c74e2ac03e0f738fcddecfb7d7835460bb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 27 Oct 2014 21:34:28 -0500
+Subject: [PATCH] shell-completion: systemctl
+ set-default,get-default,is-system-running
+
+(cherry picked from commit 1cf3c30c0787f941b0f6d0b11ab504ddee3b0b8f)
+
+Conflicts:
+	TODO
+	shell-completion/bash/systemctl.in
+
+[stable: removed changes for is-system-running]
+---
+ shell-completion/zsh/_systemctl.in | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/shell-completion/zsh/_systemctl.in b/shell-completion/zsh/_systemctl.in
+index 89b04e193f..da16bc94b5 100644
+--- a/shell-completion/zsh/_systemctl.in
++++ b/shell-completion/zsh/_systemctl.in
+@@ -29,6 +29,8 @@
+     "disable:Disable one or more unit files"
+     "reenable:Reenable one or more unit files"
+     "preset:Enable/disable one or more unit files based on preset configuration"
++    "set-default:Set the default target"
++    "get-default:Query the default target"
+     "help:Show documentation for specified units"
+     "list-dependencies:Show unit dependency tree"
+     "mask:Mask one or more units"
+@@ -235,21 +237,28 @@ done
+ (( $+functions[_systemctl_unmask] )) || _systemctl_unmask()
+ {
+   _systemctl_masked_units
+-  compadd "$@" -a - _sys_masked_units || _message "no masked unit found"
++  compadd "$@" -a - _sys_masked_units || _message "no masked units found"
+ }
+ 
+ # Completion functions for JOBS
+ (( $+functions[_systemctl_cancel] )) || _systemctl_cancel()
+ {
+   compadd "$@" - $(__systemctl list-jobs \
+-    | cut -d' ' -f1  2>/dev/null ) || _message "no job found"
++    | cut -d' ' -f1  2>/dev/null ) || _message "no jobs found"
+ }
+ 
+ # Completion functions for SNAPSHOTS
+ (( $+functions[_systemctl_delete] )) || _systemctl_delete()
+ {
+   compadd "$@" - $(__systemctl list-units --type snapshot --all \
+-    | cut -d' ' -f1  2>/dev/null ) || _message "no snapshot found"
++    | cut -d' ' -f1  2>/dev/null ) || _message "no snapshots found"
++}
++
++# Completion functions for TARGETS
++(( $+functions[_systemctl_set-default] )) || _systemctl_set-default()
++{
++  compadd "$@" - $(__systemctl list-unit-files --type target --all \
++    | cut -d' ' -f1  2>/dev/null ) || _message "no targets found"
+ }
+ 
+ # Completion functions for ENVS
