@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        217
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -39,6 +39,8 @@ Source6:        sysctl.conf.README
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v215-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v216..master
 # i=1; for p in 0*patch;do printf "Patch%04d:      %s\n" $i $p; ((i++));done
+
+Patch0001:      0001-units-don-t-order-journal-flushing-afte-remote-fs.ta.patch
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
 Patch0999:      fedora-add-bridge-sysctl-configuration.patch
@@ -822,6 +824,10 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Oct 31 2014 Michal Schmidt <mschmidt@redhat.com> - 217-2
+- Fix ordering cycles involving systemd-journal-flush.service and
+  remote-fs.target (#1159117)
+
 * Tue Oct 28 2014 Lennart Poettering <lpoetter@redhat.com> - 217-1
 - New upstream release
 
