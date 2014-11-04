@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        217
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -41,6 +41,7 @@ Source6:        sysctl.conf.README
 # i=1; for p in 0*patch;do printf "Patch%04d:      %s\n" $i $p; ((i++));done
 
 Patch0001:      0001-units-don-t-order-journal-flushing-afte-remote-fs.ta.patch
+Patch0002:      0002-units-make-systemd-journald.service-Type-notify.patch
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
 Patch0999:      fedora-add-bridge-sysctl-configuration.patch
@@ -824,6 +825,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Nov 05 2014 Michal Schmidt <mschmidt@redhat.com> - 217-3
+- Fix hanging journal flush (#1159641)
+
 * Fri Oct 31 2014 Michal Schmidt <mschmidt@redhat.com> - 217-2
 - Fix ordering cycles involving systemd-journal-flush.service and
   remote-fs.target (#1159117)
