@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        26%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        27%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -645,7 +645,7 @@ Patch603:       0603-systemctl-let-list-units-unit-files-honour-type.patch
 Patch604:       0604-systemctl-obey-state-in-list-unit-files.patch
 Patch605:       0605-bash-completion-use-improved-filtering-to-make-thing.patch
 Patch606:       0606-zsh-completion-update-start-restart-completions.patch
-
+Patch607:       0607-udev-bump-event-timeout-in-two-more-places.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -693,7 +693,7 @@ Requires(pre):  /usr/bin/getent
 Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
-Requires:       kmod >= 15
+Requires:       kmod >= 15-2
 Requires:       diffutils
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
@@ -1294,6 +1294,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Nov 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-27
+- Bump kmod requirement to make sure they are updated in lockstep
+- Increase the udev timeout to 180 seconds in two more places (#1091513)
+
 * Wed Oct 29 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-26
 - Better fixes for completion (#790768)
 - Do not change device permissions with tmpfiles after boot (#1147248)

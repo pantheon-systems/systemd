@@ -1,0 +1,37 @@
+From 75a17dd008d2a97df4c8901216b875382af9f570 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 6 Nov 2014 17:34:43 -0500
+Subject: [PATCH] udev: bump event timeout in two more places
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1091513
+---
+ src/udev/ata_id/ata_id.c | 2 +-
+ src/udev/udev-event.c    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/udev/ata_id/ata_id.c b/src/udev/ata_id/ata_id.c
+index 5e55f8dc28..c05175c464 100644
+--- a/src/udev/ata_id/ata_id.c
++++ b/src/udev/ata_id/ata_id.c
+@@ -45,7 +45,7 @@
+ #include "libudev-private.h"
+ #include "log.h"
+ 
+-#define COMMAND_TIMEOUT_MSEC (30 * 1000)
++#define COMMAND_TIMEOUT_MSEC (180 * 1000)
+ 
+ static int disk_scsi_inquiry_command(int      fd,
+                                      void    *buf,
+diff --git a/src/udev/udev-event.c b/src/udev/udev-event.c
+index 37b545b10c..c4c62b460a 100644
+--- a/src/udev/udev-event.c
++++ b/src/udev/udev-event.c
+@@ -49,7 +49,7 @@ struct udev_event *udev_event_new(struct udev_device *dev)
+         udev_list_init(udev, &event->run_list, false);
+         event->fd_signal = -1;
+         event->birth_usec = now(CLOCK_MONOTONIC);
+-        event->timeout_usec = 30 * 1000 * 1000;
++        event->timeout_usec = 180 * 1000 * 1000;
+         return event;
+ }
+ 
