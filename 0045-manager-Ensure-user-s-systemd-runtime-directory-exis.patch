@@ -1,0 +1,48 @@
+From de1a1440dd81857ae679672ae1d757bfbdd2e112 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <colin@mageia.org>
+Date: Sun, 2 Nov 2014 13:33:16 +0000
+Subject: [PATCH] manager: Ensure user's systemd runtime directory exists.
+
+This mirrors code in dbus.c when creating the private socket and
+avoids error messages like:
+
+systemd[1353]: bind(/run/user/603/systemd/notify) failed: No such file or directory
+systemd[1353]: Failed to fully start up daemon: No such file or directory
+
+(cherry picked from commit 0c3f25e0c1f028d4da9cc5253abf0322230e6835)
+---
+ src/core/manager.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index ff29ae1d9d..47e23ba80e 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -662,9 +662,11 @@ static int manager_setup_notify(Manager *m) {
+                         return -errno;
+                 }
+ 
+-                if (m->running_as == SYSTEMD_SYSTEM)
++                if (m->running_as == SYSTEMD_SYSTEM) {
+                         m->notify_socket = strdup("/run/systemd/notify");
+-                else {
++                        if (!m->notify_socket)
++                                return log_oom();
++                } else {
+                         const char *e;
+ 
+                         e = getenv("XDG_RUNTIME_DIR");
+@@ -674,9 +676,11 @@ static int manager_setup_notify(Manager *m) {
+                         }
+ 
+                         m->notify_socket = strappend(e, "/systemd/notify");
++                        if (!m->notify_socket)
++                                return log_oom();
++
++                        mkdir_parents_label(m->notify_socket, 0755);
+                 }
+-                if (!m->notify_socket)
+-                        return log_oom();
+ 
+                 strncpy(sa.un.sun_path, m->notify_socket, sizeof(sa.un.sun_path)-1);
+                 r = bind(fd, &sa.sa, offsetof(struct sockaddr_un, sun_path) + strlen(sa.un.sun_path));

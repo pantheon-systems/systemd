@@ -1,4 +1,4 @@
-From ec2b7ebedde908aed11e6504b58a7712d052344b Mon Sep 17 00:00:00 2001
+From 5793666dcea38a768af843c6dcd60029a8c43026 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 4 Nov 2014 20:28:08 +0100
 Subject: [PATCH] units: make systemd-journald.service Type=notify
@@ -11,14 +11,16 @@ it has its signal handlers set up.
 
 https://bugs.freedesktop.org/show_bug.cgi?id=85871
 https://bugzilla.redhat.com/show_bug.cgi?id=1159641
+(cherry picked from commit a87a38c20196a4aeb56b6ba71d688eefd0b21c30)
 
-(from upstream commit 87a38c20196a4aeb56b6ba71d688eefd0b21c30)
+Conflicts:
+	units/systemd-journald.service.in
 ---
  units/systemd-journald.service.in | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/units/systemd-journald.service.in b/units/systemd-journald.service.in
-index 4de38fa..441d5b1 100644
+index 4de38fad59..441d5b1f96 100644
 --- a/units/systemd-journald.service.in
 +++ b/units/systemd-journald.service.in
 @@ -14,6 +14,7 @@ After=systemd-journald.socket systemd-journald-dev-log.socket syslog.socket
@@ -29,6 +31,3 @@ index 4de38fa..441d5b1 100644
  Sockets=systemd-journald.socket systemd-journald-dev-log.socket
  ExecStart=@rootlibexecdir@/systemd-journald
  Restart=always
--- 
-2.1.0
-

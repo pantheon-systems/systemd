@@ -1,0 +1,28 @@
+From 7410911917e8b2ffef4ee0c9644632c382bd1aef Mon Sep 17 00:00:00 2001
+From: Colin Walters <walters@verbum.org>
+Date: Sat, 1 Nov 2014 15:49:53 -0400
+Subject: [PATCH] libudev: Use correct free function
+
+FILE * wants cleanup_fclose().
+
+Spotted by udev hwdb segfaulting in gnome-continuous' buildroot
+construction.
+
+(cherry picked from commit ea55caa60c6860e33fa4f1a216c003ff666e9c68)
+---
+ src/libudev/libudev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libudev/libudev.c b/src/libudev/libudev.c
+index 8464427651..05f3b479fa 100644
+--- a/src/libudev/libudev.c
++++ b/src/libudev/libudev.c
+@@ -119,7 +119,7 @@ _public_ struct udev *udev_new(void)
+ {
+         struct udev *udev;
+         const char *env;
+-        _cleanup_free_ FILE *f = NULL;
++        _cleanup_fclose_ FILE *f = NULL;
+ 
+         udev = new0(struct udev, 1);
+         if (udev == NULL)

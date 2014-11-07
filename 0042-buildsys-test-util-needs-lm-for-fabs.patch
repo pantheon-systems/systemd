@@ -1,0 +1,22 @@
+From 28ad915f797e29462533011ec886640db58884c8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Cristian=20Rodr=C3=ADguez?= <crrodriguez@opensuse.org>
+Date: Tue, 4 Nov 2014 20:48:08 -0300
+Subject: [PATCH] buildsys: test-util needs -lm for fabs()
+
+(cherry picked from commit 01acf6c3b7390e8c47b7a5cd7cae4bcbd2846634)
+---
+ Makefile.am | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile.am b/Makefile.am
+index c80d25df29..a94578a9a7 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1527,6 +1527,7 @@ test_util_SOURCES = \
+ 	src/test/test-util.c
+ 
+ test_util_LDADD = \
++	-lm \
+ 	libsystemd-core.la
+ 
+ test_uid_range_SOURCES = \

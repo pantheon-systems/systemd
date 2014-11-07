@@ -1,0 +1,72 @@
+From bedfb81393f6718d07dc7857bd94ddf0c9e17d67 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 1 Nov 2014 12:06:41 -0400
+Subject: [PATCH] libudev: do not accept invalid log levels
+
+Invalid log levels lead to a assert failure later on.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=85657
+(cherry picked from commit ee7122c0ec6aa11f02e9e8d94254b353f12d2c14)
+---
+ src/libudev/libudev-util.c | 10 +++++++---
+ src/libudev/libudev.c      | 19 ++++++++++++++++---
+ 2 files changed, 23 insertions(+), 6 deletions(-)
+
+diff --git a/src/libudev/libudev-util.c b/src/libudev/libudev-util.c
+index f3fdf3b5aa..0bc10f3470 100644
+--- a/src/libudev/libudev-util.c
++++ b/src/libudev/libudev-util.c
+@@ -159,9 +159,13 @@ int util_log_priority(const char *priority)
+         char *endptr;
+         int prio;
+ 
+-        prio = strtol(priority, &endptr, 10);
+-        if (endptr[0] == '\0' || isspace(endptr[0]))
+-                return prio;
++        prio = strtoul(priority, &endptr, 10);
++        if (endptr[0] == '\0' || isspace(endptr[0])) {
++                if (prio >= 0 && prio <= 7)
++                        return prio;
++                else
++                        return -ERANGE;
++        }
+ 
+         return log_level_from_string(priority);
+ }
+diff --git a/src/libudev/libudev.c b/src/libudev/libudev.c
+index 7803863b2e..8464427651 100644
+--- a/src/libudev/libudev.c
++++ b/src/libudev/libudev.c
+@@ -193,7 +193,13 @@ _public_ struct udev *udev_new(void)
+                         }
+ 
+                         if (streq(key, "udev_log")) {
+-                                udev_set_log_priority(udev, util_log_priority(val));
++                                int prio;
++
++                                prio = util_log_priority(val);
++                                if (prio < 0)
++                                        udev_err(udev, "/etc/udev/udev.conf:%u: invalid logging level '%s', ignoring.\n", line_nr, val);
++                                else
++                                        udev_set_log_priority(udev, prio);
+                                 continue;
+                         }
+                 }
+@@ -201,8 +207,15 @@ _public_ struct udev *udev_new(void)
+ 
+         /* environment overrides config */
+         env = secure_getenv("UDEV_LOG");
+-        if (env != NULL)
+-                udev_set_log_priority(udev, util_log_priority(env));
++        if (env != NULL) {
++                int prio;
++
++                prio = util_log_priority(env);
++                if (prio < 0)
++                        udev_err(udev, "$UDEV_LOG specifies invalid logging level '%s', ignoring.\n", env);
++                else
++                        udev_set_log_priority(udev, prio);
++        }
+ 
+         return udev;
+ }

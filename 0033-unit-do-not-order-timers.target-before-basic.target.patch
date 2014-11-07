@@ -1,0 +1,58 @@
+From 0b0aec3a3418f2562805416f1f8ced5cd245c894 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 2 Nov 2014 11:39:17 -0500
+Subject: [PATCH] unit: do not order timers.target before basic.target
+
+Since commit 19f8d037833f2 'timer: order OnCalendar units after
+timer-sync.target if DefaultDependencies=no' timers might get a
+dependency on time-sync.target, which does not really belong in early
+boot. If ntp is enabled, time-sync.target might be delayed until a
+network connection is established.
+
+It turns out that majority of timer units found in the wild do not
+need to be started in early boot. Out of the timer units available in
+Fedora 21, only systemd-readahead-done.timer and mdadm-last-resort@.timer
+should be started early, but they both have DefaultDependencies=no,
+so are not part of timers.target anyway. All the rest look like they
+will be fine with being started a bit later (and the majority even
+much later, since they run daily or weekly).
+
+Let timers.target be pulled in by basic.target, but without the
+temporal dependency. This means timer units are started on a "best
+effort" schedule.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1158206
+(cherry picked from commit 3b0217036040a6013faeab4eb9da7469e3bbcfb3)
+---
+ units/basic.target  | 5 ++++-
+ units/timers.target | 3 +++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/units/basic.target b/units/basic.target
+index 228f62c4b1..eee3e6b774 100644
+--- a/units/basic.target
++++ b/units/basic.target
+@@ -8,8 +8,11 @@
+ [Unit]
+ Description=Basic System
+ Documentation=man:systemd.special(7)
++
+ Requires=sysinit.target
++After=sysinit.target
+ Wants=sockets.target timers.target paths.target slices.target
+-After=sysinit.target sockets.target timers.target paths.target slices.target
++After=sockets.target paths.target slices.target
++
+ JobTimeoutSec=15min
+ JobTimeoutAction=poweroff-force
+diff --git a/units/timers.target b/units/timers.target
+index 07fda3d9d0..251fa68065 100644
+--- a/units/timers.target
++++ b/units/timers.target
+@@ -8,3 +8,6 @@
+ [Unit]
+ Description=Timers
+ Documentation=man:systemd.special(7)
++
++DefaultDependencies=no
++Conflicts=shutdown.target

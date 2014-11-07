@@ -1,0 +1,50 @@
+From 87c237865b445906e3df7873b0fcd0a9f8483f13 Mon Sep 17 00:00:00 2001
+From: Dan Williams <dcbw@redhat.com>
+Date: Fri, 31 Oct 2014 12:20:21 -0500
+Subject: [PATCH] sd-dhcp6-client: fix off-by-two error in DUID length
+
+The duid data passed by the caller does not include the DUID type,
+but sd_dhcp6_client_set_duid() was treating it like it did.
+
+(cherry picked from commit 393b6f28ecec537f05567c4ec8af8c499d0ea226)
+---
+ src/libsystemd-network/sd-dhcp6-client.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/libsystemd-network/sd-dhcp6-client.c b/src/libsystemd-network/sd-dhcp6-client.c
+index fa4f9b5dc2..dbec1a2a8b 100644
+--- a/src/libsystemd-network/sd-dhcp6-client.c
++++ b/src/libsystemd-network/sd-dhcp6-client.c
+@@ -200,19 +200,19 @@ int sd_dhcp6_client_set_duid(sd_dhcp6_client *client, uint16_t type, uint8_t *du
+ 
+         switch (type) {
+         case DHCP6_DUID_LLT:
+-                if (duid_len <= sizeof(client->duid.llt))
++                if (duid_len <= sizeof(client->duid.llt) - 2)
+                         return -EINVAL;
+                 break;
+         case DHCP6_DUID_EN:
+-                if (duid_len != sizeof(client->duid.en))
++                if (duid_len != sizeof(client->duid.en) - 2)
+                         return -EINVAL;
+                 break;
+         case DHCP6_DUID_LL:
+-                if (duid_len <= sizeof(client->duid.ll))
++                if (duid_len <= sizeof(client->duid.ll) - 2)
+                         return -EINVAL;
+                 break;
+         case DHCP6_DUID_UUID:
+-                if (duid_len != sizeof(client->duid.uuid))
++                if (duid_len != sizeof(client->duid.uuid) - 2)
+                         return -EINVAL;
+                 break;
+         default:
+@@ -222,7 +222,7 @@ int sd_dhcp6_client_set_duid(sd_dhcp6_client *client, uint16_t type, uint8_t *du
+ 
+         client->duid.raw.type = htobe16(type);
+         memcpy(&client->duid.raw.data, duid, duid_len);
+-        client->duid_len = duid_len;
++        client->duid_len = duid_len + 2;  /* +2 for sizeof(type) */
+ 
+         return 0;
+ }

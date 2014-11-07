@@ -1,0 +1,32 @@
+From 0e0f3ce5c1c3d4d112e2a4534fc895aca463e460 Mon Sep 17 00:00:00 2001
+From: Ronny Chevalier <chevalier.ronny@gmail.com>
+Date: Thu, 16 Oct 2014 23:22:06 +0200
+Subject: [PATCH] shared: fix typo
+
+(cherry picked from commit d3774a1b15ea86f6156269e7ed813830f0c4abb8)
+---
+ src/shared/capability.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/shared/capability.c b/src/shared/capability.c
+index d2b901337f..0226542c6c 100644
+--- a/src/shared/capability.c
++++ b/src/shared/capability.c
+@@ -228,7 +228,7 @@ int drop_privileges(uid_t uid, gid_t gid, uint64_t keep_capabilities) {
+          * which we want to avoid. */
+ 
+         if (setresgid(gid, gid, gid) < 0) {
+-                log_error("Failed change group ID: %m");
++                log_error("Failed to change group ID: %m");
+                 return -errno;
+         }
+ 
+@@ -244,7 +244,7 @@ int drop_privileges(uid_t uid, gid_t gid, uint64_t keep_capabilities) {
+ 
+         r = setresuid(uid, uid, uid);
+         if (r < 0) {
+-                log_error("Failed change user ID: %m");
++                log_error("Failed to change user ID: %m");
+                 return -errno;
+         }
+ 

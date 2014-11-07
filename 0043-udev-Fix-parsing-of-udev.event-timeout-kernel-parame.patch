@@ -1,0 +1,26 @@
+From 86e00bfef3a221d032d2dfdf4592cea152548b16 Mon Sep 17 00:00:00 2001
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Date: Tue, 4 Nov 2014 23:45:15 +0000
+Subject: [PATCH] udev: Fix parsing of udev.event-timeout kernel parameter.
+
+(cherry picked from commit f671774f52838d35d78e62ddcb781b5b65b3373f)
+---
+ src/udev/udevd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/udev/udevd.c b/src/udev/udevd.c
+index 2e6c71352f..193702cd28 100644
+--- a/src/udev/udevd.c
++++ b/src/udev/udevd.c
+@@ -994,9 +994,9 @@ static void kernel_cmdline_options(struct udev *udev) {
+                         if (r < 0)
+                                 log_warning("Invalid udev.exec-delay ignored: %s", opt + 16);
+                 } else if (startswith(opt, "udev.event-timeout=")) {
+-                        r = safe_atou64(opt + 16, &arg_event_timeout_usec);
++                        r = safe_atou64(opt + 19, &arg_event_timeout_usec);
+                         if (r < 0) {
+-                                log_warning("Invalid udev.event-timeout ignored: %s", opt + 16);
++                                log_warning("Invalid udev.event-timeout ignored: %s", opt + 19);
+                                 break;
+                         }
+                         arg_event_timeout_usec *= USEC_PER_SEC;

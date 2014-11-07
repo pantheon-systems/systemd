@@ -1,0 +1,40 @@
+From cda53bb5a56c508e7ad4e8cc1cbb1f4be1fbb2bf Mon Sep 17 00:00:00 2001
+From: Ronny Chevalier <chevalier.ronny@gmail.com>
+Date: Sun, 12 Oct 2014 17:59:03 +0200
+Subject: [PATCH] shared: add missing includes
+
+(cherry picked from commit 81a12ba6ec2f8514b7d35f0c39a96cc74bb14019)
+---
+ src/shared/copy.h        | 3 +++
+ src/shared/locale-util.h | 4 ++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/src/shared/copy.h b/src/shared/copy.h
+index 0bf2598f60..6b93107fab 100644
+--- a/src/shared/copy.h
++++ b/src/shared/copy.h
+@@ -21,6 +21,9 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
++#include <stdbool.h>
++#include <sys/types.h>
++
+ int copy_file(const char *from, const char *to, int flags, mode_t mode);
+ int copy_tree(const char *from, const char *to, bool merge);
+ int copy_bytes(int fdf, int fdt, off_t max_bytes);
+diff --git a/src/shared/locale-util.h b/src/shared/locale-util.h
+index d7a3e4fae6..e48aa3d9af 100644
+--- a/src/shared/locale-util.h
++++ b/src/shared/locale-util.h
+@@ -21,6 +21,10 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
++#include <stdbool.h>
++
++#include "macro.h"
++
+ typedef enum LocaleVariable {
+         /* We don't list LC_ALL here on purpose. People should be
+          * using LANG instead. */

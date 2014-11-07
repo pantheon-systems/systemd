@@ -1,0 +1,26 @@
+From 963449549e8f4225c90c13fec9ac845d7f9aed43 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 29 Oct 2014 22:51:00 -0400
+Subject: [PATCH] systemctl: obey --state in list-unit-files
+
+(cherry picked from commit fec1530e6b5b8d6dc352c7338010357126e84621)
+---
+ src/systemctl/systemctl.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index b71040be40..8481a9b20c 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -1268,6 +1268,11 @@ next:
+                         return false;
+         }
+ 
++        if (!strv_isempty(arg_states)) {
++                if (!strv_find(arg_states, unit_file_state_to_string(u->state)))
++                        return false;
++        }
++
+         return true;
+ }
+ 

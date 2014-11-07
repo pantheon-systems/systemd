@@ -1,0 +1,26 @@
+From f4dab44d63124d6753a9c168442f70ab6a745e2c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 4 Nov 2014 00:28:33 +0100
+Subject: [PATCH] journal: when dumping log data with missing COMM fields, show
+ "unknown" instead
+
+A small readability improvement...
+
+(cherry picked from commit 1248e84008028ae54326c565fcc65dcbce3556ad)
+---
+ src/shared/logs-show.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index 04e1165191..e33824be4a 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -365,7 +365,7 @@ static int output_short(
+                 fprintf(f, " %.*s", (int) comm_len, comm);
+                 n += comm_len + 1;
+         } else
+-                fputc(' ', f);
++                fputs(" unknown", f);
+ 
+         if (pid && shall_print(pid, pid_len, flags)) {
+                 fprintf(f, "[%.*s]", (int) pid_len, pid);

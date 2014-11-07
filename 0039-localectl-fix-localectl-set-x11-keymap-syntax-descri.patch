@@ -1,0 +1,31 @@
+From 34f01b8f564d8b0b15bfaa50f4c89ac8cebcf291 Mon Sep 17 00:00:00 2001
+From: Jan Synacek <jsynacek@redhat.com>
+Date: Mon, 3 Nov 2014 14:01:04 +0100
+Subject: [PATCH] localectl: fix localectl set-x11-keymap syntax description
+
+This complements the fix in:
+
+    commit cd4c6fb12598435fe24431f1dd616f9582f0e3bd
+    Author: Jan Synacek <jsynacek@redhat.com>
+    Date:   Mon Oct 20 12:43:39 2014 +0200
+
+        man: fix localectl set-x11-keymap syntax description
+
+(cherry picked from commit 31cf921abbeafc9dae2d5c777f3e2285e6f4c19d)
+---
+ src/locale/localectl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/locale/localectl.c b/src/locale/localectl.c
+index 3690f9fc89..d4a2d29aea 100644
+--- a/src/locale/localectl.c
++++ b/src/locale/localectl.c
+@@ -505,7 +505,7 @@ static void help(void) {
+                "  list-locales             Show known locales\n"
+                "  set-keymap MAP [MAP]     Set virtual console keyboard mapping\n"
+                "  list-keymaps             Show known virtual console keyboard mappings\n"
+-               "  set-x11-keymap LAYOUT [MODEL] [VARIANT] [OPTIONS]\n"
++               "  set-x11-keymap LAYOUT [MODEL [VARIANT [OPTIONS]]]\n"
+                "                           Set X11 keyboard mapping\n"
+                "  list-x11-keymap-models   Show known X11 keyboard mapping models\n"
+                "  list-x11-keymap-layouts  Show known X11 keyboard mapping layouts\n"

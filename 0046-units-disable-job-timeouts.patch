@@ -1,0 +1,62 @@
+From af49e1e5c7ff8e30035c1880ee42225f2d15bfd9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 5 Nov 2014 09:16:58 -0500
+Subject: [PATCH] units: disable job timeouts
+
+For boot, we might kill fsck in the middle, with likely catastrophic
+consequences.
+
+On shutdown there might be other jobs, like downloading of updates for
+installation, and other custom jobs. It seems better to schedule an
+individual timeout on each one separately, when it is known what
+timeout is useful.
+
+Disable the timeouts for now, until we have a clearer picture of how
+we can deal with long-running jobs.
+
+(cherry picked from commit 038193efa6c00e852110f17383ef2786136f4f81)
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1152220
+---
+ units/basic.target    | 3 ---
+ units/poweroff.target | 2 --
+ units/reboot.target   | 2 --
+ 3 files changed, 7 deletions(-)
+
+diff --git a/units/basic.target b/units/basic.target
+index eee3e6b774..abb63ec560 100644
+--- a/units/basic.target
++++ b/units/basic.target
+@@ -13,6 +13,3 @@ Requires=sysinit.target
+ After=sysinit.target
+ Wants=sockets.target timers.target paths.target slices.target
+ After=sockets.target paths.target slices.target
+-
+-JobTimeoutSec=15min
+-JobTimeoutAction=poweroff-force
+diff --git a/units/poweroff.target b/units/poweroff.target
+index dd92d816ca..71871033a5 100644
+--- a/units/poweroff.target
++++ b/units/poweroff.target
+@@ -12,8 +12,6 @@ DefaultDependencies=no
+ Requires=systemd-poweroff.service
+ After=systemd-poweroff.service
+ AllowIsolate=yes
+-JobTimeoutSec=30min
+-JobTimeoutAction=poweroff-force
+ 
+ [Install]
+ Alias=ctrl-alt-del.target
+diff --git a/units/reboot.target b/units/reboot.target
+index 668b98d9e4..dec8f56796 100644
+--- a/units/reboot.target
++++ b/units/reboot.target
+@@ -12,8 +12,6 @@ DefaultDependencies=no
+ Requires=systemd-reboot.service
+ After=systemd-reboot.service
+ AllowIsolate=yes
+-JobTimeoutSec=30min
+-JobTimeoutAction=reboot-force
+ 
+ [Install]
+ Alias=ctrl-alt-del.target
