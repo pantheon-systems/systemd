@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        27%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        28%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -646,6 +646,7 @@ Patch604:       0604-systemctl-obey-state-in-list-unit-files.patch
 Patch605:       0605-bash-completion-use-improved-filtering-to-make-thing.patch
 Patch606:       0606-zsh-completion-update-start-restart-completions.patch
 Patch607:       0607-udev-bump-event-timeout-in-two-more-places.patch
+Patch608:       0608-journald-always-add-syslog-facility-for-messages-com.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -1294,6 +1295,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Nov 10 2014 Jan Synáček <jsynacek@redhat.com> - 208-28
+- Always add syslog facility for messages coming from kmsg (#1161995)
+
 * Thu Nov 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-27
 - Bump kmod requirement to make sure they are updated in lockstep
 - Increase the udev timeout to 180 seconds in two more places (#1091513)

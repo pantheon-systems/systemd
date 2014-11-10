@@ -1,0 +1,45 @@
+From 68ddef8b5cdd87c4dc35f94fac47dc038f2dcabc Mon Sep 17 00:00:00 2001
+From: Fedora systemd team <systemd-maint@redhat.com>
+Date: Mon, 10 Nov 2014 10:11:13 +0100
+Subject: [PATCH] journald: always add syslog facility for messages coming from
+ kmsg
+
+Set SYSLOG_FACILITY field for kernel log messages too. Setting only
+SYSLOG_IDENTIFIER="kernel" is not sufficient and tools reading journal
+maybe confused by missing SYSLOG_FACILITY field for kernel log messages.
+
+(cherry picked from commit 36dd072cdf03dcac0fcd2d6b42f261444dc7ac88)
+
+Resolves: #1161995
+---
+ src/journal/journald-kmsg.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/journal/journald-kmsg.c b/src/journal/journald-kmsg.c
+index 4f22864..ba2e283 100644
+--- a/src/journal/journald-kmsg.c
++++ b/src/journal/journald-kmsg.c
+@@ -274,6 +274,10 @@ static void dev_kmsg_record(Server *s, char *p, size_t l) {
+         if (asprintf(&syslog_priority, "PRIORITY=%i", priority & LOG_PRIMASK) >= 0)
+                 IOVEC_SET_STRING(iovec[n++], syslog_priority);
+ 
++
++        if (asprintf(&syslog_facility, "SYSLOG_FACILITY=%i", LOG_FAC(priority)) >= 0)
++                IOVEC_SET_STRING(iovec[n++], syslog_facility);
++
+         if ((priority & LOG_FACMASK) == LOG_KERN)
+                 IOVEC_SET_STRING(iovec[n++], "SYSLOG_IDENTIFIER=kernel");
+         else {
+@@ -295,9 +299,6 @@ static void dev_kmsg_record(Server *s, char *p, size_t l) {
+                         if (syslog_pid)
+                                 IOVEC_SET_STRING(iovec[n++], syslog_pid);
+                 }
+-
+-                if (asprintf(&syslog_facility, "SYSLOG_FACILITY=%i", LOG_FAC(priority)) >= 0)
+-                        IOVEC_SET_STRING(iovec[n++], syslog_facility);
+         }
+ 
+         message = cunescape_length_with_prefix(p, pl, "MESSAGE=");
+-- 
+1.9.3
+
