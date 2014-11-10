@@ -1,0 +1,25 @@
+From 93ca0a1f68950f3db9f99030348a2cad31a9f56e Mon Sep 17 00:00:00 2001
+From: Fedora systemd team <systemd-maint@redhat.com>
+Date: Mon, 10 Nov 2014 13:35:24 +0100
+Subject: [PATCH] machinectl: correctly supply user when connecting over ssh
+
+---
+ src/machine/machinectl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/machine/machinectl.c b/src/machine/machinectl.c
+index 88cf8d5..ff8eb62 100644
+--- a/src/machine/machinectl.c
++++ b/src/machine/machinectl.c
+@@ -803,7 +803,7 @@ int main(int argc, char*argv[]) {
+         else if (arg_transport == TRANSPORT_POLKIT)
+                 bus_connect_system_polkit(&bus, &error);
+         else if (arg_transport == TRANSPORT_SSH)
+-                bus_connect_system_ssh(NULL, arg_host, &bus, &error);
++                bus_connect_system_ssh(arg_user, arg_host, &bus, &error);
+         else
+                 assert_not_reached("Uh, invalid transport...");
+ 
+-- 
+1.9.3
+
