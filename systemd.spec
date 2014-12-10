@@ -15,8 +15,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        217
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        218
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -39,60 +39,6 @@ Source6:        sysctl.conf.README
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v217-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v217..v217-stable
 # i=1; for p in 0*patch;do printf "Patch%04d:      %s\n" $i $p; ((i++));done
-Patch0001:      0001-NEWS-well-it-s-Options-now-not-Discard.patch
-Patch0002:      0002-sd-bus-properly-handle-removals-of-non-existing-matc.patch
-Patch0003:      0003-nspawn-ignore-EEXIST-when-creating-mount-point.patch
-Patch0004:      0004-udev-path_id-update-comments.patch
-Patch0005:      0005-bash-completion-rework-startable-restartable-units-o.patch
-Patch0006:      0006-systemctl-let-list-units-unit-files-honour-type.patch
-Patch0007:      0007-systemctl-obey-state-in-list-unit-files.patch
-Patch0008:      0008-bash-completion-use-improved-filtering-to-make-thing.patch
-Patch0009:      0009-zsh-completion-update-start-restart-completions.patch
-Patch0010:      0010-keymap-Ignore-brightness-keys-on-Dell-Inspiron-1520-.patch
-Patch0011:      0011-sysusers-Preserve-ownership-and-mode-on-etc-passwd-a.patch
-Patch0012:      0012-snapshot-return-error-when-snapshot-exists.patch
-Patch0013:      0013-sd-dhcp-client-clean-up-raw-socket-sd_event_source-w.patch
-Patch0014:      0014-remove-references-of-readahead.patch
-Patch0015:      0015-shared-add-missing-includes.patch
-Patch0016:      0016-shared-fix-typo.patch
-Patch0017:      0017-shared-install-avoid-prematurely-rejecting-missing-u.patch
-Patch0018:      0018-nspawn-don-t-make-up-1-as-error-code.patch
-Patch0019:      0019-units-don-t-order-journal-flushing-afte-remote-fs.ta.patch
-Patch0020:      0020-hwdb-Update-database-of-Bluetooth-company-identifier.patch
-Patch0021:      0021-libudev-modernization.patch
-Patch0022:      0022-libudev-do-not-accept-invalid-log-levels.patch
-Patch0023:      0023-man-describe-all-log-levels-in-udevadm-8.patch
-Patch0024:      0024-sd-dhcp6-client-fix-off-by-two-error-in-DUID-length.patch
-Patch0025:      0025-core-improve-error-message-when-machine-id-is-missin.patch
-Patch0026:      0026-man-explain-journalctl-flush-correctly.patch
-Patch0027:      0027-systemd-journal-flush.service-remove-trigger-from-de.patch
-Patch0028:      0028-kernel-install-90-loaderentry.install-fix-cmdline-pa.patch
-Patch0029:      0029-scsi_id-fix-usage-spelling.patch
-Patch0030:      0030-libudev-Use-correct-free-function.patch
-Patch0031:      0031-Raise-level-of-Found-dependency.-lines.patch
-Patch0032:      0032-manager-do-not-print-timing-when-running-in-test-mod.patch
-Patch0033:      0033-unit-do-not-order-timers.target-before-basic.target.patch
-Patch0034:      0034-units-order-sd-journal-flush-after-sd-remount-fs.patch
-Patch0035:      0035-man-sd_event_add_post-fix-typo.patch
-Patch0036:      0036-journald-fix-minor-memory-leak.patch
-Patch0037:      0037-journald-fix-memory-leak-on-error-path.patch
-Patch0038:      0038-journal-when-dumping-log-data-with-missing-COMM-fiel.patch
-Patch0039:      0039-localectl-fix-localectl-set-x11-keymap-syntax-descri.patch
-Patch0040:      0040-man-tmpfiles.d-fix-typo.patch
-Patch0041:      0041-units-make-systemd-journald.service-Type-notify.patch
-Patch0042:      0042-buildsys-test-util-needs-lm-for-fabs.patch
-Patch0043:      0043-udev-Fix-parsing-of-udev.event-timeout-kernel-parame.patch
-Patch0044:      0044-udev-avoid-magic-constants-in-kernel-cmdline-parsers.patch
-Patch0045:      0045-manager-Ensure-user-s-systemd-runtime-directory-exis.patch
-Patch0046:      0046-units-disable-job-timeouts.patch
-Patch0047:      0047-login-rerun-vconsole-setup-when-switching-from-vgaco.patch
-Patch0048:      0048-hostnamed-introduce-new-embedded-chassis-type.patch
-Patch0049:      0049-systemctl-when-invokes-as-reboot-f-sync.patch
-Patch0050:      0050-switch_root-do-not-fail-if-base_filesystem_create-fa.patch
-Patch0051:      0051-shared-create-files-even-if-the-SELinux-policy-has-n.patch
-Patch0052:      0052-switch-root-explain-why-we-don-t-care-about-base_fil.patch
-Patch0053:      0053-shutdown-fix-arguments-to-run-initramfs-shutdown.patch
-Patch0054:      0054-timer-reenable-TIMER_ACTIVE-timers-when-restarted.patch
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
 Patch0999:      fedora-add-bridge-sysctl-configuration.patch
@@ -550,6 +496,12 @@ if [ -f /etc/nsswitch.conf ] ; then
                 /\<myhostname\>/ b
                 s/[[:blank:]]*$/ myhostname/
                 ' /etc/nsswitch.conf >/dev/null 2>&1 || :
+
+        sed -i.bak -e '
+                /^hosts:/ !b
+                /\<mymachines\>/ b
+                s/[[:blank:]]*$/ mymachines/
+                ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
 
 %postun
@@ -580,6 +532,11 @@ if [ $1 -eq 0 ] ; then
                 sed -i.bak -e '
                         /^hosts:/ !b
                         s/[[:blank:]]\+myhostname\>//
+                        ' /etc/nsswitch.conf >/dev/null 2>&1 || :
+
+                sed -i.bak -e '
+                        /^hosts:/ !b
+                        s/[[:blank:]]\+mymachines\>//
                         ' /etc/nsswitch.conf >/dev/null 2>&1 || :
         fi
 fi
@@ -876,6 +833,10 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Dec 10 2014 Lennart Poettering <lpoetter@redhat.com> - 218-1
+- New upstream release
+- Enable "nss-mymachines" in /etc/nsswitch.conf
+
 * Thu Nov 06 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 217-4
 - Change libgudev1 to only require systemd-libs (#727499), there's
   no need to require full systemd stack.
