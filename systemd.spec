@@ -505,6 +505,9 @@ if [ -f /etc/nsswitch.conf ] ; then
                 ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
 
+# remove obsolete systemd-readahead file
+rm -f /.readahead > /dev/null 2>&1 || :
+
 %postun
 if [ $1 -ge 1 ] ; then
         systemctl daemon-reload > /dev/null 2>&1 || :
