@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        29%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        28%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -697,7 +697,6 @@ Requires:       dbus
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 15-2
 Requires:       diffutils
-Requires:       grubby
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
 Provides:       syslog
@@ -1297,9 +1296,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
-* Mon Dec 15 2014 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 208-29
-- Require grubby (#1173919).
-
 * Mon Nov 10 2014 Jan Synáček <jsynacek@redhat.com> - 208-28
 - Always add syslog facility for messages coming from kmsg (#1161995)
 - Correctly apply user when connecting over ssh (#1156363)
