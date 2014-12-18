@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        218
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -39,6 +39,7 @@ Source6:        sysctl.conf.README
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v218-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v218..v218-stable
 # i=1; for p in 0*patch;do printf "Patch%04d:      %s\n" $i $p; ((i++));done
+Patch0001:      0001-nspawn-fix-invocation-of-the-raw-clone-system-call-o.patch
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
 Patch0999:      fedora-add-bridge-sysctl-configuration.patch
@@ -837,6 +838,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Dec 18 2014 Jan Synáček <jsynacek@redhat.com> - 218-2
+- systemd-nspawn doesn't work on s390/s390x (#1175394)
+
 * Wed Dec 10 2014 Lennart Poettering <lpoetter@redhat.com> - 218-1
 - New upstream release
 - Enable "nss-mymachines" in /etc/nsswitch.conf
