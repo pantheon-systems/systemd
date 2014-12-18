@@ -36,8 +36,8 @@ Source4:        yum-protect-systemd.conf
 Source5:        inittab
 Source6:        sysctl.conf.README
 
-# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v217-stable
-# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v217..v217-stable
+# Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v218-stable
+# GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v218..v218-stable
 # i=1; for p in 0*patch;do printf "Patch%04d:      %s\n" $i $p; ((i++));done
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
