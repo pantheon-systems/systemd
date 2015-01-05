@@ -1,0 +1,43 @@
+From e6ec314b4a905e0967b08202ebc6509753f2d518 Mon Sep 17 00:00:00 2001
+From: Fedora systemd team <systemd-maint@redhat.com>
+Date: Fri, 19 Dec 2014 08:06:15 +0100
+Subject: [PATCH] nspawn: fix invocation of the raw clone() system call on s390
+ and cris
+
+Since the order of the first and second arguments of the raw clone() system
+call is reversed on s390 and cris it needs to be invoked differently.
+
+(cherry-picked from 60e1651a31c9c0ed1caef1a63f5e3a87156b0b1e)
+---
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 14cd97d..2b97e5e 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -1209,7 +1209,7 @@ int main(int argc, char *argv[]) {
+                         goto finish;
+                 }
+ 
+-                pid = syscall(__NR_clone, SIGCHLD|CLONE_NEWIPC|CLONE_NEWNS|CLONE_NEWPID|CLONE_NEWUTS|(arg_private_network ? CLONE_NEWNET : 0), NULL);
++                pid = raw_clone(SIGCHLD|CLONE_NEWIPC|CLONE_NEWNS|CLONE_NEWPID|CLONE_NEWUTS|(arg_private_network ? CLONE_NEWNET : 0), NULL);
+                 if (pid < 0) {
+                         if (errno == EINVAL)
+                                 log_error("clone() failed, do you have namespace support enabled in your kernel? (You need UTS, IPC, PID and NET namespacing built in): %m");
+diff --git a/src/shared/missing.h b/src/shared/missing.h
+index 6c038d9..7fb9c84 100644
+--- a/src/shared/missing.h
++++ b/src/shared/missing.h
+@@ -323,3 +323,13 @@ static inline int name_to_handle_at(int fd, const char *name, struct file_handle
+ #ifndef DRM_IOCTL_DROP_MASTER
+ #define DRM_IOCTL_DROP_MASTER _IO('d', 0x1f)
+ #endif
++
++static inline long raw_clone(unsigned long flags, void *child_stack) {
++#if defined(__s390__) || defined(__CRIS__)
++        /* On s390 and cris the order of the first and second arguments
++         * of the raw clone() system call is reversed. */
++        return syscall(__NR_clone, child_stack, flags);
++#else
++        return syscall(__NR_clone, flags, child_stack);
++#endif
++}
+
