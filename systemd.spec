@@ -650,6 +650,7 @@ Patch608:       0608-journald-always-add-syslog-facility-for-messages-com.patch
 Patch609:       0609-machinectl-correctly-supply-user-when-connecting-ove.patch
 Patch610:       0610-nspawn-fix-invocation-of-the-raw-clone-system-call-o.patch
 Patch611:       0611-hwdb-ignore-brightness-keys-on-Dell-Inspiron.patch
+Patch612:       0612-kernel-install-90-loaderentry.install-fix-cmdline-pa.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -1300,6 +1301,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %changelog
 * Tue Jan  6 2015 Jan Synáček <jsynacek@redhat.com> - 208-29
 - Two backlight events upon single keypress on Dell Inspiron 1520 (#1141525)
+- kernel-install/90-loaderentry.install broken cmdline parsing: never installs kernels (#1166531)
 
 * Mon Jan  5 2015 Jan Synáček <jsynacek@redhat.com> - 208-29
 - systemd-nspawn doesn't work on s390/s390x (#1175394)

@@ -1,0 +1,37 @@
+From c008f6ee8df9aa36782378d1a3767543b3635a54 Mon Sep 17 00:00:00 2001
+From: Michael Chapman <mike@very.puzzling.org>
+Date: Wed, 29 Oct 2014 11:54:07 +1100
+Subject: [PATCH] kernel-install/90-loaderentry.install: fix cmdline parsing
+
+A recent commit (2f3a215) changed the parsing of /proc/cmdline to use a
+shell array. Unfortunately, this introduced a bug: "read -ar line"
+populates the shell variable $r, not $line. This breaks installation of
+new loader entries:
+
+  # kernel-install add 3.17.1-304.fc21.x86_64 \
+      /boot/vmlinuz-3.17.1-304.fc21.x86_64
+  Could not determine the kernel command line parameters.
+  Please specify the kernel command line in /etc/kernel/cmdline!
+
+This commit alters the read command to correctly populate the $line
+array instead.
+---
+ src/kernel-install/90-loaderentry.install | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/kernel-install/90-loaderentry.install b/src/kernel-install/90-loaderentry.install
+index 6f032b5..d433e00 100644
+--- a/src/kernel-install/90-loaderentry.install
++++ b/src/kernel-install/90-loaderentry.install
+@@ -47,7 +47,7 @@ if [[ -f /etc/kernel/cmdline ]]; then
+ fi
+ 
+ if ! [[ ${BOOT_OPTIONS[*]} ]]; then
+-    read -ar line < /proc/cmdline
++    read -a line -r < /proc/cmdline
+     for i in "${line[@]}"; do
+         [[ "${i#initrd=*}" != "$i" ]] && continue
+         BOOT_OPTIONS[${#BOOT_OPTIONS[@]}]="$i"
+-- 
+2.2.0
+
