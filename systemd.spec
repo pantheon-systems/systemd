@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        218
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -35,6 +35,8 @@ Source3:        85-display-manager.preset
 Source4:        yum-protect-systemd.conf
 Source5:        inittab
 Source6:        sysctl.conf.README
+Source7:        systemd-journal-remote.xml
+Source8:        systemd-journal-gatewayd.xml
 
 # Patch series is available from http://cgit.freedesktop.org/systemd/systemd-stable/log/?h=v218-stable
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v218..v218-stable
@@ -80,6 +82,7 @@ BuildRequires:  python2-devel
 BuildRequires:  python3-devel
 BuildRequires:  python-lxml
 BuildRequires:  python3-lxml
+BuildRequires:  firewalld-filesystem
 # libseccomp is currently explicitly only supported on x86/armv7
 %ifarch %{arm} %{ix86} x86_64
 # https://bugzilla.redhat.com/show_bug.cgi?id=1071278
@@ -211,6 +214,7 @@ Requires(pre):    /usr/bin/getent
 Requires(post):   systemd
 Requires(preun):  systemd
 Requires(postun): systemd
+Requires:       firewalld-filesystem
 # For the journal-gateway split in F20, drop at F22
 Obsoletes:      systemd < 204-10
 
@@ -429,6 +433,9 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.co
 # Delete LICENSE files from _docdir (we'll get them in as %%license)
 rm -rf %{buildroot}%{_docdir}/LICENSE*
 
+mkdir -p %{buildroot}/usr/lib/firewalld/services/
+install -Dm 0644 %{SOURCE7} %{SOURCE8} %{buildroot}/usr/lib/firewalld/services/
+
 %find_lang %{name}
 
 %pre
@@ -567,6 +574,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %systemd_post systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
 %systemd_post systemd-journal-remote.socket systemd-journal-remote.service
 %systemd_post systemd-journal-upload.service
+%firewalld_reload
 
 %preun journal-gateway
 %systemd_preun systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
@@ -577,6 +585,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %systemd_postun_with_restart systemd-journal-gatewayd.service
 %systemd_postun_with_restart systemd-journal-remote.service
 %systemd_postun_with_restart systemd-journal-upload.service
+%firewalld_reload
 
 %files -f %{name}.lang
 %doc %{_docdir}/systemd
@@ -836,8 +845,12 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %{_mandir}/man8/systemd-journal-gatewayd.*
 %{_mandir}/man8/systemd-journal-remote.*
 %{_datadir}/systemd/gatewayd
+/usr/lib/firewalld/services/*
 
 %changelog
+* Mon Jan 05 2015 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 218-3
+- Add firewall description files (#1176626)
+
 * Thu Dec 18 2014 Jan Synáček <jsynacek@redhat.com> - 218-2
 - systemd-nspawn doesn't work on s390/s390x (#1175394)
 
