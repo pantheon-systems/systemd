@@ -1,0 +1,41 @@
+From 8355844b2ec9ef170eaa63d24ec821f268ba2b92 Mon Sep 17 00:00:00 2001
+From: Hans de Goede <hdegoede@redhat.com>
+Date: Thu, 30 Oct 2014 10:11:18 +0100
+Subject: [PATCH] hwdb: Ignore brightness keys on Dell Inspiron 1520 to avoid
+ double events
+
+On the Dell Inspiron 1520 both the atkbd and acpi-video input devices report
+an event for pressing the brightness up / down key-combos, resulting in user
+space seeing double events and increasing / decreasing the brightness 2 steps
+for each keypress.
+
+This hwdb snippet suppresses the atkbd events, making the Inspiron 1520 work
+like most modern laptops which emit brightness up / down events through
+acpi-video only.
+
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1141525
+Cc: Pavel Malyshev <p.malishev@gmail.com>
+Reported-by: Pavel Malyshev <p.malishev@gmail.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ hwdb/60-keyboard.hwdb | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/hwdb/60-keyboard.hwdb b/hwdb/60-keyboard.hwdb
+index 06caba9..d2ca965 100644
+--- a/hwdb/60-keyboard.hwdb
++++ b/hwdb/60-keyboard.hwdb
+@@ -230,6 +230,11 @@ keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnInspiron*1110:pvr*
+ keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnInspiron*1210:pvr*
+  KEYBOARD_KEY_84=wlan
+ 
++# Dell Inspiron 1520
++keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnInspiron*1520:pvr*
++ KEYBOARD_KEY_85=unknown  # Brightness Down, also emitted by acpi-video, ignore
++ KEYBOARD_KEY_86=unknown  # Brightness Up, also emitted by acpi-video, ignore
++
+ # Latitude XT2
+ keyboard:dmi:bvn*:bvr*:bd*:svnDell*:pnLatitude*XT2:pvr*
+  KEYBOARD_KEY_9b=up                                     # tablet rocker up
+-- 
+2.1.0
