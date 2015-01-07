@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        29%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        30%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -652,6 +652,7 @@ Patch610:       0610-nspawn-fix-invocation-of-the-raw-clone-system-call-o.patch
 Patch611:       0611-hwdb-ignore-brightness-keys-on-Dell-Inspiron.patch
 Patch612:       0612-kernel-install-90-loaderentry.install-fix-cmdline-pa.patch
 Patch613:       0613-manager-print-fatal-errors-on-the-console-too.patch
+Patch614:       0614-journald-when-we-detect-the-journal-file-we-are-abou.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -1300,6 +1301,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Feb  5 2015 Jan Synáček <jsynacek@redhat.com> - 208-30
+- RFE: journal: automatically rotate the file if it is unlinked (#1171719)
+
 * Tue Jan  6 2015 Jan Synáček <jsynacek@redhat.com> - 208-29
 - Two backlight events upon single keypress on Dell Inspiron 1520 (#1141525)
 - kernel-install/90-loaderentry.install broken cmdline parsing: never installs kernels (#1166531)

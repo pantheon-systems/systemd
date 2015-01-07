@@ -1,0 +1,188 @@
+From 56ae751311120e4aee1933985f3fe24a262f26c1 Mon Sep 17 00:00:00 2001
+From: Fedora systemd team <systemd-maint@redhat.com>
+Date: Wed, 7 Jan 2015 10:07:04 +0100
+Subject: [PATCH] journald: when we detect the journal file we are about to
+ write to has been deleted, rotate
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1171719
+
+(cherry-picked from 2678031a179a9b91fc799f8ef951a548c66c4b49)
+---
+ src/journal/journal-file.c    | 65 +++++++++++++++++++++++++++++++++----------
+ src/journal/journal-file.h    |  1 +
+ src/journal/journald-server.c |  5 +++-
+ 3 files changed, 55 insertions(+), 16 deletions(-)
+
+diff --git a/src/journal/journal-file.c b/src/journal/journal-file.c
+index f69faa4..f809edf 100644
+--- a/src/journal/journal-file.c
++++ b/src/journal/journal-file.c
+@@ -71,6 +71,9 @@
+ /* How much to increase the journal file size at once each time we allocate something new. */
+ #define FILE_SIZE_INCREASE (8ULL*1024ULL*1024ULL)              /* 8MB */
+ 
++/* Reread fstat() of the file for detecting deletions at least this often */
++#define LAST_STAT_REFRESH_USEC (5*USEC_PER_SEC)
++
+ int journal_file_set_online(JournalFile *f) {
+         assert(f);
+ 
+@@ -306,6 +309,22 @@ static int journal_file_verify_header(JournalFile *f) {
+         return 0;
+ }
+ 
++static int journal_file_fstat(JournalFile *f) {
++        assert(f);
++        assert(f->fd >= 0);
++
++        if (fstat(f->fd, &f->last_stat) < 0)
++                return -errno;
++
++        f->last_stat_usec = now(CLOCK_MONOTONIC);
++
++        /* Refuse appending to files that are already deleted */
++        if (f->last_stat.st_nlink <= 0)
++                return -EIDRM;
++
++        return 0;
++}
++
+ static int journal_file_allocate(JournalFile *f, uint64_t offset, uint64_t size) {
+         uint64_t old_size, new_size;
+         int r;
+@@ -324,8 +343,21 @@ static int journal_file_allocate(JournalFile *f, uint64_t offset, uint64_t size)
+         if (new_size < le64toh(f->header->header_size))
+                 new_size = le64toh(f->header->header_size);
+ 
+-        if (new_size <= old_size)
+-                return 0;
++        if (new_size <= old_size) {
++
++                /* We already pre-allocated enough space, but before
++                 * we write to it, let's check with fstat() if the
++                 * file got deleted, in order make sure we don't throw
++                 * away the data immediately. Don't check fstat() for
++                 * all writes though, but only once ever 10s. */
++
++                if (f->last_stat_usec + LAST_STAT_REFRESH_USEC > now(CLOCK_MONOTONIC))
++                        return 0;
++
++                return journal_file_fstat(f);
++        }
++
++        /* Allocate more space. */
+ 
+         if (f->metrics.max_size > 0 && new_size > f->metrics.max_size)
+                 return -E2BIG;
+@@ -360,15 +392,14 @@ static int journal_file_allocate(JournalFile *f, uint64_t offset, uint64_t size)
+         if (r != 0)
+                 return -r;
+ 
+-        if (fstat(f->fd, &f->last_stat) < 0)
+-                return -errno;
+-
+         f->header->arena_size = htole64(new_size - le64toh(f->header->header_size));
+ 
+-        return 0;
++        return journal_file_fstat(f);
+ }
+ 
+ static int journal_file_move_to(JournalFile *f, int context, bool keep_always, uint64_t offset, uint64_t size, void **ret) {
++        int r;
++
+         assert(f);
+         assert(ret);
+ 
+@@ -380,8 +411,11 @@ static int journal_file_move_to(JournalFile *f, int context, bool keep_always, u
+                 /* Hmm, out of range? Let's refresh the fstat() data
+                  * first, before we trust that check. */
+ 
+-                if (fstat(f->fd, &f->last_stat) < 0 ||
+-                    offset + size > (uint64_t) f->last_stat.st_size)
++                r = journal_file_fstat(f);
++                if (r < 0)
++                        return r;
++
++                if (offset + size > (uint64_t) f->last_stat.st_size)
+                         return -EADDRNOTAVAIL;
+         }
+ 
+@@ -2500,10 +2534,9 @@ int journal_file_open(
+                 goto fail;
+         }
+ 
+-        if (fstat(f->fd, &f->last_stat) < 0) {
+-                r = -errno;
++        r = journal_file_fstat(f);
++        if (r < 0)
+                 goto fail;
+-        }
+ 
+         if (f->last_stat.st_size == 0 && f->writable) {
+ #ifdef HAVE_XATTR
+@@ -2537,10 +2570,9 @@ int journal_file_open(
+                 if (r < 0)
+                         goto fail;
+ 
+-                if (fstat(f->fd, &f->last_stat) < 0) {
+-                        r = -errno;
++                r = journal_file_fstat(f);
++                if (r < 0)
+                         goto fail;
+-                }
+ 
+                 newly_created = true;
+         }
+@@ -2653,10 +2685,13 @@ int journal_file_rotate(JournalFile **f, bool compress, bool seal) {
+                  le64toh((*f)->header->head_entry_seqnum),
+                  le64toh((*f)->header->head_entry_realtime));
+ 
++        /* Try to rename the file to the archived version. If the file
++         * already was deleted, we'll get ENOENT, let's ignore that
++         * case. */
+         r = rename(old_file->path, p);
+         free(p);
+ 
+-        if (r < 0)
++        if (r < 0 && errno != ENOENT)
+                 return -errno;
+ 
+         old_file->header->state = STATE_ARCHIVED;
+diff --git a/src/journal/journal-file.h b/src/journal/journal-file.h
+index 108017a..bd34c0f 100644
+--- a/src/journal/journal-file.h
++++ b/src/journal/journal-file.h
+@@ -65,6 +65,7 @@ typedef struct JournalFile {
+ 
+         char *path;
+         struct stat last_stat;
++        usec_t last_stat_usec;
+ 
+         Header *header;
+         HashItem *data_hash_table;
+diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
+index 1e93670..28b876a 100644
+--- a/src/journal/journald-server.c
++++ b/src/journal/journald-server.c
+@@ -416,7 +416,8 @@ bool shall_try_append_again(JournalFile *f, int r) {
+            -EPROTONOSUPPORT  Unsupported feature
+            -EBADMSG          Corrupted
+            -ENODATA          Truncated
+-           -ESHUTDOWN        Already archived */
++           -ESHUTDOWN        Already archived
++           -EIDRM            Journal file has been deleted */
+ 
+         if (r == -E2BIG || r == -EFBIG || r == -EDQUOT || r == -ENOSPC)
+                 log_debug("%s: Allocation limit reached, rotating.", f->path);
+@@ -428,6 +429,8 @@ bool shall_try_append_again(JournalFile *f, int r) {
+                 log_info("%s: Unsupported feature, rotating.", f->path);
+         else if (r == -EBADMSG || r == -ENODATA || r == ESHUTDOWN)
+                 log_warning("%s: Journal file corrupted, rotating.", f->path);
++        else if (r == -EIDRM)
++                log_warning("%s: Journal file has been deleted, rotating.", f->path);
+         else
+                 return false;
+ 
+-- 
+2.2.0
+
