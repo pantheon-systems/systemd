@@ -42,6 +42,7 @@ Source8:        systemd-journal-gatewayd.xml
 # GIT_DIR=~/src/systemd/.git git format-patch-ab -M -N --no-signature v218..v218-stable
 # i=1; for p in 0*patch;do printf "Patch%04d:      %s\n" $i $p; ((i++));done
 Patch0001:      0001-nspawn-fix-invocation-of-the-raw-clone-system-call-o.patch
+Patch0002:      0002-journald-when-we-detect-the-journal-file-we-are-abou.patch
 
 Patch0998:      fedora-disable-resolv.conf-symlink.patch
 Patch0999:      fedora-add-bridge-sysctl-configuration.patch
@@ -848,6 +849,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 /usr/lib/firewalld/services/*
 
 %changelog
+* Wed Jan  7 2015 Jan Synáček <jsynacek@redhat.com> - 218-3
+- RFE: journal: automatically rotate the file if it is unlinked (#1171719)
+
 * Mon Jan 05 2015 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 218-3
 - Add firewall description files (#1176626)
 
