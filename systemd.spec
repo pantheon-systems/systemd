@@ -16,7 +16,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        218
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -72,6 +72,7 @@ BuildRequires:  libgcrypt-devel
 BuildRequires:  gnutls-devel
 BuildRequires:  qrencode-devel
 BuildRequires:  libmicrohttpd-devel
+BuildRequires:  libxkbcommon-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
@@ -318,7 +319,8 @@ pushd build2
 %configure \
         "${CONFIGURE_OPTS[@]}" \
         --enable-gtk-doc \
-        --enable-compat-libs
+        --enable-compat-libs \
+	--enable-xkbcommon
 make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
@@ -849,6 +851,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 /usr/lib/firewalld/services/*
 
 %changelog
+* Thu Jan 15 2015 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 218-4
+- Enable xkbcommon dependency to allow checking of keymaps
+
 * Wed Jan  7 2015 Jan Synáček <jsynacek@redhat.com> - 218-3
 - RFE: journal: automatically rotate the file if it is unlinked (#1171719)
 
