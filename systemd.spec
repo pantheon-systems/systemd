@@ -122,9 +122,6 @@ Obsoletes:      nss-myhostname < 0.4
 Provides:       nss-myhostname = 0.4
 # For the journal-gateway split in F20, drop at F22
 Obsoletes:      systemd < 204-10
-# systemd-analyze got merged in F19, drop at F21
-Obsoletes:      systemd-analyze < 198
-Provides:       systemd-analyze = 198
 # systemd-sysv-convert was removed in f20: https://fedorahosted.org/fpc/ticket/308
 Obsoletes:      systemd-sysv < 206
 Provides:       systemd-sysv = 206
@@ -320,7 +317,7 @@ pushd build2
         "${CONFIGURE_OPTS[@]}" \
         --enable-gtk-doc \
         --enable-compat-libs \
-	--enable-xkbcommon
+        --enable-xkbcommon
 make %{?_smp_mflags} GCC_COLORS="" V=1
 popd
 
@@ -354,10 +351,9 @@ ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 touch %{buildroot}/etc/crypttab
 chmod 600 %{buildroot}/etc/crypttab
 
-install -m 0644 %{SOURCE5} %{buildroot}/etc/
+install -Dm0644 %{SOURCE5} %{buildroot}/etc/
 
-mkdir -p %{buildroot}/etc/sysctl.d
-install -m 0644 %{SOURCE6} %{buildroot}/etc/sysctl.conf
+install -Dm0644 %{SOURCE6} %{buildroot}/etc/sysctl.conf
 ln -s ../sysctl.conf %{buildroot}/etc/sysctl.d/99-sysctl.conf
 
 # We create all wants links manually at installation time to make sure
@@ -389,7 +385,8 @@ ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd
 ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/graphical.target.wants/
 ln -s ../systemd-update-utmp-runlevel.service %{buildroot}%{_prefix}/lib/systemd/system/reboot.target.wants/
 
-mkdir -p %{buildroot}%{_localstatedir}/{run,log}/
+mkdir -p %{buildroot}%{_localstatedir}/run
+mkdir -p %{buildroot}%{_localstatedir}/log
 touch %{buildroot}%{_localstatedir}/run/utmp
 touch %{buildroot}%{_localstatedir}/log/{w,b}tmp
 
@@ -408,11 +405,10 @@ mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
 # Install Fedora default preset policy
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -Dm0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -Dm0644 %{SOURCE2} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -Dm0644 %{SOURCE3} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
-install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-install -m 0644 %{SOURCE2} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-install -m 0644 %{SOURCE3} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -430,14 +426,13 @@ touch %{buildroot}%{_localstatedir}/lib/systemd/random-seed
 touch %{buildroot}%{_localstatedir}/lib/systemd/clock
 
 # Install yum protection fragment
-mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
-install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
+install -Dm0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
-# Delete LICENSE files from _docdir (we'll get them in as %%license)
-rm -rf %{buildroot}%{_docdir}/LICENSE*
+install -Dm0644 %{SOURCE7} %{buildroot}%{_rpmconfigdir}/macros.d/macros.systemd
 
-mkdir -p %{buildroot}/usr/lib/firewalld/services/
-install -Dm 0644 %{SOURCE7} %{SOURCE8} %{buildroot}/usr/lib/firewalld/services/
+mkdir -vp %{buildroot}/usr/lib/firewalld/services/
+install -Dm0644 %{SOURCE7} %{buildroot}/usr/lib/firewalld/services/
+install -Dm0644 %{SOURCE8} %{buildroot}/usr/lib/firewalld/services/
 
 %find_lang %{name}
 
@@ -591,8 +586,8 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %firewalld_reload
 
 %files -f %{name}.lang
-%doc %{_docdir}/systemd
-%{!?_licensedir:%global license %%doc}
+%doc %{_pkgdocdir}
+%exclude %{_pkgdocdir}/LICENSE.*
 %license LICENSE.GPL2 LICENSE.LGPL2.1 LICENSE.MIT
 %dir %{_sysconfdir}/systemd
 %dir %{_sysconfdir}/systemd/system
