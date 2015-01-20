@@ -622,7 +622,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %dir %{_datadir}/pkgconfig
 %dir %{_datadir}/zsh
 %dir %{_datadir}/zsh/site-functions
-%dir %{_localstatedir}/log/journal
+%dir %attr(2755,root,systemd-journal) %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
 %ghost %dir %{_localstatedir}/lib/systemd/coredump
@@ -848,6 +848,7 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %changelog
 * Thu Jan 15 2015 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 218-4
 - Enable xkbcommon dependency to allow checking of keymaps
+- Fix permissions of /var/log/journal (#1048424)
 
 * Wed Jan  7 2015 Jan Synáček <jsynacek@redhat.com> - 218-3
 - RFE: journal: automatically rotate the file if it is unlinked (#1171719)
