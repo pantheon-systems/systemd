@@ -6,21 +6,6 @@ specific patches that are not available upstream yet.
 
 Upstream: http://pkgs.fedoraproject.org/cgit/systemd.git
 
-Pulling in Upstream changes
----------------------------
-
-```
-git clone git@github.com:pantheon-systems/systemd.git
-cd systemd
-git remote add upstream git://pkgs.fedoraproject.org/glibc.git
-git fetch upstream
-
-# merge latest changes from upstream branch
-git rebase upstream/f20
-
-# deal with any merge conflicts. hopefully none.
-```
-
 Adding a custom patch
 ---------------------
 
@@ -35,6 +20,22 @@ Patch1000:      kernel-install-grubby.patch
 Patch2000:      2000-cgroups-Cache-controller-masks-and-optimize-queues.patch
 Patch2001:      2001-install-Assume-.wants-symlinks-have-the-same-name-as.patch
 
+```
+
+Pulling in Upstream changes
+---------------------------
+
+```
+git clone git@github.com:pantheon-systems/systemd.git
+cd systemd
+git remote add upstream git://pkgs.fedoraproject.org/glibc.git
+git fetch upstream
+
+# merge latest changes from upstream branch
+git rebase upstream/f20
+
+# deal with any merge conflicts. hopefully none.
+# build new rpm!
 ```
 
 Building RPM
