@@ -658,6 +658,11 @@ Patch615:       0615-hwdb-add-a-touchpad-hwdb.patch
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
 
+
+# Pantheon backport of cgroup cache controller optimizations from systemd master branch (2013-11-21) -joe
+Patch2000:      2000-cgroups-Cache-controller-masks-and-optimize-queues.patch
+Patch2001:      2001-install-Assume-.wants-symlinks-have-the-same-name-as.patch
+
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
 BuildRequires:  libcap-devel
