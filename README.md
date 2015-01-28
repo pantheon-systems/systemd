@@ -46,4 +46,6 @@ Run the `docker-build.sh` script which will take the following actions:
 1. pull down a docker image pre-populated with dev tools and rpm
   build tools.
 2. execute `rpm-build.sh` inside the container
+3. `rpmdev-bumpver` is called to append `.pantheon1` to the package version
+  to identify this is a Pantheon-forked package.
 3. on success, `.rpm`'s will be in an arch specific directory, eg: `x86_64`
