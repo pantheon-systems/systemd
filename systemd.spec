@@ -653,6 +653,7 @@ Patch611:       0611-hwdb-ignore-brightness-keys-on-Dell-Inspiron.patch
 Patch612:       0612-kernel-install-90-loaderentry.install-fix-cmdline-pa.patch
 Patch613:       0613-manager-print-fatal-errors-on-the-console-too.patch
 Patch614:       0614-journald-when-we-detect-the-journal-file-we-are-abou.patch
+Patch615:       0615-hwdb-add-a-touchpad-hwdb.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -1303,6 +1304,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %changelog
 * Thu Feb  5 2015 Jan Synáček <jsynacek@redhat.com> - 208-30
 - RFE: journal: automatically rotate the file if it is unlinked (#1171719)
+- Add a touchpad hwdb (#1189319)
 
 * Tue Jan  6 2015 Jan Synáček <jsynacek@redhat.com> - 208-29
 - Two backlight events upon single keypress on Dell Inspiron 1520 (#1141525)
