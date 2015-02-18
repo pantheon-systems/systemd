@@ -28,14 +28,14 @@ Pulling in Upstream changes
 ```
 git clone git@github.com:pantheon-systems/systemd.git
 cd systemd
-git remote add upstream git://pkgs.fedoraproject.org/glibc.git
+git remote add upstream git://pkgs.fedoraproject.org/systemd.git
 git fetch upstream
 
-# merge latest changes from upstream branch
+# merge in latest changes from upstream branch:
 git rebase upstream/f20
 
 # deal with any merge conflicts. hopefully none.
-# build new rpm!
+# then, you're ready to build a new rpm!
 ```
 
 Building RPM
