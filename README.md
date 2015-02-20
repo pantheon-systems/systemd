@@ -41,7 +41,20 @@ git rebase upstream/f20
 Building RPM
 ------------
 
-Run the `docker-build.sh` script which will take the following actions:
+NOTE: For fedora-20 We are currently adding '00' to the upstream fedora rpm version
+ number so that we can avoid conflicts. Thus, before running the rpm build script you
+ need to edit the `Release` line in `systemd.spec`. Eg:
+
+    Release:        30%{?gitcommit:.git%{gitcommit}}%{?dist}
+    Release:        3000%{?gitcommit:.git%{gitcommit}}%{?dist}
+
+Do not commit this change to git, however, as it will cause version conflicts every
+time we rebase on the `upstream/f20` branch. Also, do not worry about adding `pantheon1`
+tag as this is done automatically by the rpm build script.
+
+
+Building the RPM is done by running the `docker-build.sh` script which will take the following
+actions:
 
 1. pull down a docker image pre-populated with dev tools and rpm
   build tools.
