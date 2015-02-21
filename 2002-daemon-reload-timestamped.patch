@@ -1,0 +1,178 @@
+From 0951e738eb1e46a5ef5ca22e2bc81986aeafa005 Mon Sep 17 00:00:00 2001
+From: Ken Sedgwick <ken@bonsai.com>
+Date: Thu Jan 15 15:26:07 PST 2015
+Subject: [PATCH] daemon-reload-timestamped
+
+---
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 676a07f..843d532 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -132,6 +132,9 @@
+         "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+         "  </method>\n"                                                 \
+         "  <method name=\"Reload\"/>\n"                                 \
++        "  <method name=\"ReloadTimestamped\">\n"                       \
++        "   <arg name=\"timestamp\" type=\"t\" direction=\"in\"/>\n"    \
++        "  </method>\n"                                                 \
+         "  <method name=\"Reexecute\"/>\n"                              \
+         "  <method name=\"Exit\"/>\n"                                   \
+         "  <method name=\"Reboot\"/>\n"                                 \
+@@ -1221,6 +1224,43 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                 if (!dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection, DBUS_TYPE_INVALID)) {
+                         goto oom;
+                 }
++        } else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "ReloadTimestamped")) {
++                usec_t requested_time;
++
++                SELINUX_ACCESS_CHECK(connection, message, "reload");
++
++                if (!dbus_message_get_args(
++                                    message,
++                                    &error,
++                                    DBUS_TYPE_UINT64, &requested_time,
++                                    DBUS_TYPE_INVALID))
++                        return bus_send_error_reply(connection, message, &error, -EINVAL);
++
++                /* Is this reload needed?  If a completed reload was started
++                 * after this reload was requested we can coalesce it and
++                 * return immediate success. */
++
++                if (requested_time < m->last_reload_time) {
++                        reply = dbus_message_new_method_return(message);
++                        if (!reply)
++                                goto oom;
++
++                        /* Don't set exit_code to MANAGER_RELOAD */
++                } else {
++                        assert(!m->queued_message);
++
++                        /* Instead of sending the reply back right away, we
++                         * just remember that we need to and then send it
++                         * after the reload is finished. That way the caller
++                         * knows when the reload finished. */
++
++                        m->queued_message = dbus_message_new_method_return(message);
++                        if (!m->queued_message)
++                                goto oom;
++
++                        m->queued_message_connection = connection;
++                        m->exit_code = MANAGER_RELOAD;
++                }
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "Reload")) {
+ 
+                 SELINUX_ACCESS_CHECK(connection, message, "reload");
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 58dacdc..1b3f3d0 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -567,6 +567,8 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
+ 
+         m->taint_usr = dir_is_empty("/usr") > 0;
+ 
++        m->last_reload_time = 0ULL;
++
+         *_m = m;
+         return 0;
+ 
+@@ -2319,9 +2321,12 @@ int manager_reload(Manager *m) {
+         int r, q;
+         FILE *f;
+         FDSet *fds;
++        usec_t this_reload_time;
+ 
+         assert(m);
+ 
++        this_reload_time = now(CLOCK_MONOTONIC);
++
+         r = manager_open_serialization(m, &f);
+         if (r < 0)
+                 return r;
+@@ -2389,6 +2394,9 @@ int manager_reload(Manager *m) {
+ 
+         m->send_reloading_done = true;
+ 
++        if (r >= 0)
++                m->last_reload_time = this_reload_time;
++
+ finish:
+         if (f)
+                 fclose(f);
+diff --git a/src/core/manager.h b/src/core/manager.h
+index a3049b5..f87d3e1 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -253,6 +253,9 @@ struct Manager {
+          * them. It's a hashmap with a path string as key and a Set as
+          * value where Unit objects are contained. */
+         Hashmap *units_requiring_mounts_for;
++
++        /* Used to coalesce redundant reloads */
++        usec_t last_reload_time;
+ };
+ 
+ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **m);
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index bb7ada9..5185b1a 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -73,6 +73,7 @@ static char **arg_states = NULL;
+ static char **arg_properties = NULL;
+ static bool arg_all = false;
+ static bool original_stdout_is_tty;
++static bool legacy_daemon_reload = false;
+ static enum dependency {
+         DEPENDENCY_FORWARD,
+         DEPENDENCY_REVERSE,
+@@ -4003,6 +4004,7 @@ static int daemon_reload(DBusConnection *bus, char **args) {
+         int r;
+         const char *method;
+         DBusError error;
++        uint64_t tstamp;
+ 
+         if (arg_action == ACTION_RELOAD)
+                 method = "Reload";
+@@ -4024,7 +4026,12 @@ static int daemon_reload(DBusConnection *bus, char **args) {
+                                     /* "daemon-reload" */ "Reload";
+         }
+ 
+-        r = bus_method_call_with_reply(
++        if (streq(method, "Reload") && !legacy_daemon_reload)
++                method = "ReloadTimestamped";
++
++        if (streq(method, "ReloadTimestamped")) {
++                tstamp = now(CLOCK_MONOTONIC);
++                r = bus_method_call_with_reply(
+                         bus,
+                         "org.freedesktop.systemd1",
+                         "/org/freedesktop/systemd1",
+@@ -4032,9 +4039,28 @@ static int daemon_reload(DBusConnection *bus, char **args) {
+                         method,
+                         NULL,
+                         &error,
++                        DBUS_TYPE_UINT64, &tstamp,
+                         DBUS_TYPE_INVALID);
++        } else {
++                r = bus_method_call_with_reply(
++                        bus,
++                        "org.freedesktop.systemd1",
++                        "/org/freedesktop/systemd1",
++                        "org.freedesktop.systemd1.Manager",
++                        method,
++                        NULL,
++                        &error,
++                        DBUS_TYPE_INVALID);
++        }
+ 
+-        if (r == -ENOENT && arg_action != ACTION_SYSTEMCTL)
++        if (r == -EIO && streq(method, "ReloadTimestamped") && streq(error.name, DBUS_ERROR_UNKNOWN_METHOD)) {
++                /* The ReloadTimestamped method wasn't available, retry
++                 * with legacy Reload instead. */
++                legacy_daemon_reload = true;
++                dbus_error_free(&error);
++                return daemon_reload(bus, args);
++        }
++        else if (r == -ENOENT && arg_action != ACTION_SYSTEMCTL)
+                 /* There's always a fallback possible for
+                  * legacy actions. */
+                 r = -EADDRNOTAVAIL;
